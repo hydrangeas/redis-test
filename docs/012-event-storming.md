@@ -79,21 +79,98 @@
 ````md
 # ステップ1：ドメインイベントと外部システムの抽出
 
-## タイムライン
+## タイムライン表現方法
+
+### 方法1: Timeline図（推奨：時系列重視の場合）
+
+```mermaid
+timeline
+    title ビジネスプロセスのタイムライン
+    
+    開始段階 : ユーザーがログインした🟧
+            : 認証が成功した🟧
+    
+    初期化段階 : ダッシュボードが表示された🟧
+               : 初期データが読み込まれた🟧
+    
+    処理段階 : データ取得要求が送信された🟧
+             : 外部システムがデータを返した🟧
+    
+    エラー処理 : エラーが検出された🟧
+              : 通知が送信された🟧
+```
+
+**Timeline図の別の表現例（セクション使用）**
+
+```mermaid
+timeline
+    title ユーザー操作フロー
+    
+    section 認証フェーズ
+    ログイン試行 : ユーザーがログインボタンを押した🟧
+                 : 認証リクエストが送信された🟧
+    認証完了 : 認証が成功した🟧
+            : セッションが作成された🟧
+    
+    section メイン処理フェーズ  
+    データ取得 : APIリクエストが送信された🟧
+              : データが返却された🟧
+    画面表示 : ダッシュボードが表示された🟧
+            : グラフが描画された🟧
+```
+
+### 方法2: Flowchart図（並行処理を表現する場合）
+
+```mermaid
+graph LR
+    %% フェーズごとにグループ化
+    subgraph "開始フェーズ"
+        A[ユーザーがログインした🟧]
+    end
+    
+    subgraph "認証フェーズ"
+        B[認証が成功した🟧]
+        C[セッションが作成された🟧]
+    end
+    
+    subgraph "初期化フェーズ - 並行処理"
+        D[ダッシュボードデータ取得🟧]
+        E[ユーザー設定読み込み🟧]
+        F[通知確認🟧]
+    end
+    
+    A --> B
+    B --> C
+    C --> D
+    C --> E
+    C --> F
+    
+    %% スタイル定義
+    classDef event fill:#ff6723,stroke:#333,stroke-width:2px;
+    classDef command fill:#00a6ed,stroke:#333,stroke-width:2px;
+    classDef user fill:#ffffff,stroke:#333,stroke-width:2px;
+    classDef externalSystem fill:#a56953,stroke:#333,stroke-width:2px;
+    classDef aggregate fill:#ffb02e,stroke:#333,stroke-width:2px;
+    classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
+    classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
+    
+    class A,B,C,D,E event;
+```
+
+### 方法3: 拡張グラフ表現（複雑なフローの場合）
 
 ```mermaid
 graph TB
-    subgraph MainFlow[メインフロー（xx時）]
+    subgraph MainFlow[メインフロー]
         direction LR
         class1[イベント1が発生した] --> class2[イベント2が発生した]
     end
 
-    subgraph SubFlow[サブフロー（oo時）]
+    subgraph SubFlow[サブフロー]
         direction LR
         class3[イベント3が発生した] --> class4[イベント4が発生した]
     end
 
-    %% スタイル定義
     %% スタイル定義
     classDef event fill:#ff6723,stroke:#333,stroke-width:2px;
     classDef command fill:#00a6ed,stroke:#333,stroke-width:2px;
@@ -118,6 +195,25 @@ graph TB
     %%      NodeA --> NodeB
     %%      ```
 ```
+
+## タイムラインの説明
+
+### 表現方法の選択ガイド
+
+**方法1: Timeline図を使用する場合**
+- 時系列の流れが重要な場合
+- イベントの順序関係を明確にしたい場合
+- フェーズやステージごとに段階を分けて表現したい場合
+- **ポイント**: 具体的な時刻ではなく、フェーズ名や段階名を使用することで、ビジネスプロセスの論理的な流れを表現できます
+
+**方法2: Flowchart図を使用する場合**
+- 並行処理や分岐を表現したい場合
+- 複数のアクターが同時に活動する場合
+- 条件分岐や選択的な流れがある場合
+
+**方法3: 拡張グラフ表現を使用する場合**
+- 従来の表現方法を維持したい場合
+- シンプルな線形フローの場合
 
 ## タイムラインの説明
 
@@ -272,19 +368,36 @@ graph TB
 
 ## タイムライン
 
+### 複雑なフローの例（すべての要素を含む）
+
 ```mermaid
-graph TB
-    subgraph MainFlow[メインフロー（xx時）]
-        direction LR
-        class1[イベント1が発生した] --> class2[イベント2が発生した]
+graph LR
+    %% アクターとコマンド
+    subgraph "Step1: コマンド実行"
+        User1[ユーザー⬜] -->|invokes| Cmd1[ログインする🟦]
+    end
+    
+    subgraph "Step2: 集約処理"
+        Cmd1 -->|invoked on| Agg1[認証集約🟨]
+        Cmd1 -->|invoked on| ExtSys1[認証システム🟫]
+    end
+    
+    subgraph "Step3: イベント生成"
+        Agg1 -->|generates| Event1[ログイン成功した🟧]
+        ExtSys1 -->|generates| Event2[トークンが発行された🟧]
+    end
+    
+    subgraph "Step4: 後続処理（並行実行）"
+        Event1 -->|triggers| Policy1[ダッシュボード表示方針🟩]
+        Event1 -->|translated into| ReadModel1[ユーザー情報⬛]
+        Event2 -->|triggers| Policy2[セッション管理方針🟩]
+    end
+    
+    subgraph "Step5: 画面更新"
+        Policy1 -->|invokes| Cmd2[ダッシュボード表示する🟦]
     end
 
-    subgraph SubFlow[サブフロー（oo時）]
-        direction LR
-        class3[イベント3が発生した] --> class4[イベント4が発生した]
-    end
-
-    %% スタイル定義 (イベントは橙色)
+    %% スタイル定義
     classDef event fill:#ff6723,stroke:#333,stroke-width:2px;
     classDef command fill:#00a6ed,stroke:#333,stroke-width:2px;
     classDef user fill:#ffffff,stroke:#333,stroke-width:2px;
@@ -292,21 +405,37 @@ graph TB
     classDef aggregate fill:#ffb02e,stroke:#333,stroke-width:2px;
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
+    
+    class Event1,Event2 event;
+    class Cmd1,Cmd2 command;
+    class User1 user;
+    class ExtSys1 externalSystem;
+    class Agg1 aggregate;
+    class Policy1,Policy2 policy;
+    class ReadModel1 readModel;
+```
 
-    class class1,class2,class3,class4 event;
+### シンプルなタイムライン表現（Timeline図）
 
-    %% mermaid記載上の【重要】注意点
-    %% 1. スタイル定義中のカンマの前後には空白を入れないでください (例: `classDef event fill:#ff6723,stroke:#333,stroke-width:2px;`)
-    %% 2. クラス定義中のカンマの前後には空白を入れないでください
-    %%    - 悪い例: class class1, class2, class3 event;
-    %%    - 良い例: class class1,class2,class3 event;
-    %% 3. 【厳禁】行末にコメントを追加しないでください。コメントは必ず独立した行に記述してください。
-    %%    - 悪い例: `NodeA --> NodeB %% これは行末コメントです`
-    %%    - 良い例:
-    %%      ```mermaid
-    %%      %% これは独立した行のコメントです
-    %%      NodeA --> NodeB
-    %%      ```
+```mermaid
+timeline
+    title ユーザー認証フロー
+    
+    section 認証開始
+        トリガー : ユーザーがログインボタンをクリック⬜
+                 : ログインコマンドが実行される🟦
+    
+    section 認証処理
+        処理実行 : 認証集約が処理を開始🟨
+                 : 外部認証システムと連携🟫
+        イベント発生 : ログイン成功イベント🟧
+                    : トークン発行イベント🟧
+    
+    section 後続処理
+        自動処理 : ダッシュボード表示方針実行🟩
+                 : セッション管理方針実行🟩
+        結果表示 : ユーザー情報の読み取りモデル生成⬛
+                 : ダッシュボードが表示された🟧
 ```
 
 ## フローの説明
