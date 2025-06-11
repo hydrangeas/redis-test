@@ -29,61 +29,30 @@ graph LR
         Cmd3 -->|invoked on| SupaAuth[Supabase Auth🟫]
         SupaAuth -->|generates| A4[Social Provider認証ページにリダイレクトされた🟧]
         
-        %% 外部認証とコールバック
-        A4 -.->|external| SocialProvider[Social Provider🟫]
-        SocialProvider -->|generates| A5[Social Providerが認証を処理した🟧]
-        A5 -.-> A6[認証コールバックが受信された🟧]
+        %% 外部認証へのリダイレクト
+        A4 -->|triggers| Policy3[Social Provider認証方針🟩]
+        Policy3 -->|invokes| Cmd4[Social Providerで認証する🟦]
+        Cmd4 -->|invoked on| SocialProvider[Social Provider🟫]
         
-        %% Supabase Auth処理
-        A6 -->|triggers| Policy4[認証情報処理方針🟩]
-        Policy4 -->|invokes| Cmd5[認証情報を検証する🟦]
-        Cmd5 -->|invoked on| SupaAuth
-        SupaAuth -->|generates| A8[ユーザー情報が取得された🟧]
+        %% 認証成功時
+        SocialProvider -->|generates| A6[認証成功コールバックが受信された🟧]
         
-        %% 認証失敗・キャンセル時の分岐
-        SupaAuth -.->|generates| A15[認証がキャンセル/失敗した🟧]
-        A15 -->|triggers| Policy25[認証失敗リダイレクト方針🟩]
+        %% 認証失敗時
+        SocialProvider -->|generates| A7[認証失敗コールバックが受信された🟧]
+        A7 -->|triggers| Policy25[認証失敗リダイレクト方針🟩]
         Policy25 -->|invokes| Cmd30[トップページにリダイレクトする🟦]
         Cmd30 -->|invoked on| UISystem1
         UISystem1 -->|generates| A16[トップページにリダイレクトされた🟧]
         
-        %% 初回/既存ユーザーの分岐
-        A8 -->|triggers| Policy5[ユーザー確認方針🟩]
-        Policy5 -->|invokes| Cmd6[ユーザー存在を確認する🟦]
-        Cmd6 -->|invoked on| UserAgg[ユーザー集約🟨]
-        
-        %% 初回ログイン時の処理
-        UserAgg -->|generates| A9[初回ログインが検出された🟧]
-        A9 -->|triggers| Policy6[新規ユーザー作成方針🟩]
-        Policy6 -->|invokes| Cmd7[ユーザーアカウントを作成する🟦]
-        Cmd7 -->|invoked on| UserAgg
-        UserAgg -->|generates| A10[ユーザーアカウントが作成された🟧]
-        
-        A10 -->|triggers| Policy7[初期ティア設定方針🟩]
-        Policy7 -->|invokes| Cmd8[tier1を割り当てる🟦]
-        Cmd8 -->|invoked on| UserAgg
-        UserAgg -->|generates| A11[tier1がユーザーに割り当てられた🟧]
-        
-        %% 既存ユーザーの処理
-        UserAgg -->|generates| A12[既存ユーザーのログインが確認された🟧]
-        
-        %% 共通のJWT発行処理
-        A11 -->|triggers| Policy8[JWT発行方針🟩]
-        A12 -->|triggers| Policy8
-        Policy8 -->|invokes| Cmd9[JWTを生成する🟦]
-        Cmd9 -->|invoked on| AuthAgg[認証集約🟨]
-        AuthAgg -->|generates| A13[JWTトークンが発行された🟧]
-        
         %% ダッシュボード表示
-        A13 -->|triggers| Policy9[ダッシュボード表示方針🟩]
+        A6 -->|triggers| Policy9[ダッシュボード表示方針🟩]
         Policy9 -->|invokes| Cmd10[ダッシュボードを表示する🟦]
         Cmd10 -->|invoked on| UISystem2[UIシステム🟫]
         UISystem2 -->|generates| A14[ダッシュボードが表示された🟧]
         
         %% 読み取りモデル
-        A11 -->|translated into| ReadModel1[ユーザープロファイル⬛]
-        A13 -->|translated into| ReadModel2[認証情報⬛]
-        A14 -->|translated into| ReadModel3[ダッシュボード情報⬛]
+        A6 -->|translated into| ReadModel1[認証情報⬛]
+        A14 -->|translated into| ReadModel2[ダッシュボード情報⬛]
     end
     
     %% APIアクセスフロー（正常系）
@@ -193,6 +162,8 @@ graph LR
         F2 -->|triggers| Policy18
         Policy18 -->|invokes| Cmd22[Supabaseでトークンをリフレッシュする🟦]
         Cmd22 -->|invoked on| SupaAuth3[Supabase Auth🟫]
+        
+        %% 新しいアクセストークン発行
         SupaAuth3 -->|generates| F4[新しいアクセストークンが発行された🟧]
         
         %% 読み取りモデル（正常系）
@@ -222,7 +193,8 @@ graph LR
     %% ログ記録フロー（並行処理）
     subgraph "ログ記録フロー - 並行処理"
         %% 方針トリガー
-        A13 -.->|triggers| Policy21[認証成功ログ方針🟩]
+        A6 -.->|triggers| Policy21[認証成功ログ方針🟩]
+        A7 -.->|triggers| Policy22[認証失敗ログ方針🟩]
         D1 -.->|triggers| Policy22[認証失敗ログ方針🟩]
         D3 -.->|triggers| Policy23[レート制限違反ログ方針🟩]
         C7 -.->|triggers| Policy24[APIアクセスログ方針🟩]
@@ -276,13 +248,13 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A5,A6,A8,A9,A10,A11,A12,A13,A14,A15,A16,C1,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd5,Cmd6,Cmd7,Cmd8,Cmd9,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
+    class A1,A2,A4,A6,A7,A14,A16,C1,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
+    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
-    class UserAgg,AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,LogAgg,DocAgg aggregate;
-    class Policy1,Policy2,Policy4,Policy5,Policy6,Policy7,Policy8,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy22,Policy23,Policy24,Policy25 policy;
-    class ReadModel1,ReadModel2,ReadModel3,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13 readModel;
+    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,LogAgg,DocAgg aggregate;
+    class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy22,Policy23,Policy24,Policy25 policy;
+    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13 readModel;
 ```
 
 ## フローの説明
@@ -306,16 +278,8 @@ graph LR
   Supabase Authの認証ページへ遷移する
 - Supabase Authで認証を開始する
   Supabase Auth UIコンポーネントが自動的にプロバイダー選択と認証ページへのリダイレクトを処理する
-- 認証情報を検証する
-  プロバイダーから受信した認証情報の妥当性を確認する
-- ユーザー存在を確認する
-  システム内での既存ユーザーかどうかを判定する
-- ユーザーアカウントを作成する
-  初回ログイン時に新規ユーザーエンティティを生成する
-- tier1を割り当てる
-  新規ユーザーに初期ティアを設定する
-- JWTを生成する
-  API認証用のトークンを生成する
+- Social Providerで認証する
+  選択された外部認証プロバイダー（Google、GitHub等）でユーザー認証を実行する
 - ダッシュボードを表示する
   認証済みユーザーの画面を表示する
 - APIを呼び出す
@@ -358,10 +322,8 @@ graph LR
   APIドキュメントを表示する
 
 ### 集約と外部システム 🟨🟫
-- ユーザー集約 🟨
-  ユーザー情報とティア管理、初回ログイン判定を担当
 - 認証集約 🟨
-  Social Login認証プロセスとJWT発行を担当
+  トークンリフレッシュの必要性判断を担当
 - API集約 🟨
   APIリクエスト処理とレスポンス生成を担当
 - レート制限集約 🟨
@@ -375,7 +337,7 @@ graph LR
 - Social Provider 🟫
   外部認証プロバイダー（Google、GitHub等）
 - Supabase Auth 🟫
-  外部認証サービス（プロバイダー統合、トークン管理）
+  外部認証サービス（プロバイダー統合、ユーザー作成、JWT発行、Custom Access Token Hook実行）
 - UIシステム 🟫
   ブラウザUIの表示とリダイレクトを担当
 
@@ -388,13 +350,9 @@ graph LR
 ### 方針 🟩
 - Supabase Auth リダイレクト方針: ログイン/サインアップボタンクリック時はSupabase Authへリダイレクトする
 - 認証開始方針: Supabase Authへのリダイレクト後は認証プロセスを開始する
-- 認証情報処理方針: 認証コールバック受信時は認証情報を検証する
-- 認証失敗リダイレクト方針: 認証がキャンセル/失敗した場合はトップページにリダイレクトする
-- ユーザー確認方針: ユーザー情報取得後は既存ユーザーかどうかを確認する
-- 新規ユーザー作成方針: 初回ログイン検出時はユーザーアカウントを作成する
-- 初期ティア設定方針: ユーザーアカウント作成後はtier1を割り当てる
-- JWT発行方針: ユーザー確認完了後はJWTトークンを生成する
-- ダッシュボード表示方針: JWTトークン発行後はダッシュボードを表示する
+- Social Provider認証方針: Social Provider認証ページにリダイレクトされた後はSocial Providerで認証する
+- 認証失敗リダイレクト方針: 認証失敗コールバック受信時はトップページにリダイレクトする
+- ダッシュボード表示方針: 認証成功コールバック受信時はダッシュボードを表示する
 - レート制限チェック方針: ユーザーティア確認後はレート制限をチェックする
 - レート制限更新方針: レート制限チェック後はカウントを更新する
 - データ取得方針: レート制限カウント更新後はJSONファイルを読み込む
@@ -407,19 +365,17 @@ graph LR
 - 再認証要求方針（Web）: リフレッシュトークンが期限切れの場合は再ログインを要求する
 - API認証エラー方針: APIクライアントからのリクエストで期限切れの場合は認証エラーを返却する
 - 認証成功ログ方針: 認証成功時はログに記録する
-- 認証失敗ログ方針: 無効なトークン検出時はログに記録する
+- 認証失敗ログ方針: 認証失敗コールバック受信時または無効なトークン検出時はログに記録する
 - レート制限違反ログ方針: レート制限超過時はログに記録する
 - APIアクセスログ方針: レスポンス返却後はログに記録する
 
 ### 読み取りモデル ⬛
-- ユーザープロファイル
-  ユーザー情報とティアレベルを表示
 - 認証情報
-  JWTトークンとユーザーIDを保持
+  JWTトークン（tier情報を含む）とユーザーIDを保持
 - ダッシュボード情報
   ログアウトボタンのみを表示
 - ユーザーティア情報
-  tier1/tier2/tier3の区分を表示
+  JWTのクレームから取得したtier1/tier2/tier3の区分を表示
 - レート制限状態
   現在のアクセス回数と残り回数を表示
 - JSONデータ
@@ -442,9 +398,11 @@ graph LR
 ## 保留事項 (Future Placement Board)
 |タイプ|内容|検討ステップ|
 |-|-|-|
+|懸念事項🟪|Supabase Authでの初回ユーザー判定とCustom Access Token Hookでのtier設定方法|ステップ3|
 |懸念事項🟪|複数のSocial Provider間でのアカウント統合方法|ステップ3|
 |懸念事項🟪|Social Provider認証失敗時のエラーハンドリング|ステップ3|
 |懸念事項🟪|ティアのアップグレード/ダウングレードのフローが未定義|ステップ3|
+|懸念事項🟪|Custom Access Token Hookの実装詳細（PostgreSQL関数）|ステップ3|
 |懸念事項🟪|CORS設定の具体的な実装方法|ステップ3|
 |懸念事項🟪|セキュリティヘッダーの設定タイミング|ステップ3|
 
@@ -459,6 +417,8 @@ graph LR
 |18|集約|Aggregate|aggregate|関連するデータと振る舞いのまとまり|全体|2025-01-06|
 |19|読み取りモデル|Read Model|readModel|ユーザーに表示する情報|全体|2025-01-06|
 |20|プロバイダー統合|Provider Integration|providerIntegration|複数の認証プロバイダーをSupabaseで統一管理|認証|2025-01-06|
+|21|カスタムアクセストークンフック|Custom Access Token Hook|customAccessTokenHook|JWT発行時にカスタムクレームを追加するSupabase機能|認証|2025-01-11|
+|22|アプリケーションメタデータ|App Metadata|appMetadata|サーバー側のみで管理されるユーザー情報（ティア情報等）|認証|2025-01-11|
 
 ## チェックリスト
 
@@ -516,7 +476,7 @@ graph LR
 
 Supabase Auth UIコンポーネントを使用することで、プロバイダー選択画面、サインイン/サインアップフォーム、パスワードリセット機能などがすべて統合された形で提供されます。これにより、認証UIの実装コストが大幅に削減されます。
 
-Social Loginの採用により、認証フローが大幅に簡素化されました。ユーザー登録とログインが統一され、初回ログイン時に自動的にユーザーアカウントが作成される仕組みになっています。
+Social Loginの採用により、認証フローが大幅に簡素化されました。ユーザー登録とログインが統一され、Supabase Authがユーザー管理とJWT発行を完全に担当します。
 
 UIシステムを外部システムとして扱うことで、ボタンクリック、ダッシュボード表示、リダイレクトなどのUI操作を、モデリングの表記法に準拠した形で表現しています。これにより、コマンドが直接イベントを生成する違反を回避し、自然なイベント駆動のフローを実現しています。
 
@@ -526,12 +486,31 @@ Supabase AuthとSocial Providerも外部システムとして明確に定義し�
 
 トークンリフレッシュフローでは、認証集約が中心的な役割を果たし、トークンの有効期限チェックからSupabase Authへの呼び出しまでを責任を持って管理します。これにより、アーキテクチャの一貫性が保たれ、リフレッシュトークン期限切れ時の再認証フローも明確に定義されています。
 
-「ユーザーアカウントを作成する」コマンドは、Supabase Authで既に認証されたユーザーに対して、アプリケーション側で必要な初期データをセットアップする処理です。具体的には、Supabaseデータベースにレート制限カウンター（初期値0）を作成し、ティア情報（tier1）をSupabase Authのユーザーメタデータに保存します。これにより、APIレート制限機能が適切に動作するようになります。
+Supabase Authがユーザー作成とJWT発行を完全に管理します。初回ログイン時、Supabase Authは自動的にユーザーを作成します。
+
+**Custom Access Token Hookについて**
+
+Custom Access Token Hookは、JWT発行時にSupabase Auth内部で実行されるPostgreSQL関数です。このフックはアプリケーションからは直接観測できませんが、以下の処理を自動的に行います：
+
+1. 初回ユーザーかどうかを判定（app_metadataにtier情報が存在しない場合）
+2. 初回ユーザーの場合、tier1をapp_metadataに設定
+3. tier情報をJWTのクレームに追加
+
+この処理はSupabase Authの内部プロセスであり、アプリケーション側からはその実行を直接確認することはできません。アプリケーションは、発行されたJWTにtier情報が含まれていることを前提として処理を行います。
+
+ティア情報の更新はSupabaseのapp_metadataを更新することで行い、次回のJWT発行時（ログインまたはトークンリフレッシュ時）に自動的に反映されます。
 
 ## 変更履歴
 
 |更新日時|変更点|
 |-|-|
+|2025-01-11T18:45:00+09:00|認証失敗コールバック（A7）のログ記録を追加。セキュリティ監視の観点から必要|
+|2025-01-11T18:30:00+09:00|JWT発行フローを削除。認証成功コールバックで既にJWTを受信する形に修正|
+|2025-01-11T18:00:00+09:00|認証コールバックを成功/失敗で分割。認証情報検証フローを削除し、コールバックから直接JWT発行または失敗処理へ|
+|2025-01-11T17:30:00+09:00|A9「ユーザー作成とJWT発行が開始された」を削除、Social Providerへの正しいフロー（方針→コマンド）を追加|
+|2025-01-11T17:00:00+09:00|Custom Access Token Hook関連のイベント、コマンド、方針を削除。アプリケーションから観測できない内部処理のため|
+|2025-01-11T16:00:00+09:00|Supabase Authによるユーザー自動作成とtier設定を反映。認証フロー全体を再構成|
+|2025-01-11T15:00:00+09:00|Custom Access Token Hookの採用を反映（補足事項に説明追加）|
 |2025-01-11T13:30:00+09:00|「ユーザーアカウントを作成する」コマンドの詳細を補足事項に追加（レート制限カウンター初期化の説明）|
 |2025-01-11T13:00:00+09:00|「Supabase Authがユーザー情報を処理した」イベントを削除し、認証情報検証から直接結果イベントを生成|
 |2025-01-11T12:30:00+09:00|認証失敗・キャンセルのパターンを追加（A15, A16イベント、Policy25、Cmd30）|
