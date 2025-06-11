@@ -180,30 +180,38 @@ graph LR
         Cmd16 -->|invoked on| AuthAgg3[認証集約🟨]
         
         %% イベント生成（トークンチェック）
-        AuthAgg3 -->|generates| F1[アクセストークンの有効期限が切れた🟧]
-        AuthAgg3 -->|generates| F2[リフレッシュトークンの有効期限を確認した🟧]
+        AuthAgg3 -->|generates| F1[アクセストークンの有効期限が近い（5分以内）🟧]
+        AuthAgg3 -->|generates| F2[リフレッシュトークンが有効である🟧]
         
-        %% 正常系：リフレッシュトークンが有効
-        F2 -->|triggers| Policy16[トークンリフレッシュ実行方針🟩]
+        %% 正常系：両条件を満たす場合のみリフレッシュ実行
+        F1 -->|triggers| Policy16[トークンリフレッシュ実行方針🟩]
+        F2 -->|triggers| Policy16
         Policy16 -->|invokes| Cmd22[Supabaseでトークンをリフレッシュする🟦]
         Cmd22 -->|invoked on| SupaAuth3[Supabase Auth🟫]
         SupaAuth3 -->|generates| F4[新しいアクセストークンが発行された🟧]
         
-        %% 方針：認証集約にトークン更新を通知
-        F4 -->|triggers| Policy17[トークン更新方針🟩]
-        Policy17 -->|invokes| Cmd23[セッションのトークンを更新する🟦]
-        Cmd23 -->|invoked on| AuthAgg3
-        AuthAgg3 -->|generates| F5[セッションが更新された🟧]
+        %% 読み取りモデル（正常系）
+        F4 -->|translated into| ReadModel10[更新された認証情報⬛]
         
         %% エラー系：リフレッシュトークンが期限切れ
-        F2 -.-> F6[リフレッシュトークンが期限切れだった🟧]
-        F6 -->|triggers| Policy18[再認証要求方針🟩]
-        Policy18 -->|invokes| Cmd24[再ログインを要求する🟦]
-        Cmd24 -->|invoked on| UISystem3[UIシステム🟫]
-        UISystem3 -->|generates| F7[ログインページにリダイレクトされた🟧]
+        F2 -.-> F5[リフレッシュトークンが期限切れだった🟧]
         
-        %% 読み取りモデル
-        F5 -->|translated into| ReadModel10[更新された認証情報⬛]
+        %% リクエスト元による分岐
+        F5 -->|triggers| Policy18[再認証要求方針（Web）🟩]
+        F5 -->|triggers| Policy19[API認証エラー方針🟩]
+        
+        %% Webブラウザからの場合
+        Policy18 -->|invokes| Cmd23[再ログインを要求する🟦]
+        Cmd23 -->|invoked on| UISystem3[UIシステム🟫]
+        UISystem3 -->|generates| F6[ログインページにリダイレクトされた🟧]
+        
+        %% APIクライアントからの場合
+        Policy19 -->|invokes| Cmd24[認証エラーを返却する🟦]
+        Cmd24 -->|invoked on| APIAgg2[API集約🟨]
+        APIAgg2 -->|generates| F7[認証エラー（トークン期限切れ）が返却された🟧]
+        
+        %% エラー読み取りモデル
+        F7 -->|translated into| ReadModel13[トークン期限切れエラー情報⬛]
     end
     
     %% ログ記録フロー（並行処理）
@@ -267,9 +275,9 @@ graph LR
     class Cmd1,Cmd2,Cmd3,Cmd4,Cmd5,Cmd6,Cmd7,Cmd8,Cmd9,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
-    class UserAgg,AuthAgg,AuthAgg2,AuthAgg3,APIAgg,RateLimitAgg,DataAgg,LogAgg,DocAgg aggregate;
-    class Policy1,Policy2,Policy3,Policy4,Policy5,Policy6,Policy7,Policy8,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18 policy;
-    class ReadModel1,ReadModel2,ReadModel3,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12 readModel;
+    class UserAgg,AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,LogAgg,DocAgg aggregate;
+    class Policy1,Policy2,Policy3,Policy4,Policy5,Policy6,Policy7,Policy8,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18,Policy19 policy;
+    class ReadModel1,ReadModel2,ReadModel3,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13 readModel;
 ```
 
 ## フローの説明
@@ -326,13 +334,13 @@ graph LR
 - トップページにリダイレクトする
   ブラウザをトップページに遷移させる
 - トークンをリフレッシュする
-  アクセストークンとリフレッシュトークンの有効期限を確認し、更新プロセスを開始する
+  認証集約がアクセストークンの残り有効期限（5分以内）とリフレッシュトークンの有効性を確認する
 - Supabaseでトークンをリフレッシュする
   Supabase Authに対してリフレッシュトークンを使用して新しいアクセストークンを要求する
-- セッションのトークンを更新する
-  新しく発行されたアクセストークンでセッション情報を更新する
 - 再ログインを要求する
-  リフレッシュトークンが期限切れの場合、ユーザーに再認証を促す
+  Webブラウザからのリクエストで、リフレッシュトークンが期限切れの場合、ログインページへリダイレクトする
+- 認証エラーを返却する
+  APIクライアントからのリクエストで、リフレッシュトークンが期限切れの場合、HTTP 401 Unauthorized（トークン期限切れ）を返却する
 - 認証成功をログに記録する
   監査用に認証成功情報を保存する
 - 認証失敗をログに記録する
@@ -429,6 +437,8 @@ graph LR
   セキュリティ監視用の記録データ
 - APIドキュメント情報
   Scalarで表示されるAPI仕様
+- トークン期限切れエラー情報
+  HTTP 401 Unauthorized（リフレッシュトークン期限切れ）の詳細
 
 ## 保留事項 (Future Placement Board)
 |タイプ|内容|検討ステップ|
@@ -517,6 +527,7 @@ Social Providerも外部システムとして明確に定義し、OAuth認証フ
 
 |更新日時|変更点|
 |-|-|
+|2025-01-06T19:30:00+09:00|リフレッシュトークン期限切れ時のエラー名称を修正（HTTP 401 Unauthorized（トークン期限切れ）が業界標準）|
 |2025-01-06T18:00:00+09:00|トークンリフレッシュフローを修正（認証集約の責務明確化、エラーパス追加、リフレッシュトークン期限切れ処理を実装）|
 |2025-01-06T14:30:00+09:00|Social Login対応により認証フローを統合、ユーザー登録・ログインフローを一本化|
 |2025-01-06T12:00:00+09:00|ステップ1の内容を基に、コマンド、アクター、方針、読み取りモデル、集約を追加|
