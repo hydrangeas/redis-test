@@ -106,7 +106,6 @@ graph LR
     %% APIアクセスフロー（エラー系）
     subgraph "APIアクセスフロー - エラー系"
         %% 認証エラー（API集約から直接生成）
-        APIAgg -.-> D1[無効なトークンが検出された🟧]
         APIAgg -->|generates| D2[認証エラーが返却された🟧]
         
         %% レート制限エラー（レート制限集約から直接生成）
@@ -189,7 +188,7 @@ graph LR
         %% 方針トリガー
         A6 -.->|triggers| Policy21[認証成功ログ方針🟩]
         A7 -.->|triggers| Policy22[認証失敗ログ方針🟩]
-        D1 -.->|triggers| Policy22[認証失敗ログ方針🟩]
+        D2 -.->|triggers| Policy22[認証失敗ログ方針🟩]
         C4b -.->|triggers| Policy23[レート制限違反ログ方針🟩]
         C7 -.->|triggers| Policy24[APIアクセスログ方針🟩]
         
@@ -242,7 +241,7 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D1,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
     class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
@@ -359,7 +358,7 @@ graph LR
 - 再認証要求方針（Web）: リフレッシュトークンが期限切れの場合は再ログインを要求する
 - API認証エラー方針: APIクライアントからのリクエストで期限切れの場合は認証エラーを返却する
 - 認証成功ログ方針: 認証成功時はログに記録する
-- 認証失敗ログ方針: 認証失敗コールバック受信時または無効なトークン検出時はログに記録する
+- 認証失敗ログ方針: 認証失敗コールバック受信時または認証エラー返却時はログに記録する
 - レート制限違反ログ方針: レート制限超過時はログに記録する
 - APIアクセスログ方針: レスポンス返却後はログに記録する
 
@@ -504,6 +503,7 @@ Custom Access Token Hookは、JWT発行時にSupabase Auth内部で実行され�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T11:00:00+09:00|認証エラーフローを修正。D1「無効なトークンが検出された」を削除し、D2「認証エラーが返却された」のみに統合。ログ方針へのトリガーも修正|
 |2025-01-12T10:15:00+09:00|ファイルエラーフローを修正。データ集約から正常系（ファイル読み込み成功）とエラー系（ファイル未発見）の分岐を明確化|
 |2025-01-12T10:00:00+09:00|レート制限フローを修正。チェック結果による分岐（制限内/制限超過）を明確化し、制限内の場合のみカウント更新する正しいフローに変更|
 |2025-01-11T18:45:00+09:00|認証失敗コールバック（A7）のログ記録を追加。セキュリティ監視の観点から必要|
