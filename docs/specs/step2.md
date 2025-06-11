@@ -71,10 +71,13 @@ graph LR
         C3 -->|triggers| Policy10[レート制限チェック方針🟩]
         Policy10 -->|invokes| Cmd12[レート制限をチェックする🟦]
         Cmd12 -->|invoked on| RateLimitAgg[レート制限集約🟨]
-        RateLimitAgg -->|generates| C4[レート制限がチェックされた🟧]
         
-        %% レート制限更新
-        C4 -->|triggers| Policy11[レート制限更新方針🟩]
+        %% チェック結果により分岐
+        RateLimitAgg -->|generates| C4a[レート制限内であることが確認された🟧]
+        RateLimitAgg -->|generates| C4b[レート制限を超過した🟧]
+        
+        %% 制限内の場合：カウント更新して処理継続
+        C4a -->|triggers| Policy11[レート制限更新方針🟩]
         Policy11 -->|invokes| Cmd13[レート制限カウントを更新する🟦]
         Cmd13 -->|invoked on| RateLimitAgg
         RateLimitAgg -->|generates| C5[レート制限カウントが更新された🟧]
@@ -83,9 +86,12 @@ graph LR
         C5 -->|triggers| Policy12[データ取得方針🟩]
         Policy12 -->|invokes| Cmd14[JSONファイルを読み込む🟦]
         Cmd14 -->|invoked on| DataAgg[データ集約🟨]
-        DataAgg -->|generates| C6[JSONファイルが読み込まれた🟧]
         
-        %% レスポンス返却
+        %% データ集約から正常系/エラー系に分岐
+        DataAgg -->|generates| C6[JSONファイルが読み込まれた🟧]
+        DataAgg -->|generates| D5[ファイルが見つからなかった🟧]
+        
+        %% 正常系：レスポンス返却
         C6 -->|triggers| Policy13[レスポンス返却方針🟩]
         Policy13 -->|invokes| Cmd15[レスポンスを返却する🟦]
         Cmd15 -->|invoked on| APIAgg
@@ -93,32 +99,21 @@ graph LR
         
         %% 読み取りモデル
         C3 -->|translated into| ReadModel4[ユーザーティア情報⬛]
-        C4 -->|translated into| ReadModel5[レート制限状態⬛]
+        C4a -->|translated into| ReadModel5[レート制限状態⬛]
         C6 -->|translated into| ReadModel6[JSONデータ⬛]
     end
     
     %% APIアクセスフロー（エラー系）
     subgraph "APIアクセスフロー - エラー系"
-        %% 認証エラー
-        C2 -.-> D1[無効なトークンが検出された🟧]
-        D1 -->|triggers| Policy14[認証エラー処理方針🟩]
-        Policy14 -->|invokes| Cmd16[認証エラーを返却する🟦]
-        Cmd16 -->|invoked on| APIAgg
+        %% 認証エラー（API集約から直接生成）
+        APIAgg -.-> D1[無効なトークンが検出された🟧]
         APIAgg -->|generates| D2[認証エラーが返却された🟧]
         
-        %% レート制限エラー
-        C4 -.-> D3[レート制限を超過した🟧]
-        D3 -->|triggers| Policy15[レート制限エラー処理方針🟩]
-        Policy15 -->|invokes| Cmd17[レート制限エラーを返却する🟦]
-        Cmd17 -->|invoked on| APIAgg
-        APIAgg -->|generates| D4[レート制限エラーが返却された🟧]
+        %% レート制限エラー（レート制限集約から直接生成）
+        RateLimitAgg -->|generates| D4[レート制限エラーが返却された🟧]
         
-        %% ファイルエラー
-        C6 -.-> D5[ファイルが見つからなかった🟧]
-        D5 -->|triggers| Policy16[404エラー処理方針🟩]
-        Policy16 -->|invokes| Cmd18[404エラーを返却する🟦]
-        Cmd18 -->|invoked on| APIAgg
-        APIAgg -->|generates| D6[404エラーが返却された🟧]
+        %% ファイルエラー（データ集約から直接生成）
+        DataAgg -->|generates| D6[404エラーが返却された🟧]
         
         %% エラー読み取りモデル
         D2 -->|translated into| ReadModel7[認証エラー情報⬛]
@@ -195,7 +190,7 @@ graph LR
         A6 -.->|triggers| Policy21[認証成功ログ方針🟩]
         A7 -.->|triggers| Policy22[認証失敗ログ方針🟩]
         D1 -.->|triggers| Policy22[認証失敗ログ方針🟩]
-        D3 -.->|triggers| Policy23[レート制限違反ログ方針🟩]
+        C4b -.->|triggers| Policy23[レート制限違反ログ方針🟩]
         C7 -.->|triggers| Policy24[APIアクセスログ方針🟩]
         
         %% コマンド実行
@@ -247,7 +242,7 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D1,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
     class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
@@ -353,7 +348,7 @@ graph LR
 - 認証失敗リダイレクト方針: 認証失敗コールバック受信時はトップページにリダイレクトする
 - ダッシュボード表示方針: 認証成功コールバック受信時はダッシュボードを表示する
 - レート制限チェック方針: ユーザーティア確認後はレート制限をチェックする
-- レート制限更新方針: レート制限チェック後はカウントを更新する
+- レート制限更新方針: レート制限内であることが確認された後はカウントを更新する
 - データ取得方針: レート制限カウント更新後はJSONファイルを読み込む
 - レスポンス返却方針: JSONファイル読み込み後はレスポンスを返却する
 - 認証エラー処理方針: 無効なトークン検出時は認証エラーを返却する
@@ -487,6 +482,12 @@ Supabase AuthとSocial Providerも外部システムとして明確に定義し�
 
 Supabase Authがユーザー作成とJWT発行を完全に管理します。初回ログイン時、Supabase Authは自動的にユーザーを作成します。
 
+**レート制限フローについて**
+
+レート制限チェックは、制限内/制限超過の2つの結果イベントに分岐するよう設計しました。制限内の場合のみカウントが更新され、制限超過の場合は即座にエラー処理へ進みます。これにより、制限に達している場合の無駄なカウント更新を防ぎます。
+
+レート制限の実装方式としては、スライディングウィンドウ方式を想定しています。これは、現在時刻から遡って指定期間内のリクエスト数をカウントする方式で、Supabaseのデータベースにタイムスタンプ付きでリクエスト履歴を保存し、古いレコードは自動的に削除される仕組みです。具体的な時間窓や制限回数は設定可能とし、設計では固定値を持たせません。
+
 **Custom Access Token Hookについて**
 
 Custom Access Token Hookは、JWT発行時にSupabase Auth内部で実行されるPostgreSQL関数です。このフックはアプリケーションからは直接観測できませんが、以下の処理を自動的に行います：
@@ -503,6 +504,8 @@ Custom Access Token Hookは、JWT発行時にSupabase Auth内部で実行され�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T10:15:00+09:00|ファイルエラーフローを修正。データ集約から正常系（ファイル読み込み成功）とエラー系（ファイル未発見）の分岐を明確化|
+|2025-01-12T10:00:00+09:00|レート制限フローを修正。チェック結果による分岐（制限内/制限超過）を明確化し、制限内の場合のみカウント更新する正しいフローに変更|
 |2025-01-11T18:45:00+09:00|認証失敗コールバック（A7）のログ記録を追加。セキュリティ監視の観点から必要|
 |2025-01-11T18:30:00+09:00|JWT発行フローを削除。認証成功コールバックで既にJWTを受信する形に修正|
 |2025-01-11T18:00:00+09:00|認証コールバックを成功/失敗で分割。認証情報検証フローを削除し、コールバックから直接JWT発行または失敗処理へ|
