@@ -97,6 +97,11 @@ graph LR
         Cmd15 -->|invoked on| APIAgg
         APIAgg -->|generates| C7[レスポンスが返却された🟧]
         
+        %% エラー系：404エラー処理
+        D5 -->|triggers| Policy16[404エラー処理方針🟩]
+        Policy16 -->|invokes| Cmd16[404エラーを返却する🟦]
+        Cmd16 -->|invoked on| APIAgg
+        
         %% 読み取りモデル
         C3 -->|translated into| ReadModel4[ユーザーティア情報⬛]
         C4a -->|translated into| ReadModel5[レート制限状態⬛]
@@ -111,8 +116,8 @@ graph LR
         %% レート制限エラー（レート制限集約から直接生成）
         RateLimitAgg -->|generates| D4[レート制限エラーが返却された🟧]
         
-        %% ファイルエラー（データ集約から直接生成）
-        DataAgg -->|generates| D6[404エラーが返却された🟧]
+        %% ファイルエラー（API集約から生成）
+        APIAgg -->|generates| D6[404エラーが返却された🟧]
         
         %% エラー読み取りモデル
         D2 -->|translated into| ReadModel7[認証エラー情報⬛]
@@ -245,11 +250,11 @@ graph LR
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
     class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd29,Cmd30 command;
+    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
     class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
-    class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy17,Policy18,Policy19,Policy20,Policy21,Policy24,Policy25 policy;
+    class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy24,Policy25 policy;
     class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13,ReadModel14 readModel;
 ```
 
@@ -508,6 +513,7 @@ Custom Access Token Hookは、JWT発行時にSupabase Auth内部で実行され�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T16:00:00+09:00|404エラーフローを修正。D5→Policy16（404エラー処理方針）→Cmd16→API集約→D6の流れに変更。DDDの責務分離原則に準拠|
 |2025-01-12T15:00:00+09:00|ログ設計を2つに分離。「認証ログ」（A6,A7）と「APIアクセスログ」（C7,D2,D4,D6）で責務を明確化。集約も認証ログ集約とAPIログ集約に分離|
 |2025-01-12T11:00:00+09:00|認証エラーフローを修正。D1「無効なトークンが検出された」を削除し、D2「認証エラーが返却された」のみに統合。ログ方針へのトリガーも修正|
 |2025-01-12T10:15:00+09:00|ファイルエラーフローを修正。データ集約から正常系（ファイル読み込み成功）とエラー系（ファイル未発見）の分岐を明確化|
