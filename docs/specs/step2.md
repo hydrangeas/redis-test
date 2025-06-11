@@ -185,36 +185,39 @@ graph LR
     
     %% ログ記録フロー（並行処理）
     subgraph "ログ記録フロー - 並行処理"
-        %% 方針トリガー
-        A6 -.->|triggers| Policy21[認証成功ログ方針🟩]
-        A7 -.->|triggers| Policy22[認証失敗ログ方針🟩]
-        D2 -.->|triggers| Policy22[認証失敗ログ方針🟩]
-        C4b -.->|triggers| Policy23[レート制限違反ログ方針🟩]
-        C7 -.->|triggers| Policy24[APIアクセスログ方針🟩]
+        %% 認証ログフロー
+        %% 認証イベントからの方針トリガー
+        A6 -.->|triggers| Policy21[認証ログ方針🟩]
+        A7 -.->|triggers| Policy21
         
-        %% コマンド実行
-        Policy21 -->|invokes| Cmd25[認証成功をログに記録する🟦]
-        Policy22 -->|invokes| Cmd26[認証失敗をログに記録する🟦]
-        Policy23 -->|invokes| Cmd27[レート制限違反をログに記録する🟦]
+        %% 認証ログコマンド実行
+        Policy21 -->|invokes| Cmd25[認証結果をログに記録する🟦]
+        
+        %% 認証ログ集約への実行
+        Cmd25 -->|invoked on| AuthLogAgg[認証ログ集約🟨]
+        
+        %% 認証ログイベント生成
+        AuthLogAgg -->|generates| G1[認証結果がログに記録された🟧]
+        
+        %% APIアクセスログフロー
+        %% APIアクセスイベントからの方針トリガー
+        C7 -.->|triggers| Policy24[APIアクセスログ方針🟩]
+        D2 -.->|triggers| Policy24
+        D4 -.->|triggers| Policy24
+        D6 -.->|triggers| Policy24
+        
+        %% APIアクセスログコマンド実行
         Policy24 -->|invokes| Cmd28[APIアクセスをログに記録する🟦]
         
-        %% 集約への実行
-        Cmd25 -->|invoked on| LogAgg[ログ集約🟨]
-        Cmd26 -->|invoked on| LogAgg
-        Cmd27 -->|invoked on| LogAgg
-        Cmd28 -->|invoked on| LogAgg
+        %% APIログ集約への実行
+        Cmd28 -->|invoked on| APILogAgg[APIログ集約🟨]
         
-        %% イベント生成
-        LogAgg -->|generates| G1[認証成功がログに記録された🟧]
-        LogAgg -->|generates| G2[認証失敗がログに記録された🟧]
-        LogAgg -->|generates| G3[レート制限違反がログに記録された🟧]
-        LogAgg -->|generates| G4[APIアクセスがログに記録された🟧]
+        %% APIアクセスログイベント生成
+        APILogAgg -->|generates| G4[APIアクセスがログに記録された🟧]
         
         %% 読み取りモデル
         G1 -->|translated into| ReadModel11[監査ログ⬛]
-        G2 -->|translated into| ReadModel11
-        G3 -->|translated into| ReadModel11
-        G4 -->|translated into| ReadModel11
+        G4 -->|translated into| ReadModel14[APIアクセスログ⬛]
     end
     
     %% APIドキュメント表示フロー（保留事項から追加）
@@ -241,13 +244,13 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4,H1 event;
+    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
-    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,LogAgg,DocAgg aggregate;
-    class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy22,Policy23,Policy24,Policy25 policy;
-    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13 readModel;
+    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
+    class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy17,Policy18,Policy19,Policy20,Policy21,Policy24,Policy25 policy;
+    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13,ReadModel14 readModel;
 ```
 
 ## フローの説明
@@ -303,14 +306,10 @@ graph LR
   Webブラウザからのリクエストで、リフレッシュトークンが期限切れの場合、Supabase Authへリダイレクトする
 - 認証エラーを返却する
   APIクライアントからのリクエストで、リフレッシュトークンが期限切れの場合、HTTP 401 Unauthorized（トークン期限切れ）を返却する
-- 認証成功をログに記録する
-  監査用に認証成功情報を保存する
-- 認証失敗をログに記録する
-  セキュリティ監視用に失敗情報を保存する
-- レート制限違反をログに記録する
-  不正アクセス検知用に違反情報を保存する
+- 認証結果をログに記録する
+  認証成功・失敗の両方をセキュリティ監査用に保存する
 - APIアクセスをログに記録する
-  アクセス履歴を保存する
+  すべてのAPIアクセス（正常・エラー含む）の履歴を保存する
 - トップページにアクセスする
   APIドキュメントを表示する
 
@@ -323,8 +322,10 @@ graph LR
   アクセス回数管理とティア別制限を担当
 - データ集約 🟨
   JSONファイルの読み込みとデータ提供を担当
-- ログ集約 🟨
-  各種イベントのログ記録を担当
+- 認証ログ集約 🟨
+  認証イベント（成功・失敗）のログ記録を担当
+- APIログ集約 🟨
+  APIアクセスのログ記録を担当
 - ドキュメント集約 🟨
   APIドキュメントの表示を担当
 - Social Provider 🟫
@@ -357,10 +358,8 @@ graph LR
 - トークンリフレッシュ実行方針: リフレッシュトークンが有効な場合はSupabaseでトークンをリフレッシュする
 - 再認証要求方針（Web）: リフレッシュトークンが期限切れの場合は再ログインを要求する
 - API認証エラー方針: APIクライアントからのリクエストで期限切れの場合は認証エラーを返却する
-- 認証成功ログ方針: 認証成功時はログに記録する
-- 認証失敗ログ方針: 認証失敗コールバック受信時または認証エラー返却時はログに記録する
-- レート制限違反ログ方針: レート制限超過時はログに記録する
-- APIアクセスログ方針: レスポンス返却後はログに記録する
+- 認証ログ方針: 認証成功・失敗イベント発生時はログに記録する
+- APIアクセスログ方針: APIレスポンス（正常・エラー）返却時はログに記録する
 
 ### 読み取りモデル ⬛
 - 認証情報
@@ -382,7 +381,9 @@ graph LR
 - 更新された認証情報
   新しいアクセストークン
 - 監査ログ
-  セキュリティ監視用の記録データ
+  認証イベントのセキュリティ監視用の記録データ
+- APIアクセスログ
+  APIアクセスの履歴データ（ステータスコード、レスポンスタイム等を含む）
 - APIドキュメント情報
   Scalarで表示されるAPI仕様
 - トークン期限切れエラー情報
@@ -481,6 +482,10 @@ Supabase AuthとSocial Providerも外部システムとして明確に定義し�
 
 Supabase Authがユーザー作成とJWT発行を完全に管理します。初回ログイン時、Supabase Authは自動的にユーザーを作成します。
 
+**ログ設計について**
+
+ログ記録を「認証ログ」と「APIアクセスログ」の2つに分離しました。これにより、認証イベント（Social Login成功/失敗）とAPIアクセス（データ取得、エラーレスポンス）が明確に区別され、それぞれ異なる目的での分析が可能になります。APIアクセスログには、正常なレスポンス（C7）だけでなく、すべてのエラーレスポンス（D2認証エラー、D4レート制限エラー、D6 404エラー）も含まれます。
+
 **レート制限フローについて**
 
 レート制限チェックは、制限内/制限超過の2つの結果イベントに分岐するよう設計しました。制限内の場合のみカウントが更新され、制限超過の場合は即座にエラー処理へ進みます。これにより、制限に達している場合の無駄なカウント更新を防ぎます。
@@ -503,6 +508,7 @@ Custom Access Token Hookは、JWT発行時にSupabase Auth内部で実行され�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T15:00:00+09:00|ログ設計を2つに分離。「認証ログ」（A6,A7）と「APIアクセスログ」（C7,D2,D4,D6）で責務を明確化。集約も認証ログ集約とAPIログ集約に分離|
 |2025-01-12T11:00:00+09:00|認証エラーフローを修正。D1「無効なトークンが検出された」を削除し、D2「認証エラーが返却された」のみに統合。ログ方針へのトリガーも修正|
 |2025-01-12T10:15:00+09:00|ファイルエラーフローを修正。データ集約から正常系（ファイル読み込み成功）とエラー系（ファイル未発見）の分岐を明確化|
 |2025-01-12T10:00:00+09:00|レート制限フローを修正。チェック結果による分岐（制限内/制限超過）を明確化し、制限内の場合のみカウント更新する正しいフローに変更|
