@@ -64,7 +64,6 @@ graph LR
         Cmd11 -->|invoked on| APIAgg[API集約🟨]
         
         %% イベント生成
-        APIAgg -->|generates| C1[APIリクエストが受信された🟧]
         APIAgg -->|generates| C2[JWTトークンが検証された🟧]
         APIAgg -->|generates| C3[ユーザーティアが確認された🟧]
         
@@ -248,7 +247,7 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C1,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
     class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
