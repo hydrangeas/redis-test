@@ -9,84 +9,90 @@ graph LR
     %% Social Login認証フロー
     subgraph "Social Login認証フロー"
         %% アクターとコマンド
-        User1[ユーザー⬜] -->|invokes| Cmd1[Social Loginを要求する🟦]
+        User1[ユーザー⬜] -->|invokes| Cmd1[ログイン/サインアップする🟦]
         
         %% コマンドと集約/外部システム
-        Cmd1 -->|invoked on| AuthAgg[認証集約🟨]
+        Cmd1 -->|invoked on| UISystem1[UIシステム🟫]
         
-        %% イベント生成とプロバイダー選択
-        AuthAgg -->|generates| A1[ユーザーがログインページにアクセスした🟧]
+        %% イベント生成とリダイレクト
+        UISystem1 -->|generates| A1[ログイン/サインアップボタンがクリックされた🟧]
         
-        %% プロバイダー選択
-        A1 -->|triggers| Policy1[プロバイダー選択表示方針🟩]
-        Policy1 -->|invokes| Cmd2[プロバイダー選択画面を表示する🟦]
-        Cmd2 -->|invoked on| UISystem1[UIシステム🟫]
-        UISystem1 -->|generates| A2[Social Providerが選択された🟧]
+        %% Supabase Authへのリダイレクト
+        A1 -->|triggers| Policy1[Supabase Auth リダイレクト方針🟩]
+        Policy1 -->|invokes| Cmd2[Supabase Authへリダイレクトする🟦]
+        Cmd2 -->|invoked on| UISystem1
+        UISystem1 -->|generates| A2[Supabase Authへリダイレクトされた🟧]
         
-        %% 外部認証へのリダイレクト
-        A2 -->|triggers| Policy2[外部認証リダイレクト方針🟩]
-        Policy2 -->|invokes| Cmd3[外部認証ページにリダイレクトする🟦]
-        Cmd3 -->|invoked on| AuthAgg
-        AuthAgg -->|generates| A3[Social Provider認証ページにリダイレクトされた🟧]
+        %% Supabase Auth UIコンポーネントが自動的に処理
+        A2 -->|triggers| Policy2[認証開始方針🟩]
+        Policy2 -->|invokes| Cmd3[Supabase Authで認証を開始する🟦]
+        Cmd3 -->|invoked on| SupaAuth[Supabase Auth🟫]
+        SupaAuth -->|generates| A4[Social Provider認証ページにリダイレクトされた🟧]
         
         %% 外部認証とコールバック
-        A3 -.->|external| SocialProvider[Social Provider🟫]
-        SocialProvider -->|generates| A4[Social Providerが認証を処理した🟧]
-        A4 -.-> A5[認証コールバックが受信された🟧]
+        A4 -.->|external| SocialProvider[Social Provider🟫]
+        SocialProvider -->|generates| A5[Social Providerが認証を処理した🟧]
+        A5 -.-> A6[認証コールバックが受信された🟧]
         
         %% Supabase Auth処理
-        A5 -->|triggers| Policy3[認証情報処理方針🟩]
-        Policy3 -->|invokes| Cmd4[認証情報を検証する🟦]
-        Cmd4 -->|invoked on| SupaAuth[Supabase Auth🟫]
-        SupaAuth -->|generates| A6[Supabase Authがユーザー情報を処理した🟧]
-        SupaAuth -->|generates| A7[ユーザー情報が取得された🟧]
+        A6 -->|triggers| Policy4[認証情報処理方針🟩]
+        Policy4 -->|invokes| Cmd5[認証情報を検証する🟦]
+        Cmd5 -->|invoked on| SupaAuth
+        SupaAuth -->|generates| A8[ユーザー情報が取得された🟧]
+        
+        %% 認証失敗・キャンセル時の分岐
+        SupaAuth -.->|generates| A15[認証がキャンセル/失敗した🟧]
+        A15 -->|triggers| Policy25[認証失敗リダイレクト方針🟩]
+        Policy25 -->|invokes| Cmd30[トップページにリダイレクトする🟦]
+        Cmd30 -->|invoked on| UISystem1
+        UISystem1 -->|generates| A16[トップページにリダイレクトされた🟧]
         
         %% 初回/既存ユーザーの分岐
-        A7 -->|triggers| Policy4[ユーザー確認方針🟩]
-        Policy4 -->|invokes| Cmd5[ユーザー存在を確認する🟦]
-        Cmd5 -->|invoked on| UserAgg[ユーザー集約🟨]
+        A8 -->|triggers| Policy5[ユーザー確認方針🟩]
+        Policy5 -->|invokes| Cmd6[ユーザー存在を確認する🟦]
+        Cmd6 -->|invoked on| UserAgg[ユーザー集約🟨]
         
         %% 初回ログイン時の処理
-        UserAgg -->|generates| A8[初回ログインが検出された🟧]
-        A8 -->|triggers| Policy5[新規ユーザー作成方針🟩]
-        Policy5 -->|invokes| Cmd6[ユーザーアカウントを作成する🟦]
-        Cmd6 -->|invoked on| UserAgg
-        UserAgg -->|generates| A9[ユーザーアカウントが作成された🟧]
-        
-        A9 -->|triggers| Policy6[初期ティア設定方針🟩]
-        Policy6 -->|invokes| Cmd7[tier1を割り当てる🟦]
+        UserAgg -->|generates| A9[初回ログインが検出された🟧]
+        A9 -->|triggers| Policy6[新規ユーザー作成方針🟩]
+        Policy6 -->|invokes| Cmd7[ユーザーアカウントを作成する🟦]
         Cmd7 -->|invoked on| UserAgg
-        UserAgg -->|generates| A10[tier1がユーザーに割り当てられた🟧]
+        UserAgg -->|generates| A10[ユーザーアカウントが作成された🟧]
+        
+        A10 -->|triggers| Policy7[初期ティア設定方針🟩]
+        Policy7 -->|invokes| Cmd8[tier1を割り当てる🟦]
+        Cmd8 -->|invoked on| UserAgg
+        UserAgg -->|generates| A11[tier1がユーザーに割り当てられた🟧]
         
         %% 既存ユーザーの処理
-        UserAgg -->|generates| A11[既存ユーザーのログインが確認された🟧]
+        UserAgg -->|generates| A12[既存ユーザーのログインが確認された🟧]
         
         %% 共通のJWT発行処理
-        A10 -->|triggers| Policy7[JWT発行方針🟩]
-        A11 -->|triggers| Policy7
-        Policy7 -->|invokes| Cmd8[JWTを生成する🟦]
-        Cmd8 -->|invoked on| AuthAgg
-        AuthAgg -->|generates| A12[JWTトークンが発行された🟧]
+        A11 -->|triggers| Policy8[JWT発行方針🟩]
+        A12 -->|triggers| Policy8
+        Policy8 -->|invokes| Cmd9[JWTを生成する🟦]
+        Cmd9 -->|invoked on| AuthAgg[認証集約🟨]
+        AuthAgg -->|generates| A13[JWTトークンが発行された🟧]
         
         %% ダッシュボード表示
-        A12 -->|triggers| Policy8[ダッシュボード表示方針🟩]
-        Policy8 -->|invokes| Cmd9[ダッシュボードを表示する🟦]
-        Cmd9 -->|invoked on| UISystem2[UIシステム🟫]
-        UISystem2 -->|generates| A13[ダッシュボードが表示された🟧]
+        A13 -->|triggers| Policy9[ダッシュボード表示方針🟩]
+        Policy9 -->|invokes| Cmd10[ダッシュボードを表示する🟦]
+        Cmd10 -->|invoked on| UISystem2[UIシステム🟫]
+        UISystem2 -->|generates| A14[ダッシュボードが表示された🟧]
         
         %% 読み取りモデル
-        A10 -->|translated into| ReadModel1[ユーザープロファイル⬛]
-        A12 -->|translated into| ReadModel2[認証情報⬛]
-        A13 -->|translated into| ReadModel3[ダッシュボード情報⬛]
+        A11 -->|translated into| ReadModel1[ユーザープロファイル⬛]
+        A13 -->|translated into| ReadModel2[認証情報⬛]
+        A14 -->|translated into| ReadModel3[ダッシュボード情報⬛]
     end
     
     %% APIアクセスフロー（正常系）
     subgraph "APIアクセスフロー - 正常系"
         %% アクターとコマンド
-        APIClient[APIクライアント⬜] -->|invokes| Cmd6[APIを呼び出す🟦]
+        APIClient[APIクライアント⬜] -->|invokes| Cmd11[APIを呼び出す🟦]
         
         %% コマンドと集約/外部システム
-        Cmd6 -->|invoked on| APIAgg[API集約🟨]
+        Cmd11 -->|invoked on| APIAgg[API集約🟨]
         
         %% イベント生成
         APIAgg -->|generates| C1[APIリクエストが受信された🟧]
@@ -94,27 +100,27 @@ graph LR
         APIAgg -->|generates| C3[ユーザーティアが確認された🟧]
         
         %% レート制限チェック
-        C3 -->|triggers| Policy4[レート制限チェック方針🟩]
-        Policy4 -->|invokes| Cmd7[レート制限をチェックする🟦]
-        Cmd7 -->|invoked on| RateLimitAgg[レート制限集約🟨]
+        C3 -->|triggers| Policy10[レート制限チェック方針🟩]
+        Policy10 -->|invokes| Cmd12[レート制限をチェックする🟦]
+        Cmd12 -->|invoked on| RateLimitAgg[レート制限集約🟨]
         RateLimitAgg -->|generates| C4[レート制限がチェックされた🟧]
         
         %% レート制限更新
-        C4 -->|triggers| Policy5[レート制限更新方針🟩]
-        Policy5 -->|invokes| Cmd8[レート制限カウントを更新する🟦]
-        Cmd8 -->|invoked on| RateLimitAgg
+        C4 -->|triggers| Policy11[レート制限更新方針🟩]
+        Policy11 -->|invokes| Cmd13[レート制限カウントを更新する🟦]
+        Cmd13 -->|invoked on| RateLimitAgg
         RateLimitAgg -->|generates| C5[レート制限カウントが更新された🟧]
         
         %% データ取得
-        C5 -->|triggers| Policy6[データ取得方針🟩]
-        Policy6 -->|invokes| Cmd9[JSONファイルを読み込む🟦]
-        Cmd9 -->|invoked on| DataAgg[データ集約🟨]
+        C5 -->|triggers| Policy12[データ取得方針🟩]
+        Policy12 -->|invokes| Cmd14[JSONファイルを読み込む🟦]
+        Cmd14 -->|invoked on| DataAgg[データ集約🟨]
         DataAgg -->|generates| C6[JSONファイルが読み込まれた🟧]
         
         %% レスポンス返却
-        C6 -->|triggers| Policy7[レスポンス返却方針🟩]
-        Policy7 -->|invokes| Cmd10[レスポンスを返却する🟦]
-        Cmd10 -->|invoked on| APIAgg
+        C6 -->|triggers| Policy13[レスポンス返却方針🟩]
+        Policy13 -->|invokes| Cmd15[レスポンスを返却する🟦]
+        Cmd15 -->|invoked on| APIAgg
         APIAgg -->|generates| C7[レスポンスが返却された🟧]
         
         %% 読み取りモデル
@@ -127,23 +133,23 @@ graph LR
     subgraph "APIアクセスフロー - エラー系"
         %% 認証エラー
         C2 -.-> D1[無効なトークンが検出された🟧]
-        D1 -->|triggers| Policy8[認証エラー処理方針🟩]
-        Policy8 -->|invokes| Cmd11[認証エラーを返却する🟦]
-        Cmd11 -->|invoked on| APIAgg
+        D1 -->|triggers| Policy14[認証エラー処理方針🟩]
+        Policy14 -->|invokes| Cmd16[認証エラーを返却する🟦]
+        Cmd16 -->|invoked on| APIAgg
         APIAgg -->|generates| D2[認証エラーが返却された🟧]
         
         %% レート制限エラー
         C4 -.-> D3[レート制限を超過した🟧]
-        D3 -->|triggers| Policy9[レート制限エラー処理方針🟩]
-        Policy9 -->|invokes| Cmd12[レート制限エラーを返却する🟦]
-        Cmd12 -->|invoked on| APIAgg
+        D3 -->|triggers| Policy15[レート制限エラー処理方針🟩]
+        Policy15 -->|invokes| Cmd17[レート制限エラーを返却する🟦]
+        Cmd17 -->|invoked on| APIAgg
         APIAgg -->|generates| D4[レート制限エラーが返却された🟧]
         
         %% ファイルエラー
         C6 -.-> D5[ファイルが見つからなかった🟧]
-        D5 -->|triggers| Policy10[404エラー処理方針🟩]
-        Policy10 -->|invokes| Cmd13[404エラーを返却する🟦]
-        Cmd13 -->|invoked on| APIAgg
+        D5 -->|triggers| Policy16[404エラー処理方針🟩]
+        Policy16 -->|invokes| Cmd18[404エラーを返却する🟦]
+        Cmd18 -->|invoked on| APIAgg
         APIAgg -->|generates| D6[404エラーが返却された🟧]
         
         %% エラー読み取りモデル
@@ -155,37 +161,37 @@ graph LR
     %% ログアウトフロー
     subgraph "ログアウトフロー"
         %% アクターとコマンド
-        User3[ログインユーザー⬜] -->|invokes| Cmd14[ログアウトする🟦]
+        User3[ログインユーザー⬜] -->|invokes| Cmd19[ログアウトする🟦]
         
         %% コマンドと集約/外部システム
-        Cmd14 -->|invoked on| AuthAgg2[認証集約🟨]
+        Cmd19 -->|invoked on| AuthAgg2[認証集約🟨]
         
         %% イベント生成
         AuthAgg2 -->|generates| E2[セッションが無効化された🟧]
         
         %% 方針
-        E2 -->|triggers| Policy11[リダイレクト方針🟩]
-        Policy11 -->|invokes| Cmd15[トップページにリダイレクトする🟦]
-        Cmd15 -->|invoked on| UISystem2[UIシステム🟫]
+        E2 -->|triggers| Policy17[リダイレクト方針🟩]
+        Policy17 -->|invokes| Cmd20[トップページにリダイレクトする🟦]
+        Cmd20 -->|invoked on| UISystem2[UIシステム🟫]
         UISystem2 -->|generates| E3[トップページにリダイレクトされた🟧]
     end
     
     %% トークンリフレッシュフロー
     subgraph "トークンリフレッシュフロー"
         %% アクターとコマンド（システム自動実行）
-        System1[システム⬜] -->|invokes| Cmd16[トークンをリフレッシュする🟦]
+        System1[システム⬜] -->|invokes| Cmd21[トークンをリフレッシュする🟦]
         
         %% コマンドと集約
-        Cmd16 -->|invoked on| AuthAgg3[認証集約🟨]
+        Cmd21 -->|invoked on| AuthAgg3[認証集約🟨]
         
         %% イベント生成（トークンチェック）
         AuthAgg3 -->|generates| F1[アクセストークンの有効期限が近い（5分以内）🟧]
         AuthAgg3 -->|generates| F2[リフレッシュトークンが有効である🟧]
         
         %% 正常系：両条件を満たす場合のみリフレッシュ実行
-        F1 -->|triggers| Policy16[トークンリフレッシュ実行方針🟩]
-        F2 -->|triggers| Policy16
-        Policy16 -->|invokes| Cmd22[Supabaseでトークンをリフレッシュする🟦]
+        F1 -->|triggers| Policy18[トークンリフレッシュ実行方針🟩]
+        F2 -->|triggers| Policy18
+        Policy18 -->|invokes| Cmd22[Supabaseでトークンをリフレッシュする🟦]
         Cmd22 -->|invoked on| SupaAuth3[Supabase Auth🟫]
         SupaAuth3 -->|generates| F4[新しいアクセストークンが発行された🟧]
         
@@ -196,16 +202,16 @@ graph LR
         F2 -.-> F5[リフレッシュトークンが期限切れだった🟧]
         
         %% リクエスト元による分岐
-        F5 -->|triggers| Policy18[再認証要求方針（Web）🟩]
-        F5 -->|triggers| Policy19[API認証エラー方針🟩]
+        F5 -->|triggers| Policy19[再認証要求方針（Web）🟩]
+        F5 -->|triggers| Policy20[API認証エラー方針🟩]
         
         %% Webブラウザからの場合
-        Policy18 -->|invokes| Cmd23[再ログインを要求する🟦]
+        Policy19 -->|invokes| Cmd23[再ログインを要求する🟦]
         Cmd23 -->|invoked on| UISystem3[UIシステム🟫]
-        UISystem3 -->|generates| F6[ログインページにリダイレクトされた🟧]
+        UISystem3 -->|generates| F6[Supabase Authへリダイレクトされた🟧]
         
         %% APIクライアントからの場合
-        Policy19 -->|invokes| Cmd24[認証エラーを返却する🟦]
+        Policy20 -->|invokes| Cmd24[認証エラーを返却する🟦]
         Cmd24 -->|invoked on| APIAgg2[API集約🟨]
         APIAgg2 -->|generates| F7[認証エラー（トークン期限切れ）が返却された🟧]
         
@@ -216,22 +222,22 @@ graph LR
     %% ログ記録フロー（並行処理）
     subgraph "ログ記録フロー - 並行処理"
         %% 方針トリガー
-        A12 -.->|triggers| Policy12[認証成功ログ方針🟩]
-        D1 -.->|triggers| Policy13[認証失敗ログ方針🟩]
-        D3 -.->|triggers| Policy14[レート制限違反ログ方針🟩]
-        C7 -.->|triggers| Policy15[APIアクセスログ方針🟩]
+        A13 -.->|triggers| Policy21[認証成功ログ方針🟩]
+        D1 -.->|triggers| Policy22[認証失敗ログ方針🟩]
+        D3 -.->|triggers| Policy23[レート制限違反ログ方針🟩]
+        C7 -.->|triggers| Policy24[APIアクセスログ方針🟩]
         
         %% コマンド実行
-        Policy12 -->|invokes| Cmd17[認証成功をログに記録する🟦]
-        Policy13 -->|invokes| Cmd18[認証失敗をログに記録する🟦]
-        Policy14 -->|invokes| Cmd19[レート制限違反をログに記録する🟦]
-        Policy15 -->|invokes| Cmd20[APIアクセスをログに記録する🟦]
+        Policy21 -->|invokes| Cmd25[認証成功をログに記録する🟦]
+        Policy22 -->|invokes| Cmd26[認証失敗をログに記録する🟦]
+        Policy23 -->|invokes| Cmd27[レート制限違反をログに記録する🟦]
+        Policy24 -->|invokes| Cmd28[APIアクセスをログに記録する🟦]
         
         %% 集約への実行
-        Cmd17 -->|invoked on| LogAgg[ログ集約🟨]
-        Cmd18 -->|invoked on| LogAgg
-        Cmd19 -->|invoked on| LogAgg
-        Cmd20 -->|invoked on| LogAgg
+        Cmd25 -->|invoked on| LogAgg[ログ集約🟨]
+        Cmd26 -->|invoked on| LogAgg
+        Cmd27 -->|invoked on| LogAgg
+        Cmd28 -->|invoked on| LogAgg
         
         %% イベント生成
         LogAgg -->|generates| G1[認証成功がログに記録された🟧]
@@ -249,10 +255,10 @@ graph LR
     %% APIドキュメント表示フロー（保留事項から追加）
     subgraph "APIドキュメント表示フロー"
         %% アクターとコマンド
-        Visitor[訪問者⬜] -->|invokes| Cmd21[トップページにアクセスする🟦]
+        Visitor[訪問者⬜] -->|invokes| Cmd29[トップページにアクセスする🟦]
         
         %% コマンドと集約/外部システム
-        Cmd21 -->|invoked on| DocAgg[ドキュメント集約🟨]
+        Cmd29 -->|invoked on| DocAgg[ドキュメント集約🟨]
         
         %% イベント生成
         DocAgg -->|generates| H1[APIドキュメントが表示された🟧]
@@ -270,12 +276,12 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,C1,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd5,Cmd6,Cmd7,Cmd8,Cmd9,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24 command;
+    class A1,A2,A4,A5,A6,A8,A9,A10,A11,A12,A13,A14,A15,A16,C1,C2,C3,C4,C5,C6,C7,D1,D2,D3,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G2,G3,G4,H1 event;
+    class Cmd1,Cmd2,Cmd3,Cmd5,Cmd6,Cmd7,Cmd8,Cmd9,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd17,Cmd18,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd26,Cmd27,Cmd28,Cmd29,Cmd30 command;
     class User1,User3,APIClient,System1,Visitor user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
     class UserAgg,AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,LogAgg,DocAgg aggregate;
-    class Policy1,Policy2,Policy3,Policy4,Policy5,Policy6,Policy7,Policy8,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18,Policy19 policy;
+    class Policy1,Policy2,Policy4,Policy5,Policy6,Policy7,Policy8,Policy9,Policy10,Policy11,Policy12,Policy13,Policy14,Policy15,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy22,Policy23,Policy24,Policy25 policy;
     class ReadModel1,ReadModel2,ReadModel3,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13 readModel;
 ```
 
@@ -294,12 +300,12 @@ graph LR
   未認証でトップページにアクセスするユーザー
 
 ### コマンド 🟦
-- Social Loginを要求する
-  Social Provider経由での認証プロセスを開始する
-- プロバイダー選択画面を表示する
-  利用可能な認証プロバイダーの選択UIを表示する
-- 外部認証ページにリダイレクトする
-  選択されたプロバイダーの認証ページへ遷移する
+- ログイン/サインアップする
+  トップページからSupabase Authでの認証プロセスを開始する
+- Supabase Authへリダイレクトする
+  Supabase Authの認証ページへ遷移する
+- Supabase Authで認証を開始する
+  Supabase Auth UIコンポーネントが自動的にプロバイダー選択と認証ページへのリダイレクトを処理する
 - 認証情報を検証する
   プロバイダーから受信した認証情報の妥当性を確認する
 - ユーザー存在を確認する
@@ -337,7 +343,7 @@ graph LR
 - Supabaseでトークンをリフレッシュする
   Supabase Authに対してリフレッシュトークンを使用して新しいアクセストークンを要求する
 - 再ログインを要求する
-  Webブラウザからのリクエストで、リフレッシュトークンが期限切れの場合、ログインページへリダイレクトする
+  Webブラウザからのリクエストで、リフレッシュトークンが期限切れの場合、Supabase Authへリダイレクトする
 - 認証エラーを返却する
   APIクライアントからのリクエストで、リフレッシュトークンが期限切れの場合、HTTP 401 Unauthorized（トークン期限切れ）を返却する
 - 認証成功をログに記録する
@@ -377,19 +383,13 @@ graph LR
 （ステップ1から引き継ぎ）
 
 #### ステップ2で追加されたイベント
-- リフレッシュトークンの有効期限を確認した
-  認証集約がリフレッシュトークンの有効期限をチェックしたイベント
-- セッションが更新された
-  新しいアクセストークンでセッション情報が更新されたイベント
-- リフレッシュトークンが期限切れだった
-  リフレッシュトークンの有効期限（30日）が切れていたことが検出されたイベント
-- ログインページにリダイレクトされた
-  リフレッシュトークン期限切れにより再認証画面への遷移が実行されたイベント
+なし（ステップ1で定義されたイベントはそのまま利用）
 
 ### 方針 🟩
-- プロバイダー選択表示方針: ログインページアクセス時はプロバイダー選択画面を表示する
-- 外部認証リダイレクト方針: プロバイダー選択後は外部認証ページにリダイレクトする
+- Supabase Auth リダイレクト方針: ログイン/サインアップボタンクリック時はSupabase Authへリダイレクトする
+- 認証開始方針: Supabase Authへのリダイレクト後は認証プロセスを開始する
 - 認証情報処理方針: 認証コールバック受信時は認証情報を検証する
+- 認証失敗リダイレクト方針: 認証がキャンセル/失敗した場合はトップページにリダイレクトする
 - ユーザー確認方針: ユーザー情報取得後は既存ユーザーかどうかを確認する
 - 新規ユーザー作成方針: 初回ログイン検出時はユーザーアカウントを作成する
 - 初期ティア設定方針: ユーザーアカウント作成後はtier1を割り当てる
@@ -403,13 +403,13 @@ graph LR
 - レート制限エラー処理方針: レート制限超過時はレート制限エラーを返却する
 - 404エラー処理方針: ファイルが見つからない時は404エラーを返却する
 - リダイレクト方針: セッション無効化後はトップページにリダイレクトする
+- トークンリフレッシュ実行方針: リフレッシュトークンが有効な場合はSupabaseでトークンをリフレッシュする
+- 再認証要求方針（Web）: リフレッシュトークンが期限切れの場合は再ログインを要求する
+- API認証エラー方針: APIクライアントからのリクエストで期限切れの場合は認証エラーを返却する
 - 認証成功ログ方針: 認証成功時はログに記録する
 - 認証失敗ログ方針: 無効なトークン検出時はログに記録する
 - レート制限違反ログ方針: レート制限超過時はログに記録する
 - APIアクセスログ方針: レスポンス返却後はログに記録する
-- トークンリフレッシュ実行方針: リフレッシュトークンが有効な場合はSupabaseでトークンをリフレッシュする
-- トークン更新方針: 新しいアクセストークン発行後はセッションのトークンを更新する
-- 再認証要求方針: リフレッシュトークンが期限切れの場合は再ログインを要求する
 
 ### 読み取りモデル ⬛
 - ユーザープロファイル
@@ -512,11 +512,15 @@ graph LR
 
 ## 補足
 
+ログインページを廃止し、トップページから直接Supabase Authへリダイレクトする方式を採用しました。これにより、UIフローがシンプルになり、ユーザー体験が向上します。
+
+Supabase Auth UIコンポーネントを使用することで、プロバイダー選択画面、サインイン/サインアップフォーム、パスワードリセット機能などがすべて統合された形で提供されます。これにより、認証UIの実装コストが大幅に削減されます。
+
 Social Loginの採用により、認証フローが大幅に簡素化されました。ユーザー登録とログインが統一され、初回ログイン時に自動的にユーザーアカウントが作成される仕組みになっています。
 
-UIシステムを外部システムとして扱うことで、プロバイダー選択画面の表示、ダッシュボード表示、リダイレクトなどのUI操作を、モデリングの表記法に準拠した形で表現しています。これにより、コマンドが直接イベントを生成する違反を回避し、自然なイベント駆動のフローを実現しています。
+UIシステムを外部システムとして扱うことで、ボタンクリック、ダッシュボード表示、リダイレクトなどのUI操作を、モデリングの表記法に準拠した形で表現しています。これにより、コマンドが直接イベントを生成する違反を回避し、自然なイベント駆動のフローを実現しています。
 
-Social Providerも外部システムとして明確に定義し、OAuth認証フローの外部依存性を適切に表現しています。
+Supabase AuthとSocial Providerも外部システムとして明確に定義し、OAuth認証フローの外部依存性を適切に表現しています。
 
 また、ログ記録フローは完全に非同期の並行処理として設計され、各種イベントからの方針トリガーによって独立して実行されます。
 
@@ -526,6 +530,10 @@ Social Providerも外部システムとして明確に定義し、OAuth認証フ
 
 |更新日時|変更点|
 |-|-|
+|2025-01-11T13:00:00+09:00|「Supabase Authがユーザー情報を処理した」イベントを削除し、認証情報検証から直接結果イベントを生成|
+|2025-01-11T12:30:00+09:00|認証失敗・キャンセルのパターンを追加（A15, A16イベント、Policy25、Cmd30）|
+|2025-01-11T12:00:00+09:00|Supabase Auth UIコンポーネントの内部処理（プロバイダー選択、リダイレクト）を簡略化|
+|2025-01-11T11:00:00+09:00|ログインページを廃止し、トップページから直接Supabase Authへリダイレクトする方式に変更。認証フロー全体を修正|
 |2025-01-11T10:00:00+09:00|ログアウトフローを修正（UIイベント「ログアウトボタンがクリックされた」を削除し、ビジネスイベント「セッションが無効化された」のみに整理）|
 |2025-01-06T19:30:00+09:00|リフレッシュトークン期限切れ時のエラー名称を修正（HTTP 401 Unauthorized（トークン期限切れ）が業界標準）|
 |2025-01-06T18:00:00+09:00|トークンリフレッシュフローを修正（認証集約の責務明確化、エラーパス追加、リフレッシュトークン期限切れ処理を実装）|
