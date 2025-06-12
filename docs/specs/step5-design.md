@@ -44,6 +44,9 @@ classDiagram
         +int maxRequests
         +int windowSeconds
         +equals()
+        +static TIER1_DEFAULT() RateLimit
+        +static TIER2_DEFAULT() RateLimit
+        +static TIER3_DEFAULT() RateLimit
     }
     
     %% ドメインサービス
@@ -198,6 +201,15 @@ classDiagram
         +toHumanReadable()
     }
     
+    class JsonObject {
+        <<Value Object>>
+        +Record~string, unknown~ data
+        +getString(key) string | undefined
+        +getNumber(key) number | undefined
+        +getObject(key) JsonObject | undefined
+        +getArray(key) JsonArray | undefined
+    }
+    
     %% ドメインサービス
     class DataAccessService {
         <<Domain Service>>
@@ -210,7 +222,7 @@ classDiagram
         <<Repository>>
         +findByPath(path) Promise~OpenDataResource~
         +exists(path) Promise~boolean~
-        +getContent(path) Promise~any~
+        +getContent(path) Promise~JsonObject~
     }
     
     %% ファクトリ
@@ -227,6 +239,7 @@ classDiagram
     DataAccessService ..> OpenDataResource : returns
     DataAccessService ..> OpenDataRepository : uses
     OpenDataRepository ..> OpenDataResource : returns
+    OpenDataRepository ..> JsonObject : returns
     OpenDataResourceFactory ..> OpenDataResource : creates
 ```
 
@@ -434,6 +447,10 @@ classDiagram
    - 主要なバリューオブジェクト：AuthenticatedUser
    - 責務：JWTトークンの検証結果を表現し、アクセス権限を判定
    - 不変条件：認証済みユーザーは必ずUserIdとUserTierを持つ
+   - レート制限デフォルト値：
+     - TIER1: 60回/60秒（1分間）
+     - TIER2: 120回/60秒（設定可能）
+     - TIER3: 300回/60秒（設定可能）
 
 2. **APIコンテキスト**
    - 主要な集約：RateLimiting（レート制限集約）
@@ -729,6 +746,82 @@ sequenceDiagram
 4. **非同期イベント処理**
    - ドメインイベントをEventBus経由で非同期配信
    - ログ記録は本処理と独立して実行
+
+## シーケンス図 <トークンリフレッシュ処理>
+
+```mermaid
+sequenceDiagram
+    participant Client as クライアント
+    participant MW as Middleware
+    participant AuthApp as 認証ユースケース
+    participant AuthDomain as 認証ドメイン
+    participant SupabaseAuth as Supabase Auth
+    participant LogApp as ログユースケース
+    participant EventBus as イベントバス
+    
+    Client->>MW: POST /api/auth/refresh<br/>refresh_token in body
+    MW->>AuthApp: refreshToken(refreshToken)
+    AuthApp->>SupabaseAuth: refreshAccessToken(refreshToken)
+    
+    alt リフレッシュトークンが無効
+        SupabaseAuth-->>AuthApp: Invalid Refresh Token
+        AuthApp-->>MW: Unauthorized
+        MW-->>Client: 401 Unauthorized
+    else リフレッシュトークンが有効
+        SupabaseAuth-->>AuthApp: New Session (access_token, refresh_token)
+        AuthApp->>AuthDomain: extractUserFromToken(newTokenPayload)
+        AuthDomain-->>AuthApp: AuthenticatedUser
+        
+        %% イベント発行
+        AuthApp->>EventBus: publish(TokenRefreshedEvent)
+        EventBus->>LogApp: handle(TokenRefreshedEvent)
+        
+        AuthApp-->>MW: Success(newTokens)
+        MW-->>Client: 200 OK + New Tokens
+    end
+    
+    %% mermaid記載上の【重要】注意点
+    %% コメントは独立した行に記述
+```
+
+## シーケンス図 <ログアウト処理>
+
+```mermaid
+sequenceDiagram
+    participant Client as クライアント
+    participant MW as Middleware
+    participant AuthApp as 認証ユースケース
+    participant AuthDomain as 認証ドメイン
+    participant SupabaseAuth as Supabase Auth
+    participant LogApp as ログユースケース
+    participant EventBus as イベントバス
+    
+    Client->>MW: POST /api/auth/logout<br/>Authorization: Bearer token
+    MW->>AuthApp: validateToken(token)
+    AuthApp->>AuthDomain: validateAccessToken(token)
+    
+    alt トークンが無効
+        AuthDomain-->>AuthApp: Invalid Token
+        AuthApp-->>MW: Unauthorized
+        MW-->>Client: 401 Unauthorized
+    else トークンが有効
+        AuthDomain-->>AuthApp: AuthenticatedUser(userId)
+        AuthApp->>SupabaseAuth: signOut()
+        SupabaseAuth-->>AuthApp: Success
+        
+        %% イベント発行
+        AuthApp->>EventBus: publish(UserLoggedOutEvent)
+        EventBus->>LogApp: handle(UserLoggedOutEvent)
+        
+        AuthApp-->>MW: LogoutSuccess
+        MW-->>Client: 200 OK
+        
+        Note over Client: ローカルストレージから<br/>トークンを削除し、<br/>トップページへリダイレクト
+    end
+    
+    %% mermaid記載上の【重要】注意点
+    %% コメントは独立した行に記述
+```
 
 ## ステートマシン図 <RateLimitLog>
 
@@ -1058,6 +1151,23 @@ classDiagram
         +getEventName() string
     }
     
+    class DataRetrieved {
+        <<Domain Event>>
+        +userId string
+        +path string
+        +fileSize number
+        +contentType string
+        +getEventName() string
+    }
+    
+    class AuthenticationFailed {
+        <<Domain Event>>
+        +provider string
+        +reason string
+        +ipAddress string
+        +getEventName() string
+    }
+    
     class IEventHandler~T~ {
         <<interface>>
         +handle(event T) Promise~void~
@@ -1085,6 +1195,8 @@ classDiagram
     DomainEvent <|-- UserLoggedOut
     DomainEvent <|-- APIAccessed
     DomainEvent <|-- RateLimitExceeded
+    DomainEvent <|-- DataRetrieved
+    DomainEvent <|-- AuthenticationFailed
     IEventHandler ..> DomainEvent
     IEventBus ..> DomainEvent
     EventBusImpl ..|> IEventBus
@@ -1175,6 +1287,19 @@ classDiagram
         +resourceId string
     }
     
+    class ValidationException {
+        <<Domain Exception>>
+        +field string
+        +value any
+        +constraint string
+    }
+    
+    class PathTraversalException {
+        <<Domain Exception>>
+        +attemptedPath string
+        +sanitizedPath string
+    }
+    
     class Result~T~ {
         <<Value Object>>
         -value T | null
@@ -1217,6 +1342,8 @@ classDiagram
     DomainException <|-- AuthorizationException
     DomainException <|-- RateLimitException
     DomainException <|-- ResourceNotFoundException
+    DomainException <|-- ValidationException
+    DomainException <|-- PathTraversalException
     Result~T~ *-- DomainError
     DomainError *-- ErrorType
     ValidationResult *-- ValidationError
@@ -1226,11 +1353,12 @@ classDiagram
 
 1. **例外の使用方針**
    - ドメイン不変条件の違反：DomainExceptionをスロー
-   - 検証エラー：Result型で処理
+   - 検証エラー：Result型またはValidationExceptionで処理
+   - パストラバーサル攻撃：PathTraversalExceptionで防御
    - 外部システムエラー：アプリケーション層でラップ
 
 2. **層別のエラー処理**
-   - ドメイン層：ビジネスルール違反の検出とResult型での返却
+   - ドメイン層：ビジネスルール違反の検出とResult型での返却、パス検証
    - アプリケーション層：エラーの変換とHTTPステータスへのマッピング
    - プレゼンテーション層：RFC 7807形式でのエラーレスポンス生成
 
@@ -1266,6 +1394,27 @@ classDiagram
        detail: error.details,
        instance: request.url
      };
+   }
+   
+   // パストラバーサル攻撃防止（ドメイン層）
+   class FilePath {
+     static create(path: string): Result<FilePath> {
+       // パストラバーサルパターンのチェック
+       if (path.includes('../') || path.includes('..\\')) {
+         throw new PathTraversalException(path, this.sanitize(path));
+       }
+       
+       const sanitized = this.sanitize(path);
+       return Result.ok(new FilePath(sanitized));
+     }
+     
+     private static sanitize(path: string): string {
+       // パスの正規化とサニタイズ
+       return path.replace(/\\/g, '/')
+                  .split('/')
+                  .filter(segment => segment !== '..' && segment !== '.')
+                  .join('/');
+     }
    }
    ```
 
@@ -1717,6 +1866,7 @@ APIドキュメントはビルド時に静的に生成され、実行時のド�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-23T11:30:00+09:00|整合性向上のための改善 - レート制限デフォルト値の明確化、ドメインイベント追加（DataRetrieved、AuthenticationFailed）、例外クラス追加（ValidationException、PathTraversalException）、リポジトリ戻り値の型安全性向上、シーケンス図追加（トークンリフレッシュ、ログアウト処理）|
 |2025-01-23T10:05:00+09:00|APIコンテキストのクラス図にIDatabaseインターフェースを追加し、RateLimitRepositoryImplからの関係線を定義 - 一貫性のための補完|
 |2025-01-23T10:00:00+09:00|APIコンテキストのクラス図でAPIAccessUseCaseからIRateLimitRepositoryへの関係線を追加 - 記載漏れの修正|
 |2025-01-22T18:00:00+09:00|シーケンス図にextractUserFromToken呼び出しを追加、refreshSessionをrefreshAccessTokenに変更 - より明確な処理フローと命名規則|
