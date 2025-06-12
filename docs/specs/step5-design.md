@@ -671,6 +671,7 @@ sequenceDiagram
         else レート制限OK
             APIDomain->>RateRepo: save(bucket)
             APIDomain-->>APIApp: AccessGranted
+            APIApp-->>MW: AccessGranted
             
             MW->>DataApp: getData(path)
             DataApp->>DataDomain: retrieveData(path)
