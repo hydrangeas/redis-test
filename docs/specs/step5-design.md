@@ -164,24 +164,18 @@ classDiagram
 
 ```mermaid
 classDiagram
-    %% 集約
-    class DataResource {
-        <<Aggregate>>
-    }
-    
-    %% エンティティ
-    class OpenDataFile {
-        <<Entity>>
-        +FileId id
+    %% バリューオブジェクト
+    class OpenDataResource {
+        <<Value Object>>
         +FilePath path
         +ContentType contentType
         +FileSize size
-        +LastModified lastModified
-        +exists()
-        +getContent()
+        +DateTime lastModified
+        +equals()
+        +getPath()
+        +isJson()
     }
     
-    %% バリューオブジェクト
     class FilePath {
         <<Value Object>>
         +String value
@@ -207,33 +201,33 @@ classDiagram
     %% ドメインサービス
     class DataAccessService {
         <<Domain Service>>
-        +retrieveData(path)
-        +validatePath(path)
+        +retrieveData(path) Promise~Result~OpenDataResource~~
+        +validatePath(path) boolean
     }
     
     %% リポジトリインターフェース
     class OpenDataRepository {
         <<Repository>>
-        +findByPath(path)
-        +exists(path)
-        +getContent(fileId)
+        +findByPath(path) Promise~OpenDataResource~
+        +exists(path) Promise~boolean~
+        +getContent(path) Promise~any~
     }
     
     %% ファクトリ
-    class OpenDataFactory {
+    class OpenDataResourceFactory {
         <<Factory>>
-        +createFromPath(path)
-        +reconstruct(metadata)
+        +createFromPath(path, metadata) OpenDataResource
+        +reconstruct(data) OpenDataResource
     }
     
     %% 関係性
-    DataResource *-- OpenDataFile : contains
-    OpenDataFile *-- FilePath : has
-    OpenDataFile *-- ContentType : has
-    OpenDataFile *-- FileSize : has
-    DataAccessService ..> DataResource : uses
-    OpenDataRepository ..> DataResource : persists
-    OpenDataFactory ..> DataResource : creates
+    OpenDataResource *-- FilePath : has
+    OpenDataResource *-- ContentType : has
+    OpenDataResource *-- FileSize : has
+    DataAccessService ..> OpenDataResource : returns
+    DataAccessService ..> OpenDataRepository : uses
+    OpenDataRepository ..> OpenDataResource : returns
+    OpenDataResourceFactory ..> OpenDataResource : creates
 ```
 
 ### ログコンテキスト
@@ -428,10 +422,10 @@ classDiagram
    - 責務：ユーザーごとのAPIアクセス履歴の記録と制限管理
    - 不変条件：リクエスト数は指定された時間枠内で制限値を超えることができない
 
-4. **データ集約（DataResource）**
-   - 集約ルート：OpenDataFile
-   - 責務：オープンデータファイルの管理とアクセス
-   - 不変条件：存在しないファイルへのアクセスは許可されない
+4. **OpenDataResource（バリューオブジェクト）**
+   - 責務：オープンデータファイルのメタデータを表現
+   - 特徴：不変オブジェクトとして実装、ファイルパスで一意性を判定
+   - 注：永続化されないため、エンティティではなくバリューオブジェクトとして設計
 
 5. **認証ログ集約（AuthenticationLog）**
    - 集約ルート：AuthLogEntry
@@ -1559,6 +1553,7 @@ const loggerConfig = {
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T17:00:00+09:00|データコンテキストの設計を簡素化 - OpenDataFileをバリューオブジェクトOpenDataResourceに変更、FileIdを削除、集約も削除|
 |2025-01-12T16:50:00+09:00|APIAccessControlService.checkRateLimitをAuthenticatedUserを受け取る設計に変更 - 凝集性・型安全性・拡張性を向上、共有カーネルパターンを適用|
 |2025-01-12T16:45:00+09:00|APIAccessControlService.checkRateLimitを再々設計 - userId,userTierを受け取りレート制限の完全なビジネスロジックを実装、リポジトリインターフェースへの依存を追加|
 |2025-01-12T16:40:00+09:00|APIAccessControlServiceのメソッドを再設計 - checkRateLimitを純粋な判定ロジックに変更、エンドポイント・ティアパラメータを削除、責務を明確化|
