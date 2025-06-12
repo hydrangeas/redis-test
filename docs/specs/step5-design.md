@@ -648,6 +648,7 @@ sequenceDiagram
     AuthApp->>AuthDomain: validateAccessToken(token)
     AuthDomain->>SupabaseAuth: verifyToken(token)
     SupabaseAuth-->>AuthDomain: token payload
+    AuthDomain->>AuthDomain: extractUserFromToken(payload)
     AuthDomain-->>AuthApp: AuthenticatedUser(userId, tier)
     
     alt トークンが無効
@@ -794,9 +795,24 @@ classDiagram
         +getRateLimit() RateLimit
     }
     
+    class TierLevel {
+        <<enumeration>>
+        TIER1
+        TIER2
+        TIER3
+    }
+    
+    class RateLimit {
+        <<Value Object>>
+        -int maxRequests
+        -int windowSeconds
+        +equals() boolean
+    }
+    
     class AuthenticationService {
         <<Domain Service>>
         +validateAccessToken(token) AuthenticatedUser
+        +extractUserFromToken(tokenPayload) AuthenticatedUser
     }
     
     %% アプリケーション層
@@ -814,7 +830,7 @@ classDiagram
         <<Infrastructure Service>>
         -supabaseClient SupabaseClient
         +verifyToken(token) Promise~TokenPayload~
-        +refreshSession(refreshToken) Promise~Session~
+        +refreshAccessToken(refreshToken) Promise~Session~
     }
     
     class TokenPayload {
@@ -833,7 +849,10 @@ classDiagram
     %% 関係性
     AuthenticatedUser *-- UserId
     AuthenticatedUser *-- UserTier
+    UserTier *-- TierLevel
+    UserTier *-- RateLimit
     AuthenticationService ..> AuthenticatedUser
+    AuthenticationService ..> TokenPayload
     AuthenticationUseCase ..> AuthenticationService
     AuthenticationUseCase ..> SupabaseAuthAdapter
     SupabaseAuthAdapter ..> TokenPayload
@@ -1689,6 +1708,8 @@ APIドキュメントはビルド時に静的に生成され、実行時のド�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-22T18:00:00+09:00|シーケンス図にextractUserFromToken呼び出しを追加、refreshSessionをrefreshAccessTokenに変更 - より明確な処理フローと命名規則|
+|2025-01-22T17:50:00+09:00|認証コンテキストのクラス図にTierLevel、RateLimit、extractUserFromTokenメソッドを追加 - ドメインモデル図との一貫性を確保|
 |2025-01-12T19:00:00+09:00|レイヤードアーキテクチャ図にVite+TypeScriptのランディングページとダッシュボードを追加|
 |2025-01-12T18:00:00+09:00|APIドキュメントを静的生成に変更、ドキュメントコンテキストを削除|
 |2025-01-12T17:30:00+09:00|ログコンテキストに他コンテキストのクラスを明示、TimeRange・StatsCriteria型を追加|
