@@ -268,6 +268,28 @@ classDiagram
     }
     
     %% バリューオブジェクト
+    class LogId {
+        <<Value Object>>
+        +UUID value
+        +equals()
+        +hashCode()
+        +static generate()
+    }
+    
+    class UserId {
+        <<Value Object>>
+        +String value
+        +equals()
+        +hashCode()
+    }
+    
+    class APIPath {
+        <<Value Object>>
+        +String value
+        +equals()
+        +matchesPattern(pattern)
+    }
+    
     class AuthEvent {
         <<Value Object>>
         +EventType type
@@ -305,6 +327,35 @@ classDiagram
         +toSeconds()
     }
     
+    class RequestId {
+        <<Value Object>>
+        +String value
+        +equals()
+        +hashCode()
+    }
+    
+    class UserAgent {
+        <<Value Object>>
+        +String value
+        +equals()
+        +parse()
+    }
+    
+    class AuthResult {
+        <<enumeration>>
+        SUCCESS
+        FAILURE
+        EXPIRED
+    }
+    
+    class EventType {
+        <<enumeration>>
+        LOGIN
+        LOGOUT
+        TOKEN_REFRESH
+        TOKEN_EXPIRED
+    }
+    
     %% ドメインサービス
     class LogAnalysisService {
         <<Domain Service>>
@@ -313,37 +364,68 @@ classDiagram
         +generateSecurityReport()
     }
     
+    %% 共通バリューオブジェクト
+    class TimeRange {
+        <<Value Object>>
+        +DateTime start
+        +DateTime end
+        +equals()
+        +isValid()
+        +contains(dateTime)
+    }
+    
+    class StatsCriteria {
+        <<Value Object>>
+        +TimeRange timeRange
+        +String groupBy
+        +Map~String,Any~ filters
+        +String[] metrics
+        +equals()
+    }
+    
     %% リポジトリインターフェース
     class AuthLogRepository {
         <<Repository>>
-        +save(logEntry)
-        +findByUserId(userId, timeRange)
-        +findByEvent(event, timeRange)
+        +save(logEntry) Promise~void~
+        +findByUserId(userId, timeRange) Promise~AuthLogEntry[]~
+        +findByEvent(event, timeRange) Promise~AuthLogEntry[]~
     }
     
     class APILogRepository {
         <<Repository>>
-        +save(logEntry)
-        +findByUserId(userId, timeRange)
-        +findByPath(path, timeRange)
-        +calculateStats(criteria)
+        +save(logEntry) Promise~void~
+        +findByUserId(userId, timeRange) Promise~APILogEntry[]~
+        +findByPath(path, timeRange) Promise~APILogEntry[]~
+        +calculateStats(criteria) Promise~StatsResult~
     }
     
     %% 関係性
     AuthenticationLog *-- AuthLogEntry : contains
     APIAccessLog *-- APILogEntry : contains
     AuthLogEntry *-- UserId : references
+    AuthLogEntry *-- LogId : has
+    AuthLogEntry *-- UserId : references
     AuthLogEntry *-- AuthEvent : has
     AuthLogEntry *-- Provider : has
     AuthLogEntry *-- IPAddress : has
+    AuthLogEntry *-- UserAgent : has
+    AuthLogEntry *-- AuthResult : has
+    AuthEvent *-- EventType : has
+    APILogEntry *-- LogId : has
+    APILogEntry *-- RequestId : has
     APILogEntry *-- UserId : references
     APILogEntry *-- APIPath : has
     APILogEntry *-- StatusCode : has
     APILogEntry *-- ResponseTime : has
     LogAnalysisService ..> AuthenticationLog : analyzes
     LogAnalysisService ..> APIAccessLog : analyzes
+    LogAnalysisService ..> TimeRange : uses
+    LogAnalysisService ..> StatsCriteria : uses
     AuthLogRepository ..> AuthenticationLog : persists
+    AuthLogRepository ..> TimeRange : uses
     APILogRepository ..> APIAccessLog : persists
+    APILogRepository ..> TimeRange : uses
+    APILogRepository ..> StatsCriteria : uses
 ```
 
 ### ドキュメントコンテキスト
@@ -1471,6 +1553,34 @@ const loggerConfig = {
    - インデックス：`(user_id, requested_at DESC)`で高速検索
    - 将来的にはRedisキャッシュ層の追加も可能
 
+### ログコンテキストの型定義詳細
+
+1. **TimeRange型**
+   ```typescript
+   interface TimeRange {
+     start: DateTime;  // 開始日時
+     end: DateTime;    // 終了日時
+   }
+   ```
+   - ログ検索時の期間指定に使用
+   - 両方の値が必須（明示的な期間指定）
+   - isValid()メソッドで開始<終了を検証
+   - contains()メソッドで特定日時が期間内かを判定
+
+2. **StatsCriteria型**
+   ```typescript
+   interface StatsCriteria {
+     timeRange: TimeRange;           // 集計対象期間
+     groupBy?: string;               // 'endpoint' | 'user' | 'status' | 'hour' | 'day'
+     filters?: Map<string, any>;     // フィルタリング条件
+     metrics?: string[];             // ['count', 'avgResponseTime', 'errorRate', 'p95ResponseTime']
+   }
+   ```
+   - API使用統計の集計条件を指定
+   - groupByで集計軸を指定
+   - filtersで絞り込み条件を指定（userId、path、statusCodeなど）
+   - metricsで必要な統計値を指定
+
 ### TypeScript/Fastify固有の設計考慮事項
 
 1. **型安全性の活用**
@@ -1553,6 +1663,7 @@ const loggerConfig = {
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T17:30:00+09:00|ログコンテキストに他コンテキストのクラスを明示、TimeRange・StatsCriteria型を追加|
 |2025-01-12T17:00:00+09:00|データコンテキストの設計を簡素化 - OpenDataFileをバリューオブジェクトOpenDataResourceに変更、FileIdを削除、集約も削除|
 |2025-01-12T16:50:00+09:00|APIAccessControlService.checkRateLimitをAuthenticatedUserを受け取る設計に変更 - 凝集性・型安全性・拡張性を向上、共有カーネルパターンを適用|
 |2025-01-12T16:45:00+09:00|APIAccessControlService.checkRateLimitを再々設計 - userId,userTierを受け取りレート制限の完全なビジネスロジックを実装、リポジトリインターフェースへの依存を追加|
