@@ -1,6 +1,69 @@
 # ステップ4：境界づけられたコンテキストの定義
 
+## 境界づけられたコンテキストと集約の概観
+
+### 境界と集約の関係（簡潔版）
+
+```mermaid
+graph TB
+    %% 認証コンテキスト
+    subgraph AuthContext["認証コンテキスト"]
+        AuthAgg[認証集約🟨]
+    end
+    
+    %% APIコンテキスト
+    subgraph APIContext["APIコンテキスト"]
+        APIAgg[API集約🟨]
+        RateLimitAgg[レート制限集約🟨]
+    end
+    
+    %% データコンテキスト
+    subgraph DataContext["データコンテキスト"]
+        DataAgg[データ集約🟨]
+    end
+    
+    %% ログコンテキスト
+    subgraph LogContext["ログコンテキスト"]
+        AuthLogAgg[認証ログ集約🟨]
+        APILogAgg[APIログ集約🟨]
+    end
+    
+    %% ドキュメントコンテキスト
+    subgraph DocContext["ドキュメントコンテキスト"]
+        DocAgg[ドキュメント集約🟨]
+    end
+    
+    %% 外部システム
+    SupaAuth[Supabase Auth🟫]
+    SocialProvider[Social Provider🟫]
+    UISystem[UIシステム🟫]
+    
+    %% 主要な関係性
+    SupaAuth -.->|外部連携| AuthAgg
+    SocialProvider -.->|OAuth認証| AuthAgg
+    UISystem -.->|UI操作| AuthAgg
+    UISystem -.->|表示| DocAgg
+    
+    AuthAgg -->|JWT発行| APIAgg
+    APIAgg -->|レート制限確認| RateLimitAgg
+    APIAgg -->|データ要求| DataAgg
+    
+    AuthAgg -.->|認証イベント| AuthLogAgg
+    APIAgg -.->|アクセスイベント| APILogAgg
+    
+    %% スタイル定義
+    classDef context fill:#e3f2fd,stroke:#1976d2,stroke-width:2px;
+    classDef aggregate fill:#ffb02e,stroke:#333,stroke-width:2px;
+    classDef externalSystem fill:#a56953,stroke:#333,stroke-width:2px;
+    
+    class AuthContext,APIContext,DataContext,LogContext,DocContext context;
+    class AuthAgg,APIAgg,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
+    class SupaAuth,SocialProvider,UISystem externalSystem;
+```
+
 ## タイムライン
+
+### 詳細なイベントフロー（全要素を含む）
 
 ```mermaid
 graph LR
@@ -517,6 +580,28 @@ graph TB
    - Vercelへのデプロイを考慮したモジュラーモノリス
    - 将来的なマイクロサービス化への移行パスを確保
 
+### ログコンテキストの設計根拠
+
+ログコンテキストでは、認証ログ集約とAPIログ集約を意図的に分離しています。この設計の根拠は以下の通りです：
+
+1. **異なる関心事の分離**
+   - 認証ログ：セキュリティ監査、不正アクセス検知、コンプライアンス要件
+   - APIログ：パフォーマンス分析、利用統計、エラー分析
+
+2. **独立したライフサイクル**
+   - 認証ログ：長期保存が必要（監査要件により数年間）
+   - APIログ：短期保存で十分（統計処理後は集約データのみ保持）
+
+3. **異なるアクセスパターン**
+   - 認証ログ：セキュリティチームによる調査時のアクセス
+   - APIログ：運用チームによる日常的なモニタリング
+
+4. **将来の拡張性**
+   - 認証ログ：SIEM（Security Information and Event Management）との連携
+   - APIログ：APM（Application Performance Monitoring）ツールとの統合
+
+この分離により、それぞれの用途に最適化された実装が可能となり、将来的な要件変更にも柔軟に対応できます。
+
 ### 外部システムとの統合
 
 外部システム（Supabase Auth、Social Provider、UIシステム）は境界づけられたコンテキストの外部に配置し、明確なインターフェースを通じて連携します。これにより：
@@ -529,6 +614,7 @@ graph TB
 
 |更新日時|変更点|
 |-|-|
+|2025-01-13T10:00:00+09:00|境界づけられたコンテキストと集約の概観図を追加。ログコンテキストの設計根拠（認証ログとAPIログの分離理由）を補足に追加|
 |2025-01-12T21:00:00+09:00|新規作成。ステップ3の7つの集約を5つの境界づけられたコンテキストにグループ化し、コンテキスト間の関係と統合パターンを定義|
 
 （更新日時の降順で記載する）
