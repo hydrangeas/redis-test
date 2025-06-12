@@ -66,35 +66,25 @@ classDiagram
 ```mermaid
 classDiagram
     %% 集約
-    class APIRequest {
-        <<Aggregate>>
-    }
-    
     class RateLimiting {
         <<Aggregate>>
     }
     
-    %% エンティティ
+    %% バリューオブジェクト
     class APIEndpoint {
-        <<Entity>>
-        +EndpointId id
+        <<Value Object>>
         +APIPath path
-        +HttpMethod method
-        +UserTier requiredTier
+        +TierLevel requiredTier
         +validateAccess(userTier)
-        +processRequest(params)
+        +equals()
     }
     
-    class RateLimitBucket {
+    class RateLimitLog {
         <<Entity>>
-        +BucketId id
+        +LogId id
         +UserId userId
-        +WindowStart windowStart
-        +RequestCount count
-        +RateLimit limit
-        +tryConsume()
-        +reset()
-        +isExceeded()
+        +DateTime requestedAt
+        +Endpoint endpoint
     }
     
     %% バリューオブジェクト
@@ -105,60 +95,68 @@ classDiagram
         +matchesPattern(pattern)
     }
     
-    class HttpMethod {
+    class Endpoint {
         <<Value Object>>
-        +String method
-        +equals()
-        +isAllowed()
-    }
-    
-    class RequestCount {
-        <<Value Object>>
-        +int value
-        +increment()
+        +String path
         +equals()
     }
     
-    class RateLimit {
+    class LogId {
         <<Value Object>>
-        +int maxRequests
-        +int windowSeconds
+        +UUID value
         +equals()
+        +hashCode()
+        +static generate()
     }
+    
+    class TierLevel {
+        <<enumeration>>
+        TIER1
+        TIER2
+        TIER3
+    }
+    
+    class UserId {
+        <<Value Object>>
+        +String value
+        +equals()
+        +hashCode()
+    }
+    
     
     %% ドメインサービス
     class APIAccessControlService {
         <<Domain Service>>
-        +checkRateLimit(userId, endpoint)
-        +validateTierAccess(userTier, requiredTier)
+        -rateLimitRepository IRateLimitRepository
+        +checkRateLimit(authenticatedUser) Promise~boolean~
+        +validateTierAccess(userTier, requiredTier) boolean
     }
     
     %% リポジトリインターフェース
     class APIEndpointRepository {
         <<Repository>>
-        +findByPath(path)
-        +listAll()
+        +findByPath(path) Promise~APIEndpoint~
+        +listAll() Promise~APIEndpoint[]~
     }
     
     class RateLimitRepository {
         <<Repository>>
-        +save(bucket)
-        +findByUserId(userId)
-        +removeExpired()
+        +save(log) Promise~void~
+        +countByUserId(userId) Promise~number~
+        +findRecentByUserId(userId, limit) Promise~RateLimitLog[]~
     }
     
     %% 関係性
-    APIRequest *-- APIEndpoint : contains
-    RateLimiting *-- RateLimitBucket : contains
+    RateLimiting *-- RateLimitLog : contains
     APIEndpoint *-- APIPath : has
-    APIEndpoint *-- HttpMethod : has
-    APIEndpoint *-- UserTier : requires
-    RateLimitBucket *-- UserId : belongs to
-    RateLimitBucket *-- RequestCount : tracks
-    RateLimitBucket *-- RateLimit : enforces
-    APIAccessControlService ..> APIRequest : uses
+    APIEndpoint *-- TierLevel : requires
+    RateLimitLog *-- LogId : has
+    RateLimitLog *-- UserId : belongs to
+    RateLimitLog *-- Endpoint : has
+    APIAccessControlService ..> APIEndpoint : uses
     APIAccessControlService ..> RateLimiting : uses
-    APIEndpointRepository ..> APIRequest : persists
+    APIAccessControlService ..> RateLimitRepository : uses
+    APIEndpointRepository ..> APIEndpoint : manages
     RateLimitRepository ..> RateLimiting : persists
 ```
 
@@ -270,7 +268,6 @@ classDiagram
         +RequestId requestId
         +UserId userId
         +APIPath path
-        +HttpMethod method
         +StatusCode statusCode
         +ResponseTime responseTime
         +DateTime timestamp
@@ -347,7 +344,6 @@ classDiagram
     AuthLogEntry *-- IPAddress : has
     APILogEntry *-- UserId : references
     APILogEntry *-- APIPath : has
-    APILogEntry *-- HttpMethod : has
     APILogEntry *-- StatusCode : has
     APILogEntry *-- ResponseTime : has
     LogAnalysisService ..> AuthenticationLog : analyzes
@@ -422,15 +418,15 @@ classDiagram
    - 責務：JWTトークンの検証結果を表現し、アクセス権限を判定
    - 不変条件：認証済みユーザーは必ずUserIdとUserTierを持つ
 
-2. **API集約（APIRequest）**
-   - 集約ルート：APIEndpoint
-   - 責務：APIエンドポイントの定義とアクセス制御
-   - 不変条件：各エンドポイントは必要なティアレベルを定義する
+2. **APIコンテキスト**
+   - 主要な集約：RateLimiting（レート制限集約）
+   - 責務：APIアクセス制御とレート制限の管理
+   - 不変条件：ユーザーは設定された制限を超えてAPIを利用できない
 
 3. **レート制限集約（RateLimiting）**
-   - 集約ルート：RateLimitBucket
-   - 責務：ユーザーごとのAPI利用回数の管理
-   - 不変条件：リクエスト数は制限値を超えることができない
+   - 集約ルート：RateLimitLog
+   - 責務：ユーザーごとのAPIアクセス履歴の記録と制限管理
+   - 不変条件：リクエスト数は指定された時間枠内で制限値を超えることができない
 
 4. **データ集約（DataResource）**
    - 集約ルート：OpenDataFile
@@ -667,7 +663,7 @@ sequenceDiagram
         APIDomain->>RateRepo: findByUserId(userId)
         RateRepo->>DB: SELECT * FROM rate_limits
         DB-->>RateRepo: bucket data
-        RateRepo-->>APIDomain: RateLimitBucket
+        RateRepo-->>APIDomain: rate_limit_count
         APIDomain->>APIDomain: tryConsume()
         
         alt レート制限超過
@@ -734,31 +730,23 @@ sequenceDiagram
    - ドメインイベントをEventBus経由で非同期配信
    - ログ記録は本処理と独立して実行
 
-## ステートマシン図 <RateLimitBucket>
+## ステートマシン図 <RateLimitLog>
 
 ```mermaid
 stateDiagram-v2
-    [*] --> 新規作成: 初回APIアクセス
-    新規作成 --> 使用中: リクエスト処理
+    [*] --> 記録済み: APIアクセス発生
+    記録済み --> 有効期間内: 1分以内
+    記録済み --> 期限切れ: 1分経過
     
-    使用中 --> 使用中: リクエスト追加（制限内）
-    使用中 --> 制限到達: リクエスト数=制限値
-    使用中 --> リセット済み: 時間窓終了
-    
-    制限到達 --> 制限到達: リクエスト拒否
-    制限到達 --> リセット済み: 時間窓終了
-    
-    リセット済み --> 使用中: 新規リクエスト
-    リセット済み --> 削除: 長期間未使用
-    
-    削除 --> [*]
+    有効期間内 --> 期限切れ: 時間経過
+    期限切れ --> 削除対象: 2時間経過
+    削除対象 --> [*]: pg_cronで削除
     
     %% 状態の説明
-    新規作成: バケット作成直後
-    使用中: リクエスト数 < 制限値
-    制限到達: リクエスト数 = 制限値
-    リセット済み: 時間窓リセット後
-    削除: メモリから削除
+    記録済み: ログレコード作成直後
+    有効期間内: レート制限カウント対象
+    期限切れ: RLSでフィルタリング対象
+    削除対象: pg_cronで物理削除予定
     
     %% mermaid記載上の【重要】注意点
     %% コメントは独立した行に記述
@@ -766,7 +754,12 @@ stateDiagram-v2
 
 ### 状態遷移の説明
 
-**RateLimitBucketの状態遷移**
+**RateLimitLogの状態遷移（ログベース方式のため個別の状態遷移は不要）**
+
+スライディングウィンドウ（ログベース）方式では、個々のログレコードは以下のシンプルなライフサイクルを持ちます：
+   - 作成：APIアクセス時に記録
+   - 有効期間：1分間（設定された時間窓）
+   - 削除：pg_cronによる自動削除（2時間後）
    - 新規作成：ユーザーの初回APIアクセス時
    - 使用中：制限値未満のリクエスト数
    - 制限到達：制限値に到達（新規リクエスト拒否）
@@ -857,38 +850,63 @@ classDiagram
 classDiagram
     %% ドメイン層
     class APIEndpoint {
-        <<Entity>>
-        -EndpointId id
-        -APIPath path
-        -HttpMethod method
-        -UserTier requiredTier
-        +validateAccess(userTier) boolean
-        +matchesRequest(path, method) boolean
-    }
-    
-    class RateLimitBucket {
-        <<Entity>>
-        -BucketId id
-        -UserId userId
-        -WindowStart windowStart
-        -RequestCount count
-        -RateLimit limit
-        +tryConsume() ConsumeResult
-        +reset() void
-        +isExpired() boolean
-    }
-    
-    class RateLimit {
         <<Value Object>>
-        -int maxRequests
-        -int windowSeconds
-        +allows(count) boolean
-        +getResetTime(windowStart) DateTime
+        -APIPath path
+        -TierLevel requiredTier
+        +validateAccess(userTier) boolean
+        +matchesPath(path) boolean
+        +equals() boolean
+    }
+    
+    %% RateLimitBucket削除済み - ログベース方式のため不要
+    
+    class TierLevel {
+        <<enumeration>>
+        TIER1
+        TIER2
+        TIER3
+    }
+    
+    class UserId {
+        <<Value Object>>
+        -String value
+        +equals() boolean
+        +hashCode() number
+    }
+    
+    class APIPath {
+        <<Value Object>>
+        -String value
+        +equals() boolean
+        +matchesPattern(pattern) boolean
+    }
+    
+    class LogId {
+        <<Value Object>>
+        -UUID value
+        +equals() boolean
+        +hashCode() number
+        +static generate() LogId
+    }
+    
+    class RateLimitLog {
+        <<Entity>>
+        -LogId id
+        -UserId userId
+        -DateTime requestedAt
+        -Endpoint endpoint
+    }
+    
+    class Endpoint {
+        <<Value Object>>
+        -String path
+        +equals() boolean
     }
     
     class APIAccessControlService {
         <<Domain Service>>
-        +checkRateLimit(userId, endpoint) AccessResult
+        -rateLimitRepository IRateLimitRepository
+        +checkRateLimit(authenticatedUser) Promise~boolean~
         +validateTierAccess(userTier, requiredTier) boolean
     }
     
@@ -900,9 +918,9 @@ classDiagram
     
     class IRateLimitRepository {
         <<interface>>
-        +save(bucket) Promise~void~
-        +findByUserId(userId) Promise~RateLimitBucket~
-        +removeExpired() Promise~void~
+        +save(log) Promise~void~
+        +countByUserId(userId) Promise~number~
+        +findRecentByUserId(userId, limit) Promise~RateLimitLog[]~
     }
     
     %% アプリケーション層
@@ -911,27 +929,29 @@ classDiagram
         -endpointRepo IAPIEndpointRepository
         -rateLimitRepo IRateLimitRepository
         -accessControl APIAccessControlService
-        +validateAccess(userId, tier, path, method) Promise~AccessResult~
-        +consumeRateLimit(userId, tier) Promise~ConsumeResult~
+        +validateTierAccess(authenticatedUser, path) Promise~boolean~
+        +checkAndRecordAccess(authenticatedUser, endpoint) Promise~RateLimitResult~
     }
     
     %% インフラ層
     class RateLimitRepositoryImpl {
         <<Repository Implementation>>
-        -cache ICache
         -db IDatabase
-        +save(bucket) Promise~void~
-        +findByUserId(userId) Promise~RateLimitBucket~
-        +removeExpired() Promise~void~
+        +save(log) Promise~void~
+        +countByUserId(userId) Promise~number~
+        +findRecentByUserId(userId, limit) Promise~RateLimitLog[]~
     }
     
     %% 関係性
-    APIEndpoint *-- UserTier
-    RateLimitBucket *-- RateLimit
+    APIEndpoint *-- APIPath
+    APIEndpoint *-- TierLevel
+    RateLimitLog *-- LogId
+    RateLimitLog *-- UserId
+    RateLimitLog *-- Endpoint
     APIAccessControlService ..> APIEndpoint
-    APIAccessControlService ..> RateLimitBucket
+    APIAccessControlService ..> RateLimitLog
+    APIAccessControlService ..> IRateLimitRepository
     APIAccessUseCase ..> IAPIEndpointRepository
-    APIAccessUseCase ..> IRateLimitRepository
     APIAccessUseCase ..> APIAccessControlService
     RateLimitRepositoryImpl ..|> IRateLimitRepository
     
@@ -997,7 +1017,6 @@ classDiagram
         <<Domain Event>>
         +userId string
         +path string
-        +method string
         +statusCode number
         +responseTime number
         +getEventName() string
@@ -1431,6 +1450,33 @@ const loggerConfig = {
 
 ## 補足
 
+### レート制限の実装方式：スライディングウィンドウ（ログベース）
+
+調査の結果、「1分間に60回」という要件に対して、スライディングウィンドウ方式を採用しました：
+
+1. **公平性の確保**
+   - 固定ウィンドウの境界問題（59分と01分で2倍のリクエストが可能）を回避
+   - 現在時刻から正確に過去1分間をカウント
+
+2. **実装の簡潔性**
+   ```sql
+   -- アクセスごとにログを記録（UUIDv8を使用）
+   INSERT INTO rate_limit_logs (id, user_id, endpoint, requested_at) 
+   VALUES (gen_random_uuid(), ?, ?, NOW());
+   
+   -- レート制限ウィンドウ内のアクセス数をカウント（ウィンドウは設定値から取得）
+   SELECT COUNT(*) FROM rate_limit_logs 
+   WHERE user_id = ? AND requested_at > NOW() - INTERVAL :window;
+   ```
+
+3. **SupabaseのTTL機能活用**
+   - Row Level Security (RLS)：クエリ時に古いデータを自動フィルタリング
+   - pg_cron：定期的な物理削除で効率的なストレージ利用
+
+4. **パフォーマンス最適化**
+   - インデックス：`(user_id, requested_at DESC)`で高速検索
+   - 将来的にはRedisキャッシュ層の追加も可能
+
 ### TypeScript/Fastify固有の設計考慮事項
 
 1. **型安全性の活用**
@@ -1453,10 +1499,78 @@ const loggerConfig = {
    - 純粋関数の活用
    - 統合テストの容易性
 
+### RateLimitLogの設計決定
+
+1. **LogId（UUID）の採用理由**
+   - **一意性の保証**: UUIDv8（または互換性のあるUUIDv4）により、分散環境でも衝突のない一意のIDを生成
+   - **セキュリティ**: 推測困難なIDにより、不正なアクセスを防止
+   - **実装の簡潔性**: PostgreSQLの`gen_random_uuid()`やTypeScriptの`crypto.randomUUID()`で簡単に生成可能
+
+2. **Weightプロパティの削除**
+   - 当初は異なるエンドポイントごとに重み付けを想定していたが、現在の要件では不要
+   - 将来的に必要になった場合は、エンドポイントごとの重み付けテーブルを別途作成
+
+3. **requestedAtをDateTimeに変更**
+   - シンプルな`DateTime`型により、実装が簡潔に
+   - `isWithinWindow`のようなメソッドは、リポジトリやサービス層で実装
+   - SQLクエリでの時間比較が直接的で分かりやすい
+
+4. **エンティティとしてのRateLimitLog**
+   - 個々のアクセスログはエンティティとして扱い、識別子（LogId）を持つ
+   - これにより、監査やデバッグ時に特定のリクエストを追跡可能
+
+5. **APIコンテキストからRateLimitクラスを削除**
+   - レート制限の設定（maxRequests、windowSeconds）は認証コンテキストのUserTierに含まれる
+   - APIAccessControlServiceは認証コンテキストから渡されるtierパラメータを使用
+   - コンテキスト境界を明確にし、責務の重複を避ける設計
+
+6. **APIAccessControlServiceの設計**
+   - `checkRateLimit(authenticatedUser)`: レート制限チェックの完全なビジネスロジック
+     - authenticatedUser.userIdから現在の時間窓内のアクセス回数を取得
+     - authenticatedUser.tierからレート制限設定（maxRequests）を取得
+     - 両者を比較して制限内かを判定
+   - `validateTierAccess(userTier, requiredTier)`: ティアベースのアクセス権限チェック
+   - AuthenticatedUserを引数として受け取る理由：
+     - 関連する情報（userId, userTier）が凝集している
+     - 認証済みユーザーであることが型レベルで保証される
+     - 将来の拡張性（AuthenticatedUserに情報を追加してもメソッドシグネチャ不変）
+     - 「認証済みユーザーのレート制限をチェックする」という意図が明確
+   - AuthenticatedUserを共有カーネルとして扱う：
+     - 認証情報は多くのコンテキストで必要とされる共通概念
+     - Value Objectは不変であり、安全に共有可能
+     - コンテキスト間の適切な情報共有の例
+   - ドメインサービスがリポジトリインターフェースに依存する理由：
+     - レート制限チェックは重要なビジネスロジック
+     - 現在のアクセス回数の取得はこのロジックの不可欠な一部
+     - 単純な数値比較ではなく、時間窓の考慮やカウント取得を含む複雑なロジック
+   - アプリケーション層の責務：
+     - ドメインサービスへの委譲
+     - アクセスログ（RateLimitLog）の記録
+
+7. **RateLimitRepositoryのメソッド設計**
+   - `countByUserId(userId)`: レート制限チェック用のカウント取得
+     - 時間窓（例：1分）は設定値から取得
+     - sinceパラメータを削除（任意の時間指定は不適切）
+   - `findRecentByUserId(userId, limit)`: 監査・デバッグ用の詳細ログ取得
+     - limitパラメータは維持（用途により必要件数が異なる）
+     - データ削除までの全データ取得は非効率
+
 ## 変更履歴
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T16:50:00+09:00|APIAccessControlService.checkRateLimitをAuthenticatedUserを受け取る設計に変更 - 凝集性・型安全性・拡張性を向上、共有カーネルパターンを適用|
+|2025-01-12T16:45:00+09:00|APIAccessControlService.checkRateLimitを再々設計 - userId,userTierを受け取りレート制限の完全なビジネスロジックを実装、リポジトリインターフェースへの依存を追加|
+|2025-01-12T16:40:00+09:00|APIAccessControlServiceのメソッドを再設計 - checkRateLimitを純粋な判定ロジックに変更、エンドポイント・ティアパラメータを削除、責務を明確化|
+|2025-01-12T16:35:00+09:00|APIコンテキストからRateLimitクラスを削除 - レート制限設定は認証コンテキストのUserTierから取得、責務の重複を排除|
+|2025-01-12T16:30:00+09:00|RateLimitLogの設計を改善 - LogIdをUUID型に変更、Weightプロパティを削除、RequestedAtをDateTimeに簡素化、関係性を修正|
+|2025-01-12T16:20:00+09:00|RateLimitBucketをRateLimitLogに変更 - スライディングウィンドウ方式（ログベース）を採用、より公平で正確なレート制限を実現|
+|2025-01-12T16:10:00+09:00|RateLimitBucket.BucketIdを削除し、バリューオブジェクトに変更 - UserIdとWindowStartで自然に識別可能|
+|2025-01-12T16:05:00+09:00|RateLimitRepository.removeExpired()を削除 - SupabaseのRLS + pg_cronでTTLを自動管理|
+|2025-01-12T16:00:00+09:00|APIRequest集約を削除 - ステートレスなリクエスト処理に集約は不要、RateLimiting集約のみで十分|
+|2025-01-12T15:55:00+09:00|APIEndpoint.requiredTierをUserTierからTierLevel（enum）に変更 - シンプルな型で十分なため|
+|2025-01-12T15:50:00+09:00|APIEndpointをValue Objectに変更、EndpointIdとHttpMethodを削除 - GETのみのAPIのため不要な設計を簡素化|
+|2025-01-12T15:45:00+09:00|APIAccessControlService.checkRateLimitからendpoint引数を削除 - レート制限はユーザー単位のため不要|
 |2025-01-12T15:40:00+09:00|RateLimitのDuration型をwindowSeconds（秒単位のnumber型）に変更 - TypeScriptに標準Duration型がないため|
 |2025-01-12T15:35:00+09:00|AuthenticatedUserFactoryを削除 - 単純な変換ロジックのためAuthenticationServiceに統合|
 |2025-01-12T15:30:00+09:00|認証コンテキストの設計を簡素化 - SessionIdを削除し、JWTトークンベースのステートレス設計に変更|
