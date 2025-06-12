@@ -226,20 +226,6 @@ graph LR
         G4 -->|translated into| ReadModel14[APIアクセスログ⬛]
     end
     
-    %% APIドキュメント表示フロー（保留事項から追加）
-    subgraph "APIドキュメント表示フロー"
-        %% アクターとコマンド
-        Visitor[訪問者⬜] -->|invokes| Cmd29[トップページにアクセスする🟦]
-        
-        %% コマンドと集約/外部システム
-        Cmd29 -->|invoked on| DocAgg[ドキュメント集約🟨]
-        
-        %% イベント生成
-        DocAgg -->|generates| H1[APIドキュメントが表示された🟧]
-        
-        %% 読み取りモデル
-        H1 -->|translated into| ReadModel12[APIドキュメント情報⬛]
-    end
     
     %% スタイル定義
     classDef event fill:#ff6723,stroke:#333,stroke-width:2px;
@@ -250,13 +236,13 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd29,Cmd30 command;
-    class User1,User3,APIClient,System1,Visitor user;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4 event;
+    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd30 command;
+    class User1,User3,APIClient,System1 user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
-    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
+    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg aggregate;
     class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy24,Policy25 policy;
-    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13,ReadModel14 readModel;
+    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel13,ReadModel14 readModel;
 ```
 
 ## フローの説明
@@ -270,8 +256,6 @@ graph LR
   ダッシュボードにアクセス中のユーザー
 - システム
   自動的にトークンリフレッシュを実行するシステム
-- 訪問者
-  未認証でトップページにアクセスするユーザー
 
 ### コマンド 🟦
 - ログイン/サインアップする
@@ -314,8 +298,6 @@ graph LR
   認証成功・失敗・ログアウトをセキュリティ監査用に保存する
 - APIアクセスをログに記録する
   すべてのAPIアクセス（正常・エラー含む）の履歴を保存する
-- トップページにアクセスする
-  APIドキュメントを表示する
 
 ### 集約と外部システム 🟨🟫
 - 認証集約 🟨
@@ -330,8 +312,6 @@ graph LR
   認証イベント（成功・失敗・ログアウト）のログ記録を担当
 - APIログ集約 🟨
   APIアクセスのログ記録を担当
-- ドキュメント集約 🟨
-  APIドキュメントの表示を担当
 - Social Provider 🟫
   外部認証プロバイダー（Google、GitHub等）
 - Supabase Auth 🟫
@@ -388,8 +368,6 @@ graph LR
   認証イベントのセキュリティ監視用の記録データ
 - APIアクセスログ
   APIアクセスの履歴データ（ステータスコード、レスポンスタイム等を含む）
-- APIドキュメント情報
-  Scalarで表示されるAPI仕様
 - トークン期限切れエラー情報
   HTTP 401 Unauthorized（リフレッシュトークン期限切れ）の詳細
 

@@ -28,10 +28,6 @@ graph TB
         APILogAgg[APIログ集約🟨]
     end
     
-    %% ドキュメントコンテキスト
-    subgraph DocContext["ドキュメントコンテキスト"]
-        DocAgg[ドキュメント集約🟨]
-    end
     
     %% 外部システム
     SupaAuth[Supabase Auth🟫]
@@ -42,7 +38,6 @@ graph TB
     SupaAuth -.->|外部連携| AuthAgg
     SocialProvider -.->|OAuth認証| AuthAgg
     UISystem -.->|UI操作| AuthAgg
-    UISystem -.->|表示| DocAgg
     
     AuthAgg -->|JWT発行| APIAgg
     APIAgg -->|レート制限確認| RateLimitAgg
@@ -56,8 +51,8 @@ graph TB
     classDef aggregate fill:#ffb02e,stroke:#333,stroke-width:2px;
     classDef externalSystem fill:#a56953,stroke:#333,stroke-width:2px;
     
-    class AuthContext,APIContext,DataContext,LogContext,DocContext context;
-    class AuthAgg,APIAgg,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
+    class AuthContext,APIContext,DataContext,LogContext context;
+    class AuthAgg,APIAgg,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg aggregate;
     class SupaAuth,SocialProvider,UISystem externalSystem;
 ```
 
@@ -321,24 +316,6 @@ graph LR
         end
     end
     
-    %% ドキュメントコンテキスト
-    subgraph DocContext["ドキュメントコンテキスト"]
-        %% ドキュメント集約の境界
-        subgraph DocAggregateContext["ドキュメント集約🟨"]
-            %% APIドキュメント表示フロー
-            %% アクターとコマンド
-            Visitor[訪問者⬜] -->|invokes| Cmd29[トップページにアクセスする🟦]
-            
-            %% コマンドと集約/外部システム
-            Cmd29 -->|invoked on| DocAgg[ドキュメント集約🟨]
-            
-            %% イベント生成
-            DocAgg -->|generates| H1[APIドキュメントが表示された🟧]
-            
-            %% 読み取りモデル
-            H1 -->|translated into| ReadModel12[APIドキュメント情報⬛]
-        end
-    end
     
     %% スタイル定義
     classDef event fill:#ff6723,stroke:#333,stroke-width:2px;
@@ -349,13 +326,13 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd29,Cmd30 command;
-    class User1,User3,APIClient,System1,Visitor user;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4 event;
+    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd30 command;
+    class User1,User3,APIClient,System1 user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
-    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
+    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg aggregate;
     class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy24,Policy25 policy;
-    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13,ReadModel14 readModel;
+    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel13,ReadModel14 readModel;
 ```
 
 ## 境界づけられたコンテキストの説明
@@ -409,17 +386,6 @@ graph LR
   - すべてのコンテキストからイベント駆動で通知を受ける（別途調達パターン）
   - 非同期処理により他コンテキストへの影響を最小化
 
-### ドキュメントコンテキスト（Documentation Context）
-- **説明**: APIドキュメントの管理と表示に関する機能を含む。OpenAPI仕様の管理とScalar UIでの表示の責務を持つ。
-- **含まれる集約**: ドキュメント集約
-- **責務**: 
-  - OpenAPI仕様の管理
-  - APIドキュメントの生成
-  - Scalar UIを通じた表示
-  - 認証不要のアクセス提供
-- **他コンテキストとの関係**: 
-  - 独立したコンテキストとして機能（別途調達パターン）
-  - APIコンテキストのAPI仕様を参照（読み取り専用）
 
 ## コンテキストマップ
 
@@ -430,7 +396,6 @@ graph TB
     APICtx[APIコンテキスト]
     DataCtx[データコンテキスト]
     LogCtx[ログコンテキスト]
-    DocCtx[ドキュメントコンテキスト]
     
     %% 外部システム
     SupaAuth[Supabase Auth]
@@ -446,13 +411,12 @@ graph TB
     AuthCtx -.->|認証イベント<br/>イベント駆動| LogCtx
     APICtx -.->|アクセスイベント<br/>イベント駆動| LogCtx
     
-    APICtx -.->|API仕様参照<br/>公開ホスト| DocCtx
     
     %% スタイル定義
     classDef context fill:#e3f2fd,stroke:#1976d2,stroke-width:2px;
     classDef external fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
     
-    class AuthCtx,APICtx,DataCtx,LogCtx,DocCtx context;
+    class AuthCtx,APICtx,DataCtx,LogCtx context;
     class SupaAuth,SocialAuth external;
 ```
 
@@ -482,13 +446,6 @@ graph TB
   - ログコンテキストは非同期でイベントを受信
   - 疎結合により各コンテキストの自律性を保証
 
-### 4. APIコンテキスト → ドキュメントコンテキスト（公開ホスト）
-- **統合方式**: API仕様の参照
-- **パターン**: 公開ホストサービス
-- **実装方針**: 
-  - APIコンテキストがOpenAPI仕様を公開
-  - ドキュメントコンテキストが仕様を読み取り表示
-  - 標準化された形式（OpenAPI 3.0）で連携
 
 ## 保留事項 (Future Placement Board)
 |タイプ|内容|今後の対応|
@@ -548,7 +505,7 @@ graph TB
 
 ### コンテキスト分割の根拠
 
-本プロジェクトでは、以下の観点から5つの境界づけられたコンテキストを定義しました：
+本プロジェクトでは、以下の観点から4つの境界づけられたコンテキストを定義しました：
 
 1. **責務の明確性**
    - 各コンテキストが単一の明確な責務を持つ
@@ -614,6 +571,7 @@ graph TB
 
 |更新日時|変更点|
 |-|-|
+|2025-01-14T15:35:00+09:00|ドキュメントコンテキストを削除（APIドキュメントは静的生成に変更されたため）。5つから4つのコンテキストに変更|
 |2025-01-13T10:00:00+09:00|境界づけられたコンテキストと集約の概観図を追加。ログコンテキストの設計根拠（認証ログとAPIログの分離理由）を補足に追加|
 |2025-01-12T21:00:00+09:00|新規作成。ステップ3の7つの集約を5つの境界づけられたコンテキストにグループ化し、コンテキスト間の関係と統合パターンを定義|
 

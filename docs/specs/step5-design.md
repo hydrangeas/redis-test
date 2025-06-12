@@ -428,64 +428,6 @@ classDiagram
     APILogRepository ..> StatsCriteria : uses
 ```
 
-### ドキュメントコンテキスト
-
-```mermaid
-classDiagram
-    %% 集約
-    class APIDocumentation {
-        <<Aggregate>>
-    }
-    
-    %% エンティティ
-    class APISpecification {
-        <<Entity>>
-        +SpecId id
-        +Version version
-        +OpenAPISchema schema
-        +LastUpdated lastUpdated
-        +render()
-        +validate()
-    }
-    
-    %% バリューオブジェクト
-    class Version {
-        <<Value Object>>
-        +String value
-        +equals()
-        +isCompatible(other)
-    }
-    
-    class OpenAPISchema {
-        <<Value Object>>
-        +Object definition
-        +equals()
-        +toJSON()
-        +validate()
-    }
-    
-    %% ドメインサービス
-    class DocumentationService {
-        <<Domain Service>>
-        +generateFromEndpoints(endpoints)
-        +renderUI(specification)
-    }
-    
-    %% リポジトリインターフェース
-    class APISpecificationRepository {
-        <<Repository>>
-        +save(specification)
-        +findLatest()
-        +findByVersion(version)
-    }
-    
-    %% 関係性
-    APIDocumentation *-- APISpecification : contains
-    APISpecification *-- Version : has
-    APISpecification *-- OpenAPISchema : has
-    DocumentationService ..> APIDocumentation : uses
-    APISpecificationRepository ..> APIDocumentation : persists
-```
 
 ### ドメインモデルの説明
 
@@ -519,18 +461,13 @@ classDiagram
    - 責務：APIアクセスの記録とパフォーマンス分析
    - 不変条件：ログエントリは不変（作成後の変更不可）
 
-7. **ドキュメント集約（APIDocumentation）**
-   - 集約ルート：APISpecification
-   - 責務：API仕様の管理とドキュメント生成
-   - 不変条件：仕様は有効なOpenAPI形式である必要がある
-
 ## レイヤードアーキテクチャ図
 
 ```mermaid
 graph TB
     subgraph "プレゼンテーション層"
         API[REST API<br/>Fastify Routes]
-        Web[Web UI<br/>Scalar Docs]
+        Web[Static Files<br/>api-docs.html]
         MW[Middleware<br/>Auth/CORS/Rate Limit]
     end
     
@@ -539,7 +476,6 @@ graph TB
         APIUseCase[APIアクセスユースケース]
         DataUseCase[データ取得ユースケース]
         LogUseCase[ログ記録ユースケース]
-        DocUseCase[ドキュメント生成ユースケース]
     end
     
     subgraph "ドメイン層"
@@ -547,7 +483,6 @@ graph TB
         APIDomain[APIドメイン<br/>Endpoint/RateLimit]
         DataDomain[データドメイン<br/>OpenDataFile]
         LogDomain[ログドメイン<br/>AuthLog/APILog]
-        DocDomain[ドキュメントドメイン<br/>APISpec]
         DomainService[ドメインサービス]
         Repository[リポジトリインターフェース]
         DomainEvent[ドメインイベント]
@@ -567,13 +502,11 @@ graph TB
     MW --> AuthUseCase
     API --> APIUseCase
     API --> DataUseCase
-    Web --> DocUseCase
     
     AuthUseCase --> AuthDomain
     APIUseCase --> APIDomain
     DataUseCase --> DataDomain
     LogUseCase --> LogDomain
-    DocUseCase --> DocDomain
     
     AuthUseCase --> Repository
     APIUseCase --> Repository
@@ -600,8 +533,8 @@ graph TB
     classDef infrastructure fill:#efebe9,stroke:#3e2723,stroke-width:2px
     
     class API,Web,MW presentation
-    class AuthUseCase,APIUseCase,DataUseCase,LogUseCase,DocUseCase application
-    class AuthDomain,APIDomain,DataDomain,LogDomain,DocDomain,DomainService,Repository,DomainEvent domain
+    class AuthUseCase,APIUseCase,DataUseCase,LogUseCase application
+    class AuthDomain,APIDomain,DataDomain,LogDomain,DomainService,Repository,DomainEvent domain
     class SupabaseAuth,SupabaseDB,FileSystem,EventBus,RepositoryImpl,Cache infrastructure
 ```
 
@@ -649,11 +582,6 @@ graph LR
         APILogModel[APILog]
     end
     
-    subgraph "ドキュメントコンテキスト"
-        DocService[ドキュメントサービス]
-        DocModel[APISpecification]
-    end
-    
     subgraph "外部システム"
         SupabaseAuth[Supabase Auth]
         SocialProvider[Social Providers]
@@ -663,7 +591,6 @@ graph LR
     %% 統合パターン
     AuthService --> APIService
     APIService --> DataService
-    APIService --> DocService
     
     SupabaseAuth --> ACL
     ACL --> AuthModel
@@ -676,8 +603,6 @@ graph LR
     APIModel -.->|APIAccessed| EventBus
     EventBus -.->|Events| LogService
     
-    %% 同期的な統合
-    APIService -->|OpenAPI Spec| DocService
 ```
 
 ### 統合パターンの説明
@@ -693,10 +618,6 @@ graph LR
 3. **イベント駆動統合**
    - 認証イベント、APIアクセスイベントを非同期で配信
    - ログコンテキストがイベントを購読して記録
-
-4. **公開ホストサービス**
-   - APIコンテキストがOpenAPI仕様を公開
-   - ドキュメントコンテキストが仕様を読み取り
 
 ## シーケンス図 <API認証とデータ取得処理>
 
@@ -1526,6 +1447,109 @@ const loggerConfig = {
 
 ## 補足
 
+### APIドキュメントの静的生成
+
+APIドキュメントはビルド時に静的に生成され、実行時のドキュメント管理が不要になります。
+
+#### 実装方法
+
+1. **@fastify/swaggerでOpenAPI仕様書を生成**
+   ```typescript
+   // scripts/generate-openapi.ts
+   import fastify from 'fastify'
+   import fastifySwagger from '@fastify/swagger'
+   import fs from 'fs/promises'
+   
+   async function generateOpenAPISpec() {
+     const app = fastify({ logger: false })
+     
+     await app.register(fastifySwagger, {
+       openapi: {
+         openapi: '3.0.0',
+         info: {
+           title: 'オープンデータ提供API',
+           version: '1.0.0',
+           description: '奈良県のオープンデータを提供するAPI'
+         },
+         components: {
+           securitySchemes: {
+             bearerAuth: {
+               type: 'http',
+               scheme: 'bearer',
+               bearerFormat: 'JWT'
+             }
+           }
+         },
+         security: [{ bearerAuth: [] }]
+       }
+     })
+     
+     // ルートを登録
+     await app.register(import('../src/routes/index.js'))
+     await app.ready()
+     
+     // OpenAPI仕様書を保存
+     const spec = app.swagger()
+     await fs.writeFile('dist/openapi.json', JSON.stringify(spec, null, 2))
+   }
+   ```
+
+2. **Scalar UIを静的HTMLとして生成**
+   ```html
+   <!-- dist/api-docs.html -->
+   <!doctype html>
+   <html>
+     <head>
+       <title>オープンデータ提供API - ドキュメント</title>
+       <meta charset="utf-8" />
+     </head>
+     <body>
+       <script id="api-reference" type="application/json">
+         <!-- OpenAPI仕様書を埋め込み -->
+       </script>
+       <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+     </body>
+   </html>
+   ```
+
+3. **ビルドスクリプトの設定**
+   ```json
+   // package.json
+   {
+     "scripts": {
+       "build:openapi": "tsx scripts/generate-openapi.ts",
+       "build:docs": "tsx scripts/build-docs.ts",
+       "build": "npm run build:openapi && npm run build:docs"
+     }
+   }
+   ```
+
+4. **Vercelでの配信設定**
+   ```json
+   // vercel.json
+   {
+     "routes": [
+       {
+         "src": "/api-docs",
+         "dest": "/dist/api-docs.html"
+       },
+       {
+         "src": "/openapi.json",
+         "dest": "/dist/openapi.json"
+       }
+     ]
+   }
+   ```
+
+#### メリット
+
+- **パフォーマンス**: 静的ファイルのためCDNで高速配信
+- **シンプル**: データベースや状態管理が不要
+- **バージョン管理**: Gitで仕様書の変更履歴を追跡
+- **CI/CD統合**: ビルド時に自動生成・検証
+
+このアプローチにより、ドキュメントコンテキストと関連するドメインモデルが不要になり、アーキテクチャが簡素化されます。
+
 ### レート制限の実装方式：スライディングウィンドウ（ログベース）
 
 調査の結果、「1分間に60回」という要件に対して、スライディングウィンドウ方式を採用しました：
@@ -1663,6 +1687,7 @@ const loggerConfig = {
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T18:00:00+09:00|APIドキュメントを静的生成に変更、ドキュメントコンテキストを削除|
 |2025-01-12T17:30:00+09:00|ログコンテキストに他コンテキストのクラスを明示、TimeRange・StatsCriteria型を追加|
 |2025-01-12T17:00:00+09:00|データコンテキストの設計を簡素化 - OpenDataFileをバリューオブジェクトOpenDataResourceに変更、FileIdを削除、集約も削除|
 |2025-01-12T16:50:00+09:00|APIAccessControlService.checkRateLimitをAuthenticatedUserを受け取る設計に変更 - 凝集性・型安全性・拡張性を向上、共有カーネルパターンを適用|

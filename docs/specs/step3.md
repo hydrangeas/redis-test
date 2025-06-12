@@ -246,21 +246,6 @@ graph LR
         G4 -->|translated into| ReadModel14[APIアクセスログ⬛]
     end
     
-    %% ドキュメント集約の境界
-    subgraph DocAggregateContext["ドキュメント集約🟨"]
-        %% APIドキュメント表示フロー
-        %% アクターとコマンド
-        Visitor[訪問者⬜] -->|invokes| Cmd29[トップページにアクセスする🟦]
-        
-        %% コマンドと集約/外部システム
-        Cmd29 -->|invoked on| DocAgg[ドキュメント集約🟨]
-        
-        %% イベント生成
-        DocAgg -->|generates| H1[APIドキュメントが表示された🟧]
-        
-        %% 読み取りモデル
-        H1 -->|translated into| ReadModel12[APIドキュメント情報⬛]
-    end
     
     %% スタイル定義
     classDef event fill:#ff6723,stroke:#333,stroke-width:2px;
@@ -271,13 +256,13 @@ graph LR
     classDef policy fill:#00d26a,stroke:#333,stroke-width:2px;
     classDef readModel fill:#000000,color:#fff,stroke:#333,stroke-width:2px;
     
-    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4,H1 event;
-    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd29,Cmd30 command;
-    class User1,User3,APIClient,System1,Visitor user;
+    class A1,A2,A4,A6,A7,A14,A16,C2,C3,C4a,C4b,C5,C6,C7,D2,D4,D5,D6,E2,E3,F1,F2,F4,F5,F6,F7,G1,G4 event;
+    class Cmd1,Cmd2,Cmd3,Cmd4,Cmd10,Cmd11,Cmd12,Cmd13,Cmd14,Cmd15,Cmd16,Cmd19,Cmd20,Cmd21,Cmd22,Cmd23,Cmd24,Cmd25,Cmd28,Cmd30 command;
+    class User1,User3,APIClient,System1 user;
     class SocialProvider,SupaAuth,SupaAuth3,UISystem1,UISystem2,UISystem3 externalSystem;
-    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg,DocAgg aggregate;
+    class AuthAgg,AuthAgg2,AuthAgg3,APIAgg,APIAgg2,RateLimitAgg,DataAgg,AuthLogAgg,APILogAgg aggregate;
     class Policy1,Policy2,Policy3,Policy9,Policy10,Policy11,Policy12,Policy13,Policy16,Policy17,Policy18,Policy19,Policy20,Policy21,Policy24,Policy25 policy;
-    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel12,ReadModel13,ReadModel14 readModel;
+    class ReadModel1,ReadModel2,ReadModel4,ReadModel5,ReadModel6,ReadModel7,ReadModel8,ReadModel9,ReadModel10,ReadModel11,ReadModel13,ReadModel14 readModel;
 ```
 
 ## 集約の説明
@@ -331,14 +316,6 @@ graph LR
 - **不変条件**：
   - 「ログエントリは作成後変更されない（イミュータブル）」
 
-### ドキュメント集約 🟨
-- **説明**：APIドキュメント表示に関連するデータの集合体。OpenAPI仕様の管理、Scalar UIでの表示を処理し、ドキュメント表示イベントを生成する責務を持つ。
-- **集約ルート**：APIドキュメント（APIDocument）
-- **含まれるエンティティ**：APIドキュメント、OpenAPI仕様、バージョン情報
-- **不変条件**：
-  - 「APIドキュメントは常に最新のAPI仕様を反映する」
-  - 「ドキュメントは認証なしでアクセス可能である」
-  - 「OpenAPI 3.0仕様に準拠する」
 
 ## 保留事項 (Future Placement Board)
 |タイプ|内容|検討ステップ|
@@ -360,9 +337,8 @@ graph LR
 |25|データファイル|Data File|dataFile|JSONデータファイルを表す集約ルート|データ|2025-01-12|
 |26|認証ログエントリ|Auth Log Entry|authLogEntry|認証イベントのログレコード|ログ|2025-01-12|
 |27|APIログエントリ|API Log Entry|apiLogEntry|APIアクセスのログレコード|ログ|2025-01-12|
-|28|APIドキュメント|API Document|apiDocument|OpenAPI仕様を管理する集約ルート|ドキュメント|2025-01-12|
-|29|不変条件|Invariant|invariant|集約内で常に満たされるべきビジネスルール|全体|2025-01-12|
-|30|集約ルート|Aggregate Root|aggregateRoot|集約内の主要エンティティで、集約へのアクセスポイントとなる|全体|2025-01-12|
+|28|不変条件|Invariant|invariant|集約内で常に満たされるべきビジネスルール|全体|2025-01-12|
+|29|集約ルート|Aggregate Root|aggregateRoot|集約内の主要エンティティで、集約へのアクセスポイントとなる|全体|2025-01-12|
 
 ## チェックリスト
 
@@ -448,6 +424,7 @@ Supabase Auth、Social Provider、UIシステムは外部システムとして�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-14T15:30:00+09:00|ドキュメント集約を削除（APIドキュメントは静的生成に変更されたため）|
 |2025-01-12T20:00:00+09:00|新規作成。ステップ2の内容を基に7つの集約を抽出し、各集約の責務、集約ルート、不変条件を定義|
 
 （更新日時の降順で記載する）
