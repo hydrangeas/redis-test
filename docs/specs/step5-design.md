@@ -6,24 +6,13 @@
 
 ```mermaid
 classDiagram
-    %% 集約の境界
-    class Authentication {
-        <<Aggregate>>
-    }
-    
-    %% エンティティ
-    class UserSession {
-        <<Entity>>
+    %% バリューオブジェクト（認証済みユーザー）
+    class AuthenticatedUser {
+        <<Value Object>>
         +UserId userId
-        +SessionId sessionId
         +UserTier tier
-        +AccessToken accessToken
-        +RefreshToken refreshToken
-        +DateTime createdAt
-        +DateTime expiresAt
-        +isValid()
-        +refresh(newTokens)
-        +terminate()
+        +canAccessEndpoint(requiredTier)
+        +equals()
     }
     
     %% バリューオブジェクト
@@ -39,58 +28,37 @@ classDiagram
         +TierLevel level
         +RateLimit rateLimit
         +equals()
-        +isHigherThan(other)
+        +isHigherThanOrEqualTo(other)
+        +getRateLimit()
     }
     
-    class AccessToken {
-        <<Value Object>>
-        +String token
-        +DateTime expiresAt
-        +isExpired()
-        +equals()
+    class TierLevel {
+        <<enumeration>>
+        TIER1
+        TIER2
+        TIER3
     }
     
-    class RefreshToken {
+    class RateLimit {
         <<Value Object>>
-        +String token
-        +DateTime expiresAt
-        +isExpired()
+        +int maxRequests
+        +int windowSeconds
         +equals()
     }
     
     %% ドメインサービス
     class AuthenticationService {
         <<Domain Service>>
-        +authenticateWithProvider(provider, credentials)
         +validateAccessToken(token)
-        +refreshTokens(refreshToken)
-    }
-    
-    %% リポジトリインターフェース
-    class UserSessionRepository {
-        <<Repository>>
-        +save(session)
-        +findByUserId(userId)
-        +findByAccessToken(token)
-        +remove(sessionId)
-    }
-    
-    %% ファクトリ
-    class UserSessionFactory {
-        <<Factory>>
-        +createFromAuthResult(authResult)
-        +reconstruct(data)
+        +extractUserFromToken(tokenPayload)
     }
     
     %% 関係性
-    Authentication *-- UserSession : contains
-    UserSession *-- UserId : has
-    UserSession *-- UserTier : has
-    UserSession *-- AccessToken : has
-    UserSession *-- RefreshToken : has
-    AuthenticationService ..> Authentication : uses
-    UserSessionRepository ..> Authentication : persists
-    UserSessionFactory ..> Authentication : creates
+    AuthenticatedUser *-- UserId : has
+    AuthenticatedUser *-- UserTier : has
+    UserTier *-- TierLevel : has
+    UserTier *-- RateLimit : has
+    AuthenticationService ..> AuthenticatedUser : creates
 ```
 
 ### APIコンテキスト
@@ -154,7 +122,7 @@ classDiagram
     class RateLimit {
         <<Value Object>>
         +int maxRequests
-        +Duration window
+        +int windowSeconds
         +equals()
     }
     
@@ -449,10 +417,10 @@ classDiagram
 
 ### ドメインモデルの説明
 
-1. **認証集約（Authentication）**
-   - 集約ルート：UserSession
-   - 責務：ユーザーセッションとトークンの管理、ティア情報の保持
-   - 不変条件：有効なセッションは必ず有効なアクセストークンを持つ
+1. **認証コンテキスト**
+   - 主要なバリューオブジェクト：AuthenticatedUser
+   - 責務：JWTトークンの検証結果を表現し、アクセス権限を判定
+   - 不変条件：認証済みユーザーは必ずUserIdとUserTierを持つ
 
 2. **API集約（APIRequest）**
    - 集約ルート：APIEndpoint
@@ -589,7 +557,7 @@ graph TB
 graph LR
     subgraph "認証コンテキスト"
         AuthService[認証サービス]
-        AuthModel[UserSession]
+        AuthModel[AuthenticatedUser]
         ACL[Supabase Auth ACL]
     end
     
@@ -671,7 +639,7 @@ sequenceDiagram
     participant AuthDomain as 認証ドメイン
     participant APIDomain as APIドメイン
     participant DataDomain as データドメイン
-    participant AuthRepo as 認証リポジトリ(I)
+    participant SupabaseAuth as Supabase Auth
     participant RateRepo as レート制限リポジトリ(I)
     participant DataRepo as データリポジトリ(I)
     participant LogRepo as ログリポジトリ(I)
@@ -684,11 +652,9 @@ sequenceDiagram
     Client->>MW: GET /secure/319985/r5.json<br/>Authorization: Bearer token
     MW->>AuthApp: validateToken(token)
     AuthApp->>AuthDomain: validateAccessToken(token)
-    AuthDomain->>AuthRepo: findByAccessToken(token)
-    AuthRepo->>DB: SELECT * FROM sessions
-    DB-->>AuthRepo: session data
-    AuthRepo-->>AuthDomain: UserSession
-    AuthDomain-->>AuthApp: ValidationResult(userId, tier)
+    AuthDomain->>SupabaseAuth: verifyToken(token)
+    SupabaseAuth-->>AuthDomain: token payload
+    AuthDomain-->>AuthApp: AuthenticatedUser(userId, tier)
     
     alt トークンが無効
         AuthApp-->>MW: Unauthorized
@@ -768,37 +734,6 @@ sequenceDiagram
    - ドメインイベントをEventBus経由で非同期配信
    - ログ記録は本処理と独立して実行
 
-## ステートマシン図 <UserSession>
-
-```mermaid
-stateDiagram-v2
-    [*] --> 新規作成: ソーシャルログイン成功
-    新規作成 --> アクティブ: トークン発行
-    
-    アクティブ --> アクティブ: APIアクセス
-    アクティブ --> 期限切れ: アクセストークン期限切れ
-    アクティブ --> 終了: ログアウト
-    
-    期限切れ --> アクティブ: トークンリフレッシュ成功
-    期限切れ --> 無効: リフレッシュトークン期限切れ
-    期限切れ --> 終了: ログアウト
-    
-    無効 --> 終了: セッション削除
-    終了 --> [*]
-    
-    %% 状態の説明
-    新規作成: 認証直後・トークン未発行
-    アクティブ: 有効なアクセストークンあり
-    期限切れ: アクセストークン期限切れ・リフレッシュ可能
-    無効: 両トークン期限切れ
-    終了: セッション終了
-    
-    %% mermaid記載上の【重要】注意点
-    %% 1. スタイル定義中のカンマの前後には空白を入れないでください
-    %% 2. クラス定義中のカンマの前後には空白を入れないでください
-    %% 3. 【厳禁】行末にコメントを追加しないでください
-```
-
 ## ステートマシン図 <RateLimitBucket>
 
 ```mermaid
@@ -831,14 +766,7 @@ stateDiagram-v2
 
 ### 状態遷移の説明
 
-1. **UserSessionの状態遷移**
-   - 新規作成：ソーシャルログイン成功時
-   - アクティブ：有効なアクセストークンを保持
-   - 期限切れ：アクセストークンは無効だがリフレッシュ可能
-   - 無効：両方のトークンが期限切れ
-   - 終了：ログアウトまたはセッション削除
-
-2. **RateLimitBucketの状態遷移**
+**RateLimitBucketの状態遷移**
    - 新規作成：ユーザーの初回APIアクセス時
    - 使用中：制限値未満のリクエスト数
    - 制限到達：制限値に到達（新規リクエスト拒否）
@@ -850,18 +778,19 @@ stateDiagram-v2
 ```mermaid
 classDiagram
     %% ドメイン層
-    class UserSession {
-        <<Entity>>
+    class AuthenticatedUser {
+        <<Value Object>>
         -UserId userId
-        -SessionId sessionId
         -UserTier tier
-        -AccessToken accessToken
-        -RefreshToken refreshToken
-        -DateTime createdAt
-        -DateTime expiresAt
-        +isValid() boolean
-        +refresh(tokens) void
-        +terminate() void
+        +canAccessEndpoint(requiredTier) boolean
+        +equals(other) boolean
+    }
+    
+    class UserId {
+        <<Value Object>>
+        -String value
+        +equals(other) boolean
+        +hashCode() number
     }
     
     class UserTier {
@@ -869,64 +798,54 @@ classDiagram
         -TierLevel level
         -RateLimit rateLimit
         +equals(other) boolean
-        +isHigherThan(other) boolean
+        +isHigherThanOrEqualTo(other) boolean
         +getRateLimit() RateLimit
     }
     
     class AuthenticationService {
         <<Domain Service>>
-        +authenticateWithProvider(provider, credentials) AuthResult
-        +validateAccessToken(token) ValidationResult
-        +refreshTokens(refreshToken) TokenPair
-    }
-    
-    class IUserSessionRepository {
-        <<interface>>
-        +save(session) Promise~void~
-        +findByUserId(userId) Promise~UserSession~
-        +findByAccessToken(token) Promise~UserSession~
-        +remove(sessionId) Promise~void~
+        +validateAccessToken(token) AuthenticatedUser
     }
     
     %% アプリケーション層
     class AuthenticationUseCase {
         <<Application Service>>
-        -sessionRepository IUserSessionRepository
         -authService AuthenticationService
+        -supabaseAuth SupabaseAuthAdapter
         -eventBus IEventBus
-        +authenticate(provider, credentials) Promise~AuthResponse~
-        +validateToken(token) Promise~ValidationResponse~
-        +refreshToken(refreshToken) Promise~TokenResponse~
-        +logout(userId) Promise~void~
+        +validateToken(token) Promise~AuthResult~
+        +refreshToken(refreshToken) Promise~TokenResult~
     }
     
     %% インフラ層
-    class UserSessionRepositoryImpl {
-        <<Repository Implementation>>
-        -supabaseClient SupabaseClient
-        -cache ICache
-        +save(session) Promise~void~
-        +findByUserId(userId) Promise~UserSession~
-        +findByAccessToken(token) Promise~UserSession~
-        +remove(sessionId) Promise~void~
-    }
-    
     class SupabaseAuthAdapter {
         <<Infrastructure Service>>
         -supabaseClient SupabaseClient
-        +signInWithProvider(provider) Promise~AuthResult~
-        +verifyToken(token) Promise~TokenData~
+        +verifyToken(token) Promise~TokenPayload~
         +refreshSession(refreshToken) Promise~Session~
     }
     
+    class TokenPayload {
+        <<Data Transfer Object>>
+        +sub string
+        +app_metadata AppMetadata
+        +exp number
+        +iat number
+    }
+    
+    class AppMetadata {
+        <<Data Transfer Object>>
+        +tier string
+    }
+    
     %% 関係性
-    UserSession *-- UserTier
-    AuthenticationUseCase ..> UserSession
+    AuthenticatedUser *-- UserId
+    AuthenticatedUser *-- UserTier
+    AuthenticationService ..> AuthenticatedUser
     AuthenticationUseCase ..> AuthenticationService
-    AuthenticationUseCase ..> IUserSessionRepository
-    UserSessionRepositoryImpl ..|> IUserSessionRepository
-    AuthenticationService ..> UserSession
     AuthenticationUseCase ..> SupabaseAuthAdapter
+    SupabaseAuthAdapter ..> TokenPayload
+    TokenPayload *-- AppMetadata
     
     %% mermaid記載上の【重要】注意点
     %% コメントは独立した行に記述
@@ -962,7 +881,7 @@ classDiagram
     class RateLimit {
         <<Value Object>>
         -int maxRequests
-        -Duration window
+        -int windowSeconds
         +allows(count) boolean
         +getResetTime(windowStart) DateTime
     }
@@ -1057,22 +976,19 @@ classDiagram
         <<Domain Event>>
         +userId string
         +provider string
-        +tier UserTier
-        +sessionId string
+        +tier string
         +getEventName() string
     }
     
     class TokenRefreshed {
         <<Domain Event>>
         +userId string
-        +sessionId string
         +getEventName() string
     }
     
     class UserLoggedOut {
         <<Domain Event>>
         +userId string
-        +sessionId string
         +reason string
         +getEventName() string
     }
@@ -1163,8 +1079,7 @@ classDiagram
        version: number,
        readonly userId: string,
        readonly provider: string,
-       readonly tier: UserTier,
-       readonly sessionId: string
+       readonly tier: string
      ) {
        super(aggregateId, version);
      }
@@ -1542,4 +1457,7 @@ const loggerConfig = {
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T15:40:00+09:00|RateLimitのDuration型をwindowSeconds（秒単位のnumber型）に変更 - TypeScriptに標準Duration型がないため|
+|2025-01-12T15:35:00+09:00|AuthenticatedUserFactoryを削除 - 単純な変換ロジックのためAuthenticationServiceに統合|
+|2025-01-12T15:30:00+09:00|認証コンテキストの設計を簡素化 - SessionIdを削除し、JWTトークンベースのステートレス設計に変更|
 |2025-01-12T14:00:00+09:00|新規作成 - TypeScript/Fastify/Vercel環境に特化した静的モデリング|
