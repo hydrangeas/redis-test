@@ -960,6 +960,13 @@ classDiagram
         +findRecentByUserId(userId, limit) Promise~RateLimitLog[]~
     }
     
+    class IDatabase {
+        <<interface>>
+        +query(sql, params) Promise~any[]~
+        +execute(sql, params) Promise~void~
+        +transaction(callback) Promise~T~
+    }
+    
     %% 関係性
     APIEndpoint *-- APIPath
     APIEndpoint *-- TierLevel
@@ -970,8 +977,10 @@ classDiagram
     APIAccessControlService ..> RateLimitLog
     APIAccessControlService ..> IRateLimitRepository
     APIAccessUseCase ..> IAPIEndpointRepository
+    APIAccessUseCase ..> IRateLimitRepository
     APIAccessUseCase ..> APIAccessControlService
     RateLimitRepositoryImpl ..|> IRateLimitRepository
+    RateLimitRepositoryImpl ..> IDatabase
     
     %% mermaid記載上の【重要】注意点
     %% コメントは独立した行に記述
@@ -1708,6 +1717,8 @@ APIドキュメントはビルド時に静的に生成され、実行時のド�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-23T10:05:00+09:00|APIコンテキストのクラス図にIDatabaseインターフェースを追加し、RateLimitRepositoryImplからの関係線を定義 - 一貫性のための補完|
+|2025-01-23T10:00:00+09:00|APIコンテキストのクラス図でAPIAccessUseCaseからIRateLimitRepositoryへの関係線を追加 - 記載漏れの修正|
 |2025-01-22T18:00:00+09:00|シーケンス図にextractUserFromToken呼び出しを追加、refreshSessionをrefreshAccessTokenに変更 - より明確な処理フローと命名規則|
 |2025-01-22T17:50:00+09:00|認証コンテキストのクラス図にTierLevel、RateLimit、extractUserFromTokenメソッドを追加 - ドメインモデル図との一貫性を確保|
 |2025-01-12T19:00:00+09:00|レイヤードアーキテクチャ図にVite+TypeScriptのランディングページとダッシュボードを追加|
