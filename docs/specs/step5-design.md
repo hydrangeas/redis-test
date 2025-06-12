@@ -428,7 +428,6 @@ classDiagram
     APILogRepository ..> StatsCriteria : uses
 ```
 
-
 ### ドメインモデルの説明
 
 1. **認証コンテキスト**
@@ -467,7 +466,8 @@ classDiagram
 graph TB
     subgraph "プレゼンテーション層"
         API[REST API<br/>Fastify Routes]
-        Web[Static Files<br/>api-docs.html]
+        Web[Landing/Dashboard<br/>Vite+TypeScript]
+        Docs[API Documentation<br/>api-docs.html - Scalar]
         MW[Middleware<br/>Auth/CORS/Rate Limit]
     end
     
@@ -532,7 +532,7 @@ graph TB
     classDef domain fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef infrastructure fill:#efebe9,stroke:#3e2723,stroke-width:2px
     
-    class API,Web,MW presentation
+    class API,Web,Docs,MW presentation
     class AuthUseCase,APIUseCase,DataUseCase,LogUseCase application
     class AuthDomain,APIDomain,DataDomain,LogDomain,DomainService,Repository,DomainEvent domain
     class SupabaseAuth,SupabaseDB,FileSystem,EventBus,RepositoryImpl,Cache infrastructure
@@ -546,13 +546,14 @@ graph TB
    - インフラ層はドメイン層のインターフェースを実装（DIP）
 
 2. **各層の責務**
-   - プレゼンテーション層：HTTPリクエスト/レスポンスの処理、認証の検証
+   - プレゼンテーション層：HTTPリクエスト/レスポンスの処理、認証の検証、ランディングページとダッシュボード（Vite+TypeScript）、APIドキュメント（Scalar静的生成）
    - アプリケーション層：ユースケースの調整、トランザクション管理
    - ドメイン層：ビジネスロジック、ドメインイベントの発行
    - インフラ層：外部システム連携、永続化、キャッシュ
 
-3. **TypeScript/Fastifyでの実装**
+3. **TypeScript/Fastify/Viteでの実装**
    - Fastifyプラグインアーキテクチャを活用
+   - Vite+TypeScriptでSPAフロントエンド構築
    - 依存性注入にTSyringeまたはInversifyJSを使用
    - 型安全性を最大限に活用
 
@@ -1687,6 +1688,7 @@ APIドキュメントはビルド時に静的に生成され、実行時のド�
 
 |更新日時|変更点|
 |-|-|
+|2025-01-12T19:00:00+09:00|レイヤードアーキテクチャ図にVite+TypeScriptのランディングページとダッシュボードを追加|
 |2025-01-12T18:00:00+09:00|APIドキュメントを静的生成に変更、ドキュメントコンテキストを削除|
 |2025-01-12T17:30:00+09:00|ログコンテキストに他コンテキストのクラスを明示、TimeRange・StatsCriteria型を追加|
 |2025-01-12T17:00:00+09:00|データコンテキストの設計を簡素化 - OpenDataFileをバリューオブジェクトOpenDataResourceに変更、FileIdを削除、集約も削除|
