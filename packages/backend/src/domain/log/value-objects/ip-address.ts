@@ -34,6 +34,13 @@ export class IPAddress {
   }
 
   /**
+   * 不明なIPアドレスを作成
+   */
+  static unknown(): Result<IPAddress> {
+    return Result.ok(new IPAddress('0.0.0.0'));
+  }
+
+  /**
    * IPv4形式の検証
    */
   private static isValidIPv4(ip: string): boolean {

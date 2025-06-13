@@ -33,6 +33,13 @@ export class UserAgent {
   }
 
   /**
+   * 不明なUser-Agentを作成
+   */
+  static unknown(): Result<UserAgent> {
+    return Result.ok(new UserAgent('Unknown'));
+  }
+
+  /**
    * User-Agentを解析して基本情報を取得
    */
   parse(): UserAgentInfo {

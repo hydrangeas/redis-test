@@ -36,4 +36,5 @@ export const DI_TOKENS = {
   JwtService: Symbol.for('JwtService'),
   FileStorageService: Symbol.for('FileStorageService'),
   SecurityAuditService: Symbol.for('SecurityAuditService'),
+  SecurityAlertService: Symbol.for('SecurityAlertService'),
 } as const;
