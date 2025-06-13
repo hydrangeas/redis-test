@@ -20,6 +20,9 @@ const server = fastify(loggerConfig);
 // リクエストロギングの設定
 setupRequestLogging(server);
 
+// エラーハンドラーの登録
+await server.register(import('./presentation/plugins/error-handler'));
+
 server.get('/health', async () => {
   return { 
     status: 'ok', 
