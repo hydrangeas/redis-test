@@ -1,4 +1,4 @@
-import { ValidationError } from '../../errors/exceptions';
+import { ValidationError } from '../../errors/validation-error';
 
 /**
  * レート制限の設定を表すバリューオブジェクト

@@ -1,6 +1,6 @@
 import { TierLevel, TierLevelOrder } from './tier-level';
 import { RateLimit } from './rate-limit';
-import { ValidationError } from '../../errors/exceptions';
+import { ValidationError } from '../../errors/validation-error';
 
 /**
  * ユーザーティアを表すバリューオブジェクト
