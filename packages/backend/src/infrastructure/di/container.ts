@@ -148,6 +148,20 @@ function registerDomainServices(container: DependencyContainer): void {
   container.register(DI_TOKENS.AuthenticationService, {
     useClass: AuthenticationService,
   });
+  
+  // Import and register new domain services
+  import('@/domain/api/services/api-access-control.service').then(module => {
+    container.register(DI_TOKENS.APIAccessControlService, {
+      useClass: module.APIAccessControlService,
+    });
+  });
+  
+  import('@/domain/data/services/data-access.service').then(module => {
+    container.register(DI_TOKENS.DataAccessService, {
+      useClass: module.DataAccessService,
+    });
+  });
+  
   // container.register(DI_TOKENS.RateLimitService, {
   //   useClass: RateLimitServiceImpl,
   // });
@@ -174,6 +188,13 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   // AuthAdapterの登録
   container.register<IAuthAdapter>(DI_TOKENS.AuthAdapter, {
     useClass: SupabaseAuthAdapter,
+  });
+  
+  // Factoriesの登録
+  import('@/domain/data/factories/open-data-resource.factory').then(module => {
+    container.register(DI_TOKENS.OpenDataResourceFactory, {
+      useClass: module.OpenDataResourceFactory,
+    });
   });
   
   // 他のインフラストラクチャサービスは後続タスクで実装

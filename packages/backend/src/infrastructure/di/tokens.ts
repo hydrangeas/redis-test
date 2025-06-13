@@ -27,6 +27,8 @@ export const DI_TOKENS = {
   AuthenticationService: Symbol.for('AuthenticationService'),
   RateLimitService: Symbol.for('RateLimitService'),
   DataAccessService: Symbol.for('DataAccessService'),
+  APIAccessControlService: Symbol.for('APIAccessControlService'),
+  LogAnalysisService: Symbol.for('LogAnalysisService'),
   
   // Application Services
   AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),
@@ -38,4 +40,7 @@ export const DI_TOKENS = {
   SecurityAuditService: Symbol.for('SecurityAuditService'),
   SecurityAlertService: Symbol.for('SecurityAlertService'),
   AuthAdapter: Symbol.for('AuthAdapter'),
+  
+  // Factories
+  OpenDataResourceFactory: Symbol.for('OpenDataResourceFactory'),
 } as const;

@@ -1,7 +1,5 @@
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
-import { APIEndpoint, APIEndpointProps, RateLimitCheckResult } from '../entities/api-endpoint.entity';
-import { RateLimitLog } from '../entities/rate-limit-log.entity';
-import { EndpointId } from '../value-objects/endpoint-id';
+import { APIEndpoint } from '../value-objects/api-endpoint';
 import { EndpointPath } from '../value-objects/endpoint-path';
 import { HttpMethod } from '../value-objects/http-method';
 import { EndpointType } from '../value-objects/endpoint-type';
@@ -12,19 +10,17 @@ import { Result } from '@/domain/errors/result';
 import { Guard } from '@/domain/shared/guard';
 import { DomainError } from '@/domain/errors/domain-error';
 import { APIAccessRequested } from '../events/api-access-requested.event';
-import { RateLimitExceeded } from '../events/rate-limit-exceeded.event';
 import { InvalidAPIAccess } from '../events/invalid-api-access.event';
-import { RateLimitWindow } from '../value-objects/rate-limit-window';
-import { RequestCount } from '../value-objects/request-count';
 
 export interface APIAggregateProps {
-  endpoints: Map<string, APIEndpoint>; // endpointId -> APIEndpoint
+  endpoints: Map<string, APIEndpoint>; // "path:method" -> APIEndpoint
   defaultRateLimits: Map<string, RateLimit>; // tierLevel -> RateLimit
 }
 
 /**
  * API集約
- * APIエンドポイントとレート制限を管理する集約ルート
+ * APIエンドポイントの定義を管理する集約ルート
+ * レート制限の実際の管理はRateLimiting集約に委譲
  */
 export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   private constructor(props: APIAggregateProps, id?: string) {
@@ -40,6 +36,13 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   }
 
   /**
+   * エンドポイントのキーを生成
+   */
+  private getEndpointKey(path: EndpointPath, method: HttpMethod): string {
+    return `${path.value}:${method}`;
+  }
+
+  /**
    * エンドポイントを追加
    */
   addEndpoint(endpoint: APIEndpoint): Result<void> {
@@ -50,77 +53,47 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
       );
     }
 
+    const key = this.getEndpointKey(endpoint.path, endpoint.method);
+
     // 既存のエンドポイントかチェック
-    if (this.props.endpoints.has(endpoint.id.value)) {
+    if (this.props.endpoints.has(key)) {
       return Result.fail(
         DomainError.businessRule(
           'ENDPOINT_ALREADY_EXISTS',
-          `Endpoint ${endpoint.id.value} already exists`
+          `Endpoint ${endpoint.path.value} ${endpoint.method} already exists`
         )
       );
     }
 
-    // 同じパスとメソッドの組み合わせが存在しないかチェック
-    const duplicate = Array.from(this.props.endpoints.values()).find(
-      (ep) => ep.path.equals(endpoint.path) && ep.method === endpoint.method
-    );
-    if (duplicate) {
-      return Result.fail(
-        DomainError.businessRule(
-          'DUPLICATE_ENDPOINT',
-          `Endpoint with path ${endpoint.path.value} and method ${endpoint.method} already exists`
-        )
-      );
-    }
-
-    this.props.endpoints.set(endpoint.id.value, endpoint);
+    this.props.endpoints.set(key, endpoint);
     return Result.ok();
   }
 
   /**
    * エンドポイントを削除
    */
-  removeEndpoint(endpointId: EndpointId): Result<void> {
-    if (!this.props.endpoints.has(endpointId.value)) {
+  removeEndpoint(path: EndpointPath, method: HttpMethod): Result<void> {
+    const key = this.getEndpointKey(path, method);
+    
+    if (!this.props.endpoints.has(key)) {
       return Result.fail(
         DomainError.notFound(
           'ENDPOINT_NOT_FOUND',
-          `Endpoint ${endpointId.value} not found`
+          `Endpoint ${path.value} ${method} not found`
         )
       );
     }
 
-    this.props.endpoints.delete(endpointId.value);
+    this.props.endpoints.delete(key);
     return Result.ok();
   }
 
   /**
    * エンドポイントを取得
    */
-  getEndpoint(endpointId: EndpointId): Result<APIEndpoint> {
-    const endpoint = this.props.endpoints.get(endpointId.value);
-    if (!endpoint) {
-      return Result.fail(
-        DomainError.notFound(
-          'ENDPOINT_NOT_FOUND',
-          `Endpoint ${endpointId.value} not found`
-        )
-      );
-    }
-
-    return Result.ok(endpoint);
-  }
-
-  /**
-   * パスとメソッドからエンドポイントを検索
-   */
-  findEndpointByPathAndMethod(
-    path: EndpointPath,
-    method: HttpMethod
-  ): Result<APIEndpoint> {
-    const endpoint = Array.from(this.props.endpoints.values()).find(
-      (ep) => ep.path.equals(path) && ep.method === method
-    );
+  getEndpoint(path: EndpointPath, method: HttpMethod): Result<APIEndpoint> {
+    const key = this.getEndpointKey(path, method);
+    const endpoint = this.props.endpoints.get(key);
 
     if (!endpoint) {
       return Result.fail(
@@ -135,16 +108,47 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   }
 
   /**
-   * APIアクセスを処理
+   * パスとメソッドに一致するエンドポイントを検索
+   * ワイルドカードパターンもサポート
    */
-  async processAPIAccess(
+  findMatchingEndpoint(
+    path: EndpointPath,
+    method: HttpMethod
+  ): Result<APIEndpoint> {
+    // 完全一致を優先
+    const exactMatch = this.getEndpoint(path, method);
+    if (exactMatch.isSuccess) {
+      return exactMatch;
+    }
+
+    // ワイルドカードパターンをチェック
+    for (const [_, endpoint] of this.props.endpoints) {
+      if (endpoint.method === method && endpoint.matchesPath(path)) {
+        return Result.ok(endpoint);
+      }
+    }
+
+    return Result.fail(
+      DomainError.notFound(
+        'ENDPOINT_NOT_FOUND',
+        `No endpoint found matching ${method} ${path.value}`
+      )
+    );
+  }
+
+  /**
+   * エンドポイントアクセスを検証
+   * 実際のレート制限チェックはRateLimiting集約で行う
+   */
+  validateEndpointAccess(
     userId: UserId,
-    endpointId: EndpointId,
+    path: EndpointPath,
+    method: HttpMethod,
     userTier: UserTier,
     requestTime: Date = new Date()
-  ): Promise<Result<RateLimitCheckResult>> {
-    // エンドポイントを取得
-    const endpointResult = this.getEndpoint(endpointId);
+  ): Result<{ endpoint: APIEndpoint; rateLimit: RateLimit | null }> {
+    // エンドポイントを検索
+    const endpointResult = this.findMatchingEndpoint(path, method);
     if (endpointResult.isFailure) {
       // 無効なAPIアクセスイベントを発行
       this.addDomainEvent(
@@ -152,7 +156,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
           this._id,
           1,
           userId.value,
-          endpointId.value,
+          path.value,
           'ENDPOINT_NOT_FOUND',
           requestTime
         )
@@ -169,7 +173,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
           this._id,
           1,
           userId.value,
-          endpointId.value,
+          path.value,
           'ENDPOINT_INACTIVE',
           requestTime
         )
@@ -182,54 +186,25 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
       );
     }
 
-    // パブリックエンドポイントの場合はレート制限をスキップ
-    if (endpoint.isPublic) {
-      // APIアクセスイベントを発行
+    // 必要なティアレベルをチェック
+    if (!endpoint.canAccessWithTier(userTier)) {
       this.addDomainEvent(
-        new APIAccessRequested(
+        new InvalidAPIAccess(
           this._id,
           1,
           userId.value,
-          endpointId.value,
-          endpoint.path.value,
-          endpoint.method,
-          endpoint.type,
+          path.value,
+          'INSUFFICIENT_TIER',
           requestTime
         )
       );
-
-      return Result.ok({
-        isExceeded: false,
-        requestCount: RequestCount.create(0).getValue(),
-        remainingRequests: Number.MAX_SAFE_INTEGER,
-      });
+      return Result.fail(
+        DomainError.forbidden(
+          'INSUFFICIENT_TIER',
+          `Tier ${userTier.level} cannot access this endpoint`
+        )
+      );
     }
-
-    // レート制限を取得
-    const rateLimitResult = endpoint.getRateLimitForTier(userTier);
-    if (rateLimitResult.isFailure) {
-      // デフォルトのレート制限を使用
-      const defaultLimit = this.props.defaultRateLimits.get(userTier.level);
-      if (!defaultLimit) {
-        return Result.fail(
-          DomainError.internal(
-            'NO_RATE_LIMIT_DEFINED',
-            `No rate limit defined for tier ${userTier.level}`
-          )
-        );
-      }
-    }
-
-    const rateLimit = rateLimitResult.isSuccess
-      ? rateLimitResult.getValue()
-      : this.props.defaultRateLimits.get(userTier.level)!;
-
-    // レート制限チェック
-    const checkResult = endpoint.checkRateLimit(
-      userId,
-      rateLimit,
-      requestTime
-    );
 
     // APIアクセスイベントを発行
     this.addDomainEvent(
@@ -237,115 +212,39 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
         this._id,
         1,
         userId.value,
-        endpointId.value,
-        endpoint.path.value,
-        endpoint.method,
+        path.value,
+        path.value,
+        method,
         endpoint.type,
         requestTime
       )
     );
 
-    // レート制限を超えている場合
-    if (checkResult.isExceeded) {
-      this.addDomainEvent(
-        new RateLimitExceeded(
-          this._id,
-          1,
-          userId.value,
-          endpointId.value,
-          checkResult.requestCount.value,
-          rateLimit.maxRequests,
-          requestTime
+    // パブリックエンドポイントの場合はレート制限なし
+    if (endpoint.isPublic) {
+      return Result.ok({ endpoint, rateLimit: null });
+    }
+
+    // レート制限を取得
+    const rateLimit = this.props.defaultRateLimits.get(userTier.level);
+    if (!rateLimit) {
+      return Result.fail(
+        DomainError.internal(
+          'NO_RATE_LIMIT_DEFINED',
+          `No rate limit defined for tier ${userTier.level}`
         )
       );
-    } else {
-      // レート制限ログを追加
-      const logResult = await endpoint.addRateLimitLog(
-        userId,
-        requestTime
-      );
-      if (logResult.isFailure) {
-        return Result.fail(logResult.getError());
-      }
     }
 
-    return Result.ok(checkResult);
+    return Result.ok({ endpoint, rateLimit });
   }
 
   /**
-   * ユーザーのレート制限ログをクリーンアップ
+   * デフォルトレート制限を設定
    */
-  async cleanupUserLogs(
-    userId: UserId,
-    retentionPeriodMinutes: number = 60
-  ): Promise<Result<number>> {
-    let totalCleaned = 0;
-    const cutoffTime = new Date(Date.now() - retentionPeriodMinutes * 60 * 1000);
-
-    for (const endpoint of this.props.endpoints.values()) {
-      const cleanedResult = await endpoint.cleanupLogsForUser(userId, cutoffTime);
-      if (cleanedResult.isSuccess) {
-        totalCleaned += cleanedResult.getValue();
-      }
-    }
-
-    return Result.ok(totalCleaned);
-  }
-
-  /**
-   * すべてのエンドポイントのレート制限ログをクリーンアップ
-   */
-  async cleanupAllLogs(
-    retentionPeriodMinutes: number = 60
-  ): Promise<Result<number>> {
-    let totalCleaned = 0;
-    const cutoffTime = new Date(Date.now() - retentionPeriodMinutes * 60 * 1000);
-
-    for (const endpoint of this.props.endpoints.values()) {
-      const cleanedResult = await endpoint.cleanupAllLogs(cutoffTime);
-      if (cleanedResult.isSuccess) {
-        totalCleaned += cleanedResult.getValue();
-      }
-    }
-
-    return Result.ok(totalCleaned);
-  }
-
-  /**
-   * エンドポイントの統計情報を取得
-   */
-  getEndpointStatistics(endpointId: EndpointId): Result<{
-    totalRequests: number;
-    uniqueUsers: number;
-    requestsInLastHour: number;
-  }> {
-    const endpointResult = this.getEndpoint(endpointId);
-    if (endpointResult.isFailure) {
-      return Result.fail(endpointResult.getError());
-    }
-
-    const endpoint = endpointResult.getValue();
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
-    let totalRequests = 0;
-    const uniqueUsers = new Set<string>();
-    let requestsInLastHour = 0;
-
-    endpoint.props.rateLimitLogs.forEach((logs, userId) => {
-      uniqueUsers.add(userId);
-      logs.forEach((log) => {
-        totalRequests++;
-        if (log.timestamp.getTime() >= oneHourAgo.getTime()) {
-          requestsInLastHour++;
-        }
-      });
-    });
-
-    return Result.ok({
-      totalRequests,
-      uniqueUsers: uniqueUsers.size,
-      requestsInLastHour,
-    });
+  setDefaultRateLimit(tier: UserTier, rateLimit: RateLimit): Result<void> {
+    this.props.defaultRateLimits.set(tier.level, rateLimit);
+    return Result.ok();
   }
 
   /**
@@ -357,23 +256,15 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   ): Result<APIAggregate> {
     const defaultProps: APIAggregateProps = {
       endpoints: new Map(),
-      defaultRateLimits: new Map([
-        ['TIER1', new RateLimit(60, 60)],
-        ['TIER2', new RateLimit(120, 60)],
-        ['TIER3', new RateLimit(300, 60)],
-      ]),
-    };
-
-    const aggregateProps = {
-      ...defaultProps,
+      defaultRateLimits: new Map(),
       ...props,
     };
 
-    return Result.ok(new APIAggregate(aggregateProps, id));
+    return Result.ok(new APIAggregate(defaultProps, id));
   }
 
   /**
-   * 既存のデータから再構築
+   * 既存データから再構築
    */
   static reconstitute(
     props: APIAggregateProps,
