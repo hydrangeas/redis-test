@@ -150,6 +150,26 @@ export class UserAgent {
   }
 
   /**
+   * クローラーかどうかを判定
+   */
+  isCrawler(): boolean {
+    const crawlerPatterns = [
+      'crawler',
+      'spider',
+      'googlebot',
+      'bingbot',
+      'yandexbot',
+      'facebookexternalhit',
+      'twitterbot',
+      'linkedinbot',
+      'slackbot',
+    ];
+
+    const lowerValue = this._value.toLowerCase();
+    return crawlerPatterns.some(pattern => lowerValue.includes(pattern));
+  }
+
+  /**
    * 等価性の比較
    */
   equals(other: UserAgent): boolean {
