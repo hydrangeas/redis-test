@@ -9,6 +9,12 @@ import path from 'path';
 import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
 import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
+import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { EventBus } from '../events/event-bus';
+import { IEventStore } from '@/domain/interfaces/event-store.interface';
+import { InMemoryEventStore } from '../events/in-memory-event-store';
 
 /**
  * DIコンテナのセットアップ
@@ -48,10 +54,11 @@ export async function setupDI(): Promise<DependencyContainer> {
     useValue: dataDirectory,
   });
 
-  // 後続タスクで実装されるサービスの登録場所
+  // サービスの登録
+  registerEventServices(container);
   // registerRepositories(container);
-  // registerDomainServices(container);
-  // registerApplicationServices(container);
+  registerDomainServices(container);
+  registerApplicationServices(container);
   registerInfrastructureServices(container);
 
   logger.info('DI container setup completed');
@@ -102,6 +109,11 @@ export function setupTestDI(): DependencyContainer {
     useClass: MockSupabaseAuthAdapter,
   });
 
+  // テスト用のサービス登録
+  registerEventServices(container);
+  registerDomainServices(container);
+  registerApplicationServices(container);
+
   return container;
 }
 
@@ -119,30 +131,41 @@ export function setupTestDI(): DependencyContainer {
 // }
 
 /**
- * ドメインサービスの登録（後続タスクで実装）
+ * イベント関連サービスの登録
  */
-// function registerDomainServices(container: DependencyContainer): void {
-//   container.register(DI_TOKENS.AuthenticationService, {
-//     useClass: AuthenticationServiceImpl,
-//   });
-//   container.register(DI_TOKENS.RateLimitService, {
-//     useClass: RateLimitServiceImpl,
-//   });
-//   // ... 他のドメインサービス
-// }
+function registerEventServices(container: DependencyContainer): void {
+  // EventStoreの登録（シングルトン）
+  container.registerSingleton<IEventStore>(DI_TOKENS.EventStore, InMemoryEventStore);
+  
+  // EventBusの登録（シングルトン）
+  container.registerSingleton<IEventBus>(DI_TOKENS.EventBus, EventBus);
+}
 
 /**
- * アプリケーションサービスの登録（後続タスクで実装）
+ * ドメインサービスの登録
  */
-// function registerApplicationServices(container: DependencyContainer): void {
-//   container.register(DI_TOKENS.AuthenticationUseCase, {
-//     useClass: AuthenticationUseCaseImpl,
-//   });
-//   container.register(DI_TOKENS.DataRetrievalUseCase, {
-//     useClass: DataRetrievalUseCaseImpl,
-//   });
-//   // ... 他のアプリケーションサービス
-// }
+function registerDomainServices(container: DependencyContainer): void {
+  container.register(DI_TOKENS.AuthenticationService, {
+    useClass: AuthenticationService,
+  });
+  // container.register(DI_TOKENS.RateLimitService, {
+  //   useClass: RateLimitServiceImpl,
+  // });
+  // ... 他のドメインサービス
+}
+
+/**
+ * アプリケーションサービスの登録
+ */
+function registerApplicationServices(container: DependencyContainer): void {
+  container.register(DI_TOKENS.AuthenticationUseCase, {
+    useClass: AuthenticationUseCase,
+  });
+  // container.register(DI_TOKENS.DataRetrievalUseCase, {
+  //   useClass: DataRetrievalUseCaseImpl,
+  // });
+  // ... 他のアプリケーションサービス
+}
 
 /**
  * インフラストラクチャサービスの登録
