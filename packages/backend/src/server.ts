@@ -1,8 +1,12 @@
 import fastify from 'fastify';
 import { pino } from 'pino';
+import { getEnvConfig } from './infrastructure/config';
+
+// 環境変数を読み込み
+const config = getEnvConfig();
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: config.LOG_LEVEL,
   transport: {
     target: 'pino-pretty',
     options: {
@@ -17,20 +21,34 @@ const server = fastify({
 });
 
 server.get('/health', async () => {
-  return { status: 'ok', timestamp: new Date().toISOString() };
+  return { 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: config.NODE_ENV,
+  };
 });
 
 const start = async (): Promise<void> => {
   try {
-    const port = parseInt(process.env.PORT || '8080', 10);
-    const host = process.env.HOST || '0.0.0.0';
+    await server.listen({ 
+      port: config.PORT, 
+      host: config.HOST,
+    });
     
-    await server.listen({ port, host });
-    logger.info(`Server listening on ${host}:${port}`);
+    logger.info({
+      msg: 'Server started successfully',
+      port: config.PORT,
+      host: config.HOST,
+      environment: config.NODE_ENV,
+    });
   } catch (err) {
     server.log.error(err);
     process.exit(1);
   }
 };
 
-start();
+// 環境変数の検証エラーをキャッチ
+start().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});

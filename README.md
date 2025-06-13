@@ -23,6 +23,11 @@
 # 依存関係のインストール
 npm install
 
+# 環境変数の設定
+cp packages/backend/.env.example packages/backend/.env.local
+cp packages/frontend/.env.example packages/frontend/.env.local
+# .env.localファイルを編集して、必要な値を設定してください
+
 # 開発環境の起動
 npm run dev
 ```

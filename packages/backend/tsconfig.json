@@ -6,6 +6,7 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "types": ["node"],
     "lib": ["ES2022"],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"]

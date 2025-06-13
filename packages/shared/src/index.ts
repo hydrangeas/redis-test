@@ -1,2 +1,5 @@
-// Shared types and utilities will be exported from here
+// Shared types and utilities
 export const version = '1.0.0';
+
+// Type exports
+export * from './types/env';
