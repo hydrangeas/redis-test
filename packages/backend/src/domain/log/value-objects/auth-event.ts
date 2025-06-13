@@ -8,6 +8,7 @@ export enum EventType {
   LOGOUT = 'LOGOUT',
   TOKEN_REFRESH = 'TOKEN_REFRESH',
   LOGIN_FAILED = 'LOGIN_FAILED',
+  LOGIN_SUCCESS = 'LOGIN_SUCCESS',
   PASSWORD_RESET = 'PASSWORD_RESET',
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
   SUSPICIOUS_ACTIVITY = 'SUSPICIOUS_ACTIVITY',
@@ -20,11 +21,12 @@ export enum EventType {
 export class AuthEvent {
   private readonly _successfulEvents = new Set([
     EventType.LOGIN,
+    EventType.LOGIN_SUCCESS,
     EventType.LOGOUT,
     EventType.TOKEN_REFRESH,
   ]);
 
-  private constructor(
+  constructor(
     private readonly _type: EventType,
     private readonly _description?: string
   ) {

@@ -3,14 +3,14 @@ import { Result } from '@/domain/shared/result';
 import { Guard } from '@/domain/shared/guard';
 import { LogId } from '../value-objects/log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { APIEndpoint } from '@/domain/api/value-objects/endpoint';
+import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { RequestInfo } from '../value-objects/request-info';
 import { ResponseInfo } from '../value-objects/response-info';
 import { ValidationError } from '@/domain/errors/validation-error';
 
 interface APILogEntryProps {
   userId?: UserId;
-  endpoint: APIEndpoint;
+  endpoint: Endpoint;
   requestInfo: RequestInfo;
   responseInfo: ResponseInfo;
   timestamp: Date;
@@ -40,7 +40,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
   /**
    * APIエンドポイント
    */
-  get endpoint(): APIEndpoint {
+  get endpoint(): Endpoint {
     return this.props.endpoint;
   }
 
@@ -162,7 +162,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
   getSummary(): string {
     const status = this.isSuccess ? 'SUCCESS' : 'ERROR';
     const method = this.props.endpoint.method;
-    const path = this.props.endpoint.path;
+    const path = this.props.endpoint.path.value;
     const statusCode = this.props.responseInfo.statusCode;
     const responseTime = this.props.responseInfo.responseTime;
     
@@ -197,7 +197,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
     }
     
     // エンドポイントタイプ
-    tags.push(`endpoint:${this.props.endpoint.path}`);
+    tags.push(`endpoint:${this.props.endpoint.path.value}`);
     tags.push(`method:${this.props.endpoint.method.toLowerCase()}`);
     
     return tags;
