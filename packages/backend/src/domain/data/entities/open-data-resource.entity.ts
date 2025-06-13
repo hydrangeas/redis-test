@@ -3,16 +3,18 @@ import { ResourceId } from '../value-objects/resource-id';
 import { DataPath } from '../value-objects/data-path';
 import { ResourceMetadata } from '../value-objects/resource-metadata';
 
+export interface OpenDataResourceProps {
+  path: DataPath;
+  metadata: ResourceMetadata;
+  createdAt: Date;
+  accessedAt: Date;
+}
+
 /**
  * オープンデータリソースエンティティ
  * ファイルシステム上のJSONデータリソースを表現する
  */
-export class OpenDataResource extends Entity<ResourceId> {
-  private _path: DataPath;
-  private _metadata: ResourceMetadata;
-  private _createdAt: Date;
-  private _accessedAt: Date;
-
+export class OpenDataResource extends Entity<OpenDataResourceProps> {
   constructor(
     id: ResourceId,
     path: DataPath,
@@ -20,46 +22,55 @@ export class OpenDataResource extends Entity<ResourceId> {
     createdAt: Date,
     accessedAt?: Date
   ) {
-    super(id);
-    this._path = path;
-    this._metadata = metadata;
-    this._createdAt = createdAt;
-    this._accessedAt = accessedAt || createdAt;
+    const props: OpenDataResourceProps = {
+      path,
+      metadata,
+      createdAt,
+      accessedAt: accessedAt || createdAt,
+    };
+    super(props, id);
+  }
+
+  /**
+   * エンティティID
+   */
+  get id(): ResourceId {
+    return this._id as ResourceId;
   }
 
   /**
    * データパス
    */
   get path(): DataPath {
-    return this._path;
+    return this.props.path;
   }
 
   /**
    * リソースメタデータ
    */
   get metadata(): ResourceMetadata {
-    return this._metadata;
+    return this.props.metadata;
   }
 
   /**
    * 作成日時
    */
   get createdAt(): Date {
-    return this._createdAt;
+    return this.props.createdAt;
   }
 
   /**
    * 最終アクセス日時
    */
   get accessedAt(): Date {
-    return this._accessedAt;
+    return this.props.accessedAt;
   }
 
   /**
    * アクセスを記録
    */
   recordAccess(): void {
-    this._accessedAt = new Date();
+    this.props.accessedAt = new Date();
   }
 
   /**
@@ -67,7 +78,7 @@ export class OpenDataResource extends Entity<ResourceId> {
    * パスとETAgを組み合わせて一意のキーを作成
    */
   getCacheKey(): string {
-    return `${this._path.value}:${this._metadata.etag.replace(/"/g, '')}`;
+    return `${this.props.path.value}:${this.props.metadata.etag.replace(/"/g, '')}`;
   }
 
   /**
@@ -76,7 +87,7 @@ export class OpenDataResource extends Entity<ResourceId> {
    * @param cacheDurationSeconds キャッシュ有効期間（秒）
    */
   isCacheValid(now: Date, cacheDurationSeconds: number): boolean {
-    const elapsedSeconds = (now.getTime() - this._metadata.lastModified.getTime()) / 1000;
+    const elapsedSeconds = (now.getTime() - this.props.metadata.lastModified.getTime()) / 1000;
     return elapsedSeconds < cacheDurationSeconds;
   }
 
@@ -85,7 +96,7 @@ export class OpenDataResource extends Entity<ResourceId> {
    * @param etag クライアントが送信したETag
    */
   matchesEtag(etag: string): boolean {
-    return this._metadata.etag === etag;
+    return this.props.metadata.etag === etag;
   }
 
   /**
@@ -93,7 +104,7 @@ export class OpenDataResource extends Entity<ResourceId> {
    * @param since クライアントが送信したIf-Modified-Since日時
    */
   isModifiedSince(since: Date): boolean {
-    return this._metadata.lastModified > since;
+    return this.props.metadata.lastModified > since;
   }
 
   /**
@@ -110,7 +121,7 @@ export class OpenDataResource extends Entity<ResourceId> {
    * リソースのサイズをヒューマンリーダブルな形式で取得
    */
   getHumanReadableSize(): string {
-    const size = this._metadata.size;
+    const size = this.props.metadata.size;
     const units = ['B', 'KB', 'MB', 'GB'];
     let unitIndex = 0;
     let displaySize = size;
@@ -128,6 +139,6 @@ export class OpenDataResource extends Entity<ResourceId> {
    * @param metadata 新しいメタデータ
    */
   updateMetadata(metadata: ResourceMetadata): void {
-    this._metadata = metadata;
+    this.props.metadata = metadata;
   }
 }

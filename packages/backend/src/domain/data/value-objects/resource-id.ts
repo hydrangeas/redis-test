@@ -1,4 +1,4 @@
-import { Guard } from '@/domain/shared/guard';
+import { UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
 import * as crypto from 'crypto';
@@ -7,27 +7,18 @@ import * as crypto from 'crypto';
  * リソースID値オブジェクト
  * オープンデータリソースの一意識別子
  */
-export class ResourceId {
+export class ResourceId extends UniqueEntityId {
   private static readonly ID_PREFIX = 'resource';
-  private static readonly ID_PATTERN = /^resource_[a-f0-9]{32}$/;
 
-  private constructor(private readonly _value: string) {
-    Object.freeze(this);
-  }
-
-  /**
-   * IDの値を取得
-   */
-  get value(): string {
-    return this._value;
+  private constructor(id?: string) {
+    super(id);
   }
 
   /**
    * 新しいリソースIDを生成
    */
   static generate(): ResourceId {
-    const uuid = crypto.randomBytes(16).toString('hex');
-    return new ResourceId(`${this.ID_PREFIX}_${uuid}`);
+    return new ResourceId();
   }
 
   /**
@@ -44,59 +35,11 @@ export class ResourceId {
    * 既存の値からリソースIDを作成
    * @param value ID文字列
    */
-  static create(value: string): Result<ResourceId, DomainError> {
-    const guardResult = Guard.againstNullOrUndefined(value, 'ResourceId');
-    if (guardResult.isFailure) {
-      return Result.fail(
-        new DomainError(
-          'INVALID_RESOURCE_ID',
-          'Resource ID cannot be null or undefined',
-          'VALIDATION'
-        )
-      );
+  static create(value?: string): Result<ResourceId> {
+    try {
+      return Result.ok(new ResourceId(value));
+    } catch (error) {
+      return Result.fail(error as Error);
     }
-
-    if (!this.isValidFormat(value)) {
-      return Result.fail(
-        new DomainError(
-          'INVALID_RESOURCE_ID_FORMAT',
-          `Resource ID must match pattern: ${this.ID_PATTERN}`,
-          'VALIDATION'
-        )
-      );
-    }
-
-    return Result.ok(new ResourceId(value));
-  }
-
-  /**
-   * IDフォーマットの検証
-   * @param value 検証する値
-   */
-  private static isValidFormat(value: string): boolean {
-    return this.ID_PATTERN.test(value);
-  }
-
-  /**
-   * 等価性の比較
-   * @param other 比較対象
-   */
-  equals(other: ResourceId): boolean {
-    if (!other) return false;
-    return this._value === other._value;
-  }
-
-  /**
-   * 文字列表現を返す
-   */
-  toString(): string {
-    return this._value;
-  }
-
-  /**
-   * JSONシリアライズ用
-   */
-  toJSON(): string {
-    return this._value;
   }
 }
