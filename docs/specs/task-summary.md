@@ -66,3 +66,32 @@
 - **詳細**: [ユーザー作業指示書](./task-user-instructions.md#supabaseプロジェクトの設定タスク0002)を参照
 
 ---
+
+### タスク0006: DIコンテナ（TSyringe）の設定と依存性注入の基本実装
+- **実施日**: 2025-01-14
+- **ブランチ**: feature/0006-di-container
+- **実装内容**:
+  - TSyringeとreflect-metadataの導入
+  - DIトークンの定義（Symbol.forを使用した型安全な注入）
+  - 本番環境用のDIコンテナセットアップ関数の実装
+  - テスト環境用のDIコンテナセットアップ関数の実装
+  - 基本サービスの登録（EnvConfig、Logger、SupabaseClient、DataDirectory）
+  - TypeScriptデコレータの有効化
+  - server.tsのDIコンテナ対応
+  - 包括的なテストの作成
+
+- **達成事項**:
+  - ✅ TSyringeがプロジェクトに導入されている
+  - ✅ DIコンテナの初期化処理が実装されている
+  - ✅ 基本的なインターフェースと実装の登録パターンが確立されている
+  - ✅ アプリケーション起動時のコンテナ設定が完了している
+  - ✅ テスト環境でのモック注入パターンが確立されている
+  - ✅ デコレータベースの注入が機能している
+  - ✅ コーディング規約に準拠している
+
+- **注意事項**:
+  - reflect-metadataのインポートは最上位で行う必要がある
+  - TypeScriptの設定でexperimentalDecoratorsとemitDecoratorMetadataを有効化
+  - 今後のサービス登録のための基盤が整備された
+
+---

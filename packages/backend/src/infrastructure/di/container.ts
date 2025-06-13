@@ -1,9 +1,10 @@
 import 'reflect-metadata';
 import { container, DependencyContainer } from 'tsyringe';
-import { pino, Logger } from 'pino';
+import { Logger } from 'pino';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { DI_TOKENS } from './tokens';
 import { getEnvConfig, type EnvConfig } from '../config';
+import { createLogger } from '../logging';
 import path from 'path';
 
 /**
@@ -18,16 +19,7 @@ export async function setupDI(): Promise<DependencyContainer> {
   });
 
   // ロガーの登録
-  const logger = pino({
-    level: envConfig.LOG_LEVEL,
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname',
-      },
-    },
-  });
+  const logger = createLogger(envConfig);
   container.register<Logger>(DI_TOKENS.Logger, {
     useValue: logger,
   });
@@ -92,9 +84,7 @@ export function setupTestDI(): DependencyContainer {
   });
 
   // テスト用ロガー（出力を抑制）
-  const testLogger = pino({
-    level: 'error',
-  });
+  const testLogger = createLogger(testEnvConfig);
   container.register<Logger>(DI_TOKENS.Logger, {
     useValue: testLogger,
   });

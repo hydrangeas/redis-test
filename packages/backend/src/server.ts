@@ -3,6 +3,7 @@ import fastify from 'fastify';
 import { container } from 'tsyringe';
 import { Logger } from 'pino';
 import { setupDI, DI_TOKENS } from './infrastructure/di';
+import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
 import type { EnvConfig } from './infrastructure/config';
 
 // DIコンテナをセットアップ
@@ -12,9 +13,12 @@ await setupDI();
 const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
 const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
-const server = fastify({
-  logger,
-});
+// Fastifyサーバーの作成（ロガー設定を含む）
+const loggerConfig = createFastifyLoggerConfig(config);
+const server = fastify(loggerConfig);
+
+// リクエストロギングの設定
+setupRequestLogging(server);
 
 server.get('/health', async () => {
   return { 
