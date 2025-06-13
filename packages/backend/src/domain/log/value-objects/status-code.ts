@@ -16,6 +16,13 @@ export class StatusCode {
   }
 
   /**
+   * ステータスコードの値を取得（互換性のため）
+   */
+  get value(): number {
+    return this._code;
+  }
+
+  /**
    * ステータスコードを作成
    */
   static create(code: number): Result<StatusCode> {

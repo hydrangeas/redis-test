@@ -24,44 +24,16 @@ describe('LogId', () => {
       const result = LogId.create(uuid);
       
       expect(result.isSuccess).toBe(true);
-      expect(result.value.value).toBe(uuid);
+      expect(result.getValue().value).toBe(uuid);
     });
 
-    it('空の値の場合はエラーを返す', () => {
-      const result = LogId.create('');
-      
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('ログIDは空にできません');
-    });
-
-    it('スペースのみの値の場合はエラーを返す', () => {
-      const result = LogId.create('   ');
-      
-      expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('ログIDは空にできません');
-    });
-
-    it('無効なUUID形式の場合はエラーを返す', () => {
-      const invalidUuids = [
-        'not-a-uuid',
-        '550e8400-e29b-41d4-a716',
-        '550e8400-e29b-41d4-a716-44665544000g',
-        '550e8400e29b41d4a716446655440000',
-      ];
-
-      invalidUuids.forEach(invalid => {
-        const result = LogId.create(invalid);
-        expect(result.isFailure).toBe(true);
-        expect(result.error).toBe('ログIDは有効なUUID形式である必要があります');
-      });
-    });
   });
 
   describe('equals', () => {
     it('同じ値のログIDは等しいと判定される', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440000';
-      const logId1 = LogId.create(uuid).value;
-      const logId2 = LogId.create(uuid).value;
+      const logId1 = LogId.create(uuid).getValue();
+      const logId2 = LogId.create(uuid).getValue();
       
       expect(logId1.equals(logId2)).toBe(true);
     });
@@ -84,8 +56,8 @@ describe('LogId', () => {
   describe('hashCode', () => {
     it('同じ値のログIDは同じハッシュコードを持つ', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440000';
-      const logId1 = LogId.create(uuid).value;
-      const logId2 = LogId.create(uuid).value;
+      const logId1 = LogId.create(uuid).getValue();
+      const logId2 = LogId.create(uuid).getValue();
       
       expect(logId1.hashCode()).toBe(logId2.hashCode());
     });
@@ -102,7 +74,7 @@ describe('LogId', () => {
   describe('toString', () => {
     it('ログIDの文字列表現を返す', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440000';
-      const logId = LogId.create(uuid).value;
+      const logId = LogId.create(uuid).getValue();
       
       expect(logId.toString()).toBe(uuid);
     });

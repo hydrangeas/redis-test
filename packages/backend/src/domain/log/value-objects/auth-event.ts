@@ -1,4 +1,4 @@
-import { Result } from '@/domain/errors';
+import { Result, DomainError } from '@/domain/errors';
 
 /**
  * 認証イベントタイプの列挙
@@ -7,6 +7,10 @@ export enum EventType {
   LOGIN = 'LOGIN',
   LOGOUT = 'LOGOUT',
   TOKEN_REFRESH = 'TOKEN_REFRESH',
+  LOGIN_FAILED = 'LOGIN_FAILED',
+  PASSWORD_RESET = 'PASSWORD_RESET',
+  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
+  SUSPICIOUS_ACTIVITY = 'SUSPICIOUS_ACTIVITY',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
 }
 
@@ -20,7 +24,10 @@ export class AuthEvent {
     EventType.TOKEN_REFRESH,
   ]);
 
-  private constructor(private readonly _type: EventType) {
+  private constructor(
+    private readonly _type: EventType,
+    private readonly _description?: string
+  ) {
     Object.freeze(this);
   }
 
@@ -29,6 +36,13 @@ export class AuthEvent {
    */
   get type(): EventType {
     return this._type;
+  }
+
+  /**
+   * 説明を取得
+   */
+  get description(): string | undefined {
+    return this._description;
   }
 
   /**
@@ -41,31 +55,40 @@ export class AuthEvent {
   /**
    * イベントタイプからAuthEventを作成
    */
-  static create(type: EventType): Result<AuthEvent> {
+  static create(type: EventType, description?: string): Result<AuthEvent> {
     if (!Object.values(EventType).includes(type)) {
-      return Result.fail<AuthEvent>('無効な認証イベントタイプです');
+      return Result.fail<AuthEvent>(
+        DomainError.validation(
+          'INVALID_AUTH_EVENT_TYPE',
+          '無効な認証イベントタイプです'
+        )
+      );
     }
 
-    return Result.ok(new AuthEvent(type));
+    return Result.ok(new AuthEvent(type, description));
   }
 
   /**
    * 事前定義されたイベント
    */
-  static login(): AuthEvent {
-    return new AuthEvent(EventType.LOGIN);
+  static login(): Result<AuthEvent> {
+    return AuthEvent.create(EventType.LOGIN, 'User logged in');
   }
 
-  static logout(): AuthEvent {
-    return new AuthEvent(EventType.LOGOUT);
+  static logout(): Result<AuthEvent> {
+    return AuthEvent.create(EventType.LOGOUT, 'User logged out');
   }
 
-  static tokenRefresh(): AuthEvent {
-    return new AuthEvent(EventType.TOKEN_REFRESH);
+  static tokenRefresh(): Result<AuthEvent> {
+    return AuthEvent.create(EventType.TOKEN_REFRESH, 'Token refreshed');
   }
 
-  static tokenExpired(): AuthEvent {
-    return new AuthEvent(EventType.TOKEN_EXPIRED);
+  static loginFailed(reason: string): Result<AuthEvent> {
+    return AuthEvent.create(EventType.LOGIN_FAILED, reason);
+  }
+
+  static tokenExpired(): Result<AuthEvent> {
+    return AuthEvent.create(EventType.TOKEN_EXPIRED, 'Token expired');
   }
 
   /**
@@ -86,7 +109,10 @@ export class AuthEvent {
   /**
    * JSON表現を返す
    */
-  toJSON(): string {
-    return this._type;
+  toJSON(): Record<string, any> {
+    return {
+      type: this._type,
+      description: this._description,
+    };
   }
 }

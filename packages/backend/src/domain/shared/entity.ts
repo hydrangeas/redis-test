@@ -31,10 +31,15 @@ export abstract class Entity<T> {
 }
 
 export class UniqueEntityId {
-  private value: string;
+  private _value: string;
 
   constructor(id?: string) {
-    this.value = id ? id : uuidv4();
+    this._value = id ? id : uuidv4();
+    Object.freeze(this);
+  }
+
+  get value(): string {
+    return this._value;
   }
 
   equals(id?: UniqueEntityId): boolean {
@@ -44,14 +49,24 @@ export class UniqueEntityId {
     if (!(id instanceof this.constructor)) {
       return false;
     }
-    return id.toValue() === this.value;
+    return id.toValue() === this._value;
   }
 
   toString(): string {
-    return String(this.value);
+    return String(this._value);
   }
 
   toValue(): string {
-    return this.value;
+    return this._value;
+  }
+
+  hashCode(): number {
+    let hash = 0;
+    for (let i = 0; i < this._value.length; i++) {
+      const char = this._value.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash;
   }
 }

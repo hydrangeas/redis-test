@@ -19,6 +19,8 @@ export const DI_TOKENS = {
   RateLimitRepository: Symbol.for('RateLimitRepository'),
   AuthLogRepository: Symbol.for('AuthLogRepository'),
   ApiLogRepository: Symbol.for('ApiLogRepository'),
+  OpenDataRepository: Symbol.for('OpenDataRepository'),
+  APILogRepository: Symbol.for('APILogRepository'),
   
   // Domain Services
   AuthenticationService: Symbol.for('AuthenticationService'),

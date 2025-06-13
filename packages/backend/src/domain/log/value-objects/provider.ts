@@ -1,54 +1,72 @@
-import { Result } from '@/domain/errors';
+import { Result, DomainError } from '@/domain/errors';
 
 /**
  * 認証プロバイダーを表すバリューオブジェクト
  */
 export class Provider {
-  private static readonly SUPPORTED_PROVIDERS = new Set([
+  private static readonly VALID_PROVIDERS = [
+    'email',
     'google',
     'github',
-    'email',
+    'microsoft',
+    'apple',
+    'jwt',
+    'api_key',
     'anonymous',
-  ]);
+  ];
 
-  private constructor(private readonly _name: string) {
+  private constructor(private readonly _value: string) {
     Object.freeze(this);
   }
 
   /**
-   * プロバイダー名を取得
+   * プロバイダーの値を取得
+   */
+  get value(): string {
+    return this._value;
+  }
+
+  /**
+   * プロバイダー名を取得（互換性のため）
    */
   get name(): string {
-    return this._name;
+    return this._value;
   }
 
   /**
    * プロバイダーを作成
    */
-  static create(name: string): Result<Provider> {
-    if (!name || name.trim().length === 0) {
-      return Result.fail<Provider>('プロバイダー名は空にできません');
+  static create(value: string): Result<Provider> {
+    if (!value || value.trim().length === 0) {
+      return Result.fail<Provider>(
+        DomainError.validation(
+          'EMPTY_PROVIDER_NAME',
+          'プロバイダー名は空にできません'
+        )
+      );
     }
 
-    const normalizedName = name.trim().toLowerCase();
+    const normalized = value.trim().toLowerCase();
     
-    if (normalizedName.length > 50) {
-      return Result.fail<Provider>('プロバイダー名は50文字以内である必要があります');
+    if (!this.VALID_PROVIDERS.includes(normalized)) {
+      return Result.fail<Provider>(
+        DomainError.validation(
+          'UNKNOWN_PROVIDER',
+          `Unknown provider: ${value}`
+        )
+      );
     }
 
-    return Result.ok(new Provider(normalizedName));
-  }
-
-  /**
-   * サポートされているプロバイダーかどうかを判定
-   */
-  isSupported(): boolean {
-    return Provider.SUPPORTED_PROVIDERS.has(this._name);
+    return Result.ok(new Provider(normalized));
   }
 
   /**
    * 事前定義されたプロバイダー
    */
+  static email(): Provider {
+    return new Provider('email');
+  }
+
   static google(): Provider {
     return new Provider('google');
   }
@@ -57,8 +75,8 @@ export class Provider {
     return new Provider('github');
   }
 
-  static email(): Provider {
-    return new Provider('email');
+  static jwt(): Provider {
+    return new Provider('jwt');
   }
 
   static anonymous(): Provider {
@@ -66,24 +84,38 @@ export class Provider {
   }
 
   /**
+   * サポートされているプロバイダーかどうかを判定
+   */
+  isSupported(): boolean {
+    return Provider.VALID_PROVIDERS.includes(this._value);
+  }
+
+  /**
+   * ソーシャルプロバイダーかどうかを判定
+   */
+  isSocialProvider(): boolean {
+    return ['google', 'github', 'microsoft', 'apple'].includes(this._value);
+  }
+
+  /**
    * 等価性の比較
    */
   equals(other: Provider): boolean {
     if (!other) return false;
-    return this._name === other._name;
+    return this._value === other._value;
   }
 
   /**
    * 文字列表現を返す
    */
   toString(): string {
-    return this._name;
+    return this._value;
   }
 
   /**
    * JSON表現を返す
    */
   toJSON(): string {
-    return this._name;
+    return this._value;
   }
 }

@@ -121,6 +121,15 @@ export class IPAddress {
   }
 
   /**
+   * ブラックリストに登録されているかどうかを判定
+   * (実装では簡易的にfalseを返す。実際の実装ではブラックリストDBとの連携が必要)
+   */
+  isBlacklisted(): boolean {
+    // TODO: 実際の実装ではブラックリストDBや外部サービスとの連携が必要
+    return false;
+  }
+
+  /**
    * 等価性の比較
    */
   equals(other: IPAddress): boolean {
