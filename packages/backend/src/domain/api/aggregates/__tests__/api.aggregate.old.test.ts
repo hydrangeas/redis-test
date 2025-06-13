@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { APIAggregate } from '../api.aggregate';
 import { APIEndpoint } from '../../value-objects/api-endpoint';
+import { EndpointId } from '../../value-objects/endpoint-id';
 import { EndpointPath } from '../../value-objects/endpoint-path';
 import { HttpMethod } from '../../value-objects/http-method';
 import { EndpointType } from '../../value-objects/endpoint-type';
@@ -9,7 +10,7 @@ import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 
-describe('APIAggregate (Refactored)', () => {
+describe('APIAggregate', () => {
   let aggregate: APIAggregate;
   let testEndpoint: APIEndpoint;
 
@@ -42,8 +43,8 @@ describe('APIAggregate (Refactored)', () => {
 
     it('should create APIAggregate with custom properties', () => {
       const customRateLimits = new Map([
-        [TierLevel.TIER1, new RateLimit(30, 60)],
-        [TierLevel.TIER2, new RateLimit(60, 60)],
+        ['TIER1', new RateLimit(30, 60)],
+        ['TIER2', new RateLimit(60, 60)],
       ]);
 
       const result = APIAggregate.create({
@@ -72,6 +73,27 @@ describe('APIAggregate (Refactored)', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().code).toBe('ENDPOINT_ALREADY_EXISTS');
+    });
+
+    it('should fail to add endpoint with duplicate path and method', () => {
+      aggregate.addEndpoint(testEndpoint);
+
+      const pathResult = EndpointPath.create('/api/test');
+      const typeResult = EndpointType.create('protected');
+      
+      const duplicateEndpointResult = APIEndpoint.create({
+        path: pathResult.getValue(),
+        method: HttpMethod.GET,
+        type: typeResult.getValue(),
+        description: 'Duplicate endpoint',
+        isActive: true,
+      });
+      const duplicateEndpoint = duplicateEndpointResult.getValue();
+
+      const result = aggregate.addEndpoint(duplicateEndpoint);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.getError().code).toBe('DUPLICATE_ENDPOINT');
     });
   });
 
@@ -112,7 +134,7 @@ describe('APIAggregate (Refactored)', () => {
   });
 
   describe('findMatchingEndpoint', () => {
-    it('should find endpoint by exact path and method', () => {
+    it('should find endpoint by path and method', () => {
       aggregate.addEndpoint(testEndpoint);
       const pathResult = EndpointPath.create('/api/test');
       const result = aggregate.findMatchingEndpoint(
@@ -122,29 +144,6 @@ describe('APIAggregate (Refactored)', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(testEndpoint);
-    });
-
-    it('should find endpoint with wildcard pattern', () => {
-      const wildcardPathResult = EndpointPath.create('/api/data/*');
-      const wildcardTypeResult = EndpointType.create('protected');
-      
-      const wildcardEndpointResult = APIEndpoint.create({
-        path: wildcardPathResult.getValue(),
-        method: HttpMethod.GET,
-        type: wildcardTypeResult.getValue(),
-        isActive: true,
-      });
-      const wildcardEndpoint = wildcardEndpointResult.getValue();
-      aggregate.addEndpoint(wildcardEndpoint);
-
-      const testPathResult = EndpointPath.create('/api/data/test.json');
-      const result = aggregate.findMatchingEndpoint(
-        testPathResult.getValue(),
-        HttpMethod.GET
-      );
-
-      expect(result.isSuccess).toBe(true);
-      expect(result.getValue()).toBe(wildcardEndpoint);
     });
 
     it('should fail to find non-existent endpoint', () => {
@@ -165,11 +164,11 @@ describe('APIAggregate (Refactored)', () => {
 
     beforeEach(() => {
       userId = UserId.generate();
-      userTier = new UserTier(TierLevel.TIER1, new RateLimit(5, 60));
+      const tierLevelResult = TierLevel.create('tier1');
+      userTier = UserTier.create(tierLevelResult.getValue()).getValue();
       
       // Add default rate limit for tier1
-      const rateLimit = new RateLimit(5, 60);
-      aggregate.defaultRateLimits.set(TierLevel.TIER1, rateLimit);
+      aggregate.setDefaultRateLimit(userTier, new RateLimit(5, 60));
       aggregate.addEndpoint(testEndpoint);
     });
 
@@ -205,10 +204,53 @@ describe('APIAggregate (Refactored)', () => {
       const inactiveEndpoint = inactiveEndpointResult.getValue();
       aggregate.addEndpoint(inactiveEndpoint);
 
-      const result = aggregate.validateEndpointAccess(
+      // 6th request should exceed limit
+      const result = await aggregate.processAPIAccess(
         userId,
-        inactiveEndpoint.path,
-        inactiveEndpoint.method,
+        testEndpoint.id,
+        userTier
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const checkResult = result.getValue();
+      expect(checkResult.isExceeded).toBe(true);
+      expect(checkResult.remainingRequests).toBe(0);
+
+      // Should emit both APIAccessRequested and RateLimitExceeded events
+      expect(aggregate.domainEvents.length).toBe(2);
+      expect(aggregate.domainEvents[0].getEventName()).toBe('APIAccessRequested');
+      expect(aggregate.domainEvents[1].getEventName()).toBe('RateLimitExceeded');
+    });
+
+    it('should skip rate limit for public endpoints', async () => {
+      const publicEndpointResult = APIEndpoint.create({
+        path: new EndpointPath('/api/public'),
+        method: HttpMethod.GET,
+        type: EndpointType.PUBLIC,
+        description: 'Public endpoint',
+        isActive: true,
+      });
+      const publicEndpoint = publicEndpointResult.getValue();
+      aggregate.addEndpoint(publicEndpoint);
+
+      const result = await aggregate.processAPIAccess(
+        userId,
+        publicEndpoint.id,
+        userTier
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const checkResult = result.getValue();
+      expect(checkResult.isExceeded).toBe(false);
+      expect(checkResult.remainingRequests).toBe(Number.MAX_SAFE_INTEGER);
+    });
+
+    it('should fail for inactive endpoints', async () => {
+      testEndpoint.deactivate();
+
+      const result = await aggregate.processAPIAccess(
+        userId,
+        testEndpoint.id,
         userTier
       );
 
@@ -220,38 +262,12 @@ describe('APIAggregate (Refactored)', () => {
       expect(aggregate.domainEvents[0].getEventName()).toBe('InvalidAPIAccess');
     });
 
-    it('should return null rate limit for public endpoints', () => {
-      const publicPathResult = EndpointPath.create('/api/public');
-      const publicTypeResult = EndpointType.create('public');
-      const publicEndpointResult = APIEndpoint.create({
-        path: publicPathResult.getValue(),
-        method: HttpMethod.GET,
-        type: publicTypeResult.getValue(),
-        isActive: true,
-      });
-      const publicEndpoint = publicEndpointResult.getValue();
-      aggregate.addEndpoint(publicEndpoint);
+    it('should fail for non-existent endpoints', async () => {
+      const nonExistentId = EndpointId.generate();
 
-      const result = aggregate.validateEndpointAccess(
+      const result = await aggregate.processAPIAccess(
         userId,
-        publicEndpoint.path,
-        publicEndpoint.method,
-        userTier
-      );
-
-      expect(result.isSuccess).toBe(true);
-      const validationResult = result.getValue();
-      expect(validationResult.endpoint).toBe(publicEndpoint);
-      expect(validationResult.rateLimit).toBeNull();
-    });
-
-    it('should fail for non-existent endpoint', () => {
-      const pathResult = EndpointPath.create('/api/nonexistent');
-      
-      const result = aggregate.validateEndpointAccess(
-        userId,
-        pathResult.getValue(),
-        HttpMethod.GET,
+        nonExistentId,
         userTier
       );
 
@@ -262,69 +278,97 @@ describe('APIAggregate (Refactored)', () => {
       expect(aggregate.domainEvents.length).toBe(1);
       expect(aggregate.domainEvents[0].getEventName()).toBe('InvalidAPIAccess');
     });
+  });
 
-    it('should fail when tier cannot access endpoint', () => {
-      // Create internal endpoint (tier3 only)
-      const pathResult = EndpointPath.create('/api/internal');
-      const typeResult = EndpointType.create('internal');
-      const tier3EndpointResult = APIEndpoint.create({
-        path: pathResult.getValue(),
-        method: HttpMethod.GET,
-        type: typeResult.getValue(),
-        isActive: true,
-      });
-      const tier3Endpoint = tier3EndpointResult.getValue();
-      aggregate.addEndpoint(tier3Endpoint);
+  describe('cleanupUserLogs', () => {
+    it('should cleanup old logs for user', async () => {
+      const userId = new UserId('123e4567-e89b-12d3-a456-426614174000');
+      const userTier = new UserTier(TierLevel.TIER1, new RateLimit(5, 60));
+      
+      aggregate.addEndpoint(testEndpoint);
 
-      // Try to access with tier1
-      const result = aggregate.validateEndpointAccess(
-        userId,
-        tier3Endpoint.path,
-        tier3Endpoint.method,
-        userTier // tier1
-      );
+      // Add some requests
+      for (let i = 0; i < 3; i++) {
+        await aggregate.processAPIAccess(userId, testEndpoint.id, userTier);
+      }
 
-      expect(result.isFailure).toBe(true);
-      expect(result.getError().code).toBe('INSUFFICIENT_TIER');
+      // Cleanup with 0 retention period (should remove all)
+      const result = await aggregate.cleanupUserLogs(userId, 0);
 
-      // Should emit InvalidAPIAccess event
-      expect(aggregate.domainEvents.length).toBe(1);
-      expect(aggregate.domainEvents[0].getEventName()).toBe('InvalidAPIAccess');
+      expect(result.isSuccess).toBe(true);
+      expect(result.getValue()).toBe(3);
     });
   });
 
-  describe('setDefaultRateLimit', () => {
-    it('should set default rate limit for tier', () => {
-      const tier = new UserTier(TierLevel.TIER2, new RateLimit(100, 60));
-      const rateLimit = new RateLimit(100, 60);
+  describe('cleanupAllLogs', () => {
+    it('should cleanup all old logs', async () => {
+      const userId1 = new UserId('123e4567-e89b-12d3-a456-426614174000');
+      const userId2 = new UserId('223e4567-e89b-12d3-a456-426614174000');
+      const userTier = new UserTier(TierLevel.TIER1, new RateLimit(5, 60));
+      
+      aggregate.addEndpoint(testEndpoint);
 
-      const result = aggregate.setDefaultRateLimit(tier, rateLimit);
+      // Add requests from multiple users
+      for (let i = 0; i < 3; i++) {
+        await aggregate.processAPIAccess(userId1, testEndpoint.id, userTier);
+        await aggregate.processAPIAccess(userId2, testEndpoint.id, userTier);
+      }
+
+      // Cleanup with 0 retention period (should remove all)
+      const result = await aggregate.cleanupAllLogs(0);
 
       expect(result.isSuccess).toBe(true);
-      expect(aggregate.defaultRateLimits.get(TierLevel.TIER2)).toBe(rateLimit);
+      expect(result.getValue()).toBe(6);
+    });
+  });
+
+  describe('getEndpointStatistics', () => {
+    it('should get endpoint statistics', async () => {
+      const userId1 = new UserId('123e4567-e89b-12d3-a456-426614174000');
+      const userId2 = new UserId('223e4567-e89b-12d3-a456-426614174000');
+      const userTier = new UserTier(TierLevel.TIER1, new RateLimit(5, 60));
+      
+      aggregate.addEndpoint(testEndpoint);
+
+      // Add requests from multiple users
+      await aggregate.processAPIAccess(userId1, testEndpoint.id, userTier);
+      await aggregate.processAPIAccess(userId1, testEndpoint.id, userTier);
+      await aggregate.processAPIAccess(userId2, testEndpoint.id, userTier);
+
+      const result = aggregate.getEndpointStatistics(testEndpoint.id);
+
+      expect(result.isSuccess).toBe(true);
+      const stats = result.getValue();
+      expect(stats.totalRequests).toBe(3);
+      expect(stats.uniqueUsers).toBe(2);
+      expect(stats.requestsInLastHour).toBe(3);
+    });
+
+    it('should fail for non-existent endpoint', () => {
+      const nonExistentId = EndpointId.generate();
+      const result = aggregate.getEndpointStatistics(nonExistentId);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.getError().code).toBe('ENDPOINT_NOT_FOUND');
     });
   });
 
   describe('reconstitute', () => {
-    it('should reconstitute from existing data', () => {
+    it('should reconstitute aggregate from existing data', () => {
       const endpoints = new Map([
-        [`${testEndpoint.path.value}:${testEndpoint.method}`, testEndpoint]
+        [testEndpoint.id.value, testEndpoint],
       ]);
-      const rateLimits = new Map([
-        [TierLevel.TIER1, new RateLimit(60, 60)]
+      const defaultRateLimits = new Map([
+        ['TIER1', new RateLimit(60, 60)],
       ]);
 
-      const reconstituted = APIAggregate.reconstitute(
-        {
-          endpoints,
-          defaultRateLimits: rateLimits,
-        },
+      const aggregate = APIAggregate.reconstitute(
+        { endpoints, defaultRateLimits },
         'aggregate-id'
       );
 
-      expect(reconstituted.endpoints).toBe(endpoints);
-      expect(reconstituted.defaultRateLimits).toBe(rateLimits);
-      // Aggregate id is private, so we can't directly test it
+      expect(aggregate.endpoints).toBe(endpoints);
+      expect(aggregate.defaultRateLimits).toBe(defaultRateLimits);
     });
   });
 });

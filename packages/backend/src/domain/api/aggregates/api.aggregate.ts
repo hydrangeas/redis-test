@@ -187,7 +187,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     }
 
     // 必要なティアレベルをチェック
-    if (!endpoint.canAccessWithTier(userTier)) {
+    if (!endpoint.type.canBeAccessedByTier(userTier)) {
       this.addDomainEvent(
         new InvalidAPIAccess(
           this._id,
