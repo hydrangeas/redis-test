@@ -26,6 +26,9 @@ await server.register(import('./presentation/plugins/security-headers'));
 await server.register(import('./presentation/plugins/path-validation'));
 await server.register(import('./presentation/plugins/error-handler'));
 
+// APIルートの登録
+await server.register(import('./presentation/routes'), { prefix: '/api/v1' });
+
 server.get('/health', async () => {
   return { 
     status: 'ok', 

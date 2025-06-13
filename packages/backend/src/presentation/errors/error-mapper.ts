@@ -3,6 +3,7 @@ import { DI_TOKENS } from '../../infrastructure/di';
 import { DomainError, ErrorType } from '../../domain/errors/domain-error';
 import { DomainException } from '../../domain/errors/exceptions';
 import { ProblemDetails } from '../../domain/errors/problem-details';
+import { ApplicationError, ApplicationErrorType } from '../../application/errors/application-error';
 import type { EnvConfig } from '../../infrastructure/config';
 
 /**
@@ -20,14 +21,54 @@ const STATUS_CODE_MAP: Record<ErrorType, number> = {
 };
 
 /**
+ * ApplicationErrorTypeからHTTPステータスコードへのマッピング
+ */
+const APP_STATUS_CODE_MAP: Record<ApplicationErrorType, number> = {
+  VALIDATION: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  RATE_LIMIT: 429,
+  EXTERNAL_SERVICE: 503,
+  INTERNAL: 500,
+};
+
+/**
  * エラーをRFC 7807 Problem Details形式に変換
  */
 export function toProblemDetails(
-  error: DomainError | DomainException | Error,
+  error: DomainError | DomainException | ApplicationError | Error | { code: string; message: string; type: string },
   instance?: string
 ): ProblemDetails {
   const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
   const baseUrl = config.API_BASE_URL;
+
+  // ApplicationErrorの場合
+  if (error instanceof ApplicationError) {
+    return {
+      type: `${baseUrl}/errors/${error.code.toLowerCase().replace(/_/g, '-')}`,
+      title: error.message,
+      status: APP_STATUS_CODE_MAP[error.type] || 500,
+      detail: error.metadata ? JSON.stringify(error.metadata) : error.message,
+      instance,
+    };
+  }
+
+  // プレーンオブジェクトの場合（簡易エラー）
+  if (!(error instanceof Error) && 'code' in error && 'message' in error && 'type' in error) {
+    const statusCode = (error.type in APP_STATUS_CODE_MAP) 
+      ? APP_STATUS_CODE_MAP[error.type as ApplicationErrorType] 
+      : 500;
+    
+    return {
+      type: `${baseUrl}/errors/${error.code.toLowerCase().replace(/_/g, '-')}`,
+      title: error.message,
+      status: statusCode,
+      detail: error.message,
+      instance,
+    };
+  }
 
   // DomainExceptionの場合
   if (error instanceof DomainException) {
