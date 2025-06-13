@@ -1,5 +1,7 @@
 import { ValidationError } from '@/domain/errors/validation-error';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
+import { Result } from '@/domain/errors/result';
+import { DomainError } from '@/domain/errors/domain-error';
 
 export class RequestCount {
   private readonly _count: number;
@@ -21,6 +23,10 @@ export class RequestCount {
     return this._count;
   }
 
+  get value(): number {
+    return this._count;
+  }
+
   public exceeds(limit: number): boolean {
     return this._count >= limit;
   }
@@ -36,5 +42,21 @@ export class RequestCount {
 
   public toString(): string {
     return this._count.toString();
+  }
+
+  /**
+   * ファクトリメソッド
+   */
+  static create(count: number): Result<RequestCount> {
+    try {
+      return Result.ok(new RequestCount(count));
+    } catch (error) {
+      return Result.fail(
+        DomainError.validation(
+          'INVALID_REQUEST_COUNT',
+          error instanceof Error ? error.message : 'Invalid request count'
+        )
+      );
+    }
   }
 }
