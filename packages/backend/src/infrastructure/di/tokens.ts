@@ -6,6 +6,7 @@ export const DI_TOKENS = {
   // Core Services
   Logger: Symbol.for('Logger'),
   EventBus: Symbol.for('EventBus'),
+  EventStore: Symbol.for('EventStore'),
   
   // Configuration
   EnvConfig: Symbol.for('EnvConfig'),
