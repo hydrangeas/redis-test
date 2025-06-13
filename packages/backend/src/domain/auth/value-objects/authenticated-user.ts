@@ -27,7 +27,7 @@ export class AuthenticatedUser {
    * @returns アクセス可能な場合true
    */
   canAccessEndpoint(requiredTier: TierLevel): boolean {
-    return this.tier.isHigherThanOrEqualTo(new UserTier(requiredTier));
+    return this.tier.meetsRequirement(requiredTier);
   }
 
   /**
@@ -95,9 +95,9 @@ export class AuthenticatedUser {
    * （AuthenticationServiceで使用）
    */
   static fromTokenPayload(userId: string, tierString: string): AuthenticatedUser {
-    const id = new UserId(userId);
+    const id = UserId.fromString(userId);
     const tierLevel = this.parseTierLevel(tierString);
-    const tier = new UserTier(tierLevel);
+    const tier = UserTier.createDefault(tierLevel);
 
     return new AuthenticatedUser(id, tier);
   }

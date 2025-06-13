@@ -10,8 +10,8 @@ describe('AuthenticatedUser', () => {
 
   describe('constructor', () => {
     it('should create authenticated user', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER2);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER2);
       const user = new AuthenticatedUser(userId, tier);
 
       expect(user.userId).toBe(userId);
@@ -20,13 +20,13 @@ describe('AuthenticatedUser', () => {
     });
 
     it('should throw error if userId is missing', () => {
-      const tier = new UserTier(TierLevel.TIER1);
+      const tier = UserTier.createDefault(TierLevel.TIER1);
       expect(() => new AuthenticatedUser(null as any, tier)).toThrow(ValidationError);
       expect(() => new AuthenticatedUser(null as any, tier)).toThrow('UserId is required');
     });
 
     it('should throw error if tier is missing', () => {
-      const userId = new UserId(validUuid);
+      const userId = UserId.fromString(validUuid);
       expect(() => new AuthenticatedUser(userId, null as any)).toThrow(ValidationError);
       expect(() => new AuthenticatedUser(userId, null as any)).toThrow('UserTier is required');
     });
@@ -34,8 +34,8 @@ describe('AuthenticatedUser', () => {
 
   describe('canAccessEndpoint', () => {
     it('should allow access to lower or equal tier endpoints', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER2);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER2);
       const user = new AuthenticatedUser(userId, tier);
 
       expect(user.canAccessEndpoint(TierLevel.TIER1)).toBe(true);
@@ -44,8 +44,8 @@ describe('AuthenticatedUser', () => {
     });
 
     it('should work for TIER1 users', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER1);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER1);
       const user = new AuthenticatedUser(userId, tier);
 
       expect(user.canAccessEndpoint(TierLevel.TIER1)).toBe(true);
@@ -54,8 +54,8 @@ describe('AuthenticatedUser', () => {
     });
 
     it('should work for TIER3 users', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER3);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER3);
       const user = new AuthenticatedUser(userId, tier);
 
       expect(user.canAccessEndpoint(TierLevel.TIER1)).toBe(true);
@@ -66,8 +66,8 @@ describe('AuthenticatedUser', () => {
 
   describe('getRateLimit', () => {
     it('should return tier rate limit', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER2);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER2);
       const user = new AuthenticatedUser(userId, tier);
 
       const rateLimit = user.getRateLimit();
@@ -111,8 +111,8 @@ describe('AuthenticatedUser', () => {
 
   describe('equals', () => {
     it('should return true for same user and tier', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER1);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER1);
 
       const user1 = new AuthenticatedUser(userId, tier);
       const user2 = new AuthenticatedUser(userId, tier);
@@ -145,20 +145,20 @@ describe('AuthenticatedUser', () => {
 
   describe('toString', () => {
     it('should return string representation', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER2);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER2);
       const user = new AuthenticatedUser(userId, tier);
 
       expect(user.toString()).toBe(
-        `AuthenticatedUser(${validUuid}, TIER2 (120 requests per minute))`,
+        `AuthenticatedUser(${validUuid}, TIER2 (120 requests/minute))`,
       );
     });
   });
 
   describe('JSON serialization', () => {
     it('should serialize to JSON', () => {
-      const userId = new UserId(validUuid);
-      const tier = new UserTier(TierLevel.TIER2);
+      const userId = UserId.fromString(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER2);
       const user = new AuthenticatedUser(userId, tier);
 
       const json = user.toJSON();
@@ -194,8 +194,8 @@ describe('AuthenticatedUser', () => {
 
     it('should round trip correctly', () => {
       const original = new AuthenticatedUser(
-        new UserId(validUuid),
-        new UserTier(TierLevel.TIER1),
+        UserId.fromString(validUuid),
+        UserTier.createDefault(TierLevel.TIER1),
       );
 
       const json = original.toJSON();
