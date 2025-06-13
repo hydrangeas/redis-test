@@ -1,0 +1,15 @@
+# Dependencies
+node_modules
+
+# Production
+dist
+build
+coverage
+.turbo
+
+# Misc
+*.min.js
+*.min.css
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
