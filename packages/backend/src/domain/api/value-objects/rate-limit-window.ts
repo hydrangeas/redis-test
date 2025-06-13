@@ -31,6 +31,10 @@ export class RateLimitWindow {
     return this._windowSizeSeconds;
   }
 
+  get windowMilliseconds(): number {
+    return this._windowSizeSeconds * 1000;
+  }
+
   get startTime(): Date {
     return new Date(this._startTime);
   }
