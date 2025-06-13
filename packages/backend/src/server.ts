@@ -1,20 +1,16 @@
+import 'reflect-metadata';
 import fastify from 'fastify';
-import { pino } from 'pino';
-import { getEnvConfig } from './infrastructure/config';
+import { container } from 'tsyringe';
+import { Logger } from 'pino';
+import { setupDI, DI_TOKENS } from './infrastructure/di';
+import type { EnvConfig } from './infrastructure/config';
 
-// 環境変数を読み込み
-const config = getEnvConfig();
+// DIコンテナをセットアップ
+await setupDI();
 
-const logger = pino({
-  level: config.LOG_LEVEL,
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      translateTime: 'HH:MM:ss Z',
-      ignore: 'pid,hostname',
-    },
-  },
-});
+// DIコンテナから依存性を取得
+const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
+const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
 const server = fastify({
   logger,
