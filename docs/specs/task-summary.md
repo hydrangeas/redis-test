@@ -365,3 +365,37 @@
   - RateLimitのプロパティ名はlimitではなくmaxRequests
 
 ---
+
+### タスク0022: ログコンテキストのエンティティ実装（AuthLogEntry、APILogEntry）
+- **実施日**: 2025-01-22
+- **ブランチ**: feature/0022-log-entities
+- **実装内容**:
+  - LogIdバリューオブジェクトの実装（UniqueEntityIdを拡張）
+  - AuthLogEntryエンティティの実装（認証ログの記録）
+  - APILogEntryエンティティの実装（APIアクセスログの記録）
+  - UniqueEntityIdクラスの改善（valueプロパティのgetter追加、hashCode実装、イミュータビリティ）
+  - 値オブジェクトの拡張（AuthEvent、Provider、IpAddress、UserAgent）
+  - RequestInfoバリューオブジェクトの実装（リクエスト情報）
+  - ResponseInfoバリューオブジェクトの実装（レスポンス情報）
+  - Result型でDomainErrorオブジェクトを使用するように修正
+  - TimeRangeでUTCタイムゾーンを使用するように修正
+  - 包括的なテストスイート（146テスト）
+
+- **達成事項**:
+  - ✅ LogIdがUniqueEntityIdを継承して実装されている
+  - ✅ AuthLogEntryが認証ログを適切に記録する
+  - ✅ 異常検知メソッド（連続失敗、クローラー、ブラックリスト）が実装されている
+  - ✅ セキュリティアラート判定機能が実装されている
+  - ✅ APILogEntryがAPIアクセスログを記録する
+  - ✅ ステータスチェックメソッド（成功、エラー、レート制限等）が実装されている
+  - ✅ ログサマリー生成機能が実装されている
+  - ✅ タグ生成機能が実装されている
+  - ✅ Result型の使用が統一されている
+  - ✅ すべてのテストが合格している
+
+- **注意事項**:
+  - IpAddressのisBlacklisted()メソッドは現在TODO（実際の実装では外部サービス連携が必要）
+  - EndpointクラスはAPIEndpointではなくEndpointという名前で実装されている
+  - DomainErrorを使用したResult型の使用に注意
+
+---

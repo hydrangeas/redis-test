@@ -167,6 +167,68 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   }
 
   /**
+   * ティアごとのレート制限を取得
+   */
+  getRateLimitForTier(userTier: UserTier): Result<RateLimit> {
+    // 現在の実装ではエンドポイントごとの個別制限はなく、
+    // ティアのデフォルト値を使用
+    return Result.ok(userTier.rateLimit);
+  }
+
+  /**
+   * レート制限ログを追加
+   */
+  async addRateLimitLog(
+    userId: UserId,
+    timestamp: Date = new Date()
+  ): Promise<Result<void>> {
+    return this.recordRequest(userId, timestamp);
+  }
+
+  /**
+   * ユーザーのログをクリーンアップ
+   */
+  async cleanupLogsForUser(
+    userId: UserId,
+    cutoffTime: Date
+  ): Promise<Result<number>> {
+    const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
+    const beforeCount = userLogs.length;
+    
+    const recentLogs = userLogs.filter(log => 
+      log.timestamp.getTime() > cutoffTime.getTime()
+    );
+    
+    if (recentLogs.length !== userLogs.length) {
+      this.props.rateLimitLogs.set(userId.value, recentLogs);
+    }
+    
+    const cleanedCount = beforeCount - recentLogs.length;
+    return Result.ok(cleanedCount);
+  }
+
+  /**
+   * すべてのログをクリーンアップ
+   */
+  async cleanupAllLogs(cutoffTime: Date): Promise<Result<number>> {
+    let totalCleaned = 0;
+    
+    for (const [userId, logs] of this.props.rateLimitLogs.entries()) {
+      const beforeCount = logs.length;
+      const recentLogs = logs.filter(log => 
+        log.timestamp.getTime() > cutoffTime.getTime()
+      );
+      
+      if (recentLogs.length !== logs.length) {
+        this.props.rateLimitLogs.set(userId, recentLogs);
+        totalCleaned += beforeCount - recentLogs.length;
+      }
+    }
+    
+    return Result.ok(totalCleaned);
+  }
+
+  /**
    * ファクトリメソッド
    */
   static create(
