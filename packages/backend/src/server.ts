@@ -20,9 +20,10 @@ const server = fastify(loggerConfig);
 // リクエストロギングの設定
 setupRequestLogging(server);
 
-// セキュリティ設定（順序重要: CORS → セキュリティヘッダー → エラーハンドラー）
+// セキュリティ設定（順序重要: CORS → セキュリティヘッダー → パス検証 → エラーハンドラー）
 await server.register(import('./presentation/plugins/cors'));
 await server.register(import('./presentation/plugins/security-headers'));
+await server.register(import('./presentation/plugins/path-validation'));
 await server.register(import('./presentation/plugins/error-handler'));
 
 server.get('/health', async () => {
