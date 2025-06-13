@@ -6,6 +6,9 @@ import { DI_TOKENS } from './tokens';
 import { getEnvConfig, type EnvConfig } from '../config';
 import { createLogger } from '../logging';
 import path from 'path';
+import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
+import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
+import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
 
 /**
  * DIコンテナのセットアップ
@@ -49,7 +52,7 @@ export async function setupDI(): Promise<DependencyContainer> {
   // registerRepositories(container);
   // registerDomainServices(container);
   // registerApplicationServices(container);
-  // registerInfrastructureServices(container);
+  registerInfrastructureServices(container);
 
   logger.info('DI container setup completed');
   
@@ -92,6 +95,11 @@ export function setupTestDI(): DependencyContainer {
   // テスト用データディレクトリ
   container.register<string>(DI_TOKENS.DataDirectory, {
     useValue: path.resolve(process.cwd(), 'test-data'),
+  });
+
+  // テスト用AuthAdapter
+  container.register<IAuthAdapter>(DI_TOKENS.AuthAdapter, {
+    useClass: MockSupabaseAuthAdapter,
   });
 
   return container;
@@ -137,14 +145,20 @@ export function setupTestDI(): DependencyContainer {
 // }
 
 /**
- * インフラストラクチャサービスの登録（後続タスクで実装）
+ * インフラストラクチャサービスの登録
  */
-// function registerInfrastructureServices(container: DependencyContainer): void {
-//   container.register(DI_TOKENS.JwtService, {
-//     useClass: JwtServiceImpl,
-//   });
-//   container.register(DI_TOKENS.FileStorageService, {
-//     useClass: FileStorageServiceImpl,
-//   });
-//   // ... 他のインフラストラクチャサービス
-// }
+function registerInfrastructureServices(container: DependencyContainer): void {
+  // AuthAdapterの登録
+  container.register<IAuthAdapter>(DI_TOKENS.AuthAdapter, {
+    useClass: SupabaseAuthAdapter,
+  });
+  
+  // 他のインフラストラクチャサービスは後続タスクで実装
+  // container.register(DI_TOKENS.JwtService, {
+  //   useClass: JwtServiceImpl,
+  // });
+  // container.register(DI_TOKENS.FileStorageService, {
+  //   useClass: FileStorageServiceImpl,
+  // });
+  // ... 他のインフラストラクチャサービス
+}
