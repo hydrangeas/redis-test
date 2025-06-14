@@ -16,7 +16,15 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:db:reset": "supabase db reset",
+    "supabase:db:push": "supabase db push",
+    "supabase:migration:new": "supabase migration new",
+    "supabase:migration:list": "supabase migration list",
+    "supabase:gen:types": "supabase gen types typescript --local > packages/backend/src/types/supabase.ts"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
