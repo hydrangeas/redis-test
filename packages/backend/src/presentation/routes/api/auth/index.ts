@@ -68,7 +68,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     
     try {
       return {
-        userId: user.userId.value,
+        userId: user.userId.toString(),
         tier: user.tier.level,
         rateLimit: {
           limit: user.tier.rateLimit.maxRequests,
@@ -78,7 +78,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (error) {
       request.log.error({
         error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.userId.value,
+        userId: user.userId.toString(),
       }, 'Error getting user info');
 
       const problemDetails = toProblemDetails(
@@ -148,7 +148,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (error) {
       request.log.error({
         error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.userId.value,
+        userId: user.userId.toString(),
       }, 'Error getting usage status');
 
       const problemDetails = toProblemDetails(

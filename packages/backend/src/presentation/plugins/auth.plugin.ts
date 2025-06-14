@@ -1,6 +1,6 @@
 import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
-import { IJwtService } from '@/application/interfaces/jwt.service.interface';
+import { IJWTService } from '@/application/interfaces/jwt.service.interface';
 import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
@@ -17,6 +17,7 @@ interface AuthPluginOptions {
 declare module 'fastify' {
   interface FastifyRequest {
     user?: AuthenticatedUser;
+    authenticatedUser?: AuthenticatedUser;
   }
   
   interface FastifyInstance {
@@ -36,7 +37,7 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
     
     try {
       // サービスを毎回解決（テストでのモック差し替えを可能にするため）
-      const jwtService = container.resolve<IJwtService>(DI_TOKENS.JwtService);
+      const jwtService = container.resolve<IJWTService>(DI_TOKENS.JwtService);
       const userRepository = container.resolve<IUserRepository>(DI_TOKENS.UserRepository);
       if (process.env.NODE_ENV === 'test') {
         console.log('Services resolved successfully');
@@ -73,7 +74,6 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       if (process.env.NODE_ENV === 'test') {
         console.log('Auth plugin: No authorization header');
       }
-      reply.hijack();
       await reply.code(401).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
         title: 'Authentication required',
@@ -81,15 +81,13 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         detail: 'Missing authorization header',
         instance: request.url,
       });
-      // エラーをthrowして処理を停止
-      throw new Error('Authentication required');
+      return;
     }
     
     // Bearer トークンの抽出
     const match = authHeader.match(/^Bearer (.+)$/);
     if (!match) {
-      reply.hijack();
-      reply.code(401).send({
+      await reply.code(401).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
         title: 'Invalid authorization format',
         status: 401,
@@ -109,15 +107,14 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         const error = verifyResult.getError();
         request.log.warn({ error: error.message }, 'Token verification failed');
         
-        reply.hijack();
-      reply.code(401).send({
+        await reply.code(401).send({
           type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
           title: 'Invalid token',
           status: 401,
           detail: error.message,
           instance: request.url,
         });
-        return reply;
+        return;
       }
       
       const tokenPayload = verifyResult.getValue();
@@ -125,15 +122,14 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       // ユーザー情報の取得
       const userIdResult = UserId.create(tokenPayload.sub);
       if (userIdResult.isFailure) {
-        reply.hijack();
-      reply.code(401).send({
+        await reply.code(401).send({
           type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
           title: 'Invalid user ID',
           status: 401,
           detail: 'Token contains invalid user ID',
           instance: request.url,
         });
-        return reply;
+        return;
       }
       
       const userId = userIdResult.getValue();
@@ -179,8 +175,7 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         console.error('Auth plugin inner error:', error);
       }
       
-      reply.hijack();
-      reply.code(500).send({
+      await reply.code(500).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/internal`,
         title: 'Authentication error',
         status: 500,
@@ -196,8 +191,7 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         console.error('Auth plugin outer error:', error);
       }
       
-      reply.hijack();
-      reply.code(500).send({
+      await reply.code(500).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/internal`,
         title: 'Authentication error',
         status: 500,
