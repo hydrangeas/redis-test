@@ -33,6 +33,7 @@ export const DI_TOKENS = {
   DatabaseConfig: Symbol('DatabaseConfig'),
   AuthConfig: Symbol('AuthConfig'),
   EnvConfig: Symbol('EnvConfig'),
+  SecurityConfig: Symbol('SecurityConfig'),
 } as const;
 
 export type DITokens = typeof DI_TOKENS;
