@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
-import { DI_TOKENS } from '../../infrastructure/di';
-import { DomainError, ErrorType } from '../../domain/errors/domain-error';
-import { DomainException } from '../../domain/errors/exceptions';
-import { ProblemDetails } from '../../domain/errors/problem-details';
-import { ApplicationError, ApplicationErrorType } from '../../application/errors/application-error';
-import type { EnvConfig } from '../../infrastructure/config';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { DomainException } from '@/domain/errors/exceptions';
+import { ProblemDetails } from '@/domain/errors/problem-details';
+import { ApplicationError, ApplicationErrorType } from '@/application/errors/application-error';
+import type { EnvConfig } from '@/infrastructure/config';
 
 /**
  * ErrorTypeからHTTPステータスコードへのマッピング

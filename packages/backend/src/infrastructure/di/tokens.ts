@@ -18,6 +18,7 @@ export const DI_TOKENS = {
   // Repositories
   UserRepository: Symbol.for('UserRepository'),
   RateLimitRepository: Symbol.for('RateLimitRepository'),
+  RateLimitLogRepository: Symbol.for('RateLimitLogRepository'),
   AuthLogRepository: Symbol.for('AuthLogRepository'),
   ApiLogRepository: Symbol.for('ApiLogRepository'),
   OpenDataRepository: Symbol.for('OpenDataRepository'),
@@ -33,6 +34,7 @@ export const DI_TOKENS = {
   // Application Services
   AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),
   DataRetrievalUseCase: Symbol.for('DataRetrievalUseCase'),
+  RateLimitUseCase: Symbol.for('RateLimitUseCase'),
   
   // Infrastructure Services
   JwtService: Symbol.for('JwtService'),

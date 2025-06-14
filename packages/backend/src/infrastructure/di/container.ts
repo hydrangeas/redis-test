@@ -192,6 +192,14 @@ function registerApplicationServices(container: DependencyContainer): void {
   container.register(DI_TOKENS.DataRetrievalUseCase, {
     useClass: DataRetrievalUseCase,
   });
+  
+  // RateLimitUseCaseの動的インポート
+  import('@/application/use-cases/rate-limit.use-case').then(module => {
+    container.register(DI_TOKENS.RateLimitUseCase, {
+      useClass: module.RateLimitUseCase,
+    });
+  });
+  
   // ... 他のアプリケーションサービス
 }
 
