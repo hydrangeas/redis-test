@@ -205,6 +205,41 @@
   margin-bottom: 2rem;
 }
 
+/* Accessibility */
+.cta-button:focus {
+  outline: 3px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+.cta-button.secondary:focus {
+  outline-color: white;
+}
+
+.feature-card:focus-within {
+  outline: 3px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .cta-button.primary {
+    border: 2px solid currentColor;
+  }
+  
+  .pricing-card {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .cta-button,
+  .feature-card,
+  .pricing-card {
+    transition: none;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-title {
@@ -222,5 +257,14 @@
   
   .pricing-card.featured {
     transform: none;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .features-grid,
+  .pricing-grid {
+    grid-template-columns: 1fr;
   }
 }

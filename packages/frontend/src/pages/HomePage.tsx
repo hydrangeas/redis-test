@@ -1,13 +1,18 @@
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import './HomePage.css';
 
-export const HomePage: React.FC = () => {
+const HomePageComponent: React.FC = () => {
   const { user } = useAuth();
+
+  useEffect(() => {
+    document.title = import.meta.env.VITE_APP_NAME || '奈良県オープンデータ提供API';
+  }, []);
 
   return (
     <div className="home-page">
-      <section className="hero-section">
+      <section className="hero-section" aria-label="メインコンテンツ">
         <div className="hero-content">
           <h1 className="hero-title">
             奈良県オープンデータ提供API
@@ -18,15 +23,15 @@ export const HomePage: React.FC = () => {
           </p>
           <div className="hero-actions">
             {user ? (
-              <Link to="/dashboard" className="cta-button primary">
+              <Link to="/dashboard" className="cta-button primary" aria-label="ダッシュボードへ移動">
                 ダッシュボードへ
               </Link>
             ) : (
               <>
-                <Link to="/login" className="cta-button primary">
+                <Link to="/login" className="cta-button primary" aria-label="ログインまたはサインアップ">
                   今すぐ始める
                 </Link>
-                <Link to="/api-docs" className="cta-button secondary">
+                <Link to="/api-docs" className="cta-button secondary" aria-label="APIドキュメントを表示">
                   APIドキュメント
                 </Link>
               </>
@@ -35,7 +40,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      <section className="features-section">
+      <section className="features-section" aria-label="サービスの特徴">
         <div className="container">
           <h2 className="section-title">特徴</h2>
           <div className="features-grid">
@@ -63,7 +68,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      <section className="pricing-section">
+      <section className="pricing-section" aria-label="料金プラン">
         <div className="container">
           <h2 className="section-title">料金プラン</h2>
           <div className="pricing-grid">
@@ -98,12 +103,12 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      <section className="cta-section">
+      <section className="cta-section" aria-label="コール・トゥ・アクション">
         <div className="container">
           <h2>今すぐオープンデータAPIを使い始めましょう</h2>
           <p>無料のTier 1プランから始められます</p>
           {!user && (
-            <Link to="/login" className="cta-button primary large">
+            <Link to="/login" className="cta-button primary large" aria-label="無料プランでサインアップ">
               無料で始める
             </Link>
           )}
@@ -112,3 +117,5 @@ export const HomePage: React.FC = () => {
     </div>
   );
 };
+
+export const HomePage = React.memo(HomePageComponent);
