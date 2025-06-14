@@ -71,7 +71,7 @@ export class ResourceMetadata {
   }): Result<ResourceMetadata, DomainError> {
     // サイズの検証
     const sizeGuard = Guard.againstNullOrUndefined(params.size, 'size');
-    if (sizeGuard.isFailure) {
+    if (!sizeGuard.succeeded) {
       return Result.fail(
         new DomainError(
           'INVALID_SIZE',

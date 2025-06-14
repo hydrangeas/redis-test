@@ -15,6 +15,8 @@ import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { EventBus } from '../events/event-bus';
 import { IEventStore } from '@/domain/interfaces/event-store.interface';
 import { InMemoryEventStore } from '../events/in-memory-event-store';
+import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import { OpenDataRepository } from '../repositories/open-data.repository';
 
 /**
  * DIコンテナのセットアップ
@@ -56,7 +58,7 @@ export async function setupDI(): Promise<DependencyContainer> {
 
   // サービスの登録
   registerEventServices(container);
-  // registerRepositories(container);
+  registerRepositories(container);
   registerDomainServices(container);
   registerApplicationServices(container);
   registerInfrastructureServices(container);
@@ -118,17 +120,28 @@ export function setupTestDI(): DependencyContainer {
 }
 
 /**
- * リポジトリの登録（後続タスクで実装）
+ * リポジトリの登録
  */
-// function registerRepositories(container: DependencyContainer): void {
-//   container.register(DI_TOKENS.UserRepository, {
-//     useClass: UserRepositoryImpl,
-//   });
-//   container.register(DI_TOKENS.RateLimitRepository, {
-//     useClass: RateLimitRepositoryImpl,
-//   });
-//   // ... 他のリポジトリ
-// }
+function registerRepositories(container: DependencyContainer): void {
+  // OpenDataRepositoryの登録
+  container.register<IOpenDataRepository>(DI_TOKENS.OpenDataRepository, {
+    useClass: OpenDataRepository,
+  });
+  
+  // 他のリポジトリは後続タスクで実装
+  // container.register(DI_TOKENS.UserRepository, {
+  //   useClass: UserRepositoryImpl,
+  // });
+  // container.register(DI_TOKENS.RateLimitRepository, {
+  //   useClass: RateLimitRepositoryImpl,
+  // });
+  // container.register(DI_TOKENS.AuthLogRepository, {
+  //   useClass: AuthLogRepositoryImpl,
+  // });
+  // container.register(DI_TOKENS.ApiLogRepository, {
+  //   useClass: ApiLogRepositoryImpl,
+  // });
+}
 
 /**
  * イベント関連サービスの登録

@@ -6,7 +6,7 @@ import { HttpMethod } from '@/domain/api/value-objects/http-method';
 import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors/domain-error';
-import { APIEndpoint } from '@/domain/api/entities/api-endpoint.entity';
+import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
@@ -47,7 +47,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     }
 
     // API集約を作成
-    const aggregateResult = APIAggregate.create(defaultRateLimits);
+    const aggregateResult = APIAggregate.create({ defaultRateLimits });
     if (aggregateResult.isSuccess) {
       this.aggregate = aggregateResult.getValue()!;
       
@@ -62,34 +62,38 @@ export class InMemoryAPIRepository implements IAPIRepository {
     // データアクセスエンドポイント
     const dataPath = EndpointPath.create('/secure/:path(*)');
     if (dataPath.isSuccess) {
-      const dataEndpoint = APIEndpoint.create({
-        path: dataPath.getValue()!,
-        method: HttpMethod.GET,
-        type: EndpointType.PUBLIC,
-        description: 'Access open data resources',
-        requiresAuth: true,
-        rateLimitOverride: undefined,
-      });
+      const publicType = EndpointType.create('public');
+      if (publicType.isSuccess) {
+        const dataEndpoint = APIEndpoint.create({
+          path: dataPath.getValue()!,
+          method: HttpMethod.GET,
+          type: publicType.getValue()!,
+          description: 'Access open data resources',
+          isActive: true,
+        });
 
-      if (dataEndpoint.isSuccess && this.aggregate) {
-        this.aggregate.addEndpoint(dataEndpoint.getValue()!);
+        if (dataEndpoint.isSuccess && this.aggregate) {
+          this.aggregate.addEndpoint(dataEndpoint.getValue()!);
+        }
       }
     }
 
     // ヘルスチェックエンドポイント（認証不要）
     const healthPath = EndpointPath.create('/health');
     if (healthPath.isSuccess) {
-      const healthEndpoint = APIEndpoint.create({
-        path: healthPath.getValue()!,
-        method: HttpMethod.GET,
-        type: EndpointType.INTERNAL,
-        description: 'Health check endpoint',
-        requiresAuth: false,
-        rateLimitOverride: undefined,
-      });
+      const internalType = EndpointType.create('internal');
+      if (internalType.isSuccess) {
+        const healthEndpoint = APIEndpoint.create({
+          path: healthPath.getValue()!,
+          method: HttpMethod.GET,
+          type: internalType.getValue()!,
+          description: 'Health check endpoint',
+          isActive: true,
+        });
 
-      if (healthEndpoint.isSuccess && this.aggregate) {
-        this.aggregate.addEndpoint(healthEndpoint.getValue()!);
+        if (healthEndpoint.isSuccess && this.aggregate) {
+          this.aggregate.addEndpoint(healthEndpoint.getValue()!);
+        }
       }
     }
   }
@@ -125,16 +129,9 @@ export class InMemoryAPIRepository implements IAPIRepository {
   async findByEndpointId(
     endpointId: EndpointId
   ): Promise<Result<APIAggregate | null, DomainError>> {
-    if (!this.aggregate) {
-      return Result.ok(null);
-    }
-
-    const endpoint = this.aggregate.getEndpoint(endpointId);
-    if (endpoint.isFailure) {
-      return Result.ok(null);
-    }
-
-    return Result.ok(this.aggregate);
+    // APIEndpointはvalue objectになりidを持たないため、この検索方法は使用できません
+    // 常にnullを返します
+    return Result.ok(null);
   }
 
   async findByPathAndMethod(
@@ -145,7 +142,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
       return Result.ok(null);
     }
 
-    const endpoint = this.aggregate.findEndpointByPathAndMethod(path, method);
+    const endpoint = this.aggregate.findMatchingEndpoint(path, method);
     if (endpoint.isFailure) {
       return Result.ok(null);
     }
