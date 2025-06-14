@@ -1,3 +1,4 @@
-export { setupDI, setupTestDI } from './container';
-export { DI_TOKENS } from './tokens';
-export { injectable, inject, singleton, container } from 'tsyringe';
+export { DI_TOKENS } from './tokens.js';
+export { setupContainer, getContainer, resetContainer } from './container.js';
+export { setupTestContainer, registerMock, clearContainer } from './test-container.js';
+export { container } from 'tsyringe';

@@ -1,51 +1,38 @@
 /**
- * DIコンテナで使用するトークン定義
- * 型安全な依存性注入のための定数
+ * Dependency Injection tokens for TSyringe container
+ * These tokens are used to identify dependencies in the container
  */
 export const DI_TOKENS = {
-  // Core Services
-  Logger: Symbol.for('Logger'),
-  EventBus: Symbol.for('EventBus'),
-  EventStore: Symbol.for('EventStore'),
-  
-  // Configuration
-  EnvConfig: Symbol.for('EnvConfig'),
-  DataDirectory: Symbol.for('DataDirectory'),
-  
-  // Database
-  SupabaseClient: Symbol.for('SupabaseClient'),
+  // Infrastructure
+  Database: Symbol('IDatabase'),
+  EventBus: Symbol('IEventBus'),
+  Logger: Symbol('ILogger'),
   
   // Repositories
-  UserRepository: Symbol.for('UserRepository'),
-  RateLimitRepository: Symbol.for('RateLimitRepository'),
-  RateLimitLogRepository: Symbol.for('RateLimitLogRepository'),
-  AuthLogRepository: Symbol.for('AuthLogRepository'),
-  ApiLogRepository: Symbol.for('ApiLogRepository'),
-  OpenDataRepository: Symbol.for('OpenDataRepository'),
-  APILogRepository: Symbol.for('APILogRepository'),
+  UserRepository: Symbol('IUserRepository'),
+  RateLimitRepository: Symbol('IRateLimitRepository'),
+  DataRepository: Symbol('IDataRepository'),
   
   // Domain Services
-  AuthenticationService: Symbol.for('AuthenticationService'),
-  RateLimitService: Symbol.for('RateLimitService'),
-  DataAccessService: Symbol.for('DataAccessService'),
-  APIAccessControlService: Symbol.for('APIAccessControlService'),
-  LogAnalysisService: Symbol.for('LogAnalysisService'),
+  AuthenticationService: Symbol('IAuthenticationService'),
+  RateLimitService: Symbol('IRateLimitService'),
+  DataAccessService: Symbol('IDataAccessService'),
   
   // Application Services
-  AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),
-  DataRetrievalUseCase: Symbol.for('DataRetrievalUseCase'),
-  RateLimitUseCase: Symbol.for('RateLimitUseCase'),
-  APIAccessControlUseCase: Symbol.for('APIAccessControlUseCase'),
+  AuthenticationUseCase: Symbol('AuthenticationUseCase'),
+  DataRetrievalUseCase: Symbol('DataRetrievalUseCase'),
+  RateLimitUseCase: Symbol('RateLimitUseCase'),
   
   // Infrastructure Services
-  JwtService: Symbol.for('JwtService'),
-  JWTValidator: Symbol.for('JWTValidator'),
-  FileStorageService: Symbol.for('FileStorageService'),
-  SecurityAuditService: Symbol.for('SecurityAuditService'),
-  SecurityAlertService: Symbol.for('SecurityAlertService'),
-  AuthAdapter: Symbol.for('AuthAdapter'),
-  NotificationService: Symbol.for('NotificationService'),
+  SupabaseClient: Symbol('SupabaseClient'),
+  JwtService: Symbol('IJwtService'),
+  FileService: Symbol('IFileService'),
   
-  // Factories
-  OpenDataResourceFactory: Symbol.for('OpenDataResourceFactory'),
+  // Configuration
+  AppConfig: Symbol('AppConfig'),
+  DatabaseConfig: Symbol('DatabaseConfig'),
+  AuthConfig: Symbol('AuthConfig'),
+  EnvConfig: Symbol('EnvConfig'),
 } as const;
+
+export type DITokens = typeof DI_TOKENS;
