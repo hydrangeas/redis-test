@@ -1,117 +1,161 @@
 # セッション引き継ぎドキュメント
 
-作成日時: 2025-06-14T12:15:00Z
+作成日時: 2025-06-14T14:30:00Z
+前回更新: 2025-06-14T12:15:00Z
 
 ## 完了した作業
 
-### 1. OpenDataRepository実装（前セッション）
-- タスク0020: ファイルシステムベースのデータリポジトリ実装
-- キャッシング機能（5分TTL）
-- ETag生成とメタデータ管理
-- 包括的なテストスイート（15件）
+### 前セッションまでの作業
+1. **OpenDataRepository実装**（タスク0020）
+   - ファイルシステムベースのデータリポジトリ
+   - キャッシング機能（5分TTL）
+   - ETag生成とメタデータ管理
 
-### 2. UserAuthenticatedドメインイベント実装（本セッション）
-- タスク0019: ユーザー認証成功時のドメインイベント
-- AuthLogHandler: 認証ログの記録
-- AuthNotificationHandler: 新デバイス検出・セキュリティアラート
-- イベントハンドラー登録機能
-- 単体テスト（23件すべて成功）
+2. **UserAuthenticatedドメインイベント実装**（タスク0019）
+   - 認証成功時のドメインイベント
+   - AuthLogHandler: 認証ログの記録
+   - AuthNotificationHandler: 新デバイス検出・セキュリティアラート
 
-### 3. DataRetrievalUseCase実装（本セッション）
-- タスク0029: データ取得のアプリケーションサービス
-- 条件付きリクエスト対応（ETag/Last-Modified）
-- ドメインイベント発行
-- 単体テスト（11件すべて成功）
+3. **DataRetrievalUseCase実装**（タスク0029）
+   - データ取得のアプリケーションサービス
+   - 条件付きリクエスト対応（ETag/Last-Modified）
+   - ドメインイベント発行
+
+### 本セッションで完了した作業
+
+1. **RateLimitUseCase実装**（タスク0021）✅
+   - スライディングウィンドウ方式のレート制限
+   - 60秒ウィンドウでのリクエスト数カウント
+   - ユーザーティアに基づく制限値の適用
+   - レート制限超過時のイベント発行（RateLimitExceeded）
+   - APIアクセス記録のイベント発行（APIAccessRecorded）
+   - 包括的なテストスイート（12件すべて成功）
+
+2. **エンドポイント定義の初期化**（タスク0022）✅
+   - Fastifyサーバー設定（`src/presentation/server.ts`）
+   - プラグインアーキテクチャの実装
+     - 認証プラグイン（JWT検証、Bearer Token）
+     - ロギングプラグイン（リクエスト/レスポンスログ）
+     - エラーハンドラー（RFC 7807形式）
+   - APIルート構造の実装
+     - `/api/data/*` - データアクセスエンドポイント
+     - `/api/auth/me` - ユーザー情報取得
+     - `/api/auth/usage` - 使用状況取得
+     - `/api/auth/tiers` - ティア情報取得
+   - OpenAPI/Swagger仕様の自動生成設定
+   - CORS、セキュリティヘッダー設定
+   - ヘルスチェックエンドポイント
 
 ## 現在の状況
 
-### テスト結果（最終確認時）
-- packages/backend: 929件中926件成功（99.7%カバレッジ）
-- 失敗している3件は error-mapper.test.ts の既知の問題
+### テスト結果
+- RateLimitUseCase: 12件すべて成功 ✅
+- Server設定: 8件すべて成功 ✅
+- データルート: 一部テストで認証関連の問題あり（JWTサービス未実装のため）
 
-### タスクの不整合について
-- docs/specs/task-XXXX.md ファイルと task-list.md の間に不整合あり
-- task-0019.md: UserAuthenticatedイベント（実装済み）
-- task-0020.md: TokenRefreshedイベント（既に実装済み）
-- task-list.md での task-0019: DataAggregate（既に実装済み）
-- task-list.md での task-0020: DataRepository（実装済み）
+### 未解決の問題
+
+1. **認証関連のテスト失敗**
+   - 原因: JWTService と UserRepository の実装が未完了
+   - 影響: データアクセスエンドポイントのテストが一部失敗
+   - 対応: タスク0031（JWTサービス実装）の完了が必要
+
+2. **廃止予定の警告**
+   - Fastify v5で削除される機能の使用（json shorthand schema）
+   - 将来的にフルオブジェクトスキーマへの移行が必要
 
 ## 次セッションで実施すべきタスク
 
 ### 優先度：高
 
-1. **タスク0021: RateLimitUseCase の実装**
-   - レート制限チェックのアプリケーションサービス
-   - スライディングウィンドウ方式の実装
-   - Supabaseデータベース連携
+1. **タスク0024: ログリポジトリ実装（Supabase連携）**
+   - RateLimitLogRepository の実装
+   - AuthLogRepository の実装
+   - APILogRepository の実装
+   - Supabaseテーブル設計とマイグレーション
 
-2. **タスク0022: エンドポイント定義の初期化**
-   - API エンドポイントの定義
-   - ルーティング設定
-   - OpenAPI仕様の生成
+2. **タスク0031: JWTサービス実装**
+   - アクセストークン・リフレッシュトークンの生成
+   - トークン検証ロジック
+   - Supabase Authとの連携
 
-3. **タスク0023: ログ集約（LogAggregate）の実装**
-   - ログエントリの集約管理
-   - ビジネスルールの実装
+3. **タスク0032: ユーザーリポジトリ実装**
+   - Supabase Auth連携
+   - ユーザー情報の取得・更新
 
 ### 中期的なタスク（優先順）
 
-4. タスク0024: ログリポジトリ実装（Supabase連携）
-5. タスク0025: イベントバスの実装（EventEmitter）
-6. タスク0026: ドメインイベントハンドラーの実装
-7. タスク0027: Viteによるフロントエンド開発環境構築
-8. タスク0028: APIアクセス制御のアプリケーションサービス実装
+4. タスク0025: イベントバスの実装（EventEmitter）
+5. タスク0026: ドメインイベントハンドラーの実装
+6. タスク0027: Viteによるフロントエンド開発環境構築
+7. タスク0028: APIアクセス制御のアプリケーションサービス実装
 
 ## 技術的な注意点
 
-### 1. 値オブジェクトの実装パターン
-- UserId: create() メソッド + UUID v4 形式の検証が必要
-- Provider: create() メソッド + 事前定義されたプロバイダーリスト
-- IPAddress: create() メソッドまたは unknown() で '0.0.0.0' を返す
-- UserAgent: create() メソッドまたは unknown() で 'Unknown' を返す
+### 1. エンドポイント実装パターン
+```typescript
+// preHandlerで認証を適用
+preHandler: fastify.authenticate,
+// try-catchでエラーハンドリング
+try {
+  // ビジネスロジック
+} catch (error) {
+  // ProblemDetails形式でエラー返却
+}
+```
 
-### 2. リポジトリパターン
-- Result<T, DomainError> パターンを使用
-- 非同期メソッドはすべて Promise を返す
-- エラーハンドリングは DomainError で統一
+### 2. レート制限の実装詳細
+- スライディングウィンドウ: 60秒
+- デフォルト制限値:
+  - TIER1: 60リクエスト/分
+  - TIER2: 120リクエスト/分
+  - TIER3: 300リクエスト/分
+- ヘッダー: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
 
-### 3. イベント駆動アーキテクチャ
-- ドメインイベントは DomainEvent 基底クラスを継承
-- イベントハンドラーは IEventHandler<T> インターフェースを実装
-- イベントバス経由で非同期に配信
+### 3. 依存性注入（DI）パターン
+- TSyringeのtokensファイルにSymbolを定義
+- containerで実装をバインド
+- @injectable()と@inject()で利用
 
-## 推奨される次のアクション
+## 新しいセッション開始時の推奨プロンプト
 
-1. **タスクファイルの整合性確認**
-   - task-list.md と個別タスクファイルの不整合を解消
-   - 実際の実装状況に基づいて更新
+```
+前回のセッションでRateLimitUseCaseとAPIエンドポイント定義を完了しました。
+SESSION_HANDOVER.mdを確認しました。
 
-2. **RateLimitUseCase の実装開始**
-   - 設計ドキュメント（step5-design.md）のシーケンス図を参照
-   - スライディングウィンドウ方式の理解
-   - Supabase RLS（Row Level Security）の活用
+次の優先タスクは：
+1. タスク0024: ログリポジトリ実装（Supabase連携）
+2. タスク0031: JWTサービス実装（認証テストの修正に必要）
 
-3. **エンドポイント実装の準備**
-   - Fastify プラグインアーキテクチャの理解
-   - OpenAPI/Swagger 仕様の自動生成設定
-   - Scalar によるAPIドキュメント生成
+現在の課題：
+- JWTServiceとUserRepositoryが未実装のため、一部のAPIテストが失敗
+- これらの実装により、完全に動作するAPIが完成予定
+
+どちらのタスクから着手しますか？
+推奨: JWTサービスを先に実装することで、既存のテストを通すことができます。
+```
 
 ## セッション終了時のコミット状況
 
-最終コミット:
+最終コミット（予定）:
 ```
-7933773 feat: データ取得のアプリケーションサービス実装
-06e0f7f feat: UserAuthenticatedドメインイベントとハンドラーの実装
-a562d8c feat: TypeScriptガイドラインを追加、不要なファイルを削除
+feat: RateLimitUseCaseとAPIエンドポイント定義の実装
+
+- RateLimitUseCase: スライディングウィンドウ方式のレート制限実装
+- API基本構造: Fastifyによるルート定義とプラグイン設定
+- データアクセスAPI: /api/data/* エンドポイント（レート制限統合）
+- 認証API: /api/auth/* エンドポイント（ユーザー情報・使用状況）
+- OpenAPI仕様: Swagger UIによるAPIドキュメント自動生成
+- セキュリティ: CORS、認証ミドルウェア、セキュリティヘッダー
 ```
 
 ブランチ: feature/refactor-based-on-design-docs
-未プッシュコミット: 3件
+未プッシュコミット: 4件（予定）
 
 ## 補足
 
-- エラー修正時の注意: error-mapper.test.ts の3件の失敗は既知の問題
-- パフォーマンス: 現在のテストスイートは約30秒で完了
-- 依存関係: TSyringe によるDI設定は正常に動作中
+- エラーマッパーのテスト3件は既知の問題として継続
+- Fastifyの廃止予定警告は将来のバージョンアップ時に対応
+- 実装済みコンポーネントの連携テストは、依存サービス実装後に実施
 
 次のセッションでは、このドキュメントを参照して作業を継続してください。
