@@ -1,11 +1,13 @@
 import React from 'react';
+import { AuthProvider } from '@/hooks/useAuth';
+import { AppRouter } from '@/router';
+import './App.css';
 
 const App: React.FC = () => {
   return (
-    <div>
-      <h1>オープンデータ提供API</h1>
-      <p>準備中です...</p>
-    </div>
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
   );
 };
 
