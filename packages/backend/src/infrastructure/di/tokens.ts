@@ -38,6 +38,7 @@ export const DI_TOKENS = {
   
   // Infrastructure Services
   JwtService: Symbol.for('JwtService'),
+  JWTValidator: Symbol.for('JWTValidator'),
   FileStorageService: Symbol.for('FileStorageService'),
   SecurityAuditService: Symbol.for('SecurityAuditService'),
   SecurityAlertService: Symbol.for('SecurityAlertService'),

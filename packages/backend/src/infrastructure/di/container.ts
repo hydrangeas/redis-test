@@ -18,6 +18,9 @@ import { IEventStore } from '@/domain/interfaces/event-store.interface';
 import { InMemoryEventStore } from '../events/in-memory-event-store';
 import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
 import { OpenDataRepository } from '../repositories/open-data.repository';
+import { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
+import { JWTValidatorService } from '../auth/services/jwt-validator.service';
+import { Result } from '@/domain/shared/result';
 
 /**
  * DIコンテナのセットアップ
@@ -116,6 +119,40 @@ export function setupTestDI(): DependencyContainer {
   registerEventServices(container);
   registerDomainServices(container);
   registerApplicationServices(container);
+  
+  // テスト用にJwtServiceのモックを登録（auth.plugin.tsで必要）
+  // 実際のモックはテストで上書き可能
+  container.register(DI_TOKENS.JwtService, {
+    useValue: {
+      generateAccessToken: () => Promise.resolve(Result.ok('test-token')),
+      generateRefreshToken: () => Promise.resolve(Result.ok('test-refresh')),
+      verifyAccessToken: () => Promise.resolve(Result.ok({ sub: 'test-user', tier: 'tier1', exp: Math.floor(Date.now() / 1000) + 3600 })),
+      verifyRefreshToken: () => Promise.resolve(Result.ok({ sub: 'test-user' })),
+      decodeToken: () => ({ sub: 'test-user' }),
+    },
+  });
+  
+  // テスト用にUserRepositoryのモックを登録（auth.plugin.tsで必要）
+  container.register(DI_TOKENS.UserRepository, {
+    useValue: {
+      findById: () => Promise.resolve(Result.ok(null)),
+      findByEmail: () => Promise.resolve(Result.ok(null)),
+      save: () => Promise.resolve(Result.ok()),
+      update: () => Promise.resolve(Result.ok()),
+      delete: () => Promise.resolve(Result.ok()),
+    },
+  });
+  
+  // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
+  container.register(DI_TOKENS.RateLimitLogRepository, {
+    useValue: {
+      save: () => Promise.resolve(Result.ok()),
+      findByUserId: () => Promise.resolve(Result.ok([])),
+      countInWindow: () => Promise.resolve(Result.ok(0)),
+      deleteOlderThan: () => Promise.resolve(Result.ok()),
+      deleteByUserId: () => Promise.resolve(Result.ok()),
+    },
+  });
 
   return container;
 }
@@ -210,6 +247,11 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   // AuthAdapterの登録
   container.register<IAuthAdapter>(DI_TOKENS.AuthAdapter, {
     useClass: SupabaseAuthAdapter,
+  });
+  
+  // JWTValidatorの登録
+  container.register<IJWTValidator>(DI_TOKENS.JWTValidator, {
+    useClass: JWTValidatorService,
   });
   
   // Factoriesの登録
