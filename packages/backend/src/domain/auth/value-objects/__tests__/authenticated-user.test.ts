@@ -3,40 +3,37 @@ import { AuthenticatedUser } from '../authenticated-user';
 import { UserId } from '../user-id';
 import { UserTier } from '../user-tier';
 import { TierLevel } from '../tier-level';
-import { ValidationError } from '../../../errors/validation-error';
 
 describe('AuthenticatedUser', () => {
   const validUuid = '550e8400-e29b-41d4-a716-446655440000';
 
   describe('constructor', () => {
     it('should create authenticated user', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER2);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
-      expect(user.userId).toBe(userId);
+      expect(user.userId).toBe(userIdResult.getValue());
       expect(user.tier).toBe(tier);
       expect(Object.isFrozen(user)).toBe(true);
     });
 
     it('should throw error if userId is missing', () => {
       const tier = UserTier.createDefault(TierLevel.TIER1);
-      expect(() => new AuthenticatedUser(null as any, tier)).toThrow(ValidationError);
       expect(() => new AuthenticatedUser(null as any, tier)).toThrow('UserId is required');
     });
 
     it('should throw error if tier is missing', () => {
-      const userId = UserId.fromString(validUuid);
-      expect(() => new AuthenticatedUser(userId, null as any)).toThrow(ValidationError);
-      expect(() => new AuthenticatedUser(userId, null as any)).toThrow('UserTier is required');
+      const userIdResult = UserId.create(validUuid);
+      expect(() => new AuthenticatedUser(userIdResult.getValue(), null as any)).toThrow('UserTier is required');
     });
   });
 
   describe('canAccessEndpoint', () => {
     it('should allow access to lower or equal tier endpoints', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER2);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       expect(user.canAccessEndpoint(TierLevel.TIER1)).toBe(true);
       expect(user.canAccessEndpoint(TierLevel.TIER2)).toBe(true);
@@ -44,9 +41,9 @@ describe('AuthenticatedUser', () => {
     });
 
     it('should work for TIER1 users', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER1);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       expect(user.canAccessEndpoint(TierLevel.TIER1)).toBe(true);
       expect(user.canAccessEndpoint(TierLevel.TIER2)).toBe(false);
@@ -54,9 +51,9 @@ describe('AuthenticatedUser', () => {
     });
 
     it('should work for TIER3 users', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER3);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       expect(user.canAccessEndpoint(TierLevel.TIER1)).toBe(true);
       expect(user.canAccessEndpoint(TierLevel.TIER2)).toBe(true);
@@ -66,9 +63,9 @@ describe('AuthenticatedUser', () => {
 
   describe('getRateLimit', () => {
     it('should return tier rate limit', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER2);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       const rateLimit = user.getRateLimit();
       expect(rateLimit.maxRequests).toBe(120);
@@ -111,43 +108,51 @@ describe('AuthenticatedUser', () => {
 
   describe('equals', () => {
     it('should return true for same user and tier', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER1);
 
-      const user1 = new AuthenticatedUser(userId, tier);
-      const user2 = new AuthenticatedUser(userId, tier);
+      const user1 = new AuthenticatedUser(userIdResult.getValue(), tier);
+      const user2 = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       expect(user1.equals(user2)).toBe(true);
     });
 
     it('should return false for different userId', () => {
-      const userId1 = new UserId(validUuid);
-      const userId2 = new UserId('650e8400-e29b-41d4-a716-446655440000');
-      const tier = new UserTier(TierLevel.TIER1);
+      const userId1Result = UserId.create(validUuid);
+      const userId2Result = UserId.create('650e8400-e29b-41d4-a716-446655440000');
+      const tier = UserTier.createDefault(TierLevel.TIER1);
 
-      const user1 = new AuthenticatedUser(userId1, tier);
-      const user2 = new AuthenticatedUser(userId2, tier);
+      const user1 = new AuthenticatedUser(userId1Result.getValue(), tier);
+      const user2 = new AuthenticatedUser(userId2Result.getValue(), tier);
 
       expect(user1.equals(user2)).toBe(false);
     });
 
     it('should return false for different tier', () => {
-      const userId = new UserId(validUuid);
-      const tier1 = new UserTier(TierLevel.TIER1);
-      const tier2 = new UserTier(TierLevel.TIER2);
+      const userIdResult = UserId.create(validUuid);
+      const tier1 = UserTier.createDefault(TierLevel.TIER1);
+      const tier2 = UserTier.createDefault(TierLevel.TIER2);
 
-      const user1 = new AuthenticatedUser(userId, tier1);
-      const user2 = new AuthenticatedUser(userId, tier2);
+      const user1 = new AuthenticatedUser(userIdResult.getValue(), tier1);
+      const user2 = new AuthenticatedUser(userIdResult.getValue(), tier2);
 
       expect(user1.equals(user2)).toBe(false);
+    });
+
+    it('should return false for null', () => {
+      const userIdResult = UserId.create(validUuid);
+      const tier = UserTier.createDefault(TierLevel.TIER1);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
+
+      expect(user.equals(null as any)).toBe(false);
     });
   });
 
   describe('toString', () => {
     it('should return string representation', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER2);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       expect(user.toString()).toBe(
         `AuthenticatedUser(${validUuid}, TIER2 (120 requests/minute))`,
@@ -157,9 +162,9 @@ describe('AuthenticatedUser', () => {
 
   describe('JSON serialization', () => {
     it('should serialize to JSON', () => {
-      const userId = UserId.fromString(validUuid);
+      const userIdResult = UserId.create(validUuid);
       const tier = UserTier.createDefault(TierLevel.TIER2);
-      const user = new AuthenticatedUser(userId, tier);
+      const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
       const json = user.toJSON();
       expect(json).toEqual({
@@ -193,8 +198,9 @@ describe('AuthenticatedUser', () => {
     });
 
     it('should round trip correctly', () => {
+      const userIdResult = UserId.create(validUuid);
       const original = new AuthenticatedUser(
-        UserId.fromString(validUuid),
+        userIdResult.getValue(),
         UserTier.createDefault(TierLevel.TIER1),
       );
 
@@ -202,6 +208,21 @@ describe('AuthenticatedUser', () => {
       const restored = AuthenticatedUser.fromJSON(json);
 
       expect(restored.equals(original)).toBe(true);
+    });
+
+    it('should throw error for invalid userId in fromJSON', () => {
+      const json = {
+        userId: 'invalid-uuid',
+        tier: {
+          level: 'TIER1',
+          rateLimit: {
+            maxRequests: 60,
+            windowSeconds: 60,
+          },
+        },
+      };
+
+      expect(() => AuthenticatedUser.fromJSON(json)).toThrow();
     });
   });
 });
