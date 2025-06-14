@@ -44,7 +44,7 @@ export class RateLimitWindow {
 
   public contains(timestamp: Date): boolean {
     const time = timestamp.getTime();
-    return time >= this._startTime.getTime() && time <= this._endTime.getTime();
+    return time >= this._startTime.getTime() && time < this._endTime.getTime();
   }
 
   public getSecondsUntilExpires(timestamp: Date): number {

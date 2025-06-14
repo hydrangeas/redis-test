@@ -312,8 +312,11 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
       )
     );
     
-    // 記録後の最新状態を返す（記録したのでカウントは1増える）
-    const finalCheck = endpoint.checkRateLimit(userId, rateLimit, requestTime);
+    // 記録後の最新状態を返す
+    // Note: checkRateLimitのタイムスタンプを1ms後にすることで、
+    // 記録したリクエストが確実にウィンドウ内に含まれるようにする
+    const checkTime = new Date(requestTime.getTime() + 1);
+    const finalCheck = endpoint.checkRateLimit(userId, rateLimit, checkTime);
 
     return Result.ok({
       isExceeded: finalCheck.isExceeded,
