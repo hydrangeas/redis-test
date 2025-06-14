@@ -11,9 +11,12 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'] as const).default('info'),
   
   // Supabase
-  SUPABASE_URL: z.string().url().min(1),
-  SUPABASE_ANON_KEY: z.string().min(1),
+  PUBLIC_SUPABASE_URL: z.string().url().min(1),
+  PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  // Backward compatibility
+  SUPABASE_URL: z.string().url().min(1).optional(),
+  SUPABASE_ANON_KEY: z.string().min(1).optional(),
   
   // JWT
   JWT_SECRET: z.string().min(32),
@@ -73,7 +76,13 @@ let envConfig: EnvConfig | undefined;
  */
 export function getEnvConfig(): EnvConfig {
   if (!envConfig) {
-    envConfig = validateEnv();
+    const rawConfig = validateEnv();
+    // Backward compatibility: map old env names to new ones
+    envConfig = {
+      ...rawConfig,
+      PUBLIC_SUPABASE_URL: rawConfig.PUBLIC_SUPABASE_URL || rawConfig.SUPABASE_URL || '',
+      PUBLIC_SUPABASE_ANON_KEY: rawConfig.PUBLIC_SUPABASE_ANON_KEY || rawConfig.SUPABASE_ANON_KEY || '',
+    };
   }
   return envConfig;
 }
