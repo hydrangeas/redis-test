@@ -2,15 +2,13 @@ import { Entity } from '@/domain/shared/entity';
 import { RateLimitLogId } from '../value-objects/rate-limit-log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { EndpointId } from '../value-objects/endpoint-id';
-import { RequestCount } from '../value-objects/request-count';
 import { Result } from '@/domain/shared/result';
 import { Guard } from '@/domain/shared/guard';
 
 export interface RateLimitLogProps {
   userId: UserId;
   endpointId: EndpointId;
-  requestCount: RequestCount;
-  requestedAt: Date;
+  timestamp: Date;
   requestMetadata?: {
     ip?: string;
     userAgent?: string;
@@ -35,12 +33,8 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
     return this.props.endpointId;
   }
 
-  get requestCount(): RequestCount {
-    return this.props.requestCount;
-  }
-
-  get requestedAt(): Date {
-    return this.props.requestedAt;
+  get timestamp(): Date {
+    return this.props.timestamp;
   }
 
   get requestMetadata(): RateLimitLogProps['requestMetadata'] {
@@ -51,7 +45,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
    * ログが特定のウィンドウ内かチェック
    */
   isWithinWindow(windowStart: Date, windowEnd: Date): boolean {
-    const logTime = this.requestedAt.getTime();
+    const logTime = this.timestamp.getTime();
     return logTime >= windowStart.getTime() && logTime < windowEnd.getTime();
   }
 
@@ -59,7 +53,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
    * ログの経過時間を取得（秒）
    */
   getAgeInSeconds(currentTime: Date = new Date()): number {
-    return Math.floor((currentTime.getTime() - this.requestedAt.getTime()) / 1000);
+    return Math.floor((currentTime.getTime() - this.timestamp.getTime()) / 1000);
   }
 
   /**
@@ -72,8 +66,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
     const guardResult = Guard.againstNullOrUndefinedBulk([
       { argument: props.userId, argumentName: 'userId' },
       { argument: props.endpointId, argumentName: 'endpointId' },
-      { argument: props.requestCount, argumentName: 'requestCount' },
-      { argument: props.requestedAt, argumentName: 'requestedAt' },
+      { argument: props.timestamp, argumentName: 'timestamp' },
     ]);
 
     if (!guardResult.succeeded) {
@@ -81,8 +74,8 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
     }
 
     // タイムスタンプが未来でないことを確認
-    if (props.requestedAt.getTime() > Date.now()) {
-      return Result.fail(new Error('Requested at cannot be in the future'));
+    if (props.timestamp.getTime() > Date.now()) {
+      return Result.fail(new Error('Timestamp cannot be in the future'));
     }
 
     return Result.ok(new RateLimitLog(props, id));

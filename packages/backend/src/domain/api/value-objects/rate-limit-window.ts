@@ -16,13 +16,12 @@ export class RateLimitWindow {
 
     this._windowSizeSeconds = windowSizeSeconds;
     
-    // Calculate window start (aligned to window size)
+    // For sliding window: window ends at current time and starts windowSize seconds before
     const currentMs = currentTime.getTime();
     const windowMs = windowSizeSeconds * 1000;
-    const startMs = Math.floor(currentMs / windowMs) * windowMs;
     
-    this._startTime = new Date(startMs);
-    this._endTime = new Date(startMs + windowMs);
+    this._endTime = new Date(currentMs);
+    this._startTime = new Date(currentMs - windowMs);
     
     Object.freeze(this);
   }
@@ -49,7 +48,9 @@ export class RateLimitWindow {
   }
 
   public getSecondsUntilExpires(timestamp: Date): number {
-    const msUntilExpires = this._endTime.getTime() - timestamp.getTime();
+    // For sliding window: the timestamp will "expire" from the window after windowSize seconds
+    const msInWindow = this._endTime.getTime() - timestamp.getTime();
+    const msUntilExpires = this.windowMilliseconds - msInWindow;
     return Math.ceil(msUntilExpires / 1000);
   }
 

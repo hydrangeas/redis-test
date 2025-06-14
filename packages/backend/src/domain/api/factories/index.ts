@@ -1,1 +1,1 @@
-export { APIEndpointFactory } from './api-endpoint.factory';
+export * from './api-endpoint.factory';

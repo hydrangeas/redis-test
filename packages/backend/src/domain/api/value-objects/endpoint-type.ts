@@ -1,7 +1,7 @@
 import { ValidationError } from '@/domain/errors/validation-error';
 import { Result } from '@/domain/shared/result';
 
-type EndpointTypeValue = 'public' | 'protected' | 'internal';
+type EndpointTypeValue = 'public' | 'protected' | 'internal' | 'admin';
 
 export class EndpointType {
   private readonly _value: EndpointTypeValue;
@@ -11,7 +11,7 @@ export class EndpointType {
       throw new ValidationError('Endpoint type is required');
     }
 
-    const validTypes: EndpointTypeValue[] = ['public', 'protected', 'internal'];
+    const validTypes: EndpointTypeValue[] = ['public', 'protected', 'internal', 'admin'];
     if (!validTypes.includes(value)) {
       throw new ValidationError(`Invalid endpoint type: ${value}`);
     }
@@ -34,6 +34,10 @@ export class EndpointType {
 
   public isInternal(): boolean {
     return this._value === 'internal';
+  }
+
+  public isAdmin(): boolean {
+    return this._value === 'admin';
   }
 
   public equals(other: EndpointType): boolean {
@@ -64,6 +68,8 @@ export class EndpointType {
         return 'tier1'; // Tier1 and above
       case 'internal':
         return 'tier3'; // Tier3 only
+      case 'admin':
+        return 'tier3'; // Admin requires tier3
       default:
         return 'tier1';
     }
@@ -83,8 +89,8 @@ export class EndpointType {
       return true;
     }
     
-    // For internal endpoints, only tier3 can access
-    if (this.isInternal() && userTier.level === 'TIER3') {
+    // For internal or admin endpoints, only tier3 can access
+    if ((this.isInternal() || this.isAdmin()) && userTier.level === 'TIER3') {
       return true;
     }
     
@@ -95,4 +101,5 @@ export class EndpointType {
   public static readonly PUBLIC = new EndpointType('public');
   public static readonly PROTECTED = new EndpointType('protected');
   public static readonly INTERNAL = new EndpointType('internal');
+  public static readonly ADMIN = new EndpointType('admin');
 }

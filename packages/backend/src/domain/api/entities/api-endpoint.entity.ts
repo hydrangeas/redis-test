@@ -4,6 +4,7 @@ import { EndpointPath } from '../value-objects/endpoint-path';
 import { HttpMethod } from '../value-objects/http-method';
 import { EndpointType } from '../value-objects/endpoint-type';
 import { UserId } from '@/domain/auth/value-objects/user-id';
+import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { RateLimitLog } from './rate-limit-log.entity';
 import { RequestCount } from '../value-objects/request-count';
