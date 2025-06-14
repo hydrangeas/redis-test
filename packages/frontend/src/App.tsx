@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const App: React.FC = () => {
+const App: React.FC = () => {
   return (
     <div>
       <h1>オープンデータ提供API</h1>
@@ -8,3 +8,5 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
+export default App;
