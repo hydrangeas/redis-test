@@ -132,15 +132,11 @@ export function setupTestDI(): DependencyContainer {
     },
   });
   
-  // テスト用にUserRepositoryのモックを登録（auth.plugin.tsで必要）
-  container.register(DI_TOKENS.UserRepository, {
-    useValue: {
-      findById: () => Promise.resolve(Result.ok(null)),
-      findByEmail: () => Promise.resolve(Result.ok(null)),
-      save: () => Promise.resolve(Result.ok()),
-      update: () => Promise.resolve(Result.ok()),
-      delete: () => Promise.resolve(Result.ok()),
-    },
+  // テスト用にSupabaseUserRepositoryを登録
+  import('../repositories/auth/supabase-user.repository').then(module => {
+    container.register(DI_TOKENS.UserRepository, {
+      useClass: module.SupabaseUserRepository,
+    });
   });
   
   // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
@@ -252,6 +248,13 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   // JWTValidatorの登録
   container.register<IJWTValidator>(DI_TOKENS.JWTValidator, {
     useClass: JWTValidatorService,
+  });
+  
+  // UserRepositoryの登録
+  import('../repositories/auth/supabase-user.repository').then(module => {
+    container.register(DI_TOKENS.UserRepository, {
+      useClass: module.SupabaseUserRepository,
+    });
   });
   
   // Factoriesの登録
