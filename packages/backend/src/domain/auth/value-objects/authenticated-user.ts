@@ -1,7 +1,6 @@
 import { UserId } from './user-id';
 import { UserTier } from './user-tier';
 import { TierLevel } from './tier-level';
-import { ValidationError } from '../../errors/validation-error';
 
 /**
  * 認証済みユーザーを表現するバリューオブジェクト
@@ -10,13 +9,13 @@ import { ValidationError } from '../../errors/validation-error';
 export class AuthenticatedUser {
   constructor(
     public readonly userId: UserId,
-    public readonly tier: UserTier,
+    public readonly tier: UserTier
   ) {
     if (!userId) {
-      throw new ValidationError('UserId is required');
+      throw new Error('UserId is required');
     }
     if (!tier) {
-      throw new ValidationError('UserTier is required');
+      throw new Error('UserTier is required');
     }
     Object.freeze(this);
   }
@@ -35,14 +34,15 @@ export class AuthenticatedUser {
    * @returns ユーザーティアに応じたレート制限
    */
   getRateLimit() {
-    return this.tier.getRateLimit();
+    return this.tier.rateLimit;
   }
 
-  /**
-   * 等価性の比較
-   */
   equals(other: AuthenticatedUser): boolean {
-    return this.userId.equals(other.userId) && this.tier.equals(other.tier);
+    if (!other) return false;
+    return (
+      this.userId.equals(other.userId) &&
+      this.tier.equals(other.tier)
+    );
   }
 
   /**
@@ -78,15 +78,20 @@ export class AuthenticatedUser {
     userId: string;
     tier: {
       level: string;
-      rateLimit: {
+      rateLimit?: {
         maxRequests: number;
         windowSeconds: number;
       };
     };
   }): AuthenticatedUser {
+    const idResult = UserId.create(json.userId);
+    if (idResult.isFailure) {
+      throw new Error(idResult.getError().message);
+    }
+    
     return new AuthenticatedUser(
-      UserId.fromJSON(json.userId),
-      UserTier.fromJSON(json.tier),
+      idResult.getValue(),
+      UserTier.fromJSON(json.tier)
     );
   }
 
@@ -94,12 +99,19 @@ export class AuthenticatedUser {
    * JWTペイロードからAuthenticatedUserを作成するファクトリメソッド
    * （AuthenticationServiceで使用）
    */
-  static fromTokenPayload(userId: string, tierString: string): AuthenticatedUser {
-    const id = UserId.fromString(userId);
+  static fromTokenPayload(
+    userId: string,
+    tierString: string
+  ): AuthenticatedUser {
+    const idResult = UserId.create(userId);
+    if (idResult.isFailure) {
+      throw new Error(idResult.getError().message);
+    }
+    
     const tierLevel = this.parseTierLevel(tierString);
     const tier = UserTier.createDefault(tierLevel);
-
-    return new AuthenticatedUser(id, tier);
+    
+    return new AuthenticatedUser(idResult.getValue(), tier);
   }
 
   /**
