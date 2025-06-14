@@ -8,12 +8,7 @@ import { Provider } from '@/domain/log/value-objects/provider';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { ValidationError } from '@/domain/errors/validation-error';
-
-export enum AuthResult {
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  BLOCKED = 'BLOCKED',
-}
+import { AuthResult } from '@/domain/log/enums';
 
 interface AuthLogEntryProps {
   userId?: UserId;

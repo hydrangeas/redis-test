@@ -149,6 +149,49 @@ export function setupTestDI(): DependencyContainer {
       deleteByUserId: () => Promise.resolve(Result.ok()),
     },
   });
+  
+  // テスト用にAuthLogRepositoryのモックを登録
+  container.register(DI_TOKENS.AuthLogRepository, {
+    useValue: {
+      save: () => Promise.resolve(Result.ok()),
+      findById: () => Promise.resolve(Result.ok(null)),
+      findByUserId: () => Promise.resolve(Result.ok([])),
+      findByEventType: () => Promise.resolve(Result.ok([])),
+      findByIPAddress: () => Promise.resolve(Result.ok([])),
+      findFailures: () => Promise.resolve(Result.ok([])),
+      findSuspiciousActivities: () => Promise.resolve(Result.ok([])),
+      getStatistics: () => Promise.resolve(Result.ok({
+        totalAttempts: 0,
+        successfulLogins: 0,
+        failedLogins: 0,
+        uniqueUsers: 0,
+        suspiciousActivities: 0,
+        loginsByProvider: new Map(),
+        tokenRefreshCount: 0,
+      })),
+      deleteOldLogs: () => Promise.resolve(Result.ok(0)),
+    },
+  });
+  
+  // テスト用にAPILogRepositoryのモックを登録
+  container.register(DI_TOKENS.APILogRepository, {
+    useValue: {
+      save: () => Promise.resolve(Result.ok()),
+      findById: () => Promise.resolve(Result.ok(null)),
+      findByUserId: () => Promise.resolve(Result.ok([])),
+      findByTimeRange: () => Promise.resolve(Result.ok([])),
+      findErrors: () => Promise.resolve(Result.ok([])),
+      getStatistics: () => Promise.resolve(Result.ok({
+        totalRequests: 0,
+        uniqueUsers: 0,
+        errorCount: 0,
+        averageResponseTime: 0,
+        requestsByEndpoint: new Map(),
+        requestsByStatus: new Map(),
+      })),
+      deleteOldLogs: () => Promise.resolve(Result.ok(0)),
+    },
+  });
 
   return container;
 }
@@ -254,6 +297,20 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   import('../repositories/auth/supabase-user.repository').then(module => {
     container.register(DI_TOKENS.UserRepository, {
       useClass: module.SupabaseUserRepository,
+    });
+  });
+  
+  // AuthLogRepositoryの登録
+  import('../repositories/log/supabase-auth-log.repository').then(module => {
+    container.register(DI_TOKENS.AuthLogRepository, {
+      useClass: module.SupabaseAuthLogRepository,
+    });
+  });
+  
+  // APILogRepositoryの登録
+  import('../repositories/log/supabase-api-log.repository').then(module => {
+    container.register(DI_TOKENS.APILogRepository, {
+      useClass: module.SupabaseAPILogRepository,
     });
   });
   
