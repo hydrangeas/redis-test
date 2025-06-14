@@ -282,6 +282,13 @@ function registerApplicationServices(container: DependencyContainer): void {
     });
   });
   
+  // APIAccessControlUseCaseの動的インポート
+  import('@/application/use-cases/api-access-control.use-case').then(module => {
+    container.register(DI_TOKENS.APIAccessControlUseCase, {
+      useClass: module.APIAccessControlUseCase,
+    });
+  });
+  
   // ... 他のアプリケーションサービス
 }
 
