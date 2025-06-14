@@ -1,5 +1,6 @@
 import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
+import { setupRequestLogging } from '@/infrastructure/logging';
 
 interface LoggingPluginOptions {
   skipPaths?: string[];
@@ -8,76 +9,25 @@ interface LoggingPluginOptions {
 
 const loggingPlugin: FastifyPluginAsync<LoggingPluginOptions> = async (fastify, options) => {
   const skipPaths = options.skipPaths || ['/health', '/metrics'];
-  const logLevel = options.logLevel || 'info';
   
-  // リクエスト開始時のロギング
-  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-    // スキップするパスの場合はログを出力しない
-    if (skipPaths.some(path => request.url === path || request.url.startsWith(path))) {
-      return;
-    }
-    
-    // リクエスト開始時刻を記録
-    request.startTime = Date.now();
-    
-    request.log[logLevel]({
-      method: request.method,
-      url: request.url,
-      headers: {
-        'user-agent': request.headers['user-agent'],
-        'content-type': request.headers['content-type'],
-        'content-length': request.headers['content-length'],
-      },
-      ip: request.ip,
-      hostname: request.hostname,
-    }, 'Request received');
-  });
+  // インフラストラクチャ層のロギング設定を適用
+  setupRequestLogging(fastify);
   
-  // レスポンス送信時のロギング
+  // 追加のカスタムロギング（ユーザー情報など）
   fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
     // スキップするパスの場合はログを出力しない
     if (skipPaths.some(path => request.url === path || request.url.startsWith(path))) {
       return;
     }
     
-    const responseTime = Date.now() - (request.startTime || Date.now());
-    
-    const logData = {
-      method: request.method,
-      url: request.url,
-      statusCode: reply.statusCode,
-      responseTime,
-      contentLength: reply.getHeader('content-length'),
-    };
-    
-    // ユーザー情報があれば追加
+    // ユーザー情報があれば追加のログを出力
     if (request.user) {
-      logData['userId'] = request.user.userId.value;
-      logData['userTier'] = request.user.tier.level;
+      request.log.info({
+        userId: request.user.userId.value,
+        userTier: request.user.tier.level,
+        event: 'authenticated_request',
+      }, 'Authenticated user request');
     }
-    
-    // ステータスコードに応じてログレベルを変更
-    if (reply.statusCode >= 500) {
-      request.log.error(logData, 'Request completed with error');
-    } else if (reply.statusCode >= 400) {
-      request.log.warn(logData, 'Request completed with client error');
-    } else {
-      request.log[logLevel](logData, 'Request completed');
-    }
-  });
-  
-  // エラー時のロギング
-  fastify.addHook('onError', async (request: FastifyRequest, reply: FastifyReply, error: Error) => {
-    request.log.error({
-      method: request.method,
-      url: request.url,
-      error: {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      },
-      userId: request.user?.userId.value,
-    }, 'Request error');
   });
 };
 

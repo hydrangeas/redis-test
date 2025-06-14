@@ -11,6 +11,7 @@ export * from './data';
 import { DependencyContainer } from 'tsyringe';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { EventLogger } from '@/infrastructure/logging';
 
 // Auth Handlers
 import { UserAuthenticatedHandler } from './auth/user-authenticated.handler';
@@ -32,30 +33,41 @@ import { DataResourceNotFoundHandler } from './data/data-resource-not-found.hand
 export function registerEventHandlers(container: DependencyContainer): void {
   const eventBus = container.resolve<IEventBus>(DI_TOKENS.EventBus);
 
+  // Universal Event Logger - すべてのイベントをログに記録
+  const eventLogger = container.resolve(EventLogger);
+  
   // Auth Event Handlers
   const userAuthenticatedHandler = container.resolve(UserAuthenticatedHandler);
   eventBus.subscribe('UserAuthenticated', userAuthenticatedHandler);
+  eventBus.subscribe('UserAuthenticated', eventLogger);
 
   const tokenRefreshedHandler = container.resolve(TokenRefreshedHandler);
   eventBus.subscribe('TokenRefreshed', tokenRefreshedHandler);
+  eventBus.subscribe('TokenRefreshed', eventLogger);
 
   const userLoggedOutHandler = container.resolve(UserLoggedOutHandler);
   eventBus.subscribe('UserLoggedOut', userLoggedOutHandler);
+  eventBus.subscribe('UserLoggedOut', eventLogger);
 
   const authenticationFailedHandler = container.resolve(AuthenticationFailedHandler);
   eventBus.subscribe('AuthenticationFailed', authenticationFailedHandler);
+  eventBus.subscribe('AuthenticationFailed', eventLogger);
 
   // API Event Handlers
   const apiAccessRequestedHandler = container.resolve(APIAccessRequestedHandler);
   eventBus.subscribe('APIAccessRequested', apiAccessRequestedHandler);
+  eventBus.subscribe('APIAccessRequested', eventLogger);
 
   const rateLimitExceededHandler = container.resolve(RateLimitExceededHandler);
   eventBus.subscribe('RateLimitExceeded', rateLimitExceededHandler);
+  eventBus.subscribe('RateLimitExceeded', eventLogger);
 
   // Data Event Handlers
   const dataRetrievedHandler = container.resolve(DataRetrievedHandler);
   eventBus.subscribe('DataRetrieved', dataRetrievedHandler);
+  eventBus.subscribe('DataRetrieved', eventLogger);
 
   const dataResourceNotFoundHandler = container.resolve(DataResourceNotFoundHandler);
   eventBus.subscribe('DataResourceNotFound', dataResourceNotFoundHandler);
+  eventBus.subscribe('DataResourceNotFound', eventLogger);
 }
