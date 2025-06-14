@@ -11,6 +11,7 @@ import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
 import { AuthenticationService } from '@/domain/auth/services/authentication.service';
 import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { EventBus } from '../events/event-bus';
 import { IEventStore } from '@/domain/interfaces/event-store.interface';
@@ -188,9 +189,9 @@ function registerApplicationServices(container: DependencyContainer): void {
   container.register(DI_TOKENS.AuthenticationUseCase, {
     useClass: AuthenticationUseCase,
   });
-  // container.register(DI_TOKENS.DataRetrievalUseCase, {
-  //   useClass: DataRetrievalUseCaseImpl,
-  // });
+  container.register(DI_TOKENS.DataRetrievalUseCase, {
+    useClass: DataRetrievalUseCase,
+  });
   // ... 他のアプリケーションサービス
 }
 

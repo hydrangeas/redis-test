@@ -40,10 +40,11 @@ describe('AuthLogHandler', () => {
 
   it('should successfully log user authenticated event', async () => {
     // Arrange
+    const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
     const event = new UserAuthenticated(
-      'user-123',
+      userId,
       1,
-      'user-123',
+      userId,
       'google',
       'tier2',
       'session-456',
@@ -61,7 +62,7 @@ describe('AuthLogHandler', () => {
     const savedLog = (mockAuthLogRepository.save as MockedFunction<any>).mock.calls[0][0];
     
     expect(savedLog).toBeDefined();
-    expect(savedLog.userId?.value).toBe('user-123');
+    expect(savedLog.userId?.value).toBe(userId);
     expect(savedLog.provider.value).toBe('google');
     expect(savedLog.result).toBe(AuthResult.SUCCESS);
     expect(savedLog.metadata?.tier).toBe('tier2');
@@ -71,7 +72,7 @@ describe('AuthLogHandler', () => {
       expect.objectContaining({
         event: expect.objectContaining({
           eventName: 'UserAuthenticated',
-          aggregateId: 'user-123',
+          aggregateId: userId,
         }),
       }),
       'Authentication event logged successfully'
@@ -80,10 +81,11 @@ describe('AuthLogHandler', () => {
 
   it('should handle event without optional fields', async () => {
     // Arrange
+    const userId = '550e8400-e29b-41d4-a716-446655440001'; // Valid UUID v4
     const event = new UserAuthenticated(
-      'user-456',
+      userId,
       1,
-      'user-456',
+      userId,
       'github',
       'tier1'
     );
@@ -98,18 +100,19 @@ describe('AuthLogHandler', () => {
     const savedLog = (mockAuthLogRepository.save as MockedFunction<any>).mock.calls[0][0];
     
     expect(savedLog).toBeDefined();
-    expect(savedLog.userId?.value).toBe('user-456');
+    expect(savedLog.userId?.value).toBe(userId);
     expect(savedLog.provider.value).toBe('github');
-    expect(savedLog.ipAddress.value).toBe('unknown');
+    expect(savedLog.ipAddress.value).toBe('0.0.0.0'); // IPAddress.unknown() returns '0.0.0.0'
     expect(savedLog.userAgent.value).toBe('Unknown');
   });
 
   it('should handle repository save failure', async () => {
     // Arrange
+    const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
     const event = new UserAuthenticated(
-      'user-123',
+      userId,
       1,
-      'user-123',
+      userId,
       'google',
       'tier2'
     );
@@ -144,7 +147,7 @@ describe('AuthLogHandler', () => {
     const event = new UserAuthenticated(
       'invalid-user',
       1,
-      '', // Invalid empty user ID
+      'invalid-user-id', // Invalid user ID format
       'google',
       'tier2'
     );
@@ -166,10 +169,11 @@ describe('AuthLogHandler', () => {
 
   it('should handle invalid provider', async () => {
     // Arrange
+    const userId = '550e8400-e29b-41d4-a716-446655440003'; // Valid UUID v4
     const event = new UserAuthenticated(
-      'user-123',
+      userId,
       1,
-      'user-123',
+      userId,
       '', // Invalid empty provider
       'tier2'
     );
@@ -191,10 +195,11 @@ describe('AuthLogHandler', () => {
 
   it('should not throw error on unexpected exception', async () => {
     // Arrange
+    const userId = '550e8400-e29b-41d4-a716-446655440004'; // Valid UUID v4
     const event = new UserAuthenticated(
-      'user-123',
+      userId,
       1,
-      'user-123',
+      userId,
       'google',
       'tier2'
     );
@@ -218,10 +223,11 @@ describe('AuthLogHandler', () => {
 
   it('should include event metadata in log entry', async () => {
     // Arrange
+    const userId = '550e8400-e29b-41d4-a716-446655440005'; // Valid UUID v4
     const event = new UserAuthenticated(
-      'user-123',
+      userId,
       1,
-      'user-123',
+      userId,
       'google',
       'tier3',
       'session-789'
