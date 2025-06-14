@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
 import { OpenDataResource } from '@/domain/data/entities/open-data-resource.entity';
 import { DataPath } from '@/domain/data/value-objects/data-path';
@@ -12,6 +12,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Logger } from 'pino';
 import { createHash } from 'crypto';
+import { DI_TOKENS } from '../di/tokens';
 
 interface CacheEntry {
   resource: OpenDataResource;
@@ -26,9 +27,11 @@ export class OpenDataRepository implements IOpenDataRepository {
   private readonly dataDirectory: string;
 
   constructor(
+    @inject(DI_TOKENS.Logger)
     private readonly logger: Logger
   ) {
-    this.dataDirectory = process.env.DATA_DIRECTORY || '/data';
+    // プロジェクトルートからの相対パスを使用
+    this.dataDirectory = process.env.DATA_DIRECTORY || path.join(process.cwd(), 'data');
   }
 
   /**

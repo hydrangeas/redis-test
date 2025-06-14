@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-01T00:00:00Z",
+  "metadata": {
+    "source": "オープンデータAPI管理システム",
+    "lastUpdated": "2025-01-01",
+    "license": "CC BY 4.0"
+  },
+  "categories": {
+    "population": {
+      "name": "人口統計",
+      "path": "/secure/population",
+      "files": ["2024.json", "2023.json"]
+    },
+    "budget": {
+      "name": "予算",
+      "path": "/secure/budget",
+      "files": ["2024/general.json", "2024/details.json"]
+    },
+    "statistics": {
+      "name": "統計データ",
+      "path": "/secure/statistics",
+      "files": ["education.json", "health.json", "economy.json"]
+    }
+  }
+}

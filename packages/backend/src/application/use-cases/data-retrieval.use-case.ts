@@ -11,6 +11,7 @@ import { DataResourceNotFound } from '@/domain/data/events/data-resource-not-fou
 import { DataAccessDenied } from '@/domain/data/events/data-access-denied.event';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 /**
  * データ取得ユースケースの実装
@@ -30,16 +31,20 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   /**
    * 指定されたパスのデータを取得
    */
-  async retrieveData(path: string): Promise<Result<any, DomainError>> {
+  async retrieveData(path: string, user: AuthenticatedUser): Promise<Result<{
+    content: any;
+    checksum: string;
+    lastModified: Date;
+  }, DomainError>> {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
       if (dataPathResult.isFailure) {
-        this.logger.warn({ path }, 'Invalid data path');
+        this.logger.warn({ path, userId: user.userId.value }, 'Invalid data path');
         
         // データアクセス拒否イベントを発行
         await this.eventBus.publish(new DataAccessDenied(
-          'system',
+          user.userId.value,
           1,
           path,
           'INVALID_PATH',
@@ -53,7 +58,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
 
       // データアクセス要求イベントを発行
       await this.eventBus.publish(new DataAccessRequested(
-        dataPath.value,
+        user.userId.value,
         1,
         dataPath.value,
         new Date()
@@ -63,14 +68,14 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       const resourceResult = await this.dataRepository.findByPath(dataPath);
       if (resourceResult.isFailure) {
         this.logger.error(
-          { path: dataPath.value, error: resourceResult.error },
+          { path: dataPath.value, error: resourceResult.error, userId: user.userId.value },
           'Failed to find resource'
         );
 
         // リソースが見つからない場合のイベント発行
         if (resourceResult.error!.type === ErrorType.NOT_FOUND) {
           await this.eventBus.publish(new DataResourceNotFound(
-            dataPath.value,
+            user.userId.value,
             1,
             dataPath.value,
             new Date()
@@ -86,7 +91,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       const contentResult = await this.dataRepository.getContent(resource);
       if (contentResult.isFailure) {
         this.logger.error(
-          { path: dataPath.value, error: contentResult.error },
+          { path: dataPath.value, error: contentResult.error, userId: user.userId.value },
           'Failed to get resource content'
         );
         return Result.fail(contentResult.error!);
@@ -109,15 +114,21 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
         { 
           path: dataPath.value, 
           size: resource.metadata.size,
-          contentType: resource.metadata.contentType 
+          contentType: resource.metadata.contentType,
+          userId: user.userId.value,
+          tier: user.tier.level
         },
         'Data retrieved successfully'
       );
 
-      return Result.ok(contentResult.getValue());
+      return Result.ok({
+        content: contentResult.getValue(),
+        checksum: resource.metadata.etag,
+        lastModified: resource.metadata.lastModified
+      });
     } catch (error) {
       this.logger.error(
-        { path, error: error instanceof Error ? error.message : 'Unknown error' },
+        { path, error: error instanceof Error ? error.message : 'Unknown error', userId: user.userId.value },
         'Unexpected error in data retrieval'
       );
       

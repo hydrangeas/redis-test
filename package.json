@@ -24,7 +24,9 @@
     "supabase:db:push": "supabase db push",
     "supabase:migration:new": "supabase migration new",
     "supabase:migration:list": "supabase migration list",
-    "supabase:gen:types": "supabase gen types typescript --local > packages/backend/src/types/supabase.ts"
+    "supabase:gen:types": "supabase gen types typescript --local > packages/backend/src/types/supabase.ts",
+    "validate:json": "node scripts/validate-json.js",
+    "setup:data": "bash scripts/setup-data.sh"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
@@ -41,5 +43,9 @@
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
-  "packageManager": "npm@10.2.4"
+  "packageManager": "npm@10.2.4",
+  "dependencies": {
+    "glob": "^11.0.3",
+    "node-fetch": "^3.3.2"
+  }
 }

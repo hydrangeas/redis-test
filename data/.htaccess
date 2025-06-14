@@ -1,0 +1,3 @@
+# Deny direct access to data files
+Order deny,allow
+Deny from all

@@ -1,0 +1,23 @@
+{
+  "year": "2024",
+  "prefecture": "奈良県",
+  "totalPopulation": 1324473,
+  "households": 595890,
+  "populationByCity": [
+    {
+      "city": "奈良市",
+      "population": 354630,
+      "households": 166584
+    },
+    {
+      "city": "橿原市",
+      "population": 120548,
+      "households": 53211
+    }
+  ],
+  "metadata": {
+    "source": "奈良県統計課",
+    "lastUpdated": "2024-12-01",
+    "license": "CC BY 4.0"
+  }
+}

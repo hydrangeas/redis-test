@@ -1,5 +1,6 @@
 import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 /**
  * データ取得ユースケースのインターフェース
@@ -9,9 +10,14 @@ export interface IDataRetrievalUseCase {
   /**
    * 指定されたパスのデータを取得
    * @param path データパス（例: "secure/319985/r5.json"）
-   * @returns データ内容（JSONまたはその他の形式）
+   * @param user 認証済みユーザー
+   * @returns データ内容とメタデータ
    */
-  retrieveData(path: string): Promise<Result<any, DomainError>>;
+  retrieveData(path: string, user: AuthenticatedUser): Promise<Result<{
+    content: any;
+    checksum: string;
+    lastModified: Date;
+  }, DomainError>>;
 
   /**
    * 指定されたパスのデータメタデータを取得

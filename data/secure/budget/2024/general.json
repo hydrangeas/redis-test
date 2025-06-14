@@ -1,0 +1,28 @@
+{
+  "year": "2024",
+  "prefecture": "奈良県",
+  "fiscalYear": "令和6年度",
+  "totalBudget": 562340000000,
+  "generalAccount": {
+    "revenue": 518450000000,
+    "expenditure": 518450000000
+  },
+  "specialAccounts": {
+    "total": 43890000000,
+    "accounts": [
+      {
+        "name": "国民健康保険特別会計",
+        "amount": 12560000000
+      },
+      {
+        "name": "介護保険特別会計",
+        "amount": 8970000000
+      }
+    ]
+  },
+  "metadata": {
+    "source": "奈良県財政課",
+    "lastUpdated": "2024-04-01",
+    "license": "CC BY 4.0"
+  }
+}

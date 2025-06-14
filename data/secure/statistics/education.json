@@ -1,0 +1,28 @@
+{
+  "category": "教育統計",
+  "prefecture": "奈良県",
+  "year": "2024",
+  "schools": {
+    "elementary": {
+      "count": 198,
+      "students": 64782,
+      "teachers": 3894
+    },
+    "juniorHigh": {
+      "count": 104,
+      "students": 33156,
+      "teachers": 2156
+    },
+    "highSchool": {
+      "count": 51,
+      "students": 31245,
+      "teachers": 2345
+    }
+  },
+  "universityEnrollmentRate": 58.7,
+  "metadata": {
+    "source": "奈良県教育委員会",
+    "lastUpdated": "2024-05-01",
+    "license": "CC BY 4.0"
+  }
+}
