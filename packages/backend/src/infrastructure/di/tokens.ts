@@ -18,6 +18,7 @@ export const DI_TOKENS = {
   // Repositories
   UserRepository: Symbol.for('UserRepository'),
   RateLimitRepository: Symbol.for('RateLimitRepository'),
+  RateLimitLogRepository: Symbol.for('RateLimitLogRepository'),
   AuthLogRepository: Symbol.for('AuthLogRepository'),
   ApiLogRepository: Symbol.for('ApiLogRepository'),
   OpenDataRepository: Symbol.for('OpenDataRepository'),
@@ -27,15 +28,23 @@ export const DI_TOKENS = {
   AuthenticationService: Symbol.for('AuthenticationService'),
   RateLimitService: Symbol.for('RateLimitService'),
   DataAccessService: Symbol.for('DataAccessService'),
+  APIAccessControlService: Symbol.for('APIAccessControlService'),
+  LogAnalysisService: Symbol.for('LogAnalysisService'),
   
   // Application Services
   AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),
   DataRetrievalUseCase: Symbol.for('DataRetrievalUseCase'),
+  RateLimitUseCase: Symbol.for('RateLimitUseCase'),
   
   // Infrastructure Services
   JwtService: Symbol.for('JwtService'),
+  JWTValidator: Symbol.for('JWTValidator'),
   FileStorageService: Symbol.for('FileStorageService'),
   SecurityAuditService: Symbol.for('SecurityAuditService'),
   SecurityAlertService: Symbol.for('SecurityAlertService'),
   AuthAdapter: Symbol.for('AuthAdapter'),
+  NotificationService: Symbol.for('NotificationService'),
+  
+  // Factories
+  OpenDataResourceFactory: Symbol.for('OpenDataResourceFactory'),
 } as const;

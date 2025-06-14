@@ -46,7 +46,7 @@ describe('ResourceId', () => {
 
   describe('create', () => {
     it('should create ResourceId from valid string', () => {
-      const validId = 'resource_a1b2c3d4e5f6789012345678901234';
+      const validId = 'resource_a1b2c3d4e5f678901234567890123456';
       const result = ResourceId.create(validId);
 
       expect(result.isSuccess).toBe(true);
@@ -67,9 +67,9 @@ describe('ResourceId', () => {
         'invalid_format',
         'resource_',
         'resource_12345',
-        'resource_GHIJKLMNOP1234567890123456',
-        'res_a1b2c3d4e5f6789012345678901234',
-        'resource_a1b2c3d4e5f678901234567890123456' // too long
+        'resource_GHIJKLMNOP12345678901234567890',  // uppercase letters
+        'res_a1b2c3d4e5f678901234567890123456',     // wrong prefix
+        'resource_a1b2c3d4e5f6789012345678901234567' // too long (33 hex chars)
       ];
 
       invalidFormats.forEach(invalid => {
@@ -80,7 +80,7 @@ describe('ResourceId', () => {
     });
 
     it('should only accept lowercase hex characters', () => {
-      const uppercase = 'resource_A1B2C3D4E5F6789012345678901234';
+      const uppercase = 'resource_A1B2C3D4E5F678901234567890123456';
       const result = ResourceId.create(uppercase);
       
       expect(result.isFailure).toBe(true);

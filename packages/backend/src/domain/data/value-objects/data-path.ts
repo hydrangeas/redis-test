@@ -13,9 +13,10 @@ export class DataPath {
 
   private constructor(
     public readonly value: string,
-    public readonly segments: string[]
+    public readonly segments: readonly string[]
   ) {
     Object.freeze(this);
+    Object.freeze(this.segments);
   }
 
   /**
@@ -57,8 +58,35 @@ export class DataPath {
     }
 
     // パストラバーサル攻撃の防止
+    const lowerPath = pathString.toLowerCase();
+    const dangerousPatterns = [
+      '..',
+      './',
+      '//',
+      '\\',
+      '%2e%2e',
+      '%252e%252e',
+      '..%2f',
+      '%2e%2e%2f',
+      '.%2e',
+      '%00'
+    ];
+    
+    for (const pattern of dangerousPatterns) {
+      if (lowerPath.includes(pattern)) {
+        return Result.fail(
+          new DomainError(
+            'INVALID_PATH',
+            'Path traversal detected',
+            'SECURITY'
+          )
+        );
+      }
+    }
+    
+    // path.normalizeを使った追加チェック
     const normalizedPath = path.normalize(pathString);
-    if (normalizedPath.includes('..') || normalizedPath.includes('./')) {
+    if (normalizedPath !== pathString || normalizedPath.includes('..')) {
       return Result.fail(
         new DomainError(
           'INVALID_PATH',

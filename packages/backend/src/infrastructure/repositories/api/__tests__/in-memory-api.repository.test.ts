@@ -111,18 +111,13 @@ describe('InMemoryAPIRepository', () => {
   });
 
   describe('findByEndpointId', () => {
-    it('should find aggregate when endpoint exists', async () => {
-      const aggregateResult = await repository.getAggregate();
-      const aggregate = aggregateResult.getValue()!;
-
-      // 最初のエンドポイントのIDを取得
-      const firstEndpoint = Array.from(aggregate.endpoints.values())[0];
-      expect(firstEndpoint).toBeDefined();
-
-      const findResult = await repository.findByEndpointId(firstEndpoint.id);
+    it('should always return null as APIEndpoint is now a value object without id', async () => {
+      // APIEndpointがvalue objectになりidを持たないため、このメソッドは常にnullを返します
+      const dummyEndpointId = { value: 'dummy-id' } as any;
+      const findResult = await repository.findByEndpointId(dummyEndpointId);
 
       expect(findResult.isSuccess).toBe(true);
-      expect(findResult.getValue()).toBeTruthy();
+      expect(findResult.getValue()).toBeNull();
     });
   });
 

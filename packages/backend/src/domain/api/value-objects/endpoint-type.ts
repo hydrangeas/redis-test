@@ -53,6 +53,44 @@ export class EndpointType {
     }
   }
 
+  /**
+   * このエンドポイントタイプに必要な最小ティアレベルを取得
+   */
+  public get requiredTier(): string {
+    switch (this._value) {
+      case 'public':
+        return 'tier0'; // Any tier can access
+      case 'protected':
+        return 'tier1'; // Tier1 and above
+      case 'internal':
+        return 'tier3'; // Tier3 only
+      default:
+        return 'tier1';
+    }
+  }
+
+  /**
+   * 指定されたティアがこのエンドポイントにアクセスできるかチェック
+   */
+  public canBeAccessedByTier(userTier: any): boolean {
+    // For public endpoints, any tier can access
+    if (this.isPublic()) {
+      return true;
+    }
+    
+    // For protected endpoints, any authenticated user can access
+    if (this.isProtected()) {
+      return true;
+    }
+    
+    // For internal endpoints, only tier3 can access
+    if (this.isInternal() && userTier.level === 'TIER3') {
+      return true;
+    }
+    
+    return false;
+  }
+
   // Static instances for common types
   public static readonly PUBLIC = new EndpointType('public');
   public static readonly PROTECTED = new EndpointType('protected');

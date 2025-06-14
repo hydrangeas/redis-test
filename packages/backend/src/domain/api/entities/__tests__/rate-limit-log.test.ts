@@ -3,16 +3,19 @@ import { RateLimitLog } from '../rate-limit-log.entity';
 import { RateLimitLogId } from '../../value-objects/rate-limit-log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { EndpointId } from '../../value-objects/endpoint-id';
+import { RequestCount } from '../../value-objects/request-count';
 
 describe('RateLimitLog', () => {
   let userId: UserId;
   let endpointId: EndpointId;
-  let timestamp: Date;
+  let requestedAt: Date;
+  let requestCount: RequestCount;
 
   beforeEach(() => {
     userId = UserId.generate();
     endpointId = EndpointId.generate();
-    timestamp = new Date();
+    requestedAt = new Date();
+    requestCount = RequestCount.create(1).getValue();
   });
 
   describe('create', () => {
@@ -20,14 +23,16 @@ describe('RateLimitLog', () => {
       const result = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
       });
 
       expect(result.isSuccess).toBe(true);
       const log = result.getValue();
       expect(log.userId).toBe(userId);
       expect(log.endpointId).toBe(endpointId);
-      expect(log.timestamp).toEqual(timestamp);
+      expect(log.requestCount).toBe(requestCount);
+      expect(log.requestedAt).toEqual(requestedAt);
       expect(log.requestMetadata).toBeUndefined();
     });
 
@@ -41,7 +46,8 @@ describe('RateLimitLog', () => {
       const result = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
         requestMetadata: metadata,
       });
 
@@ -54,7 +60,8 @@ describe('RateLimitLog', () => {
       const result = RateLimitLog.create({
         userId: null as any,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
       });
 
       expect(result.isFailure).toBe(true);
@@ -65,35 +72,38 @@ describe('RateLimitLog', () => {
       const result = RateLimitLog.create({
         userId,
         endpointId: null as any,
-        timestamp,
+        requestCount,
+        requestedAt,
       });
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().message).toContain('endpointId is null or undefined');
     });
 
-    it('should fail when timestamp is null', () => {
+    it('should fail when requestedAt is null', () => {
       const result = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp: null as any,
+        requestCount,
+        requestedAt: null as any,
       });
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError().message).toContain('timestamp is null or undefined');
+      expect(result.getError().message).toContain('requestedAt is null or undefined');
     });
 
-    it('should fail when timestamp is in the future', () => {
+    it('should fail when requestedAt is in the future', () => {
       const futureTimestamp = new Date(Date.now() + 60000); // 1 minute in future
 
       const result = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp: futureTimestamp,
+        requestCount,
+        requestedAt: futureTimestamp,
       });
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError().message).toBe('Timestamp cannot be in the future');
+      expect(result.getError().message).toBe('Requested at cannot be in the future');
     });
 
     it('should create with custom id', () => {
@@ -102,7 +112,8 @@ describe('RateLimitLog', () => {
         {
           userId,
           endpointId,
-          timestamp,
+          requestCount,
+          requestedAt,
         },
         customId
       );
@@ -118,11 +129,12 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
       }).getValue();
 
-      const windowStart = new Date(timestamp.getTime() - 30000); // 30 seconds before
-      const windowEnd = new Date(timestamp.getTime() + 30000); // 30 seconds after
+      const windowStart = new Date(requestedAt.getTime() - 30000); // 30 seconds before
+      const windowEnd = new Date(requestedAt.getTime() + 30000); // 30 seconds after
 
       expect(log.isWithinWindow(windowStart, windowEnd)).toBe(true);
     });
@@ -131,11 +143,12 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
       }).getValue();
 
-      const windowStart = new Date(timestamp.getTime() + 10000); // 10 seconds after log
-      const windowEnd = new Date(timestamp.getTime() + 60000); // 60 seconds after log
+      const windowStart = new Date(requestedAt.getTime() + 10000); // 10 seconds after log
+      const windowEnd = new Date(requestedAt.getTime() + 60000); // 60 seconds after log
 
       expect(log.isWithinWindow(windowStart, windowEnd)).toBe(false);
     });
@@ -144,11 +157,12 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
       }).getValue();
 
-      const windowStart = new Date(timestamp.getTime() - 60000); // 60 seconds before log
-      const windowEnd = new Date(timestamp.getTime() - 10000); // 10 seconds before log
+      const windowStart = new Date(requestedAt.getTime() - 60000); // 60 seconds before log
+      const windowEnd = new Date(requestedAt.getTime() - 10000); // 10 seconds before log
 
       expect(log.isWithinWindow(windowStart, windowEnd)).toBe(false);
     });
@@ -157,17 +171,18 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
       }).getValue();
 
       // Log timestamp exactly at window start
-      const windowStart = timestamp;
-      const windowEnd = new Date(timestamp.getTime() + 60000);
+      const windowStart = requestedAt;
+      const windowEnd = new Date(requestedAt.getTime() + 60000);
       expect(log.isWithinWindow(windowStart, windowEnd)).toBe(true);
 
       // Log timestamp exactly at window end
-      const windowStart2 = new Date(timestamp.getTime() - 60000);
-      const windowEnd2 = timestamp;
+      const windowStart2 = new Date(requestedAt.getTime() - 60000);
+      const windowEnd2 = requestedAt;
       expect(log.isWithinWindow(windowStart2, windowEnd2)).toBe(false);
     });
   });
@@ -178,7 +193,8 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp: pastTimestamp,
+        requestCount,
+        requestedAt: pastTimestamp,
       }).getValue();
 
       const age = log.getAgeInSeconds();
@@ -193,7 +209,8 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp: logTime,
+        requestCount,
+        requestedAt: logTime,
       }).getValue();
 
       expect(log.getAgeInSeconds(currentTime)).toBe(60);
@@ -204,7 +221,8 @@ describe('RateLimitLog', () => {
       const log = RateLimitLog.create({
         userId,
         endpointId,
-        timestamp: now,
+        requestCount,
+        requestedAt: now,
       }).getValue();
 
       expect(log.getAgeInSeconds(now)).toBe(0);
@@ -217,7 +235,8 @@ describe('RateLimitLog', () => {
       const props = {
         userId,
         endpointId,
-        timestamp,
+        requestCount,
+        requestedAt,
         requestMetadata: {
           ip: '192.168.1.1',
           userAgent: 'test',
@@ -229,7 +248,8 @@ describe('RateLimitLog', () => {
       expect(log.id).toBe(id);
       expect(log.userId).toBe(userId);
       expect(log.endpointId).toBe(endpointId);
-      expect(log.timestamp).toEqual(timestamp);
+      expect(log.requestCount).toBe(requestCount);
+      expect(log.requestedAt).toEqual(requestedAt);
       expect(log.requestMetadata).toEqual(props.requestMetadata);
     });
   });

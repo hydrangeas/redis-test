@@ -1,15 +1,15 @@
 import { container } from 'tsyringe';
-import { DI_TOKENS } from '../../infrastructure/di';
-import { DomainError, ErrorType } from '../../domain/errors/domain-error';
-import { DomainException } from '../../domain/errors/exceptions';
-import { ProblemDetails } from '../../domain/errors/problem-details';
-import { ApplicationError, ApplicationErrorType } from '../../application/errors/application-error';
-import type { EnvConfig } from '../../infrastructure/config';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { DomainException } from '@/domain/errors/exceptions';
+import { ProblemDetails } from '@/domain/errors/problem-details';
+import { ApplicationError, ApplicationErrorType } from '@/application/errors/application-error';
+import type { EnvConfig } from '@/infrastructure/config';
 
 /**
  * ErrorTypeからHTTPステータスコードへのマッピング
  */
-const STATUS_CODE_MAP: Record<ErrorType, number> = {
+const STATUS_CODE_MAP: Record<string, number> = {
   [ErrorType.VALIDATION]: 400,
   [ErrorType.BUSINESS_RULE]: 422,
   [ErrorType.NOT_FOUND]: 404,
@@ -100,13 +100,20 @@ export function toProblemDetails(
 
   // DomainErrorの場合
   if (error instanceof DomainError) {
-    return {
+    // TypeScript enumの値とキーの問題を解決
+    const statusCode = STATUS_CODE_MAP[error.type] || 500;
+    const problemDetails: ProblemDetails = {
       type: `${baseUrl}/errors/${error.code.toLowerCase().replace(/_/g, '-')}`,
       title: error.message,
-      status: STATUS_CODE_MAP[error.type] || 500,
+      status: statusCode,
       detail: error.details ? JSON.stringify(error.details) : error.message,
-      instance,
     };
+    
+    if (instance) {
+      problemDetails.instance = instance;
+    }
+    
+    return problemDetails;
   }
 
   // 通常のErrorの場合（予期しないエラー）

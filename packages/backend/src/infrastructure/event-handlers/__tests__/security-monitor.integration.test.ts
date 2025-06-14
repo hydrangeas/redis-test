@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SecurityMonitorHandler } from '../security-monitor.handler';
 import { TokenRefreshed, AuthenticationFailed } from '@/domain/auth/events';
 import { ISecurityAlertService, SecurityAlert } from '@/infrastructure/services/security-alert.service';
@@ -16,38 +17,38 @@ import type { Logger } from 'pino';
 
 describe('SecurityMonitorHandler', () => {
   let handler: SecurityMonitorHandler;
-  let mockAlertService: jest.Mocked<ISecurityAlertService>;
-  let mockAuthLogRepository: jest.Mocked<IAuthLogRepository>;
-  let mockLogger: jest.Mocked<Logger>;
+  let mockAlertService: any;
+  let mockAuthLogRepository: any;
+  let mockLogger: any;
 
   beforeEach(() => {
     // モックの作成
     mockAlertService = {
-      sendAlert: jest.fn().mockResolvedValue(undefined),
+      sendAlert: vi.fn().mockResolvedValue(undefined),
     };
 
     mockAuthLogRepository = {
-      save: jest.fn().mockResolvedValue(Result.ok()),
-      findById: jest.fn(),
-      findByUserId: jest.fn(),
-      findByEventType: jest.fn(),
-      findByIPAddress: jest.fn(),
-      findFailures: jest.fn(),
-      findSuspiciousActivities: jest.fn(),
-      getStatistics: jest.fn(),
-      deleteOldLogs: jest.fn(),
+      save: vi.fn().mockResolvedValue(Result.ok()),
+      findById: vi.fn(),
+      findByUserId: vi.fn(),
+      findByEventType: vi.fn(),
+      findByIPAddress: vi.fn(),
+      findFailures: vi.fn(),
+      findSuspiciousActivities: vi.fn(),
+      getStatistics: vi.fn(),
+      deleteOldLogs: vi.fn(),
     };
 
     mockLogger = {
-      warn: jest.fn(),
-      error: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-      fatal: jest.fn(),
-      trace: jest.fn(),
-      child: jest.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      debug: vi.fn(),
+      fatal: vi.fn(),
+      trace: vi.fn(),
+      child: vi.fn(),
       level: 'info',
-      silent: jest.fn(),
+      silent: vi.fn(),
     } as unknown as jest.Mocked<Logger>;
 
     handler = new SecurityMonitorHandler(

@@ -4,6 +4,7 @@ import { Result } from '../errors/result';
 import { ApplicationError } from '../errors/application-error';
 import { ApplicationResult } from '../errors/result';
 import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
+import { IJWTValidator } from '@/infrastructure/auth/interfaces/jwt-validator.interface';
 import { AuthenticationService } from '@/domain/auth/services/authentication.service';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
@@ -19,6 +20,8 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
   constructor(
     @inject(DI_TOKENS.AuthAdapter)
     private readonly authAdapter: IAuthAdapter,
+    @inject(DI_TOKENS.JWTValidator)
+    private readonly jwtValidator: IJWTValidator,
     @inject(DI_TOKENS.AuthenticationService)
     private readonly authService: AuthenticationService,
     @inject(DI_TOKENS.EventBus)
@@ -29,12 +32,13 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
   async validateToken(token: string): Promise<Result<TokenValidationResult>> {
     try {
-      // Validate token format
-      if (!token || typeof token !== 'string' || token.trim().length === 0) {
+      // Validate token format with JWT validator
+      const jwtValidation = await this.jwtValidator.validateToken(token);
+      if (jwtValidation.isFailure) {
         return ApplicationResult.fail(
           new ApplicationError(
             'INVALID_TOKEN_FORMAT',
-            'Token format is invalid',
+            jwtValidation.getError().message,
             'VALIDATION'
           )
         );
@@ -147,8 +151,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
       
       try {
         // Try to decode tokens to get JTI claims
-        const jwt = await import('jsonwebtoken');
-        const decoded = jwt.decode(session.access_token) as any;
+        const decoded = this.jwtValidator.decodeToken<any>(session.access_token);
         newTokenId = decoded?.jti;
       } catch (e) {
         // If we can't decode, that's ok - token IDs are optional

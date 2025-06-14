@@ -115,12 +115,11 @@ describe('Error Mapper', () => {
         );
         const result = toProblemDetails(error);
 
-        expect(result).toEqual({
-          type: 'https://api.example.com/errors/insufficient-funds',
-          title: 'Insufficient funds for transaction',
-          status: 422,
-          detail: 'Insufficient funds for transaction',
-        });
+        expect(result.type).toBe('https://api.example.com/errors/insufficient-funds');
+        expect(result.title).toBe('Insufficient funds for transaction');
+        expect(result.status).toBe(422);
+        expect(result.detail).toBe('Insufficient funds for transaction');
+        expect(result.instance).toBeUndefined();
       });
 
       it('should map all error types to correct status codes', () => {
