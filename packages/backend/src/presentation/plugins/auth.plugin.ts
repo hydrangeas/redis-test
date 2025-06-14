@@ -9,6 +9,7 @@ import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import fp from 'fastify-plugin';
 
+
 interface AuthPluginOptions {
   excludePaths?: string[];
 }
@@ -24,39 +25,78 @@ declare module 'fastify' {
 }
 
 const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, options) => {
-  const jwtService = container.resolve<IJwtService>(DI_TOKENS.JwtService);
-  const userRepository = container.resolve<IUserRepository>(DI_TOKENS.UserRepository);
-  
   const excludePaths = options.excludePaths || [];
   
   const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
-    // 除外パスのチェック
-    if (excludePaths.some(path => request.url === path || request.url.startsWith(path))) {
+    // デバッグログ
+    if (process.env.NODE_ENV === 'test') {
+      console.log('Auth plugin authenticate called for URL:', request.url);
+    }
+    request.log.debug({ url: request.url, headers: request.headers }, 'Auth plugin authenticate called');
+    
+    try {
+      // サービスを毎回解決（テストでのモック差し替えを可能にするため）
+      const jwtService = container.resolve<IJwtService>(DI_TOKENS.JwtService);
+      const userRepository = container.resolve<IUserRepository>(DI_TOKENS.UserRepository);
+      if (process.env.NODE_ENV === 'test') {
+        console.log('Services resolved successfully');
+      }
+      
+      // 除外パスのチェック
+    if (process.env.NODE_ENV === 'test') {
+      console.log('Checking exclude paths for URL:', request.url);
+      console.log('Exclude paths:', excludePaths);
+    }
+    if (excludePaths.some(path => {
+      // ワイルドカードの処理
+      if (path.endsWith('/*')) {
+        const basePath = path.slice(0, -2); // /* を除去
+        return request.url === basePath || request.url.startsWith(basePath + '/');
+      }
+      return request.url === path;
+    })) {
+      request.log.debug({ url: request.url }, 'URL is in exclude paths');
+      if (process.env.NODE_ENV === 'test') {
+        console.log('URL is excluded from auth');
+      }
       return;
     }
     
     // Authorizationヘッダーのチェック
     const authHeader = request.headers.authorization;
+    if (process.env.NODE_ENV === 'test') {
+      console.log('Auth header value:', authHeader);
+      console.log('All headers:', JSON.stringify(request.headers));
+    }
     if (!authHeader) {
-      return reply.code(401).send({
+      request.log.debug('No authorization header found');
+      if (process.env.NODE_ENV === 'test') {
+        console.log('Auth plugin: No authorization header');
+      }
+      reply.hijack();
+      await reply.code(401).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
         title: 'Authentication required',
         status: 401,
         detail: 'Missing authorization header',
         instance: request.url,
       });
+      // エラーをthrowして処理を停止
+      throw new Error('Authentication required');
     }
     
     // Bearer トークンの抽出
     const match = authHeader.match(/^Bearer (.+)$/);
     if (!match) {
-      return reply.code(401).send({
+      reply.hijack();
+      reply.code(401).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
         title: 'Invalid authorization format',
         status: 401,
         detail: 'Authorization header must use Bearer scheme',
         instance: request.url,
       });
+      return;
     }
     
     const token = match[1];
@@ -69,13 +109,15 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         const error = verifyResult.getError();
         request.log.warn({ error: error.message }, 'Token verification failed');
         
-        return reply.code(401).send({
+        reply.hijack();
+      reply.code(401).send({
           type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
           title: 'Invalid token',
           status: 401,
           detail: error.message,
           instance: request.url,
         });
+        return reply;
       }
       
       const tokenPayload = verifyResult.getValue();
@@ -83,13 +125,15 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       // ユーザー情報の取得
       const userIdResult = UserId.create(tokenPayload.sub);
       if (userIdResult.isFailure) {
-        return reply.code(401).send({
+        reply.hijack();
+      reply.code(401).send({
           type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
           title: 'Invalid user ID',
           status: 401,
           detail: 'Token contains invalid user ID',
           instance: request.url,
         });
+        return reply;
       }
       
       const userId = userIdResult.getValue();
@@ -131,14 +175,36 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       
     } catch (error) {
       request.log.error({ error }, 'Authentication error');
+      if (process.env.NODE_ENV === 'test') {
+        console.error('Auth plugin inner error:', error);
+      }
       
-      return reply.code(500).send({
+      reply.hijack();
+      reply.code(500).send({
         type: `${process.env.API_URL || 'https://api.example.com'}/errors/internal`,
         title: 'Authentication error',
         status: 500,
         detail: 'An error occurred during authentication',
         instance: request.url,
       });
+      return;
+    }
+    
+    } catch (error) {
+      request.log.error({ error }, 'Authentication plugin error');
+      if (process.env.NODE_ENV === 'test') {
+        console.error('Auth plugin outer error:', error);
+      }
+      
+      reply.hijack();
+      reply.code(500).send({
+        type: `${process.env.API_URL || 'https://api.example.com'}/errors/internal`,
+        title: 'Authentication error',
+        status: 500,
+        detail: 'An error occurred during authentication setup',
+        instance: request.url,
+      });
+      return;
     }
   };
   

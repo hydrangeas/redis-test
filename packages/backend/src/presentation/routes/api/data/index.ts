@@ -59,6 +59,11 @@ type DataPathParamsType = Static<typeof DataPathParams>;
 type ListQueryParamsType = Static<typeof ListQueryParams>;
 
 const dataRoutes: FastifyPluginAsync = async (fastify) => {
+  // デバッグ: authenticateが存在するか確認
+  if (process.env.NODE_ENV === 'test') {
+    console.log('fastify.authenticate exists?', typeof fastify.authenticate);
+  }
+  
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(DI_TOKENS.DataRetrievalUseCase);
   const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
 
@@ -112,17 +117,12 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {
     try {
-      // Check if user is authenticated
+      // preHandlerで認証済みなので、request.userは必ず存在する
+      // ただし、念のためチェック
       if (!request.user) {
-        return reply.code(401).send({
-          type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
-          title: 'Authentication required',
-          status: 401,
-          detail: 'User not authenticated',
-          instance: request.url,
-        });
+        // この場合は認証ミドルウェアが正しく動作していない
+        throw new Error('Authentication middleware did not set request.user');
       }
-      
       const user = request.user as AuthenticatedUser;
       const dataPath = request.params['*'];
       const endpoint = `/api/data/${dataPath}`;
@@ -241,9 +241,15 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (error) {
       request.log.error({
         error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
         url: request.url,
         userId: request.user?.userId?.value,
       }, 'Unexpected error during data access');
+      
+      // テスト中は詳細なエラーを表示
+      if (process.env.NODE_ENV === 'test') {
+        console.error('Data route error:', error);
+      }
 
       const problemDetails = toProblemDetails(
         {

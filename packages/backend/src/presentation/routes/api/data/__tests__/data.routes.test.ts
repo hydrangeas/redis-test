@@ -9,20 +9,39 @@ import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interf
 import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
+import { IAuthenticationUseCase } from '@/application/interfaces/authentication-use-case.interface';
 import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 
 describe('Data Routes', () => {
   let server: FastifyInstance;
   let mockDataRetrievalUseCase: IDataRetrievalUseCase;
   let mockRateLimitUseCase: IRateLimitUseCase;
   let mockJwtService: IJwtService;
+  let mockAuthenticationUseCase: IAuthenticationUseCase;
 
   beforeAll(async () => {
+    // 環境変数の設定（setupTestDIの前に設定）
+    process.env.NODE_ENV = 'test';
+    process.env.API_URL = 'http://localhost:8000';
+    process.env.ALLOWED_ORIGINS = 'http://localhost:3000';
+    
+    // DIコンテナをリセット
+    container.reset();
+    
     // Test DI設定
     setupTestDI();
     
-    // JwtServiceのモックを登録
+    // 認証関連のモックを先に登録
+    const mockUserId = UserId.create('123e4567-e89b-12d3-a456-426614174000').getValue();
+    const mockUserTier = UserTier.create(TierLevel.TIER1).getValue();
+    const mockAuthenticatedUser = new AuthenticatedUser(mockUserId, mockUserTier);
+    
+    // JwtServiceのモックを登録（auth.plugin.tsで使用）
     mockJwtService = {
       generateAccessToken: vi.fn().mockResolvedValue(Result.ok('mock-access-token')),
       generateRefreshToken: vi.fn().mockResolvedValue(Result.ok('mock-refresh-token')),
@@ -36,7 +55,7 @@ describe('Data Routes', () => {
     };
     container.register(DI_TOKENS.JwtService, { useValue: mockJwtService });
     
-    // UserRepositoryのモックを登録
+    // UserRepositoryのモックを登録（auth.plugin.tsで使用）
     const mockUserRepository: IUserRepository = {
       findById: vi.fn().mockResolvedValue(Result.ok(null)),
       findByEmail: vi.fn().mockResolvedValue(Result.ok(null)),
@@ -45,6 +64,20 @@ describe('Data Routes', () => {
       delete: vi.fn().mockResolvedValue(Result.ok()),
     };
     container.register(DI_TOKENS.UserRepository, { useValue: mockUserRepository });
+    
+    // AuthenticationUseCaseのモックを登録（もし使用される場合のため）
+    mockAuthenticationUseCase = {
+      validateToken: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          user: mockAuthenticatedUser,
+          tokenId: 'test-token-id',
+        },
+      }),
+      refreshToken: vi.fn(),
+      signOut: vi.fn(),
+    };
+    container.register(DI_TOKENS.AuthenticationUseCase, { useValue: mockAuthenticationUseCase });
     
     // RateLimitLogRepositoryのモックを登録
     const mockRateLimitLogRepository: IRateLimitLogRepository = {
@@ -69,11 +102,6 @@ describe('Data Routes', () => {
       resetUserLimit: vi.fn(),
     };
     container.register(DI_TOKENS.RateLimitUseCase, { useValue: mockRateLimitUseCase });
-    
-    // 環境変数の設定
-    process.env.NODE_ENV = 'test';
-    process.env.API_URL = 'http://localhost:8000';
-    process.env.ALLOWED_ORIGINS = 'http://localhost:3000';
     
     // サーバー構築
     server = await buildServer();
@@ -103,6 +131,7 @@ describe('Data Routes', () => {
         lastModified: new Date('2024-01-01T00:00:00Z'),
       }));
       
+      console.log('Sending request with Bearer valid-token');
       const response = await server.inject({
         method: 'GET',
         url: '/api/data/secure/319985/r5.json',
@@ -119,6 +148,7 @@ describe('Data Routes', () => {
         if (mockJwtService.verifyAccessToken.mock.calls.length > 0) {
           console.log('JWT verify calls:', mockJwtService.verifyAccessToken.mock.calls);
         }
+        console.log('AuthenticationUseCase validateToken was called:', mockAuthenticationUseCase.validateToken.mock.calls.length, 'times');
       }
 
       expect(response.statusCode).toBe(200);
