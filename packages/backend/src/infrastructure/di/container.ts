@@ -66,6 +66,12 @@ export async function setupDI(): Promise<DependencyContainer> {
   registerDomainServices(container);
   registerApplicationServices(container);
   registerInfrastructureServices(container);
+  
+  // イベントハンドラーの登録
+  import('@/application/event-handlers').then(module => {
+    module.registerEventHandlers(container);
+    logger.info('Event handlers registered');
+  });
 
   logger.info('DI container setup completed');
   

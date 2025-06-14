@@ -1,0 +1,134 @@
+import { injectable, inject } from 'tsyringe';
+import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
+import { UserAuthenticated } from '@/domain/auth/events/user-authenticated.event';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { Logger } from 'pino';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { IPAddress as IpAddress } from '@/domain/log/value-objects/ip-address';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { AuthResult } from '@/domain/log/enums';
+
+/**
+ * ユーザー認証成功イベントのハンドラー
+ * 認証ログへの記録を行う
+ */
+@injectable()
+export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated> {
+  constructor(
+    @inject(DI_TOKENS.AuthLogRepository)
+    private readonly authLogRepository: IAuthLogRepository,
+    @inject(DI_TOKENS.Logger)
+    private readonly logger: Logger
+  ) {}
+
+  async handle(event: UserAuthenticated): Promise<void> {
+    try {
+      this.logger.info({
+        eventId: event.eventId,
+        userId: event.userId,
+        provider: event.provider,
+        tier: event.tier,
+      }, 'Handling UserAuthenticated event');
+
+      // Value Objectsの作成
+      const userIdResult = UserId.create(event.userId);
+      if (userIdResult.isFailure) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: userIdResult.error,
+        }, 'Invalid userId in UserAuthenticated event');
+        return;
+      }
+
+      const providerResult = Provider.create(event.provider);
+      if (providerResult.isFailure) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: providerResult.error,
+        }, 'Invalid provider in UserAuthenticated event');
+        return;
+      }
+
+      // IPアドレスの作成（オプション）
+      let ipAddress: IpAddress | undefined;
+      if (event.ipAddress) {
+        const ipResult = IpAddress.create(event.ipAddress);
+        if (ipResult.isSuccess) {
+          ipAddress = ipResult.getValue();
+        } else {
+          this.logger.warn({
+            eventId: event.eventId,
+            ipAddress: event.ipAddress,
+            error: ipResult.error,
+          }, 'Invalid IP address in UserAuthenticated event');
+        }
+      }
+
+      // UserAgentの作成（オプション）
+      let userAgent: UserAgent | undefined;
+      if (event.userAgent) {
+        const uaResult = UserAgent.create(event.userAgent);
+        if (uaResult.isSuccess) {
+          userAgent = uaResult.getValue();
+        } else {
+          this.logger.warn({
+            eventId: event.eventId,
+            userAgent: event.userAgent,
+            error: uaResult.error,
+          }, 'Invalid user agent in UserAuthenticated event');
+        }
+      }
+
+      // 認証ログエントリの作成
+      const logEntryResult = AuthLogEntry.create({
+        userId: userIdResult.getValue(),
+        eventType: AuthEventType.LOGIN,
+        provider: providerResult.getValue(),
+        ipAddress,
+        userAgent,
+        result: AuthResult.SUCCESS,
+        sessionId: event.sessionId,
+        metadata: {
+          tier: event.tier,
+          eventId: event.eventId,
+          aggregateId: event.aggregateId,
+        },
+      });
+
+      if (logEntryResult.isFailure) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: logEntryResult.error,
+        }, 'Failed to create AuthLogEntry');
+        return;
+      }
+
+      // ログの保存
+      const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
+      if (saveResult.isFailure()) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: saveResult.error,
+        }, 'Failed to save auth log');
+        return;
+      }
+
+      this.logger.info({
+        eventId: event.eventId,
+        logId: logEntryResult.getValue().id.value,
+      }, 'UserAuthenticated event handled successfully');
+
+    } catch (error) {
+      this.logger.error({
+        eventId: event.eventId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      }, 'Error handling UserAuthenticated event');
+      throw error;
+    }
+  }
+}
