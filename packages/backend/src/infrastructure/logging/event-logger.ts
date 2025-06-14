@@ -1,26 +1,12 @@
 import { injectable, inject } from 'tsyringe';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '../di';
-
-/**
- * ドメインイベントの基本インターフェース
- */
-export interface DomainEvent {
-  eventId: string;
-  aggregateId: string;
-  occurredAt: Date;
-  getEventName(): string;
-}
-
-/**
- * イベントハンドラーのインターフェース
- */
-export interface IEventHandler<T extends DomainEvent> {
-  handle(event: T): Promise<void>;
-}
+import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
+import { DomainEvent } from '@/domain/interfaces/domain-event.interface';
 
 /**
  * ドメインイベントのロギングを行うハンドラー
+ * すべてのドメインイベントをログに記録する
  */
 @injectable()
 export class EventLogger implements IEventHandler<DomainEvent> {
