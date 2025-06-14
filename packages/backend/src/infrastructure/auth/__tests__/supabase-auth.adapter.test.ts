@@ -30,6 +30,8 @@ describe('SupabaseAuthAdapter', () => {
           exp: Math.floor(Date.now() / 1000) + 3600,
           app_metadata: { tier: 'tier1' },
           user_metadata: {},
+          aud: 'authenticated',
+          iss: 'https://test.supabase.co/auth/v1',
         };
 
         mockAdapter.setMockToken(token, payload);
@@ -117,6 +119,8 @@ describe('SupabaseAuthAdapter', () => {
           exp: Math.floor(Date.now() / 1000) + 3600,
           app_metadata: { tier: 'tier1' },
           user_metadata: {},
+          aud: 'authenticated',
+          iss: 'https://test.supabase.co/auth/v1',
         };
 
         mockAdapter.setMockToken(token, payload);

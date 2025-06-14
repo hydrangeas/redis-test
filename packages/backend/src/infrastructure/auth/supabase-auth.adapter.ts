@@ -4,7 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { IAuthAdapter, Session } from './interfaces/auth-adapter.interface';
 import { TokenPayload } from '@/domain/auth/types/token-payload';
 import { getEnvConfig } from '@/infrastructure/config/env.config';
-import type { Logger } from 'pino';
+import { Logger } from 'pino';
 
 @injectable()
 export class SupabaseAuthAdapter implements IAuthAdapter {
@@ -16,8 +16,8 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
     
     // 通常のクライアント（anonキー使用）
     this.supabaseClient = createClient(
-      env.SUPABASE_URL,
-      env.SUPABASE_ANON_KEY,
+      env.PUBLIC_SUPABASE_URL,
+      env.PUBLIC_SUPABASE_ANON_KEY,
       {
         auth: {
           autoRefreshToken: false,
@@ -28,7 +28,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
 
     // 管理者クライアント（サービスロールキー使用）
     this.adminClient = createClient(
-      env.SUPABASE_URL,
+      env.PUBLIC_SUPABASE_URL,
       env.SUPABASE_SERVICE_ROLE_KEY,
       {
         auth: {
@@ -141,172 +141,14 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   }
 
   /**
-   * IDによるユーザー取得
-   */
-  async getUserById(userId: string): Promise<any | null> {
-    try {
-      const { data, error } = await this.adminClient.auth.admin.getUserById(userId);
-      
-      if (error || !data) {
-        this.logger.debug({ userId, error: error?.message }, 'User not found by ID');
-        return null;
-      }
-
-      return data.user;
-    } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId,
-      }, 'Failed to get user by ID');
-      return null;
-    }
-  }
-
-  /**
-   * メールアドレスによるユーザー取得
-   */
-  async getUserByEmail(email: string): Promise<any | null> {
-    try {
-      const { data, error } = await this.adminClient.auth.admin.listUsers({
-        filter: `email.eq.${email}`,
-        page: 1,
-        perPage: 1,
-      });
-      
-      if (error || !data.users || data.users.length === 0) {
-        this.logger.debug({ email, error: error?.message }, 'User not found by email');
-        return null;
-      }
-
-      return data.users[0];
-    } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email,
-      }, 'Failed to get user by email');
-      return null;
-    }
-  }
-
-  /**
-   * ユーザー作成
-   */
-  async createUser(userData: {
-    id?: string;
-    email: string;
-    email_confirmed?: boolean;
-    app_metadata?: Record<string, any>;
-    user_metadata?: Record<string, any>;
-  }): Promise<any | null> {
-    try {
-      const { data, error } = await this.adminClient.auth.admin.createUser({
-        email: userData.email,
-        email_confirm: userData.email_confirmed || false,
-        app_metadata: userData.app_metadata || {},
-        user_metadata: userData.user_metadata || {},
-        id: userData.id,
-      });
-      
-      if (error || !data) {
-        this.logger.error({ 
-          email: userData.email, 
-          error: error?.message 
-        }, 'Failed to create user');
-        return null;
-      }
-
-      return data.user;
-    } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email: userData.email,
-      }, 'Failed to create user');
-      return null;
-    }
-  }
-
-  /**
-   * ユーザー更新
-   */
-  async updateUser(userId: string, updates: {
-    email?: string;
-    email_confirmed?: boolean;
-    app_metadata?: Record<string, any>;
-    user_metadata?: Record<string, any>;
-  }): Promise<any | null> {
-    try {
-      const updateData: any = {};
-      
-      if (updates.email !== undefined) updateData.email = updates.email;
-      if (updates.email_confirmed !== undefined) updateData.email_confirm = updates.email_confirmed;
-      if (updates.app_metadata !== undefined) updateData.app_metadata = updates.app_metadata;
-      if (updates.user_metadata !== undefined) updateData.user_metadata = updates.user_metadata;
-
-      const { data, error } = await this.adminClient.auth.admin.updateUserById(
-        userId,
-        updateData
-      );
-      
-      if (error || !data) {
-        this.logger.error({ 
-          userId, 
-          error: error?.message 
-        }, 'Failed to update user');
-        return null;
-      }
-
-      return data.user;
-    } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId,
-      }, 'Failed to update user');
-      return null;
-    }
-  }
-
-  /**
-   * ユーザー削除
-   */
-  async deleteUser(userId: string): Promise<boolean> {
-    try {
-      const { error } = await this.adminClient.auth.admin.deleteUser(userId);
-      
-      if (error) {
-        this.logger.error({ 
-          userId, 
-          error: error.message 
-        }, 'Failed to delete user');
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId,
-      }, 'Failed to delete user');
-      return false;
-    }
-  }
-
-  /**
    * Custom Access Token Hookの設定を検証（初期化時に実行）
    */
   async validateCustomClaimsHook(): Promise<boolean> {
     try {
-      const env = getEnvConfig();
-      
-      // テスト環境の場合はスキップ
-      if (env.NODE_ENV === 'test' || !process.env.TEST_USER_EMAIL || !process.env.TEST_USER_PASSWORD) {
-        this.logger.debug('Skipping custom claims validation in test environment');
-        return true;
-      }
-
       // テスト用のトークンを作成して、カスタムクレームが含まれているか検証
       const { data, error } = await this.supabaseClient.auth.signInWithPassword({
-        email: process.env.TEST_USER_EMAIL,
-        password: process.env.TEST_USER_PASSWORD,
+        email: process.env.TEST_USER_EMAIL || 'test@example.com',
+        password: process.env.TEST_USER_PASSWORD || 'testpassword',
       });
 
       if (data?.session) {
