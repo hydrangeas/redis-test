@@ -3,9 +3,12 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "mikestead.dotenv",
     "christian-kohler.path-intellisense",
-    "formulahendry.auto-rename-tag",
+    "wix.vscode-import-cost",
     "streetsidesoftware.code-spell-checker",
-    "usernamehw.errorlens"
+    "usernamehw.errorlens",
+    "aaron-bond.better-comments"
   ]
 }

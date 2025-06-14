@@ -16,6 +16,7 @@
 
 - Node.js 20.x LTS
 - npm 10.x
+- Supabase CLI
 
 ### インストール
 
@@ -28,9 +29,26 @@ cp packages/backend/.env.example packages/backend/.env.local
 cp packages/frontend/.env.example packages/frontend/.env.local
 # .env.localファイルを編集して、必要な値を設定してください
 
+# Supabaseローカル環境の起動
+npm run supabase:start
+
+# データベースのマイグレーション
+npm run supabase:db:push
+
 # 開発環境の起動
 npm run dev
 ```
+
+### 開発環境
+
+このプロジェクトは以下の開発ツールを使用しています：
+
+- **ESLint**: コード品質チェック
+- **Prettier**: コードフォーマット
+- **TypeScript**: 型安全性
+- **Turbo**: モノレポビルドシステム
+
+VS Codeを使用する場合は、推奨拡張機能が自動的に提案されます。
 
 ## プロジェクト構造
 

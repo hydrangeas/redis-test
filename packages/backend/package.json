@@ -11,6 +11,7 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist coverage .turbo"
   },

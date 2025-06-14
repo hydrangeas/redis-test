@@ -1,0 +1,36 @@
+# Build outputs
+dist/
+build/
+coverage/
+*.min.js
+*.min.css
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.generated.ts
+*.generated.js
+*.d.ts
+
+# Configuration files
+*.config.js
+*.config.ts
+vite.config.ts
+vitest.config.ts
+
+# Data files
+data/
+
+# Documentation
+docs/
+
+# Scripts
+scripts/
+
+# Test files
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx

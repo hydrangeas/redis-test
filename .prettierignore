@@ -1,15 +1,38 @@
-# Dependencies
-node_modules
-
-# Production
-dist
-build
-coverage
-.turbo
-
-# Misc
+# Build outputs
+dist/
+build/
+coverage/
 *.min.js
 *.min.css
+
+# Dependencies
+node_modules/
 package-lock.json
-pnpm-lock.yaml
 yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+*.generated.ts
+*.generated.js
+
+# Ignore specific file types
+*.md
+*.json
+*.yaml
+*.yml
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Data files
+data/
+
+# Documentation
+docs/specs/
