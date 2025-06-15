@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import "./styles/responsive.css";
 
 // 開発環境での React DevTools 設定
 if (import.meta.env.DEV) {

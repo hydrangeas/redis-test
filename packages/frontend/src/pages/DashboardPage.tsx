@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { ResponsiveHeader } from '@/components/Header';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import './DashboardPage.css';
 
 interface UserInfo {
@@ -27,6 +30,7 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     document.title = 'ダッシュボード - オープンデータ提供API';
@@ -128,35 +132,60 @@ export const DashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div className="loading-container">
-          <LoadingSpinner />
-          <p>読み込み中...</p>
+      <div className="min-h-screen bg-gray-50">
+        <ResponsiveHeader />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <LoadingSpinner />
+            <p className="mt-4 text-gray-600">読み込み中...</p>
+          </div>
         </div>
       </div>
     );
   }
 
+  const usageColumns = [
+    {
+      key: 'endpoint' as keyof UsageStats,
+      header: 'エンドポイント',
+    },
+    {
+      key: 'count' as keyof UsageStats,
+      header: '使用回数',
+      render: (value: any, item: UsageStats) => `${item.count} / ${item.limit}`,
+    },
+    {
+      key: 'resetAt' as keyof UsageStats,
+      header: 'リセット時刻',
+      render: (value: any) => new Date(value).toLocaleTimeString('ja-JP'),
+      hideOnMobile: true,
+    },
+  ];
+
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        <h1 className="dashboard-title">ダッシュボード</h1>
+    <div className="min-h-screen bg-gray-50">
+      <ResponsiveHeader />
+      
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+          ダッシュボード
+        </h1>
         
         {/* User Information Section */}
-        <section className="dashboard-section" aria-label="ユーザー情報">
-          <h2>ユーザー情報</h2>
-          <div className="info-card">
-            <div className="info-item">
-              <span className="info-label">メールアドレス:</span>
-              <span className="info-value">{userInfo?.email}</span>
+        <section className="bg-white rounded-lg shadow p-4 md:p-6 mb-6" aria-label="ユーザー情報">
+          <h2 className="text-xl font-semibold mb-4">ユーザー情報</h2>
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between">
+              <span className="text-gray-600">メールアドレス:</span>
+              <span className="font-medium break-all">{userInfo?.email}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">ユーザーID:</span>
-              <span className="info-value">{userInfo?.id}</span>
+            <div className="flex flex-col sm:flex-row sm:justify-between">
+              <span className="text-gray-600">ユーザーID:</span>
+              <span className="font-medium text-sm break-all">{userInfo?.id}</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">プラン:</span>
-              <span className="info-value tier-badge">
+            <div className="flex flex-col sm:flex-row sm:justify-between">
+              <span className="text-gray-600">プラン:</span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                 {getTierDisplayName(userInfo?.tier || '')}
               </span>
             </div>
@@ -164,24 +193,24 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* API Key Section */}
-        <section className="dashboard-section" aria-label="APIキー管理">
-          <h2>APIキー</h2>
-          <div className="api-key-card">
-            <div className="api-key-display">
-              <code className="api-key-text">
+        <section className="bg-white rounded-lg shadow p-4 md:p-6 mb-6" aria-label="APIキー管理">
+          <h2 className="text-xl font-semibold mb-4">APIキー</h2>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+              <code className="flex-1 text-sm font-mono break-all">
                 {apiKeyVisible 
                   ? userInfo?.apiKey 
                   : maskApiKey(userInfo?.apiKey || '')}
               </code>
               <button
-                className="icon-button"
+                className="p-2 hover:bg-gray-200 rounded transition"
                 onClick={() => setApiKeyVisible(!apiKeyVisible)}
                 aria-label={apiKeyVisible ? 'APIキーを隠す' : 'APIキーを表示'}
               >
                 {apiKeyVisible ? '🙈' : '👁️'}
               </button>
               <button
-                className="icon-button"
+                className="p-2 hover:bg-gray-200 rounded transition"
                 onClick={copyApiKey}
                 aria-label="APIキーをコピー"
               >
@@ -189,65 +218,78 @@ export const DashboardPage: React.FC = () => {
               </button>
             </div>
             {copySuccess && (
-              <p className="success-message">APIキーをコピーしました</p>
+              <p className="text-green-600 text-sm">APIキーをコピーしました</p>
             )}
-            <p className="api-key-warning">
-              ⚠️ APIキーは秘密情報です。第三者と共有しないでください。
+            <p className="text-amber-600 text-sm flex items-center gap-2">
+              <span>⚠️</span>
+              <span>APIキーは秘密情報です。第三者と共有しないでください。</span>
             </p>
           </div>
         </section>
 
         {/* Usage Statistics Section */}
-        <section className="dashboard-section" aria-label="使用状況">
-          <h2>API使用状況</h2>
-          <div className="usage-stats">
-            {usageStats.map((stat, index) => {
-              const percentage = getUsagePercentage(stat.count, stat.limit);
-              const isNearLimit = percentage >= 80;
-              
-              return (
-                <div key={index} className="usage-card">
-                  <h3>{stat.endpoint}</h3>
-                  <div className="usage-info">
-                    <span>{stat.count} / {stat.limit} リクエスト</span>
-                    <span className="usage-percentage">{percentage}%</span>
+        <section className="bg-white rounded-lg shadow p-4 md:p-6 mb-6" aria-label="使用状況">
+          <h2 className="text-xl font-semibold mb-4">API使用状況</h2>
+          {isMobile ? (
+            <div className="space-y-4">
+              {usageStats.map((stat, index) => {
+                const percentage = getUsagePercentage(stat.count, stat.limit);
+                const isNearLimit = percentage >= 80;
+                
+                return (
+                  <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-medium mb-2">{stat.endpoint}</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>{stat.count} / {stat.limit} リクエスト</span>
+                        <span className={isNearLimit ? 'text-red-600' : 'text-gray-600'}>
+                          {percentage}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${
+                            isNearLimit ? 'bg-red-500' : 'bg-purple-600'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                          role="progressbar"
+                          aria-valuenow={stat.count}
+                          aria-valuemin={0}
+                          aria-valuemax={stat.limit}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        リセット: {stat.resetAt.toLocaleTimeString('ja-JP')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="usage-bar-container">
-                    <div 
-                      className={`usage-bar ${isNearLimit ? 'near-limit' : ''}`}
-                      style={{ width: `${percentage}%` }}
-                      role="progressbar"
-                      aria-valuenow={stat.count}
-                      aria-valuemin={0}
-                      aria-valuemax={stat.limit}
-                    />
-                  </div>
-                  <p className="reset-time">
-                    リセット時刻: {stat.resetAt.toLocaleTimeString('ja-JP')}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <ResponsiveTable
+              data={usageStats}
+              columns={usageColumns}
+              keyExtractor={(item) => item.endpoint}
+            />
+          )}
         </section>
 
         {/* Actions Section */}
-        <section className="dashboard-section" aria-label="アクション">
-          <div className="dashboard-actions">
-            <button 
-              className="action-button secondary"
-              onClick={() => navigate('/api-docs')}
-            >
-              APIドキュメントを見る
-            </button>
-            <button 
-              className="action-button danger"
-              onClick={handleSignOut}
-              disabled={loggingOut}
-            >
-              {loggingOut ? 'ログアウト中...' : 'ログアウト'}
-            </button>
-          </div>
+        <section className="space-y-4 md:space-y-0 md:flex md:gap-4" aria-label="アクション">
+          <button 
+            className="w-full md:w-auto px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition"
+            onClick={() => navigate('/api-docs')}
+          >
+            APIドキュメントを見る
+          </button>
+          <button 
+            className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+            onClick={handleSignOut}
+            disabled={loggingOut}
+          >
+            {loggingOut ? 'ログアウト中...' : 'ログアウト'}
+          </button>
         </section>
       </div>
     </div>
