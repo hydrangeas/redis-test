@@ -3,9 +3,9 @@ import { RateLimitExceededHandler } from '../api/rate-limit-exceeded.handler';
 import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
 import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
 import { Logger } from 'pino';
-import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { EventType } from '@/domain/log/value-objects/auth-event';
 import { AuthResult } from '@/domain/log/enums';
 
 describe('RateLimitExceededHandler', () => {
@@ -42,12 +42,12 @@ describe('RateLimitExceededHandler', () => {
       // Arrange
       const event = new RateLimitExceeded(
         'agg-123',
+        1,
         '550e8400-e29b-41d4-a716-446655440000',
         'endpoint-123',
         61,
         60,
-        new Date(),
-        1
+        new Date()
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -61,7 +61,7 @@ describe('RateLimitExceededHandler', () => {
       const savedLog = vi.mocked(mockAuthLogRepository.save).mock.calls[0][0];
       expect(savedLog).toBeInstanceOf(AuthLogEntry);
       expect(savedLog.userId.value).toBe('550e8400-e29b-41d4-a716-446655440000');
-      expect(savedLog.eventType).toBe(AuthEventType.RATE_LIMIT_CHECK);
+      expect(savedLog.event.type).toBe(EventType.RATE_LIMIT_CHECK);
       expect(savedLog.result).toBe(AuthResult.BLOCKED);
       expect(savedLog.errorMessage).toBe('Rate limit exceeded: 61/60 requests');
       expect(savedLog.metadata).toMatchObject({
@@ -85,12 +85,12 @@ describe('RateLimitExceededHandler', () => {
       // Arrange
       const event = new RateLimitExceeded(
         'agg-123',
+        1,
         '550e8400-e29b-41d4-a716-446655440000',
         'endpoint-123',
         61,
         60,
-        new Date(),
-        1
+        new Date()
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -99,7 +99,7 @@ describe('RateLimitExceededHandler', () => {
       const previousViolations = Array(5).fill(null).map(() => ({
         id: { value: 'log-id' } as any,
         userId: { value: '550e8400-e29b-41d4-a716-446655440000' } as any,
-        eventType: AuthEventType.RATE_LIMIT_CHECK,
+        eventType: EventType.RATE_LIMIT_CHECK,
         result: AuthResult.BLOCKED,
         createdAt: new Date(),
       } as AuthLogEntry));
@@ -151,12 +151,12 @@ describe('RateLimitExceededHandler', () => {
       // Arrange
       const event = new RateLimitExceeded(
         'agg-123',
+        1,
         '550e8400-e29b-41d4-a716-446655440000',
         'endpoint-123',
         61,
         60,
-        new Date(),
-        1
+        new Date()
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(
@@ -171,7 +171,7 @@ describe('RateLimitExceededHandler', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: event.eventId,
-          error: 'Database error',
+          error: expect.any(Error),
         }),
         'Failed to save rate limit exceeded log'
       );
@@ -181,12 +181,12 @@ describe('RateLimitExceededHandler', () => {
       // Arrange
       const event = new RateLimitExceeded(
         'agg-123',
+        1,
         '550e8400-e29b-41d4-a716-446655440000',
         'endpoint-123',
         61,
         60,
-        new Date(),
-        1
+        new Date()
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -209,12 +209,12 @@ describe('RateLimitExceededHandler', () => {
       // Arrange
       const event = new RateLimitExceeded(
         'agg-123',
+        1,
         '550e8400-e29b-41d4-a716-446655440000',
         'endpoint-123',
         61,
         60,
-        new Date(),
-        1
+        new Date()
       );
 
       const error = new Error('Unexpected error');

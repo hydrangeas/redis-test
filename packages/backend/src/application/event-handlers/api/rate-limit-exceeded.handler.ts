@@ -6,7 +6,10 @@ import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { AuthResult } from '@/domain/log/enums';
 
 /**
@@ -42,10 +45,45 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
         return;
       }
 
+      // AuthEvent作成
+      const authEvent = new AuthEvent(EventType.RATE_LIMIT_CHECK);
+      
+      // Provider, IPAddress, UserAgentを作成（メタデータから取得、または適切なデフォルト値を使用）
+      const providerResult = Provider.create('api_key'); // API経由のアクセスはapi_keyプロバイダーとして記録
+      if (providerResult.isFailure) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: providerResult.error,
+        }, 'Failed to create Provider');
+        return;
+      }
+      
+      const ipAddressResult = IPAddress.create('0.0.0.0'); // デフォルトIP（実際の実装では適切な値を使用）
+      if (ipAddressResult.isFailure) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: ipAddressResult.error,
+        }, 'Failed to create IPAddress');
+        return;
+      }
+      
+      const userAgentResult = UserAgent.create('API Rate Limiter'); // デフォルトUA
+      if (userAgentResult.isFailure) {
+        this.logger.error({
+          eventId: event.eventId,
+          error: userAgentResult.error,
+        }, 'Failed to create UserAgent');
+        return;
+      }
+
       // セキュリティイベントとして認証ログに記録
       const logEntryResult = AuthLogEntry.create({
         userId: userIdResult.getValue(),
-        eventType: AuthEventType.RATE_LIMIT_CHECK,
+        event: authEvent,
+        provider: providerResult.getValue(),
+        ipAddress: ipAddressResult.getValue(),
+        userAgent: userAgentResult.getValue(),
+        timestamp: new Date(),
         result: AuthResult.BLOCKED,
         errorMessage: `Rate limit exceeded: ${event.requestCount}/${event.rateLimit} requests`,
         metadata: {
@@ -68,23 +106,23 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error({
           eventId: event.eventId,
-          error: saveResult.error,
+          error: saveResult.getError(),
         }, 'Failed to save rate limit exceeded log');
         return;
       }
 
       // 異常なアクセスパターンの検出
       const recentBlocksResult = await this.authLogRepository.findByEventType({
-        eventType: AuthEventType.RATE_LIMIT_CHECK,
+        eventType: EventType.RATE_LIMIT_CHECK,
         userId: userIdResult.getValue(),
         result: AuthResult.BLOCKED,
         limit: 10,
       });
 
-      if (recentBlocksResult.isSuccess() && recentBlocksResult.getValue().length >= 5) {
+      if (recentBlocksResult.isSuccess && recentBlocksResult.getValue().length >= 5) {
         this.logger.error({
           eventId: event.eventId,
           userId: event.userId,

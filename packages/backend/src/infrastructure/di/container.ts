@@ -279,10 +279,10 @@ function registerDomainServices(container: DependencyContainer): void {
     });
   });
   
-  // RateLimitServiceのモック実装を登録（開発用）
-  import('@/infrastructure/services/mock-rate-limit.service').then(module => {
+  // RateLimitServiceの実装を登録
+  import('@/infrastructure/services/in-memory-rate-limit.service').then(module => {
     container.register(DI_TOKENS.RateLimitService, {
-      useClass: module.MockRateLimitService,
+      useClass: module.InMemoryRateLimitService,
     });
   });
   

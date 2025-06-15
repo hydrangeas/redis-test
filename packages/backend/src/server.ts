@@ -35,9 +35,11 @@ await server.register(import('./presentation/plugins/security-headers'));
 await server.register(import('./presentation/plugins/path-validation'));
 await server.register(import('./presentation/plugins/error-handler'));
 
-// 認証ミドルウェアの登録
-import { registerAuthDecorator } from './presentation/middleware/authenticate';
-registerAuthDecorator(server);
+// 認証プラグインの登録
+await server.register(import('./presentation/plugins/auth.plugin'));
+
+// レート制限プラグインの登録（認証プラグインの後）
+await server.register(import('./presentation/plugins/rate-limit.plugin'));
 
 // APIルートの登録
 await server.register(import('./presentation/routes'), { prefix: '/api/v1' });
