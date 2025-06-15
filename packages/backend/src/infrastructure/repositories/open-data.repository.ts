@@ -8,10 +8,8 @@ import { FileSize } from '@/domain/data/value-objects/file-size';
 import { ResourceMetadata } from '@/domain/data/value-objects/resource-metadata';
 import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { IFileStorage } from '@/domain/data/interfaces/file-storage.interface';
 import { Logger } from 'pino';
-import { createHash } from 'crypto';
 import { DI_TOKENS } from '../di/tokens';
 
 interface CacheEntry {
@@ -24,15 +22,13 @@ interface CacheEntry {
 export class OpenDataRepository implements IOpenDataRepository {
   private cacheStore: Map<string, CacheEntry> = new Map();
   private readonly cacheExpirationMs = 300000; // 5分
-  private readonly dataDirectory: string;
 
   constructor(
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
-  ) {
-    // プロジェクトルートからの相対パスを使用
-    this.dataDirectory = process.env.DATA_DIRECTORY || path.join(process.cwd(), 'data');
-  }
+    private readonly logger: Logger,
+    @inject(DI_TOKENS.FileStorage)
+    private readonly fileStorage: IFileStorage
+  ) {}
 
   /**
    * パスからデータリソースを検索

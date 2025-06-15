@@ -373,9 +373,16 @@ function registerInfrastructureServices(container: DependencyContainer): void {
     });
   });
   
+  // FileStorageServiceの登録
+  import('../storage/file-storage.service').then(module => {
+    container.register(DI_TOKENS.FileStorage, {
+      useClass: module.FileStorageService,
+    });
+    container.register(DI_TOKENS.FileStorageService, {
+      useClass: module.FileStorageService,
+    });
+  });
+  
   // 他のインフラストラクチャサービスは後続タスクで実装
-  // container.register(DI_TOKENS.FileStorageService, {
-  //   useClass: FileStorageServiceImpl,
-  // });
   // ... 他のインフラストラクチャサービス
 }
