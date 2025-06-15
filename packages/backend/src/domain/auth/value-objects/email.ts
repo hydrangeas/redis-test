@@ -10,7 +10,7 @@ interface EmailProps {
  * メールアドレスバリューオブジェクト
  */
 export class Email extends ValueObject<EmailProps> {
-  private static readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private static readonly EMAIL_REGEX = /^[a-zA-Z0-9]+([._+-]?[a-zA-Z0-9]+)*@[a-zA-Z0-9]+([.-]?[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
   private static readonly MAX_LENGTH = 255;
 
   get value(): string {
