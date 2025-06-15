@@ -1,23 +1,23 @@
-import type { Preview } from '@storybook/react';
-import React from 'react';
-import '../src/index.css';
+import React from "react";
+import type { Preview } from "@storybook/react";
+import { BrowserRouter } from "react-router-dom";
+import "../src/index.css";
 
 const preview: Preview = {
   parameters: {
-    actions: { argTypesRegex: '^on[A-Z].*' },
+    actions: { argTypesRegex: "^on[A-Z].*" },
     controls: {
       matchers: {
         color: /(background|color)$/i,
-        date: /Date$/i,
+        date: /Date$/,
       },
     },
-    layout: 'centered',
   },
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <BrowserRouter>
         <Story />
-      </div>
+      </BrowserRouter>
     ),
   ],
 };

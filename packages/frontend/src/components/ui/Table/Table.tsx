@@ -1,150 +1,107 @@
-import React, { forwardRef } from 'react';
-import { cn } from '../../../lib/utils';
+import React from "react";
+import { cn } from "@/utils/cn";
 
-export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
-  variant?: 'default' | 'striped';
+interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  striped?: boolean;
+  hoverable?: boolean;
+  bordered?: boolean;
 }
 
-const Table = forwardRef<HTMLTableElement, TableProps>(
-  ({ className, variant = 'default', ...props }, ref) => {
-    return (
-      <div className="w-full overflow-auto">
-        <table
-          ref={ref}
-          className={cn(
-            'w-full caption-bottom text-sm',
-            variant === 'striped' && '[&>tbody>tr:nth-child(odd)]:bg-gray-50 dark:[&>tbody>tr:nth-child(odd)]:bg-gray-900',
-            className
-          )}
-          {...props}
-        />
-      </div>
-    );
-  }
-);
-
-Table.displayName = 'Table';
-
-export interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
-
-export const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <thead
-        ref={ref}
-        className={cn('border-b border-gray-200 dark:border-gray-700', className)}
-        {...props}
-      />
-    );
-  }
-);
-
-TableHeader.displayName = 'TableHeader';
-
-export interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
-
-export const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
-  ({ className, ...props }, ref) => {
-    return <tbody ref={ref} className={cn(className)} {...props} />;
-  }
-);
-
-TableBody.displayName = 'TableBody';
-
-export interface TableFooterProps extends React.HTMLAttributes<HTMLTableSectionElement> {}
-
-export const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <tfoot
-        ref={ref}
+export const Table: React.FC<TableProps> = ({
+  children,
+  className,
+  striped = false,
+  hoverable = false,
+  bordered = false,
+  ...props
+}) => {
+  return (
+    <div className="overflow-x-auto">
+      <table
         className={cn(
-          'border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 font-medium',
+          "min-w-full divide-y divide-gray-200",
+          bordered && "border border-gray-200",
           className
         )}
         {...props}
-      />
-    );
-  }
-);
+      >
+        {children}
+      </table>
+    </div>
+  );
+};
 
-TableFooter.displayName = 'TableFooter';
+export const TableHeader: React.FC<React.HTMLAttributes<HTMLTableSectionElement>> = ({
+  children,
+  className,
+  ...props
+}) => {
+  return (
+    <thead className={cn("bg-gray-50", className)} {...props}>
+      {children}
+    </thead>
+  );
+};
 
-export interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {}
+export const TableBody: React.FC<React.HTMLAttributes<HTMLTableSectionElement>> = ({
+  children,
+  className,
+  ...props
+}) => {
+  return (
+    <tbody
+      className={cn("bg-white divide-y divide-gray-200", className)}
+      {...props}
+    >
+      {children}
+    </tbody>
+  );
+};
 
-export const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <tr
-        ref={ref}
-        className={cn(
-          'border-b border-gray-200 dark:border-gray-700 transition-colors',
-          'hover:bg-gray-50 dark:hover:bg-gray-900',
-          'data-[state=selected]:bg-gray-100 dark:data-[state=selected]:bg-gray-800',
-          className
-        )}
-        {...props}
-      />
-    );
-  }
-);
+export const TableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({
+  children,
+  className,
+  ...props
+}) => {
+  return (
+    <tr
+      className={cn("hover:bg-gray-50 transition-colors", className)}
+      {...props}
+    >
+      {children}
+    </tr>
+  );
+};
 
-TableRow.displayName = 'TableRow';
+export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement>> = ({
+  children,
+  className,
+  ...props
+}) => {
+  return (
+    <td
+      className={cn("px-6 py-4 whitespace-nowrap text-sm", className)}
+      {...props}
+    >
+      {children}
+    </td>
+  );
+};
 
-export interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {}
-
-export const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <th
-        ref={ref}
-        className={cn(
-          'h-12 px-4 text-left align-middle font-medium text-gray-600 dark:text-gray-400',
-          '[&:has([role=checkbox])]:pr-0',
-          className
-        )}
-        {...props}
-      />
-    );
-  }
-);
-
-TableHead.displayName = 'TableHead';
-
-export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {}
-
-export const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <td
-        ref={ref}
-        className={cn(
-          'p-4 align-middle text-gray-900 dark:text-gray-100',
-          '[&:has([role=checkbox])]:pr-0',
-          className
-        )}
-        {...props}
-      />
-    );
-  }
-);
-
-TableCell.displayName = 'TableCell';
-
-export interface TableCaptionProps extends React.HTMLAttributes<HTMLTableCaptionElement> {}
-
-export const TableCaption = forwardRef<HTMLTableCaptionElement, TableCaptionProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <caption
-        ref={ref}
-        className={cn('mt-4 text-sm text-gray-600 dark:text-gray-400', className)}
-        {...props}
-      />
-    );
-  }
-);
-
-TableCaption.displayName = 'TableCaption';
-
-export default Table;
+export const TableHeaderCell: React.FC<React.ThHTMLAttributes<HTMLTableCellElement>> = ({
+  children,
+  className,
+  ...props
+}) => {
+  return (
+    <th
+      className={cn(
+        "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </th>
+  );
+};

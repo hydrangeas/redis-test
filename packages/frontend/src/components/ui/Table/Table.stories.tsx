@@ -1,26 +1,29 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import Table, {
+import type { Meta, StoryObj } from "@storybook/react";
+import {
+  Table,
   TableHeader,
   TableBody,
-  TableFooter,
   TableRow,
-  TableHead,
   TableCell,
-  TableCaption,
-} from './Table';
-import { Button } from '../Button';
+  TableHeaderCell,
+} from "./Table";
 
 const meta = {
-  title: 'UI/Table',
+  title: "UI/Table",
   component: Table,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
-    variant: {
-      control: 'select',
-      options: ['default', 'striped'],
+    striped: {
+      control: "boolean",
+    },
+    hoverable: {
+      control: "boolean",
+    },
+    bordered: {
+      control: "boolean",
     },
   },
 } satisfies Meta<typeof Table>;
@@ -28,45 +31,35 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const invoices = [
-  { id: 'INV001', status: 'Paid', method: 'Credit Card', amount: 250.00 },
-  { id: 'INV002', status: 'Pending', method: 'PayPal', amount: 150.00 },
-  { id: 'INV003', status: 'Unpaid', method: 'Bank Transfer', amount: 350.00 },
-  { id: 'INV004', status: 'Paid', method: 'Credit Card', amount: 450.00 },
-  { id: 'INV005', status: 'Paid', method: 'PayPal', amount: 550.00 },
-  { id: 'INV006', status: 'Pending', method: 'Bank Transfer', amount: 200.00 },
-  { id: 'INV007', status: 'Unpaid', method: 'Credit Card', amount: 300.00 },
+const sampleData = [
+  { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "Active" },
+  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User", status: "Active" },
+  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "User", status: "Inactive" },
+  { id: 4, name: "Alice Brown", email: "alice@example.com", role: "Moderator", status: "Active" },
 ];
 
-export const Default: Story = {
+export const Basic: Story = {
   args: {
     children: (
       <>
-        <TableCaption>A list of your recent invoices.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Invoice</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell>Email</TableHeaderCell>
+            <TableHeaderCell>Role</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {invoices.map((invoice) => (
-            <TableRow key={invoice.id}>
-              <TableCell className="font-medium">{invoice.id}</TableCell>
-              <TableCell>{invoice.status}</TableCell>
-              <TableCell>{invoice.method}</TableCell>
-              <TableCell className="text-right">${invoice.amount.toFixed(2)}</TableCell>
+          {sampleData.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.role}</TableCell>
+              <TableCell>{user.status}</TableCell>
             </TableRow>
           ))}
         </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3}>Total</TableCell>
-            <TableCell className="text-right">$2,500.00</TableCell>
-          </TableRow>
-        </TableFooter>
       </>
     ),
   },
@@ -74,41 +67,57 @@ export const Default: Story = {
 
 export const Striped: Story = {
   args: {
-    variant: 'striped',
+    striped: true,
     children: (
       <>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell>Email</TableHeaderCell>
+            <TableHeaderCell>Role</TableHeaderCell>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sampleData.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.role}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </>
+    ),
+  },
+};
+
+export const Bordered: Story = {
+  args: {
+    bordered: true,
+    children: (
+      <>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell>Product</TableHeaderCell>
+            <TableHeaderCell>Price</TableHeaderCell>
+            <TableHeaderCell>Stock</TableHeaderCell>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell>John Doe</TableCell>
-            <TableCell>john@example.com</TableCell>
-            <TableCell>Admin</TableCell>
-            <TableCell>Active</TableCell>
+            <TableCell>Laptop</TableCell>
+            <TableCell>$999</TableCell>
+            <TableCell>15</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Jane Smith</TableCell>
-            <TableCell>jane@example.com</TableCell>
-            <TableCell>Editor</TableCell>
-            <TableCell>Active</TableCell>
+            <TableCell>Mouse</TableCell>
+            <TableCell>$29</TableCell>
+            <TableCell>50</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Bob Johnson</TableCell>
-            <TableCell>bob@example.com</TableCell>
-            <TableCell>Viewer</TableCell>
-            <TableCell>Inactive</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Alice Brown</TableCell>
-            <TableCell>alice@example.com</TableCell>
-            <TableCell>Editor</TableCell>
-            <TableCell>Active</TableCell>
+            <TableCell>Keyboard</TableCell>
+            <TableCell>$79</TableCell>
+            <TableCell>32</TableCell>
           </TableRow>
         </TableBody>
       </>
@@ -118,120 +127,108 @@ export const Striped: Story = {
 
 export const WithActions: Story = {
   args: {
+    hoverable: true,
     children: (
       <>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell>Email</TableHeaderCell>
+            <TableHeaderCell>Actions</TableHeaderCell>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Fix login bug</TableCell>
-            <TableCell>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                Open
-              </span>
-            </TableCell>
-            <TableCell>High</TableCell>
-            <TableCell className="text-right">
-              <Button size="sm" variant="ghost">Edit</Button>
-              <Button size="sm" variant="ghost">Delete</Button>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Update documentation</TableCell>
-            <TableCell>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
-                In Progress
-              </span>
-            </TableCell>
-            <TableCell>Medium</TableCell>
-            <TableCell className="text-right">
-              <Button size="sm" variant="ghost">Edit</Button>
-              <Button size="sm" variant="ghost">Delete</Button>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Add new feature</TableCell>
-            <TableCell>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
-                Closed
-              </span>
-            </TableCell>
-            <TableCell>Low</TableCell>
-            <TableCell className="text-right">
-              <Button size="sm" variant="ghost">Edit</Button>
-              <Button size="sm" variant="ghost">Delete</Button>
-            </TableCell>
-          </TableRow>
+          {sampleData.slice(0, 3).map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  <button className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                  <button className="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </>
     ),
   },
 };
 
-export const Selectable: Story = {
-  render: () => {
-    const [selected, setSelected] = React.useState<string[]>([]);
-
-    const toggleAll = () => {
-      if (selected.length === invoices.length) {
-        setSelected([]);
-      } else {
-        setSelected(invoices.map((i) => i.id));
-      }
-    };
-
-    const toggleOne = (id: string) => {
-      if (selected.includes(id)) {
-        setSelected(selected.filter((s) => s !== id));
-      } else {
-        setSelected([...selected, id]);
-      }
-    };
-
-    return (
-      <Table>
+export const WithStatusBadges: Story = {
+  args: {
+    children: (
+      <>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]">
-              <input
-                type="checkbox"
-                checked={selected.length === invoices.length}
-                onChange={toggleAll}
-                className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              />
-            </TableHead>
-            <TableHead>Invoice</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            <TableHeaderCell>User</TableHeaderCell>
+            <TableHeaderCell>Role</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
+            <TableHeaderCell>Last Active</TableHeaderCell>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {invoices.map((invoice) => (
-            <TableRow key={invoice.id} data-state={selected.includes(invoice.id) ? 'selected' : undefined}>
-              <TableCell>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(invoice.id)}
-                  onChange={() => toggleOne(invoice.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                />
-              </TableCell>
-              <TableCell className="font-medium">{invoice.id}</TableCell>
-              <TableCell>{invoice.status}</TableCell>
-              <TableCell>{invoice.method}</TableCell>
-              <TableCell className="text-right">${invoice.amount.toFixed(2)}</TableCell>
-            </TableRow>
-          ))}
+          <TableRow>
+            <TableCell>
+              <div>
+                <div className="font-medium">John Doe</div>
+                <div className="text-sm text-gray-500">john@example.com</div>
+              </div>
+            </TableCell>
+            <TableCell>
+              <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                Admin
+              </span>
+            </TableCell>
+            <TableCell>
+              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                Active
+              </span>
+            </TableCell>
+            <TableCell className="text-sm text-gray-500">2 hours ago</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>
+              <div>
+                <div className="font-medium">Jane Smith</div>
+                <div className="text-sm text-gray-500">jane@example.com</div>
+              </div>
+            </TableCell>
+            <TableCell>
+              <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                User
+              </span>
+            </TableCell>
+            <TableCell>
+              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                Active
+              </span>
+            </TableCell>
+            <TableCell className="text-sm text-gray-500">5 minutes ago</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>
+              <div>
+                <div className="font-medium">Bob Johnson</div>
+                <div className="text-sm text-gray-500">bob@example.com</div>
+              </div>
+            </TableCell>
+            <TableCell>
+              <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                User
+              </span>
+            </TableCell>
+            <TableCell>
+              <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                Inactive
+              </span>
+            </TableCell>
+            <TableCell className="text-sm text-gray-500">3 days ago</TableCell>
+          </TableRow>
         </TableBody>
-      </Table>
-    );
+      </>
+    ),
   },
 };
 
@@ -241,19 +238,17 @@ export const Empty: Story = {
       <>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell>Email</TableHeaderCell>
+            <TableHeaderCell>Role</TableHeaderCell>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell colSpan={3} className="h-24 text-center">
-              <div className="flex flex-col items-center justify-center text-gray-500">
-                <svg className="w-12 h-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-                No results found
+            <TableCell colSpan={3} className="text-center py-8">
+              <div className="text-gray-500">
+                <p className="text-lg font-medium">No data available</p>
+                <p className="text-sm">Try adjusting your filters or add new items.</p>
               </div>
             </TableCell>
           </TableRow>
