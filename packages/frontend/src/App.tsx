@@ -1,14 +1,57 @@
-import React from 'react';
-import { AuthProvider } from '@/hooks/useAuth';
-import { AppRouter } from '@/router';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LoginPage } from '@/pages/Login';
+import { AuthCallbackPage } from '@/pages/auth/callback';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import './styles/auth.css';
 
-const App: React.FC = () => {
+function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="auth-callback-container">
+        <LoadingSpinner />
+        <p>読み込み中...</p>
+      </div>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/dashboard" element={isAuthenticated ? <div>Dashboard (TODO)</div> : <Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;
