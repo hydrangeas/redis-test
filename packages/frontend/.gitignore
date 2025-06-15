@@ -29,3 +29,9 @@ dist-ssr
 
 # Build stats
 stats.html
+
+# E2E test artifacts
+/test-results/
+/playwright-report/
+/playwright/.cache/
+e2e/screenshots/
