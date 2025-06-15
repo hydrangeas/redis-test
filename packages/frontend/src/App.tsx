@@ -1,63 +1,103 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage } from '@/pages/Login';
-import { AuthCallbackPage } from '@/pages/auth/callback';
-import { LandingPage } from '@/pages/LandingPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { ApiDocsRedirect } from '@/components/ApiDocsRedirect';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { AuthProvider } from '@/hooks/useAuth';
+import { Layout } from '@/components/Layout';
+import { AuthGuard } from '@/router/guards/AuthGuard';
+import { GuestGuard } from '@/router/guards/GuestGuard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import './styles/auth.css';
 import './styles/landing.css';
 
+// 遅延ロードによるコード分割
+const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import('@/pages/Login').then(m => ({ default: m.LoginPage })));
+const AuthCallbackPage = lazy(() => import('@/pages/auth/callback').then(m => ({ default: m.AuthCallbackPage })));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const ApiDocsRedirect = lazy(() => import('@/components/ApiDocsRedirect').then(m => ({ default: m.ApiDocsRedirect })));
+
+// ローディングコンポーネント
+const PageLoader = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center">
+    <LoadingSpinner />
+    <p className="mt-4 text-gray-600">ページを読み込み中...</p>
+  </div>
+);
+
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        console.error('Auth check error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="auth-callback-container">
-        <LoadingSpinner />
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/api-docs" element={<ApiDocsRedirect />} />
-        <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            {/* パブリックルート */}
+            <Route 
+              index 
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <LandingPage />
+                </Suspense>
+              } 
+            />
+            
+            {/* APIドキュメント */}
+            <Route 
+              path="api-docs" 
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ApiDocsRedirect />
+                </Suspense>
+              } 
+            />
+
+            {/* ゲスト限定ルート（ログイン済みならダッシュボードへ） */}
+            <Route element={<GuestGuard />}>
+              <Route 
+                path="login" 
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <LoginPage />
+                  </Suspense>
+                } 
+              />
+            </Route>
+
+            {/* 認証コールバック */}
+            <Route 
+              path="auth/callback" 
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AuthCallbackPage />
+                </Suspense>
+              } 
+            />
+
+            {/* 認証必須ルート */}
+            <Route element={<AuthGuard />}>
+              <Route 
+                path="dashboard" 
+                element={
+                  <Suspense fallback={<PageLoader />}>
+                    <DashboardPage />
+                  </Suspense>
+                } 
+              />
+              {/* 将来的にここに他の認証必須ページを追加 */}
+            </Route>
+
+            {/* 404ページ */}
+            <Route 
+              path="*" 
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <NotFoundPage />
+                </Suspense>
+              } 
+            />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
