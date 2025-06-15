@@ -1,5 +1,5 @@
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { APIEndpoint } from '../value-objects/endpoint';
+import { Endpoint as APIEndpoint } from '../value-objects/endpoint';
 
 /**
  * レート制限チェック結果

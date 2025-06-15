@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import authRoutes from './auth';
 import healthRoutes from './health';
+import dataRoutes from './data';
 
 /**
  * APIルートを登録するプラグイン
@@ -13,8 +14,10 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
   // 認証関連のルート (/api/v1/auth/*)
   await fastify.register(authRoutes, { prefix: '/auth' });
   
+  // データアクセスルート (/api/v1/data/*)
+  await fastify.register(dataRoutes, { prefix: '/data' });
+  
   // TODO: 後続タスクで以下のルートを追加
-  // - /api/v1/data/* (task-0024)
   // - その他のAPIエンドポイント
 };
 

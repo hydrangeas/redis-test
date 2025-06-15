@@ -34,6 +34,7 @@ export const DI_TOKENS = {
   // Application Services
   AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),
   DataRetrievalUseCase: Symbol.for('DataRetrievalUseCase'),
+  DataAccessUseCase: Symbol.for('DataAccessUseCase'),
   RateLimitUseCase: Symbol.for('RateLimitUseCase'),
   APIAccessControlUseCase: Symbol.for('APIAccessControlUseCase'),
   

@@ -199,6 +199,27 @@ export function setupTestDI(): DependencyContainer {
     },
   });
 
+  // テスト用にRateLimitServiceのモックを登録
+  container.register(DI_TOKENS.RateLimitService, {
+    useValue: {
+      checkLimit: () => Promise.resolve({
+        allowed: true,
+        limit: 60,
+        remaining: 59,
+        resetAt: new Date(Date.now() + 60000),
+        retryAfter: undefined,
+      }),
+      recordUsage: () => Promise.resolve(),
+      getUsageStatus: () => Promise.resolve({
+        currentCount: 1,
+        limit: 60,
+        windowStart: new Date(),
+        windowEnd: new Date(Date.now() + 60000),
+      }),
+      resetLimit: () => Promise.resolve(),
+    },
+  });
+
   return container;
 }
 
@@ -258,9 +279,13 @@ function registerDomainServices(container: DependencyContainer): void {
     });
   });
   
-  // container.register(DI_TOKENS.RateLimitService, {
-  //   useClass: RateLimitServiceImpl,
-  // });
+  // RateLimitServiceのモック実装を登録（開発用）
+  import('@/infrastructure/services/mock-rate-limit.service').then(module => {
+    container.register(DI_TOKENS.RateLimitService, {
+      useClass: module.MockRateLimitService,
+    });
+  });
+  
   // ... 他のドメインサービス
 }
 
@@ -273,6 +298,13 @@ function registerApplicationServices(container: DependencyContainer): void {
   });
   container.register(DI_TOKENS.DataRetrievalUseCase, {
     useClass: DataRetrievalUseCase,
+  });
+  
+  // DataAccessUseCaseの動的インポート
+  import('@/application/use-cases/data-access.use-case').then(module => {
+    container.register(DI_TOKENS.DataAccessUseCase, {
+      useClass: module.DataAccessUseCase,
+    });
   });
   
   // RateLimitUseCaseの動的インポート
