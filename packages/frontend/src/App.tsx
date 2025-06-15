@@ -3,6 +3,8 @@ import { LoginPage } from '@/pages/Login';
 import { AuthCallbackPage } from '@/pages/auth/callback';
 import { LandingPage } from '@/pages/LandingPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ApiDocsRedirect } from '@/components/ApiDocsRedirect';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -51,7 +53,9 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/api-docs" element={<ApiDocsRedirect />} />
         <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );
