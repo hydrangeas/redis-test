@@ -9,9 +9,7 @@ import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 
 describe('APIEndpoint', () => {
-  let endpoint: APIEndpoint;
-  
-  beforeEach(() => {
+  const createEndpoint = () => {
     const pathResult = EndpointPath.create('/api/data/*');
     const typeResult = EndpointType.create('protected');
     
@@ -22,7 +20,13 @@ describe('APIEndpoint', () => {
       isActive: true,
     });
     
-    endpoint = endpointResult.getValue();
+    return endpointResult.getValue();
+  };
+  
+  let endpoint: APIEndpoint;
+  
+  beforeEach(() => {
+    endpoint = createEndpoint();
   });
 
   describe('creation', () => {
@@ -76,12 +80,13 @@ describe('APIEndpoint', () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue();
       const rateLimit = new RateLimit(5, 60); // 5 requests per minute
       
-      // Record 3 requests
-      for (let i = 0; i < 3; i++) {
-        endpoint.recordRequest(userId);
-      }
+      const now = new Date();
+      // Record 3 requests within the past 30 seconds
+      endpoint.recordRequest(userId, new Date(now.getTime() - 30000)); // 30 seconds ago
+      endpoint.recordRequest(userId, new Date(now.getTime() - 20000)); // 20 seconds ago
+      endpoint.recordRequest(userId, new Date(now.getTime() - 10000)); // 10 seconds ago
       
-      const result = endpoint.checkRateLimit(userId, rateLimit);
+      const result = endpoint.checkRateLimit(userId, rateLimit, now);
       
       expect(result.isExceeded).toBe(false);
       expect(result.requestCount.count).toBe(3);
@@ -92,12 +97,13 @@ describe('APIEndpoint', () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue();
       const rateLimit = new RateLimit(5, 60);
       
-      // Record 6 requests (exceeds limit of 5)
+      const now = new Date();
+      // Record 6 requests (exceeds limit of 5) within the past minute
       for (let i = 0; i < 6; i++) {
-        endpoint.recordRequest(userId);
+        endpoint.recordRequest(userId, new Date(now.getTime() - (50000 - i * 5000))); // Spread across 50 seconds
       }
       
-      const result = endpoint.checkRateLimit(userId, rateLimit);
+      const result = endpoint.checkRateLimit(userId, rateLimit, now);
       
       expect(result.isExceeded).toBe(true);
       expect(result.remainingRequests).toBe(0);
@@ -109,16 +115,17 @@ describe('APIEndpoint', () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue();
       const rateLimit = new RateLimit(5, 60);
       
+      const now = new Date();
       // Record old request (2 hours ago)
-      const oldTimestamp = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      const oldTimestamp = new Date(now.getTime() - 2 * 60 * 60 * 1000);
       endpoint.recordRequest(userId, oldTimestamp);
       
       // Record current request
-      endpoint.recordRequest(userId);
+      endpoint.recordRequest(userId, new Date(now.getTime() - 5000)); // 5 seconds ago
       
-      const result = endpoint.checkRateLimit(userId, rateLimit);
+      const result = endpoint.checkRateLimit(userId, rateLimit, now);
       
-      // Only current request should be counted
+      // Only current request should be counted (old one is cleaned up)
       expect(result.requestCount.count).toBe(1);
     });
 
@@ -127,18 +134,19 @@ describe('APIEndpoint', () => {
       const userId2 = UserId.create('550e8400-e29b-41d4-a716-446655440002').getValue();
       const rateLimit = new RateLimit(5, 60);
       
+      const now = new Date();
       // Record requests for user 1
       for (let i = 0; i < 3; i++) {
-        endpoint.recordRequest(userId1);
+        endpoint.recordRequest(userId1, new Date(now.getTime() - (30000 - i * 5000)));
       }
       
       // Record requests for user 2
       for (let i = 0; i < 2; i++) {
-        endpoint.recordRequest(userId2);
+        endpoint.recordRequest(userId2, new Date(now.getTime() - (25000 - i * 5000)));
       }
       
-      const result1 = endpoint.checkRateLimit(userId1, rateLimit);
-      const result2 = endpoint.checkRateLimit(userId2, rateLimit);
+      const result1 = endpoint.checkRateLimit(userId1, rateLimit, now);
+      const result2 = endpoint.checkRateLimit(userId2, rateLimit, now);
       
       expect(result1.requestCount.count).toBe(3);
       expect(result2.requestCount.count).toBe(2);
@@ -229,10 +237,11 @@ describe('APIEndpoint', () => {
     it('should add rate limit log asynchronously', async () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue();
       
-      const result = await endpoint.addRateLimitLog(userId);
+      const now = new Date();
+      const result = await endpoint.addRateLimitLog(userId, new Date(now.getTime() - 5000)); // 5 seconds ago
       expect(result.isSuccess).toBe(true);
       
-      const checkResult = endpoint.checkRateLimit(userId, new RateLimit(5, 60));
+      const checkResult = endpoint.checkRateLimit(userId, new RateLimit(5, 60), now);
       expect(checkResult.requestCount.count).toBe(1);
     });
 
@@ -247,7 +256,7 @@ describe('APIEndpoint', () => {
       await endpoint.addRateLimitLog(userId, new Date(now.getTime() - 30 * 1000)); // 30 seconds ago
       
       // Check current count before cleanup
-      const beforeResult = endpoint.checkRateLimit(userId, new RateLimit(10, 60));
+      const beforeResult = endpoint.checkRateLimit(userId, new RateLimit(10, 60), now);
       expect(beforeResult.requestCount.count).toBe(1);
       
       // Note: Since auto-cleanup happens during addRateLimitLog, 
@@ -258,7 +267,7 @@ describe('APIEndpoint', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(0); // No logs to remove (all are recent)
       
-      const checkResult = endpoint.checkRateLimit(userId, new RateLimit(5, 60));
+      const checkResult = endpoint.checkRateLimit(userId, new RateLimit(5, 60), now);
       expect(checkResult.requestCount.count).toBe(1); // Still 1 recent log
     });
 
@@ -272,8 +281,8 @@ describe('APIEndpoint', () => {
       await endpoint.addRateLimitLog(userId2, new Date(now.getTime() - 2 * 60 * 60 * 1000));
       
       // Add recent logs
-      await endpoint.addRateLimitLog(userId1, now);
-      await endpoint.addRateLimitLog(userId2, now);
+      await endpoint.addRateLimitLog(userId1, new Date(now.getTime() - 5000)); // 5 seconds ago
+      await endpoint.addRateLimitLog(userId2, new Date(now.getTime() - 5000)); // 5 seconds ago
       
       // Since auto-cleanup already happened, manual cleanup returns 0
       const cutoffTime = new Date(now.getTime() - 60 * 60 * 1000);
@@ -283,8 +292,8 @@ describe('APIEndpoint', () => {
       expect(result.getValue()).toBe(0); // 0 logs removed (already cleaned automatically)
       
       // Verify only recent logs remain
-      const check1 = endpoint.checkRateLimit(userId1, new RateLimit(5, 60));
-      const check2 = endpoint.checkRateLimit(userId2, new RateLimit(5, 60));
+      const check1 = endpoint.checkRateLimit(userId1, new RateLimit(5, 60), now);
+      const check2 = endpoint.checkRateLimit(userId2, new RateLimit(5, 60), now);
       expect(check1.requestCount.count).toBe(1);
       expect(check2.requestCount.count).toBe(1);
     });

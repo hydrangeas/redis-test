@@ -7,7 +7,7 @@ import { RequestCount } from '../value-objects/request-count';
 import { DomainError, ErrorType } from '../../errors/domain-error';
 import { Result } from '../../errors/result';
 import { ValidationError } from '../../errors/validation-error';
-import { RateLimitExceededException } from '../../errors/exceptions';
+import { RateLimitException } from '../../errors/exceptions';
 
 export interface RateLimitStatus {
   allowed: boolean;
@@ -114,21 +114,22 @@ export class APIAccessControlService implements IAPIAccessControlService {
 
       const userRateLimit = user.getRateLimit();
       const resetTime = this.calculateResetTime(window);
-      const remainingRequests = Math.max(0, userRateLimit.requestsPerMinute - currentRequestCount.value);
+      const remainingRequests = Math.max(0, userRateLimit.maxRequests - currentRequestCount.value);
       
       const status: RateLimitStatus = {
-        allowed: currentRequestCount.value < userRateLimit.requestsPerMinute,
+        allowed: currentRequestCount.value < userRateLimit.maxRequests,
         currentCount: currentRequestCount.value,
-        limit: userRateLimit.requestsPerMinute,
+        limit: userRateLimit.maxRequests,
         resetTime,
         remainingRequests
       };
 
       if (!status.allowed) {
         return Result.fail(
-          new RateLimitExceededException(
-            userRateLimit.requestsPerMinute,
-            resetTime
+          new RateLimitException(
+            userRateLimit.maxRequests,
+            resetTime,
+            Math.ceil((resetTime.getTime() - Date.now()) / 1000)
           )
         );
       }
@@ -149,7 +150,7 @@ export class APIAccessControlService implements IAPIAccessControlService {
   calculateResetTime(window: RateLimitWindow): Date {
     const now = new Date();
     const windowStart = window.startTime;
-    const windowDurationMs = window.durationSeconds * 1000;
+    const windowDurationMs = window.windowSizeSeconds * 1000;
     const windowEndTime = new Date(windowStart.getTime() + windowDurationMs);
     
     // If current time is past window end, the next window starts now

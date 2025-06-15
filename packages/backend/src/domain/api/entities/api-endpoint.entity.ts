@@ -76,10 +76,22 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     
     // ウィンドウ内のリクエストをカウント
     const requestsInWindow = userLogs.filter(log => 
-      window.contains(log.timestamp)
+      window.contains(log.requestedAt)
     );
     
-    const requestCount = new RequestCount(requestsInWindow.length);
+    const requestCountResult = RequestCount.create(requestsInWindow.length);
+    if (requestCountResult.isFailure) {
+      // If we can't create a request count, assume 0
+      const requestCount = RequestCount.create(0).getValue();
+      return {
+        isExceeded: false,
+        requestCount,
+        remainingRequests: rateLimit.maxRequests,
+        retryAfterSeconds: undefined,
+      };
+    }
+    
+    const requestCount = requestCountResult.getValue();
     const isExceeded = requestCount.exceeds(rateLimit.maxRequests);
     const remainingRequests = Math.max(0, rateLimit.maxRequests - requestCount.count);
     
@@ -87,7 +99,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     if (isExceeded && requestsInWindow.length > 0) {
       // 最も古いリクエストがウィンドウから出るまでの時間
       const oldestRequest = requestsInWindow[0];
-      retryAfterSeconds = window.getSecondsUntilExpires(oldestRequest.timestamp);
+      retryAfterSeconds = window.getSecondsUntilExpires(oldestRequest.requestedAt);
     }
     
     return {
@@ -107,7 +119,8 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     const newLogResult = RateLimitLog.create({
       userId,
       endpointId: this.id,
-      timestamp,
+      requestCount: RequestCount.create(1).getValue(),
+      requestedAt: timestamp,
     });
     
     if (newLogResult.isFailure) {
@@ -117,7 +130,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     userLogs.push(newLogResult.getValue());
     
     // ログを時系列でソート
-    userLogs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    userLogs.sort((a, b) => a.requestedAt.getTime() - b.requestedAt.getTime());
     
     this.props.rateLimitLogs.set(userId.value, userLogs);
     
@@ -135,7 +148,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
     
     const recentLogs = userLogs.filter(log => 
-      log.timestamp.getTime() > oneHourAgo.getTime()
+      log.requestedAt.getTime() > oneHourAgo.getTime()
     );
     
     if (recentLogs.length !== userLogs.length) {
@@ -197,7 +210,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     const beforeCount = userLogs.length;
     
     const recentLogs = userLogs.filter(log => 
-      log.timestamp.getTime() > cutoffTime.getTime()
+      log.requestedAt.getTime() > cutoffTime.getTime()
     );
     
     if (recentLogs.length !== userLogs.length) {
@@ -217,7 +230,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     for (const [userId, logs] of this.props.rateLimitLogs.entries()) {
       const beforeCount = logs.length;
       const recentLogs = logs.filter(log => 
-        log.timestamp.getTime() > cutoffTime.getTime()
+        log.requestedAt.getTime() > cutoffTime.getTime()
       );
       
       if (recentLogs.length !== logs.length) {
