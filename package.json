@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "build:vercel": "turbo run build --filter=@opendata-api/backend --filter=@opendata-api/frontend",
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",
     "test:integration": "turbo run test:integration",
@@ -31,7 +32,10 @@
     "supabase:migration:list": "supabase migration list",
     "supabase:gen:types": "supabase gen types typescript --local > packages/backend/src/types/supabase.ts",
     "validate:json": "node scripts/validate-json.js",
-    "setup:data": "bash scripts/setup-data.sh"
+    "setup:data": "bash scripts/setup-data.sh",
+    "vercel:dev": "vercel dev",
+    "vercel:deploy": "vercel",
+    "vercel:prod": "vercel --prod"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

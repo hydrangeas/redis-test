@@ -1,0 +1,24 @@
+# テストファイル
+**/*.test.ts
+**/*.spec.ts
+**/test/**
+**/tests/**
+**/__tests__/**
+
+# 開発用ファイル
+.env.local
+.env.development
+.env.test
+
+# ドキュメント
+docs/
+*.md
+
+# ソースコード（ビルド済みを使用）
+packages/*/src/
+
+# 設定ファイル
+.eslintrc*
+.prettierrc*
+vitest.config.ts
+playwright.config.ts
