@@ -2,11 +2,11 @@ import 'reflect-metadata';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fastify, { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
-import { setupTestDI } from '../../../../infrastructure/di';
+import { DI_TOKENS } from '../../../../infrastructure/di/tokens';
+import { setupTestDI } from '../../../../infrastructure/di/container';
 import refreshRoute from '../refresh.route';
 import { AuthenticationUseCase } from '../../../../application/use-cases/authentication.use-case';
 import { ApplicationError } from '../../../../application/errors/application-error';
-import { DI_TOKENS } from '../../../../infrastructure/di/tokens';
 import type { Result } from '../../../../application/errors/result';
 
 describe('Refresh Route', () => {
@@ -28,7 +28,8 @@ describe('Refresh Route', () => {
     app = fastify({ logger: false });
     
     // Register error handler to properly format validation errors
-    await app.register(import('../../../plugins/error-handler'));
+    const errorHandler = (await import('../../../plugins/error-handler')).default;
+    await app.register(errorHandler);
     
     await app.register(refreshRoute);
   });
