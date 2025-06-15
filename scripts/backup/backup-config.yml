@@ -1,0 +1,76 @@
+# Backup Configuration
+backup_targets:
+  # Supabaseデータベース
+  database:
+    type: postgresql
+    connection: ${SUPABASE_DB_URL}
+    tables:
+      - auth_logs
+      - api_logs
+      - rate_limit_logs
+    backup_method: pg_dump
+    compression: gzip
+    
+  # アプリケーション設定
+  configurations:
+    paths:
+      - /app/.env.production
+      - /app/config/
+    exclude:
+      - "*.local"
+      - "*.tmp"
+    
+  # 静的データファイル
+  data_files:
+    paths:
+      - /data/secure/
+      - /data/public/
+    compression: tar.gz
+    
+  # アプリケーションログ
+  logs:
+    paths:
+      - /app/logs/
+    retention: 30 # 30日分のみバックアップ
+    compression: gzip
+
+# バックアップスケジュール
+schedules:
+  daily:
+    time: "02:00"
+    targets: [database, logs]
+    retention: 7 # 7日分保持
+    
+  weekly:
+    time: "Sunday 03:00"
+    targets: [database, configurations, data_files, logs]
+    retention: 4 # 4週間分保持
+    
+  monthly:
+    time: "1st day 04:00"
+    targets: [database, configurations, data_files]
+    retention: 12 # 12ヶ月分保持
+
+# バックアップ先
+destinations:
+  primary:
+    type: s3
+    bucket: ${BACKUP_S3_BUCKET}
+    region: ap-northeast-1
+    encryption: AES256
+    storage_class: STANDARD_IA
+    
+  secondary:
+    type: gcs
+    bucket: ${BACKUP_GCS_BUCKET}
+    location: asia-northeast1
+
+# 通知設定
+notifications:
+  webhook: ${MONITORING_WEBHOOK}
+  email: backup-alerts@example.com
+  
+# 検証設定
+verification:
+  checksum: sha256
+  test_restore: quarterly # 四半期ごとにテストリストア実施

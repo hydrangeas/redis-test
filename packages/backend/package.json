@@ -21,7 +21,8 @@
     "size": "echo 'Size analysis not configured for backend'",
     "clean": "rm -rf dist coverage .turbo",
     "validate:json": "node scripts/validate-json.cjs",
-    "setup:data": "bash scripts/setup-data.sh"
+    "setup:data": "bash scripts/setup-data.sh",
+    "backup:health-check": "tsx ../../scripts/backup/check-backup-health.ts"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
