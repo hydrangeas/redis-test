@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { LoginPage } from '@/pages/Login';
 import { AuthCallbackPage } from '@/pages/auth/callback';
 import { LandingPage } from '@/pages/LandingPage';
+import { DashboardPage } from '@/pages/DashboardPage';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -50,7 +51,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/dashboard" element={isAuthenticated ? <div>Dashboard (TODO)</div> : <Navigate to="/login" />} />
+        <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

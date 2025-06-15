@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import './DashboardPage.css';
 
 interface UserInfo {
@@ -18,31 +20,43 @@ interface UsageStats {
 }
 
 export const DashboardPage: React.FC = () => {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats[]>([]);
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     document.title = 'ダッシュボード - オープンデータ提供API';
-    fetchUserData();
-  }, [user]);
+    checkUser();
+  }, []);
 
-  const fetchUserData = async () => {
-    if (!user) return;
-    
+  const checkUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      await fetchUserData(user);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      navigate('/login');
+    }
+  };
+
+  const fetchUserData = async (currentUser: User) => {
     try {
       setLoading(true);
       // TODO: Replace with actual API calls
       // Simulate fetching user info and usage stats
       const mockUserInfo: UserInfo = {
-        id: user.id || 'unknown',
-        email: user.email || 'unknown',
-        tier: 'tier1',
-        apiKey: 'sk_test_' + btoa(user.id || 'unknown').replace(/=/g, '').substring(0, 32),
+        id: currentUser.id,
+        email: currentUser.email || 'unknown',
+        tier: currentUser.app_metadata?.tier || 'tier1',
+        apiKey: 'sk_test_' + btoa(currentUser.id).replace(/=/g, '').substring(0, 32),
       };
       
       const mockUsageStats: UsageStats[] = [
@@ -64,11 +78,21 @@ export const DashboardPage: React.FC = () => {
   };
 
   const handleSignOut = async () => {
+    setLoggingOut(true);
     try {
-      await signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        alert('ログアウトに失敗しました。もう一度お試しください。');
+        setLoggingOut(false);
+        return;
+      }
+      // ログアウト成功後、トップページにリダイレクト
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
+      alert('予期せぬエラーが発生しました。');
+      setLoggingOut(false);
     }
   };
 
@@ -106,7 +130,7 @@ export const DashboardPage: React.FC = () => {
     return (
       <div className="dashboard-page">
         <div className="loading-container">
-          <div className="spinner"></div>
+          <LoadingSpinner />
           <p>読み込み中...</p>
         </div>
       </div>
@@ -219,8 +243,9 @@ export const DashboardPage: React.FC = () => {
             <button 
               className="action-button danger"
               onClick={handleSignOut}
+              disabled={loggingOut}
             >
-              ログアウト
+              {loggingOut ? 'ログアウト中...' : 'ログアウト'}
             </button>
           </div>
         </section>
