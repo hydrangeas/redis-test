@@ -10,6 +10,8 @@
     "start": "node dist/server.js",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
+    "test:performance": "vitest run test/performance/rate-limit-load.test.ts",
+    "test:performance:gc": "node --expose-gc ./node_modules/.bin/vitest run test/performance/rate-limit-load.test.ts",
     "lint": "eslint . --ext .ts",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist coverage .turbo",
