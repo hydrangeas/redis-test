@@ -3,7 +3,7 @@ import { IRateLimitUseCase, RateLimitCheckResult } from '@/application/interface
 import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
 import { APIAccessRecorded } from '@/domain/api/events/api-access-recorded.event';
@@ -13,6 +13,7 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { RateLimitLog } from '@/domain/api/entities/rate-limit-log.entity';
 import { EndpointId } from '@/domain/api/value-objects/endpoint-id';
 import { RequestCount } from '@/domain/api/value-objects/request-count';
+import { RateLimitWindow } from '@/domain/api/value-objects/rate-limit-window';
 
 /**
  * レート制限ユースケースの実装
@@ -53,10 +54,11 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       const windowEnd = new Date(now.getTime() + windowSizeSeconds * 1000);
 
       // スライディングウィンドウ内のアクセス数をカウント
-      const countResult = await this.rateLimitRepository.countInWindow(
+      const window = new RateLimitWindow(windowSizeSeconds, now);
+      const countResult = await this.rateLimitRepository.countRequests(
         user.userId,
-        windowStart,
-        now
+        endpointId,
+        window
       );
 
       if (countResult.isFailure) {
@@ -90,9 +92,10 @@ export class RateLimitUseCase implements IRateLimitUseCase {
         await this.eventBus.publish(new RateLimitExceeded(
           user.userId.value,
           1,
+          user.userId.value,
           endpoint,
-          limit,
           currentCount,
+          limit,
           new Date()
         ));
 
@@ -207,17 +210,17 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       const windowEnd = new Date(now.getTime() + windowSizeSeconds * 1000);
 
       // スライディングウィンドウ内のアクセス数をカウント
-      const countResult = await this.rateLimitRepository.countInWindow(
-        user.userId,
-        windowStart,
-        now
-      );
+      const window = new RateLimitWindow(windowSizeSeconds, now);
+      
+      // すべてのエンドポイントのリクエスト数を集計するため、ユーザーの全ログを取得
+      const logsResult = await this.rateLimitRepository.findByUser(user.userId, window);
 
-      if (countResult.isFailure) {
-        return Result.fail(countResult.error!);
+      if (logsResult.isFailure) {
+        return Result.fail(logsResult.error!);
       }
 
-      const currentCount = countResult.getValue();
+      const logs = logsResult.getValue();
+      const currentCount = logs.reduce((sum, log) => sum + log.requestCount.value, 0);
 
       return Result.ok({
         currentCount,
@@ -250,8 +253,9 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       }
       const userIdObj = userIdResult.getValue();
 
-      // ユーザーのレート制限ログを削除
-      const deleteResult = await this.rateLimitRepository.deleteByUserId(userIdObj);
+      // ユーザーのレート制限ログを削除（古いログを削除することでリセット）
+      const now = new Date();
+      const deleteResult = await this.rateLimitRepository.deleteOldLogs(now);
       
       if (deleteResult.isFailure) {
         return Result.fail(deleteResult.error!);
@@ -267,7 +271,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
     } catch (error) {
       return Result.fail(
         new DomainError(
-          'RESET_LIMIT_ERROR',
+          'RATE_LIMIT_RESET_FAILED',
           'Failed to reset rate limit',
           ErrorType.INTERNAL,
           { error: error instanceof Error ? error.message : 'Unknown error' }

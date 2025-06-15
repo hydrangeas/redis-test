@@ -114,7 +114,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         },
       ],
     },
-    preHandler: fastify.authenticate,
+    preHandler: [fastify.authenticate, fastify.checkRateLimit],
   }, async (request, reply) => {
     try {
       // preHandlerで認証済みなので、request.userは必ず存在する
@@ -145,50 +145,6 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
           request.url
         );
         return reply.code(400).send(problemDetails);
-      }
-
-      // レート制限チェック
-      const rateLimitResult = await rateLimitUseCase.checkAndRecordAccess(
-        user,
-        endpoint,
-        method
-      );
-
-      if (rateLimitResult.isFailure) {
-        const error = rateLimitResult.getError();
-        const problemDetails = toProblemDetails(error, request.url);
-        return reply.code(500).send(problemDetails);
-      }
-
-      const rateLimitCheck = rateLimitResult.getValue();
-      
-      // レート制限ヘッダーを設定
-      reply.headers({
-        'X-RateLimit-Limit': rateLimitCheck.limit.toString(),
-        'X-RateLimit-Remaining': rateLimitCheck.remaining.toString(),
-        'X-RateLimit-Reset': rateLimitCheck.resetAt.toString(),
-      });
-
-      // レート制限超過の場合
-      if (!rateLimitCheck.allowed) {
-        reply.header('Retry-After', (rateLimitCheck.retryAfter || 60).toString());
-        
-        const problemDetails = toProblemDetails(
-          {
-            code: 'RATE_LIMIT_EXCEEDED',
-            message: 'Too many requests',
-            type: 'RATE_LIMIT' as const,
-            metadata: {
-              limit: rateLimitCheck.limit,
-              remaining: 0,
-              reset: rateLimitCheck.resetAt,
-              retryAfter: rateLimitCheck.retryAfter,
-            },
-          },
-          request.url
-        );
-        
-        return reply.code(429).send(problemDetails);
       }
 
       // データ取得処理
@@ -294,54 +250,11 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         },
       ],
     },
-    preHandler: fastify.authenticate,
+    preHandler: [fastify.authenticate, fastify.checkRateLimit],
   }, async (request, reply) => {
     try {
       const user = request.user as AuthenticatedUser;
       const { prefix, limit = 20, offset = 0 } = request.query;
-
-      // レート制限チェック
-    const rateLimitResult = await rateLimitUseCase.checkAndRecordAccess(
-      user,
-      '/api/data',
-      'GET'
-    );
-
-    if (rateLimitResult.isFailure) {
-      const error = rateLimitResult.getError();
-      const problemDetails = toProblemDetails(error, request.url);
-      return reply.code(500).send(problemDetails);
-    }
-
-    const rateLimitCheck = rateLimitResult.getValue();
-    
-    // レート制限ヘッダーを設定
-    reply.headers({
-      'X-RateLimit-Limit': rateLimitCheck.limit.toString(),
-      'X-RateLimit-Remaining': rateLimitCheck.remaining.toString(),
-      'X-RateLimit-Reset': rateLimitCheck.resetAt.toString(),
-    });
-
-    if (!rateLimitCheck.allowed) {
-      reply.header('Retry-After', (rateLimitCheck.retryAfter || 60).toString());
-      
-      const problemDetails = toProblemDetails(
-        {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many requests',
-          type: 'RATE_LIMIT' as const,
-          metadata: {
-            limit: rateLimitCheck.limit,
-            remaining: 0,
-            reset: rateLimitCheck.resetAt,
-            retryAfter: rateLimitCheck.retryAfter,
-          },
-        },
-        request.url
-      );
-      
-      return reply.code(429).send(problemDetails);
-    }
 
       // データ一覧の実装（現時点では仮実装）
       // TODO: 実際のファイルシステムまたはメタデータストアから取得

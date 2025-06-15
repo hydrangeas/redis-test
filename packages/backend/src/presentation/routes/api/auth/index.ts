@@ -62,7 +62,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         },
       ],
     },
-    preHandler: fastify.authenticate,
+    preHandler: [fastify.authenticate, fastify.checkRateLimit],
   }, async (request, reply) => {
     const user = request.user as AuthenticatedUser;
     
@@ -118,7 +118,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         },
       ],
     },
-    preHandler: fastify.authenticate,
+    preHandler: [fastify.authenticate, fastify.checkRateLimit],
   }, async (request, reply) => {
     const user = request.user as AuthenticatedUser;
     

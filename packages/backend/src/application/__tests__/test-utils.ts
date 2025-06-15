@@ -138,9 +138,15 @@ export function createMockAPIEndpointRepository() {
 export function createMockRateLimitLogRepository() {
   return {
     save: vi.fn(),
-    countInWindow: vi.fn(),
-    findByUserId: vi.fn(),
-    cleanupOldLogs: vi.fn(),
+    saveMany: vi.fn(),
+    findByUserAndEndpoint: vi.fn(),
+    findByUser: vi.fn(),
+    findByEndpoint: vi.fn(),
+    deleteOldLogs: vi.fn(),
+    countRequests: vi.fn(),
+    countInWindow: vi.fn(), // legacy, keep for backward compatibility
+    findByUserId: vi.fn(), // legacy, keep for backward compatibility
+    cleanupOldLogs: vi.fn(), // legacy, keep for backward compatibility
   };
 }
 

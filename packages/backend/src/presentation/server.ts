@@ -8,6 +8,7 @@ import { container } from 'tsyringe';
 import authPlugin from './plugins/auth.plugin';
 import errorHandlerPlugin from './plugins/error-handler';
 import loggingPlugin from './plugins/logging.plugin';
+import rateLimitPlugin from './plugins/rate-limit.plugin';
 import apiRoutes from './routes/api';
 import apiDocsRoute from './routes/api-docs';
 import { Logger } from 'pino';
@@ -110,10 +111,13 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(authPlugin, {
     excludePaths: ['/', '/health', '/api-docs', '/api-docs/json', '/api-docs/yaml', '/api-docs/*'],
   });
+  await server.register(rateLimitPlugin, {
+    excludePaths: ['/', '/health', '/api-docs', '/api-docs/json', '/api-docs/yaml', '/api-docs/*'],
+  });
 
   // ルート登録
   await server.register(apiRoutes, { prefix: '/api' });
-  await server.register(apiDocsRoute, { prefix: '/api' });
+  await server.register(apiDocsRoute);
 
   // ヘルスチェック
   server.get('/health', {

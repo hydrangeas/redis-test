@@ -10,7 +10,7 @@ import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
 import { IAuthenticationUseCase } from '@/application/interfaces/authentication-use-case.interface';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { UserId } from '@/domain/auth/value-objects/user-id';
@@ -82,10 +82,12 @@ describe('Data Routes', () => {
     // RateLimitLogRepositoryのモックを登録
     const mockRateLimitLogRepository: IRateLimitLogRepository = {
       save: vi.fn().mockResolvedValue(Result.ok()),
-      findByUserId: vi.fn().mockResolvedValue(Result.ok([])),
-      countInWindow: vi.fn().mockResolvedValue(Result.ok(0)),
-      deleteOlderThan: vi.fn().mockResolvedValue(Result.ok()),
-      deleteByUserId: vi.fn().mockResolvedValue(Result.ok()),
+      saveMany: vi.fn().mockResolvedValue(Result.ok()),
+      findByUserAndEndpoint: vi.fn().mockResolvedValue(Result.ok([])),
+      findByUser: vi.fn().mockResolvedValue(Result.ok([])),
+      findByEndpoint: vi.fn().mockResolvedValue(Result.ok([])),
+      deleteOldLogs: vi.fn().mockResolvedValue(Result.ok(0)),
+      countRequests: vi.fn().mockResolvedValue(Result.ok(0)),
     };
     container.register(DI_TOKENS.RateLimitLogRepository, { useValue: mockRateLimitLogRepository });
     
