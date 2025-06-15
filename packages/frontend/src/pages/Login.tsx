@@ -1,9 +1,16 @@
+import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { useAuthError } from "@/hooks/useAuthError";
 import { Alert } from "@/components/common/Alert";
+import { preloadDashboard } from "@/utils/preload";
 
 export const LoginPage: React.FC = () => {
   const { error, clearError } = useAuthError();
+
+  useEffect(() => {
+    // ログイン成功後に遷移する可能性が高いダッシュボードページをプリロード
+    preloadDashboard();
+  }, []);
 
   return (
     <div className="login-page">
