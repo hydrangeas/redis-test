@@ -26,7 +26,10 @@
     "validate:env": "tsx scripts/validate-env.ts",
     "validate:json": "node scripts/validate-json.cjs",
     "setup:data": "bash scripts/setup-data.sh",
-    "backup:health-check": "tsx ../../scripts/backup/check-backup-health.ts"
+    "backup:health-check": "tsx ../../scripts/backup/check-backup-health.ts",
+    "db:seed": "tsx src/commands/seed.command.ts seed",
+    "db:reset": "tsx src/commands/seed.command.ts reset",
+    "dev:setup": "npm run db:seed"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -63,6 +66,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
     "@rollup/plugin-commonjs": "^28.0.5",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@types/node": "^20.14.0",
