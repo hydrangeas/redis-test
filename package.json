@@ -11,12 +11,17 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
+    "type-check": "turbo run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
+    "size": "turbo run size",
+    "db:test:setup": "pnpm run supabase:db:reset",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
@@ -40,10 +45,10 @@
     "typescript": "^5.4.0"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
   },
-  "packageManager": "npm@10.2.4",
+  "packageManager": "pnpm@8.15.5",
   "dependencies": {
     "glob": "^11.0.3",
     "node-fetch": "^3.3.2"

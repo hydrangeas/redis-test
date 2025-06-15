@@ -9,6 +9,10 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts",
+    "test": "echo 'No tests for shared package'",
+    "test:unit": "echo 'No tests for shared package'",
+    "test:integration": "echo 'No tests for shared package'",
+    "size": "echo 'Size analysis not applicable for shared package'",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
