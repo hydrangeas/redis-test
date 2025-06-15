@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 
+/// <reference types="vitest" />
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   
@@ -107,6 +108,29 @@ export default defineConfig(({ mode }) => {
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    },
+    
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.ts',
+      css: {
+        modules: {
+          classNameStrategy: 'non-scoped',
+        },
+      },
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/',
+          'src/test/',
+          '**/*.d.ts',
+          '**/*.config.*',
+          '**/__mocks__/**',
+          'src/main.tsx',
+        ],
+      },
     },
   };
 });

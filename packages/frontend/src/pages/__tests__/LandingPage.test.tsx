@@ -1,191 +1,194 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { renderWithRouter } from '@/test/test-utils';
 import { LandingPage } from '../LandingPage';
+import { supabase } from '@/lib/supabase';
 
-// Mock setup must be defined before vi.mock
-vi.mock('@/lib/supabase', () => {
-  const mockSupabase = {
-    auth: {
-      getUser: vi.fn(),
-      signOut: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({
-        data: {
-          subscription: {
-            unsubscribe: vi.fn(),
-          },
-        },
-      })),
-    },
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom') as any;
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
   };
-  
-  return { supabase: mockSupabase };
 });
-
-// Get the mocked module
-const { supabase: mockSupabase } = await vi.importMock<{ supabase: any }>('@/lib/supabase');
-
-// Mock user for tests
-const mockUser = {
-  id: 'test-id',
-  email: 'test@example.com',
-};
 
 describe('LandingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders loading state initially', () => {
-    mockSupabase.auth.getUser.mockImplementation(() => 
-      new Promise(() => {}) // Never resolves to keep loading state
-    );
+  it('should render the landing page with correct content', () => {
+    renderWithRouter(<LandingPage />);
 
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
+    expect(screen.getByText('オープンデータ提供API')).toBeInTheDocument();
+    expect(screen.getByText(/奈良県のオープンデータをJSON形式で提供/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'APIドキュメント' })).toBeInTheDocument();
+  });
+
+  it('should show auth buttons when user is not authenticated', async () => {
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+
+    renderWithRouter(<LandingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ログイン')).toBeInTheDocument();
+      expect(screen.getByText('サインアップ')).toBeInTheDocument();
+    });
+  });
+
+  it('should show dashboard button and logout when user is authenticated', async () => {
+    const mockUser = {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      app_metadata: { tier: 'tier1' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: mockUser as any },
+      error: null,
+    });
+
+    renderWithRouter(<LandingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ダッシュボードへ')).toBeInTheDocument();
+      expect(screen.getByText('ログアウト')).toBeInTheDocument();
+      expect(screen.queryByText('ログイン')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should navigate to dashboard when dashboard button is clicked', async () => {
+    const user = userEvent.setup();
+    const mockUser = {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      app_metadata: { tier: 'tier1' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: mockUser as any },
+      error: null,
+    });
+
+    renderWithRouter(<LandingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ダッシュボードへ')).toBeInTheDocument();
+    });
+
+    const dashboardButton = screen.getByText('ダッシュボードへ');
+    await user.click(dashboardButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('should handle logout successfully', async () => {
+    const user = userEvent.setup();
+    const mockUser = {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      app_metadata: { tier: 'tier1' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: mockUser as any },
+      error: null,
+    });
+
+    vi.mocked(supabase.auth.signOut).mockResolvedValue({
+      error: null,
+    });
+
+    renderWithRouter(<LandingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ログアウト')).toBeInTheDocument();
+    });
+
+    const logoutButton = screen.getByText('ログアウト');
+    await user.click(logoutButton);
+
+    expect(supabase.auth.signOut).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+  });
+
+  it('should handle logout error gracefully', async () => {
+    const user = userEvent.setup();
+    const mockUser = {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      app_metadata: { tier: 'tier1' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: mockUser as any },
+      error: null,
+    });
+
+    vi.mocked(supabase.auth.signOut).mockResolvedValue({
+      error: new Error('Logout failed'),
+    });
+
+    // Mock window.alert
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    renderWithRouter(<LandingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ログアウト')).toBeInTheDocument();
+    });
+
+    const logoutButton = screen.getByText('ログアウト');
+    await user.click(logoutButton);
+
+    expect(alertSpy).toHaveBeenCalledWith('ログアウトに失敗しました。もう一度お試しください。');
+    alertSpy.mockRestore();
+  });
+
+  it('should have correct link to API documentation', () => {
+    renderWithRouter(<LandingPage />);
+
+    const apiDocsLink = screen.getByRole('link', { name: 'APIドキュメント' });
+    expect(apiDocsLink).toHaveAttribute('href', '/api-docs');
+    expect(apiDocsLink).toHaveAttribute('target', '_blank');
+    expect(apiDocsLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('should show loading state while checking auth', () => {
+    // Mock getUser to never resolve
+    vi.mocked(supabase.auth.getUser).mockImplementation(() => new Promise(() => {}));
+
+    renderWithRouter(<LandingPage />);
 
     expect(screen.getByText('読み込み中...')).toBeInTheDocument();
   });
 
-  it('renders landing page content for unauthenticated users', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+  it('should have accessible structure', async () => {
+    renderWithRouter(<LandingPage />);
 
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
+    // Check for main heading
+    const mainHeading = screen.getByRole('heading', { level: 1 });
+    expect(mainHeading).toHaveTextContent('オープンデータ提供API');
 
-    await waitFor(() => {
-      expect(screen.getByText('奈良県オープンデータ提供API')).toBeInTheDocument();
-    });
+    // Check for navigation elements
+    const nav = screen.getByRole('navigation');
+    expect(nav).toBeInTheDocument();
 
-    // Check for login/signup buttons
-    expect(screen.getByRole('link', { name: 'ログイン' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'サインアップ' })).toBeInTheDocument();
-    
-    // Check for CTA button
-    expect(screen.getByRole('link', { name: '今すぐ始める' })).toBeInTheDocument();
-    
-    // Check for API docs link
-    expect(screen.getAllByText('APIドキュメントを見る')[0]).toBeInTheDocument();
-  });
-
-  it('renders landing page content for authenticated users', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('奈良県オープンデータ提供API')).toBeInTheDocument();
-    });
-
-    // Check for dashboard link and logout button
-    expect(screen.getByRole('link', { name: 'ダッシュボード' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ログアウト' })).toBeInTheDocument();
-    
-    // Check for dashboard CTA
-    expect(screen.getByRole('link', { name: 'ダッシュボードへ' })).toBeInTheDocument();
-  });
-
-  it('handles logout correctly', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-    mockSupabase.auth.signOut.mockResolvedValue({ error: null });
-
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'ログアウト' })).toBeInTheDocument();
-    });
-
-    const logoutButton = screen.getByRole('button', { name: 'ログアウト' });
-    fireEvent.click(logoutButton);
-
-    await waitFor(() => {
-      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
-    });
-  });
-
-  it('renders all feature cards', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('特徴')).toBeInTheDocument();
-    });
-
-    // Check for feature cards
-    expect(screen.getByText('豊富なデータセット')).toBeInTheDocument();
-    expect(screen.getByText('セキュアな認証')).toBeInTheDocument();
-    expect(screen.getByText('高速なレスポンス')).toBeInTheDocument();
-    expect(screen.getByText('柔軟な利用プラン')).toBeInTheDocument();
-  });
-
-  it('renders getting started steps', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('利用開始までの流れ')).toBeInTheDocument();
-    });
-
-    // Check for steps
-    expect(screen.getByText('アカウント登録')).toBeInTheDocument();
-    expect(screen.getByText('APIキーの取得')).toBeInTheDocument();
-    expect(screen.getByText('APIの利用開始')).toBeInTheDocument();
-  });
-
-  it('updates UI when auth state changes', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-    let authCallback: any;
-    
-    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
-      authCallback = callback;
-      return {
-        data: {
-          subscription: {
-            unsubscribe: vi.fn(),
-          },
-        },
-      };
-    });
-
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'ログイン' })).toBeInTheDocument();
-    });
-
-    // Simulate auth state change to logged in
-    authCallback('SIGNED_IN', { user: mockUser });
-
-    await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'ダッシュボード' })).toBeInTheDocument();
-    });
+    // Check for main content
+    const main = screen.getByRole('main');
+    expect(main).toBeInTheDocument();
   });
 });
