@@ -3,7 +3,7 @@ import { container, DependencyContainer } from 'tsyringe';
 import { Logger } from 'pino';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { DI_TOKENS } from './tokens';
-import { getEnvConfig, type EnvConfig } from '../config';
+import { getEnvConfig, type EnvConfig } from '../config/adapter';
 import { createLogger } from '../logging';
 import path from 'path';
 import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
@@ -41,7 +41,7 @@ export async function setupDI(): Promise<DependencyContainer> {
 
   // Supabaseクライアントの登録
   const supabaseClient = createClient(
-    envConfig.SUPABASE_URL,
+    envConfig.PUBLIC_SUPABASE_URL || envConfig.SUPABASE_URL!,
     envConfig.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
