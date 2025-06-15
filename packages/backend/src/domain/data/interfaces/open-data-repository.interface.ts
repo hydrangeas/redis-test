@@ -1,6 +1,6 @@
 import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
-import { OpenDataResource } from '../entities/open-data-resource.entity';
+import { OpenDataResource } from '../entities/open-data-resource';
 import { DataPath } from '../value-objects/data-path';
 import { ResourceId } from '../value-objects/resource-id';
 

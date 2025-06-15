@@ -1,0 +1,44 @@
+{
+  "title": "奈良県観光統計データ R5年度",
+  "description": "令和5年度の奈良県観光統計情報",
+  "data": {
+    "visitors": {
+      "total": 3548000,
+      "domestic": 3421000,
+      "international": 127000
+    },
+    "attractions": [
+      {
+        "name": "東大寺",
+        "visitors": 1234567,
+        "type": "寺院"
+      },
+      {
+        "name": "春日大社",
+        "visitors": 987654,
+        "type": "神社"
+      },
+      {
+        "name": "奈良公園",
+        "visitors": 2345678,
+        "type": "公園"
+      }
+    ],
+    "monthlyData": [
+      { "month": 1, "visitors": 234567 },
+      { "month": 2, "visitors": 245678 },
+      { "month": 3, "visitors": 356789 },
+      { "month": 4, "visitors": 467890 },
+      { "month": 5, "visitors": 578901 },
+      { "month": 6, "visitors": 289012 },
+      { "month": 7, "visitors": 390123 },
+      { "month": 8, "visitors": 501234 },
+      { "month": 9, "visitors": 312345 },
+      { "month": 10, "visitors": 423456 },
+      { "month": 11, "visitors": 534567 },
+      { "month": 12, "visitors": 345678 }
+    ]
+  },
+  "source": "奈良県観光局",
+  "lastUpdated": "2024-03-31"
+}

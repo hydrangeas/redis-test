@@ -50,6 +50,11 @@ describe('Data Access Route', () => {
       request.user = createMockAuthenticatedUser();
     });
     
+    // Register rate limit decorator
+    app.decorate('checkRateLimit', async (request, reply) => {
+      // Mock rate limit check - always pass in tests
+    });
+    
     // Register error handler
     const errorHandler = (await import('../../../plugins/error-handler')).default;
     await app.register(errorHandler);
