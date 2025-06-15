@@ -383,6 +383,13 @@ function registerInfrastructureServices(container: DependencyContainer): void {
     });
   });
   
+  // SupabaseServiceの登録
+  import('../services/supabase.service').then(module => {
+    container.register(DI_TOKENS.SupabaseService, {
+      useClass: module.SupabaseService,
+    });
+  });
+  
   // 他のインフラストラクチャサービスは後続タスクで実装
   // ... 他のインフラストラクチャサービス
 }

@@ -47,6 +47,7 @@ export const DI_TOKENS = {
   SecurityAlertService: Symbol.for('SecurityAlertService'),
   AuthAdapter: Symbol.for('AuthAdapter'),
   NotificationService: Symbol.for('NotificationService'),
+  SupabaseService: Symbol.for('SupabaseService'),
   
   // Factories
   OpenDataResourceFactory: Symbol.for('OpenDataResourceFactory'),

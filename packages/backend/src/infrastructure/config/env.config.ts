@@ -30,6 +30,9 @@ const envSchema = z.object({
   RATE_LIMIT_TIER2: z.string().transform(Number).pipe(z.number().positive()).default('120'),
   RATE_LIMIT_TIER3: z.string().transform(Number).pipe(z.number().positive()).default('300'),
   RATE_LIMIT_WINDOW: z.string().transform(Number).pipe(z.number().positive()).default('60'),
+  
+  // Data Directory
+  DATA_DIRECTORY: z.string().default('./data'),
 });
 
 /**
