@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "size": "echo 'Size analysis not configured for backend'",
     "clean": "rm -rf dist coverage .turbo",
+    "validate:env": "tsx scripts/validate-env.ts",
     "validate:json": "node scripts/validate-json.cjs",
     "setup:data": "bash scripts/setup-data.sh",
     "backup:health-check": "tsx ../../scripts/backup/check-backup-health.ts"

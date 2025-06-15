@@ -1,139 +1,210 @@
-# 環境変数設定ガイド
+# Environment Variables Configuration
 
-## 概要
+This document describes the environment variable management system for the OpenData API project.
 
-このドキュメントでは、オープンデータ提供APIで使用される環境変数について説明します。
+## Overview
 
-## 環境変数一覧
+The project uses a type-safe environment variable system with validation at startup. This ensures that:
+- All required variables are present
+- Values are properly formatted and typed
+- Clear error messages are provided for misconfiguration
+- Both development and production environments are supported
 
-### Supabase設定
+## Environment Files
 
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `PUBLIC_SUPABASE_URL` | SupabaseプロジェクトのURL | ✅ | - |
-| `PUBLIC_SUPABASE_ANON_KEY` | Supabaseのanonymousキー（公開可能） | ✅ | - |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabaseのservice roleキー（秘密） | ✅ | - |
+### Local Development
 
-### アプリケーション設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `NODE_ENV` | 実行環境（development/staging/production） | ❌ | development |
-| `PORT` | サーバーのポート番号 | ❌ | 3000 |
-| `HOST` | サーバーのホスト | ❌ | 0.0.0.0 |
-| `LOG_LEVEL` | ログレベル（fatal/error/warn/info/debug/trace） | ❌ | info |
-
-### レート制限設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `RATE_LIMIT_TIER1` | Tier1の1分あたりのリクエスト数上限 | ❌ | 60 |
-| `RATE_LIMIT_TIER2` | Tier2の1分あたりのリクエスト数上限 | ❌ | 120 |
-| `RATE_LIMIT_TIER3` | Tier3の1分あたりのリクエスト数上限 | ❌ | 300 |
-| `RATE_LIMIT_WINDOW` | レート制限のウィンドウ（秒） | ❌ | 60 |
-
-### JWT設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `JWT_SECRET` | JWT署名用の秘密鍵（32文字以上） | ✅ | - |
-
-### データディレクトリ設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `DATA_DIRECTORY` | JSONデータファイルのディレクトリパス | ❌ | ./data |
-
-### CORS設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `CORS_ORIGIN` | 許可するオリジン（カンマ区切り） | ❌ | http://localhost:5173 |
-
-### API設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `API_PREFIX` | APIのプレフィックス | ❌ | /api |
-| `API_VERSION` | APIのバージョン | ❌ | v1 |
-| `FRONTEND_URL` | フロントエンドのURL | ❌ | http://localhost:5173 |
-
-### セッション設定
-
-| 変数名 | 説明 | 必須 | デフォルト値 |
-|--------|------|------|-------------|
-| `SESSION_EXPIRY_HOURS` | セッションの有効期限（時間） | ❌ | 24 |
-| `REFRESH_TOKEN_EXPIRY_DAYS` | リフレッシュトークンの有効期限（日） | ❌ | 30 |
-
-## 環境別設定
-
-### 開発環境（development）
+Create a `.env.local` file in the project root (copy from `.env.example`):
 
 ```bash
 cp .env.example .env.local
-# .env.localを編集して必要な値を設定
 ```
 
-### ステージング環境（staging）
+### File Structure
 
-Vercelのプロジェクト設定で環境変数を設定します。
+- `.env.example` - Template with all required variables
+- `.env.local` - Local development configuration (gitignored)
+- `.env.production` - Production configuration (gitignored)
+- `.env.staging` - Staging configuration (gitignored)
 
-### 本番環境（production）
+## Required Variables
 
-Vercelのプロジェクト設定で環境変数を設定します。セキュリティのため、本番環境では以下の点に注意してください：
+### Supabase Configuration
 
-- `SUPABASE_SERVICE_ROLE_KEY`は絶対に公開しない
-- `JWT_SECRET`は強力なランダム文字列を使用
-- `NODE_ENV`は必ず`production`に設定
+```env
+# Either use PUBLIC_ prefixed (recommended)
+PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
-## Vercel環境変数の設定
+# Or use legacy names (backward compatibility)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 
-1. Vercelダッシュボードにログイン
-2. プロジェクトを選択
-3. Settings → Environment Variables
-4. 以下の変数を設定：
+# Service role key (required for both)
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
 
-### 必須変数
-- `PUBLIC_SUPABASE_URL`
-- `PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (Encrypted)
-- `JWT_SECRET` (Encrypted)
+### JWT Configuration
 
-### オプション変数（必要に応じて）
-- `RATE_LIMIT_TIER1`
-- `RATE_LIMIT_TIER2`
-- `RATE_LIMIT_TIER3`
-- `CORS_ORIGIN`
+```env
+JWT_SECRET=your-jwt-secret-at-least-32-characters-long
+```
 
-## セキュリティベストプラクティス
+The JWT secret must be at least 32 characters long. Generate a secure secret:
 
-1. **秘密情報の管理**
-   - `SUPABASE_SERVICE_ROLE_KEY`と`JWT_SECRET`は絶対に公開しない
-   - これらの値はVercelで「Encrypted」として保存
+```bash
+openssl rand -base64 32
+```
 
-2. **環境の分離**
-   - 開発、ステージング、本番で異なるSupabaseプロジェクトを使用
-   - 各環境で異なるJWT秘密鍵を使用
+### Application Configuration
 
-3. **アクセス制御**
-   - 環境変数へのアクセスは必要最小限のメンバーに限定
-   - 定期的に秘密鍵をローテーション
+```env
+NODE_ENV=development  # or 'staging' or 'production'
+PORT=8080
+HOST=0.0.0.0
+LOG_LEVEL=info  # fatal, error, warn, info, debug, trace
+```
 
-## トラブルシューティング
+### API URLs
 
-### 環境変数が読み込まれない
+```env
+API_BASE_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:5173
+```
 
-1. `.env.local`ファイルが正しい場所にあるか確認
-2. 変数名のスペルミスがないか確認
-3. サーバーを再起動
+### Rate Limiting
 
-### Vercelで環境変数が反映されない
+```env
+RATE_LIMIT_TIER1=60   # requests per minute for tier1 users
+RATE_LIMIT_TIER2=120  # requests per minute for tier2 users
+RATE_LIMIT_TIER3=300  # requests per minute for tier3 users
+RATE_LIMIT_WINDOW=60  # window size in seconds
+```
 
-1. デプロイを再実行
-2. 環境変数のスコープ（Development/Preview/Production）を確認
-3. ビルドログでエラーを確認
+### Data Directory
 
-### 型エラーが発生する
+```env
+DATA_DIRECTORY=./data  # where JSON data files are stored
+```
 
-1. `packages/shared/src/config/env.ts`の型定義を確認
-2. 必須変数がすべて設定されているか確認
+## Validation
+
+The application validates all environment variables at startup using Zod schemas. If validation fails, the application will not start and will display clear error messages.
+
+### Validation Rules
+
+1. **URLs** must be valid URLs with protocol (http:// or https://)
+2. **Numbers** must be positive integers
+3. **Enums** must match allowed values
+4. **Strings** must meet minimum length requirements
+
+### Error Messages
+
+If validation fails, you'll see messages like:
+
+```
+Environment validation errors:
+  PUBLIC_SUPABASE_URL: Invalid url
+  JWT_SECRET: String must contain at least 32 character(s)
+  NODE_ENV: Invalid enum value. Expected 'development' | 'staging' | 'production', received 'test'
+```
+
+## Type Safety
+
+The environment configuration is fully typed in TypeScript:
+
+```typescript
+import { getEnvConfig } from '@/infrastructure/config';
+
+const config = getEnvConfig();
+// config is fully typed with all environment variables
+```
+
+## Testing
+
+For testing, you can use the `resetEnvConfig()` function to clear the singleton cache:
+
+```typescript
+import { resetEnvConfig } from '@/infrastructure/config';
+
+// In your test
+beforeEach(() => {
+  process.env.NODE_ENV = 'development';
+  resetEnvConfig();
+});
+```
+
+## Security Best Practices
+
+1. **Never commit** `.env.local` or any file with real credentials
+2. **Use different secrets** for development, staging, and production
+3. **Rotate secrets regularly**, especially JWT secrets
+4. **Limit access** to production environment variables
+5. **Use environment-specific** values for all URLs and keys
+
+## Backward Compatibility
+
+The system supports both new (`PUBLIC_SUPABASE_*`) and legacy (`SUPABASE_*`) environment variable names for easier migration. However, we recommend using the `PUBLIC_` prefixed versions for clarity.
+
+## Deployment
+
+### Vercel
+
+See [Vercel Environment Variables Setup Guide](./vercel-environment-variables.md) for Vercel-specific configuration.
+
+### Docker
+
+For Docker deployments, use environment files:
+
+```bash
+docker run --env-file .env.production your-image
+```
+
+### Kubernetes
+
+Use ConfigMaps and Secrets:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+data:
+  JWT_SECRET: <base64-encoded-secret>
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Missing variables**: Check that all required variables are set
+2. **Wrong format**: Ensure URLs include protocol, numbers are integers
+3. **Wrong environment**: Verify NODE_ENV matches your deployment
+4. **Permission issues**: Ensure the process can read .env files
+
+### Debug Mode
+
+Enable debug logging to see which variables are being loaded:
+
+```env
+LOG_LEVEL=debug
+```
+
+### Validation Script
+
+Test your environment configuration:
+
+```bash
+npm run validate:env
+```
+
+This will load and validate all environment variables without starting the server.

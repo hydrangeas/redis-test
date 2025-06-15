@@ -11,8 +11,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'] as const).default('info'),
   
   // Supabase
-  PUBLIC_SUPABASE_URL: z.string().url().min(1),
-  PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  PUBLIC_SUPABASE_URL: z.string().url().min(1).optional(),
+  PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   // Backward compatibility
   SUPABASE_URL: z.string().url().min(1).optional(),
@@ -33,7 +33,21 @@ const envSchema = z.object({
   
   // Data Directory
   DATA_DIRECTORY: z.string().default('./data'),
-});
+}).refine(
+  (data) => {
+    // Ensure we have either PUBLIC_ or regular Supabase credentials
+    const hasPublicUrl = !!data.PUBLIC_SUPABASE_URL;
+    const hasPublicKey = !!data.PUBLIC_SUPABASE_ANON_KEY;
+    const hasUrl = !!data.SUPABASE_URL;
+    const hasKey = !!data.SUPABASE_ANON_KEY;
+    
+    return (hasPublicUrl && hasPublicKey) || (hasUrl && hasKey);
+  },
+  {
+    message: "Either PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL and SUPABASE_ANON_KEY must be provided",
+    path: ["PUBLIC_SUPABASE_URL"],
+  }
+);
 
 /**
  * 環境変数の型定義

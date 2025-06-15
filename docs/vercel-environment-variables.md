@@ -1,128 +1,214 @@
-# Vercel環境変数設定ガイド
+# Vercel Environment Variables Setup Guide
 
-## 概要
+This guide explains how to configure environment variables for the OpenData API when deploying to Vercel.
 
-本ドキュメントでは、オープンデータ提供APIをVercelにデプロイする際に必要な環境変数の設定方法を説明します。
+## Overview
 
-## 必要な環境変数
+Vercel provides three environment types:
+- **Development**: Used when running `vercel dev` locally
+- **Preview**: Used for preview deployments (pull requests)
+- **Production**: Used for production deployments
 
-### Supabase関連
+## Required Environment Variables
 
-| 変数名 | 説明 | 取得方法 |
-|--------|------|----------|
-| `SUPABASE_URL` | SupabaseプロジェクトのURL | Supabaseダッシュボード > Settings > API > Project URL |
-| `SUPABASE_ANON_KEY` | Supabaseの匿名キー（公開可能） | Supabaseダッシュボード > Settings > API > anon public |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabaseのサービスロールキー（秘密） | Supabaseダッシュボード > Settings > API > service_role secret |
-
-### アプリケーション設定
-
-| 変数名 | 説明 | 推奨値 |
-|--------|------|--------|
-| `NODE_ENV` | 実行環境 | `production` |
-| `PORT` | サーバーポート | `8080`（Vercelでは自動設定） |
-| `HOST` | サーバーホスト | `0.0.0.0`（Vercelでは自動設定） |
-| `LOG_LEVEL` | ログレベル | `info` または `warn` |
-
-### セキュリティ
-
-| 変数名 | 説明 | 要件 |
-|--------|------|------|
-| `JWT_SECRET` | JWT署名用の秘密鍵 | 32文字以上のランダムな文字列 |
-
-### API設定
-
-| 変数名 | 説明 | 例 |
-|--------|------|-----|
-| `API_BASE_URL` | APIのベースURL | `https://your-app.vercel.app` |
-| `FRONTEND_URL` | フロントエンドURL | `https://your-app.vercel.app` |
-
-### レート制限
-
-| 変数名 | 説明 | デフォルト値 |
-|--------|------|--------------|
-| `RATE_LIMIT_TIER1` | Tier1の1分あたりリクエスト数 | `60` |
-| `RATE_LIMIT_TIER2` | Tier2の1分あたりリクエスト数 | `120` |
-| `RATE_LIMIT_TIER3` | Tier3の1分あたりリクエスト数 | `300` |
-| `RATE_LIMIT_WINDOW` | レート制限のウィンドウ（秒） | `60` |
-
-## Vercelでの設定方法
-
-### 1. Vercelダッシュボードから設定
-
-1. [Vercel Dashboard](https://vercel.com/dashboard)にアクセス
-2. 対象のプロジェクトを選択
-3. "Settings" タブをクリック
-4. "Environment Variables" セクションに移動
-5. 各環境変数を追加：
-   - Key: 環境変数名
-   - Value: 環境変数の値
-   - Environment: Production/Preview/Development から選択
-
-### 2. Vercel CLIから設定
+### 1. Supabase Configuration
 
 ```bash
-# Vercel CLIのインストール
-npm i -g vercel
-
-# ログイン
-vercel login
-
-# 環境変数の設定
-vercel env add SUPABASE_URL production
-vercel env add SUPABASE_ANON_KEY production
-vercel env add SUPABASE_SERVICE_ROLE_KEY production
-# ... 他の環境変数も同様に設定
+PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-### 3. vercel.jsonでの設定（非推奨）
+⚠️ **Security Note**: The `SUPABASE_SERVICE_ROLE_KEY` should only be added to the backend environment, never exposed to the frontend.
 
-機密情報を含む環境変数は`vercel.json`に記載しないでください。
-開発用のデフォルト値のみ設定可能です。
+### 2. JWT Configuration
+
+```bash
+JWT_SECRET=your-jwt-secret-at-least-32-characters-long
+```
+
+Generate a secure secret:
+```bash
+openssl rand -base64 32
+```
+
+### 3. Application Configuration
+
+```bash
+NODE_ENV=production
+LOG_LEVEL=info
+API_BASE_URL=https://your-api-domain.vercel.app
+FRONTEND_URL=https://your-frontend-domain.vercel.app
+```
+
+### 4. Rate Limiting
+
+```bash
+RATE_LIMIT_TIER1=60
+RATE_LIMIT_TIER2=120
+RATE_LIMIT_TIER3=300
+RATE_LIMIT_WINDOW=60
+```
+
+### 5. OAuth Providers (Optional)
+
+```bash
+SUPABASE_AUTH_GOOGLE_CLIENT_ID=your-google-client-id
+SUPABASE_AUTH_GOOGLE_SECRET=your-google-secret
+SUPABASE_AUTH_GITHUB_CLIENT_ID=your-github-client-id
+SUPABASE_AUTH_GITHUB_SECRET=your-github-secret
+```
+
+## Setting Environment Variables in Vercel
+
+### Method 1: Vercel Dashboard
+
+1. Go to your project in the [Vercel Dashboard](https://vercel.com/dashboard)
+2. Navigate to "Settings" → "Environment Variables"
+3. Add each variable with the appropriate values
+4. Select which environments should have access to each variable:
+   - Development ✓
+   - Preview ✓
+   - Production ✓
+
+### Method 2: Vercel CLI
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Set a variable for all environments
+vercel env add PUBLIC_SUPABASE_URL
+
+# Set a variable for production only
+vercel env add SUPABASE_SERVICE_ROLE_KEY production
+
+# Pull environment variables to .env.local
+vercel env pull
+```
+
+### Method 3: Using vercel.json
+
+For non-sensitive configuration, you can use `vercel.json`:
 
 ```json
 {
   "env": {
     "NODE_ENV": "production",
     "LOG_LEVEL": "info"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
   }
 }
 ```
 
-## セキュリティのベストプラクティス
+## Environment-Specific Configuration
 
-1. **機密情報の保護**
-   - `SUPABASE_SERVICE_ROLE_KEY`と`JWT_SECRET`は必ず秘密にする
-   - これらの値をコードやGitリポジトリにコミットしない
+### Development Environment
 
-2. **環境ごとの分離**
-   - Production、Preview、Development環境で異なる値を使用
-   - 特にSupabaseプロジェクトは環境ごとに分ける
+For local development with Vercel:
 
-3. **定期的な更新**
-   - JWT_SECRETは定期的に更新する
-   - 漏洩の疑いがある場合は即座に変更
+```bash
+# .env.development.local
+PUBLIC_SUPABASE_URL=http://localhost:54321
+PUBLIC_SUPABASE_ANON_KEY=your-local-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-local-service-key
+```
 
-4. **アクセス制限**
-   - Vercelチームメンバーの環境変数アクセス権限を適切に管理
-   - 必要最小限のメンバーのみがProduction環境変数にアクセス可能にする
+### Preview Environment
 
-## トラブルシューティング
+For pull request previews:
 
-### 環境変数が反映されない
+```bash
+# Set in Vercel Dashboard for Preview environment
+API_BASE_URL=https://pr-{{PR_NUMBER}}-your-project.vercel.app
+FRONTEND_URL=https://pr-{{PR_NUMBER}}-your-project.vercel.app
+```
 
-1. デプロイメントを再実行する
-2. Vercelのキャッシュをクリアする
-3. 環境変数名のタイポを確認する
+### Production Environment
 
-### ビルドエラー
+For production deployments:
 
-環境変数の検証エラーが発生した場合：
-- ビルドログで具体的なエラーメッセージを確認
-- 必須環境変数がすべて設定されているか確認
-- 環境変数の形式（URL、数値など）が正しいか確認
+```bash
+# Set in Vercel Dashboard for Production environment
+API_BASE_URL=https://api.yourdomain.com
+FRONTEND_URL=https://app.yourdomain.com
+```
 
-## 参考リンク
+## Automatic Environment Variables
 
-- [Vercel Environment Variables Documentation](https://vercel.com/docs/environment-variables)
-- [Supabase Dashboard](https://supabase.com/dashboard)
-- [環境変数設定例](.env.example)
+Vercel automatically provides these variables:
+
+- `VERCEL`: Always `1` when running on Vercel
+- `VERCEL_ENV`: `development`, `preview`, or `production`
+- `VERCEL_URL`: The deployment URL
+- `VERCEL_REGION`: The deployment region
+- `VERCEL_GIT_COMMIT_SHA`: The git commit SHA
+- `VERCEL_GIT_COMMIT_REF`: The git branch or tag
+
+## Security Best Practices
+
+1. **Never commit sensitive values**: Use Vercel's environment variables for all secrets
+2. **Limit scope**: Only expose variables to the environments that need them
+3. **Use different values**: Don't use production secrets in development/preview
+4. **Rotate secrets regularly**: Update JWT secrets and API keys periodically
+5. **Audit access**: Regularly review who has access to your Vercel project
+
+## Validating Environment Variables
+
+The application validates environment variables at startup. If any required variables are missing or invalid, the deployment will fail with clear error messages.
+
+To test your configuration locally:
+
+```bash
+# Load environment variables and run validation
+npm run build
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Missing environment variables**
+   - Check the build logs in Vercel Dashboard
+   - Ensure all required variables are set for the deployment environment
+
+2. **Invalid values**
+   - Verify URL formats include protocol (https://)
+   - Ensure numeric values are positive integers
+   - Check JWT secret is at least 32 characters
+
+3. **Environment mismatch**
+   - Verify NODE_ENV matches the Vercel environment
+   - Check that URLs point to the correct domains
+
+### Debug Commands
+
+```bash
+# List all environment variables for a project
+vercel env ls
+
+# Show details of a specific variable
+vercel env get PUBLIC_SUPABASE_URL
+
+# Remove a variable
+vercel env rm VARIABLE_NAME
+```
+
+## Migration from Other Platforms
+
+If migrating from another platform:
+
+1. Export existing environment variables
+2. Map variable names to match the application's expectations
+3. Update OAuth redirect URLs in provider dashboards
+4. Test thoroughly in preview environment before production
+
+## References
+
+- [Vercel Environment Variables Documentation](https://vercel.com/docs/concepts/projects/environment-variables)
+- [Vercel CLI Documentation](https://vercel.com/docs/cli)
+- [Security Best Practices](https://vercel.com/docs/concepts/projects/environment-variables#security-considerations)
