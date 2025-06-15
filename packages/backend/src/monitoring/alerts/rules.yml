@@ -1,0 +1,133 @@
+# Prometheus Alert Rules
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # レート制限アラート
+      - alert: HighRateLimitUsage
+        expr: |
+          (sum by (user_tier) (rate(rate_limit_hits_total[5m])) / 
+           sum by (user_tier) (rate(rate_limit_exceeded_total[5m]) + rate(rate_limit_hits_total[5m]))) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: rate_limit
+        annotations:
+          summary: "High rate limit usage for tier {{ $labels.user_tier }}"
+          description: "Rate limit usage for tier {{ $labels.user_tier }} is above 80% (current: {{ $value }})"
+
+      - alert: RateLimitExceededSpike
+        expr: rate(rate_limit_exceeded_total[1m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+          component: rate_limit
+        annotations:
+          summary: "High number of rate limit exceeded events"
+          description: "{{ $value }} requests per second are being rate limited"
+
+      # エラー率アラート
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(errors_total[5m])) / 
+           sum(rate(http_requests_total[5m]))) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% (current: {{ $value }})"
+
+      - alert: Error5xxSpike
+        expr: rate(http_requests_total{status_code=~"5.."}[1m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High 5xx error rate"
+          description: "{{ $value }} 5xx errors per second"
+
+      # レスポンスタイムアラート
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route)
+          ) > 3
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High response time on route {{ $labels.route }}"
+          description: "95th percentile response time is above 3 seconds (current: {{ $value }}s)"
+
+      - alert: VeryHighResponseTime
+        expr: |
+          histogram_quantile(0.99, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Very high response time detected"
+          description: "99th percentile response time is above 10 seconds (current: {{ $value }}s)"
+
+      # 認証エラーアラート
+      - alert: HighAuthenticationFailureRate
+        expr: |
+          (sum(rate(authentication_attempts_total{status="failure"}[5m])) /
+           sum(rate(authentication_attempts_total[5m]))) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: auth
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is above 30% (current: {{ $value }})"
+
+      # メモリ使用量アラート
+      - alert: HighMemoryUsage
+        expr: process_memory_usage_bytes{type="heap"} > 1073741824  # 1GB
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Heap memory usage is above 1GB (current: {{ $value }} bytes)"
+
+      - alert: VeryHighMemoryUsage
+        expr: process_memory_usage_bytes{type="heap"} > 2147483648  # 2GB
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Very high memory usage detected"
+          description: "Heap memory usage is above 2GB (current: {{ $value }} bytes)"
+
+      # データアクセスエラーアラート
+      - alert: DataAccessErrors
+        expr: rate(data_access_total{status="error"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: data
+        annotations:
+          summary: "Data access errors detected"
+          description: "{{ $value }} data access errors per second"
+
+      # 可用性アラート
+      - alert: ServiceDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "API service is down"
+          description: "API service has been down for more than 1 minute"

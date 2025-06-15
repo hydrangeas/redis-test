@@ -31,6 +31,9 @@ export default async function buildApp(opts: FastifyServerOptions = {}) {
   // レート制限プラグインの登録（認証プラグインの後）
   await server.register(import('./presentation/plugins/rate-limit.plugin'));
 
+  // モニタリングプラグインの登録
+  await server.register(import('./plugins/monitoring'));
+
   // Vercel Analytics（Vercel環境でのみ有効）
   if (process.env.VERCEL) {
     await server.register(import('./plugins/vercel-analytics'));

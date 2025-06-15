@@ -8,6 +8,7 @@ import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { DomainError } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { rateLimitHits, rateLimitExceeded } from '@/monitoring/metrics';
 
 export interface RateLimitPluginOptions {
   // レート制限をスキップするパス
@@ -94,6 +95,12 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
       // レート制限チェック
       const rateLimitResult = await rateLimitService.checkLimit(user, endpoint);
 
+      // メトリクスの記録
+      rateLimitHits.inc({
+        user_tier: user.tier.level,
+        endpoint: endpoint.toString(),
+      });
+
       // ヘッダーの設定（成功・失敗に関わらず）
       if (includeHeaders) {
         reply.headers({
@@ -113,6 +120,12 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
 
       // 制限を超えている場合
       if (!rateLimitResult.allowed) {
+        // メトリクスの記録
+        rateLimitExceeded.inc({
+          user_tier: user.tier.level,
+          endpoint: endpoint.toString(),
+        });
+
         const problemDetails = toProblemDetails(
           new DomainError(
             'RATE_LIMIT_EXCEEDED',
