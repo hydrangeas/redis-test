@@ -1,0 +1,85 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# UI Component Library
+
+Welcome to the Open Data API UI Component Library! This is a collection of reusable React components built with TypeScript, Tailwind CSS, and accessibility in mind.
+
+## Features
+
+- 🎨 **Modern Design**: Clean and consistent visual design
+- 🌙 **Dark Mode Ready**: All components support dark mode
+- ♿ **Accessible**: ARIA compliant and keyboard navigable
+- 📱 **Responsive**: Works across all device sizes
+- 🔧 **Customizable**: Flexible props and styling options
+- 🚀 **Performance**: Optimized for production use
+- 📖 **Well Documented**: Comprehensive Storybook documentation
+
+## Components
+
+### Core Components
+
+- **Button**: Various styles and states for user actions
+- **Card**: Container component for content grouping
+- **Input**: Form input with validation support
+- **Modal**: Overlay dialog for focused interactions
+- **Table**: Data display with sorting and selection
+
+### Design Principles
+
+1. **Consistency**: Uniform spacing, colors, and interactions
+2. **Simplicity**: Clean interfaces without unnecessary complexity
+3. **Flexibility**: Components that adapt to various use cases
+4. **Accessibility**: Inclusive design for all users
+5. **Performance**: Minimal bundle size and optimal rendering
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Run Storybook
+npm run storybook
+
+# Run tests
+npm run test
+
+# Build components
+npm run build
+```
+
+## Usage Example
+
+```tsx
+import { Button, Card, CardHeader, CardTitle, CardContent } from '@opendata-api/frontend/components/ui';
+
+function MyComponent() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Welcome</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>Build amazing interfaces with our component library.</p>
+        <Button variant="primary">Get Started</Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## Contributing
+
+We welcome contributions! Please ensure:
+- Components are accessible
+- Tests are written and passing
+- Storybook documentation is updated
+- Code follows our style guide
+
+## Resources
+
+- [Component Guidelines](/?path=/docs/guidelines--docs)
+- [Accessibility Standards](/?path=/docs/accessibility--docs)
+- [Design Tokens](/?path=/docs/design-tokens--docs)
