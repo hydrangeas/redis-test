@@ -1,0 +1,457 @@
+{
+  "info": {
+    "_postman_id": "opendata-api-collection",
+    "name": "Open Data API",
+    "description": "奈良県のオープンデータをJSON形式で提供するWeb APIサービス",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 環境変数の確認",
+          "if (!pm.environment.get('base_url')) {",
+          "    pm.environment.set('base_url', 'http://localhost:3000/api/v1');",
+          "}",
+          "",
+          "// レート制限情報の表示",
+          "const remaining = pm.environment.get('rate_limit_remaining');",
+          "if (remaining !== undefined) {",
+          "    console.log(`Rate Limit Remaining: ${remaining}`);",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// レート制限ヘッダーの保存",
+          "const rateLimit = pm.response.headers.get('X-RateLimit-Limit');",
+          "const rateLimitRemaining = pm.response.headers.get('X-RateLimit-Remaining');",
+          "const rateLimitReset = pm.response.headers.get('X-RateLimit-Reset');",
+          "",
+          "if (rateLimit) {",
+          "    pm.environment.set('rate_limit', rateLimit);",
+          "    pm.environment.set('rate_limit_remaining', rateLimitRemaining);",
+          "    pm.environment.set('rate_limit_reset', rateLimitReset);",
+          "}",
+          "",
+          "// ETagの保存（データ取得エンドポイントの場合）",
+          "if (pm.request.url.path.includes('data') && pm.response.code === 200) {",
+          "    const responseData = pm.response.json();",
+          "    if (responseData.metadata && responseData.metadata.etag) {",
+          "        pm.environment.set('last_etag', responseData.metadata.etag);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has tokens', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "    pm.expect(jsonData).to.have.property('refresh_token');",
+                  "    pm.expect(jsonData).to.have.property('token_type', 'bearer');",
+                  "    pm.expect(jsonData).to.have.property('expires_in');",
+                  "});",
+                  "",
+                  "// トークンを環境変数に保存",
+                  "const jsonData = pm.response.json();",
+                  "pm.environment.set('access_token', jsonData.access_token);",
+                  "pm.environment.set('refresh_token', jsonData.refresh_token);",
+                  "console.log('Tokens refreshed successfully');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "リフレッシュトークンを使用して新しいアクセストークンを取得します。"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "// トークンをクリア",
+                  "pm.environment.unset('access_token');",
+                  "pm.environment.unset('refresh_token');",
+                  "console.log('Logged out successfully');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "現在のセッションを終了し、ログアウトします。"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Data Access",
+      "item": [
+        {
+          "name": "Get Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has required structure', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData).to.have.property('metadata');",
+                  "    pm.expect(jsonData.metadata).to.have.property('size');",
+                  "    pm.expect(jsonData.metadata).to.have.property('lastModified');",
+                  "    pm.expect(jsonData.metadata).to.have.property('etag');",
+                  "});",
+                  "",
+                  "pm.test('Rate limit headers are present', function () {",
+                  "    pm.response.to.have.header('X-RateLimit-Limit');",
+                  "    pm.response.to.have.header('X-RateLimit-Remaining');",
+                  "    pm.response.to.have.header('X-RateLimit-Reset');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/data/secure/319985/r5.json",
+              "host": ["{{base_url}}"],
+              "path": ["data", "secure", "319985", "r5.json"]
+            },
+            "description": "指定されたパスのデータファイルを取得します。"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/data/secure/319985/r5.json",
+                  "host": ["{{base_url}}"],
+                  "path": ["data", "secure", "319985", "r5.json"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-RateLimit-Limit",
+                  "value": "60"
+                },
+                {
+                  "key": "X-RateLimit-Remaining",
+                  "value": "59"
+                },
+                {
+                  "key": "X-RateLimit-Reset",
+                  "value": "1706007600"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"title\": \"令和5年度統計データ\",\n    \"items\": [\n      { \"項目\": \"人口\", \"値\": 1324473 },\n      { \"項目\": \"世帯数\", \"値\": 595534 }\n    ]\n  },\n  \"metadata\": {\n    \"size\": 2048,\n    \"lastModified\": \"2025-01-15T09:00:00Z\",\n    \"etag\": \"33a64df551425fcc55e4d42a148795d9f25f89d4\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Data (Conditional)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 304) {",
+                  "    pm.test('Status code is 304 Not Modified', function () {",
+                  "        pm.response.to.have.status(304);",
+                  "    });",
+                  "    console.log('Data has not been modified');",
+                  "} else {",
+                  "    pm.test('Status code is 200', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "    console.log('Data has been updated');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "If-None-Match",
+                "value": "{{last_etag}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/data/secure/319985/r5.json",
+              "host": ["{{base_url}}"],
+              "path": ["data", "secure", "319985", "r5.json"]
+            },
+            "description": "条件付きリクエスト。データが変更されていない場合は304を返します。"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Non-existent Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error response follows RFC 7807', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('type');",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('status', 404);",
+                  "    pm.expect(jsonData).to.have.property('detail');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/data/secure/nonexistent.json",
+              "host": ["{{base_url}}"],
+              "path": ["data", "secure", "nonexistent.json"]
+            },
+            "description": "存在しないデータへのアクセス（404エラーのテスト）"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has required fields', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'ok');",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "    pm.expect(jsonData).to.have.property('environment');",
+                  "    pm.expect(jsonData).to.have.property('region');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/../health",
+              "host": ["{{base_url}}"],
+              "path": ["..", "health"]
+            },
+            "description": "APIサービスの基本的な稼働状態を確認します。"
+          },
+          "response": []
+        },
+        {
+          "name": "Detailed Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 503', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 503]);",
+                  "});",
+                  "",
+                  "pm.test('Response has detailed health info', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "    pm.expect(jsonData).to.have.property('uptime');",
+                  "    pm.expect(jsonData).to.have.property('memory');",
+                  "    pm.expect(jsonData).to.have.property('checks');",
+                  "});",
+                  "",
+                  "const jsonData = pm.response.json();",
+                  "console.log(`Health Status: ${jsonData.status}`);",
+                  "console.log(`Uptime: ${jsonData.uptime} seconds`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/../health/detailed",
+              "host": ["{{base_url}}"],
+              "path": ["..", "health", "detailed"]
+            },
+            "description": "APIサービスの詳細な稼働状態を確認します。"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is Prometheus format', function () {",
+                  "    const contentType = pm.response.headers.get('Content-Type');",
+                  "    pm.expect(contentType).to.include('text/plain');",
+                  "    ",
+                  "    const responseText = pm.response.text();",
+                  "    pm.expect(responseText).to.include('# HELP');",
+                  "    pm.expect(responseText).to.include('# TYPE');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/../metrics",
+              "host": ["{{base_url}}"],
+              "path": ["..", "metrics"]
+            },
+            "description": "Prometheus形式のメトリクスを取得します。"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

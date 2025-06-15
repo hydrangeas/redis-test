@@ -1,0 +1,627 @@
+openapi: 3.0.3
+info:
+  title: Open Data API
+  description: |
+    # Open Data API
+
+    奈良県のオープンデータをJSON形式で提供するWeb APIサービスです。
+
+    ## 主な機能
+    - 認証付きデータアクセス
+    - ティアベースのレート制限
+    - RESTful API設計
+    - RFC 7807準拠のエラーレスポンス
+
+    ## 認証
+    このAPIはJWT（JSON Web Token）ベースの認証を使用します。
+    Supabase Authを通じて取得したアクセストークンを`Authorization`ヘッダーに含めてください。
+
+    ```
+    Authorization: Bearer <your-access-token>
+    ```
+
+    ## レート制限
+    APIリクエストはユーザーのティアに基づいて制限されます：
+    - **TIER1**: 60リクエスト/分
+    - **TIER2**: 120リクエスト/分
+    - **TIER3**: 300リクエスト/分
+
+    レート制限の状態は以下のヘッダーで確認できます：
+    - `X-RateLimit-Limit`: 制限値
+    - `X-RateLimit-Remaining`: 残りリクエスト数
+    - `X-RateLimit-Reset`: リセット時刻（Unix timestamp）
+    
+  version: 1.0.0
+  contact:
+    email: api-support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production server
+  - url: https://staging-api.example.com/api/v1
+    description: Staging server
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWTトークンによる認証。
+        Supabase Authから取得したアクセストークンを使用してください。
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: エラータイプを識別するURI
+          example: https://example.com/errors/not-found
+        title:
+          type: string
+          description: エラーの簡潔な説明
+          example: Resource not found
+        status:
+          type: integer
+          description: HTTPステータスコード
+          example: 404
+        detail:
+          type: string
+          description: エラーの詳細説明
+          example: The requested data file does not exist
+        instance:
+          type: string
+          format: uri
+          description: エラーが発生した具体的なリソース
+          example: /api/v1/data/secure/319985/r5.json
+
+    TokenRefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          description: リフレッシュトークン
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    TokenRefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: 新しいアクセストークン
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          description: 新しいリフレッシュトークン
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          enum: [bearer]
+          example: bearer
+        expires_in:
+          type: integer
+          description: トークンの有効期限（秒）
+          example: 3600
+
+    DataResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: データファイルの内容（構造はファイルにより異なる）
+        metadata:
+          type: object
+          properties:
+            size:
+              type: integer
+              description: ファイルサイズ（バイト）
+              example: 1024
+            lastModified:
+              type: string
+              format: date-time
+              description: 最終更新日時
+              example: 2025-01-23T10:00:00Z
+            etag:
+              type: string
+              description: エンティティタグ
+              example: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-01-23T10:30:00Z
+        environment:
+          type: string
+          example: production
+        region:
+          type: string
+          example: ap-northeast-1
+
+    DetailedHealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-01-23T10:30:00Z
+        uptime:
+          type: number
+          description: アップタイム（秒）
+          example: 3600
+        memory:
+          type: object
+          properties:
+            rss:
+              type: integer
+              description: Resident Set Size
+            heapTotal:
+              type: integer
+              description: V8 heap total
+            heapUsed:
+              type: integer
+              description: V8 heap used
+            external:
+              type: integer
+              description: External memory
+            arrayBuffers:
+              type: integer
+              description: ArrayBuffers memory
+        checks:
+          type: object
+          properties:
+            database:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, unhealthy]
+                latency:
+                  type: number
+                  description: レイテンシ（ミリ秒）
+            filesystem:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [healthy, unhealthy]
+
+  responses:
+    UnauthorizedError:
+      description: 認証エラー
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://example.com/errors/unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Invalid or missing authentication token
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            example: Bearer realm="api"
+
+    NotFoundError:
+      description: リソースが見つからない
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://example.com/errors/not-found
+            title: Resource not found
+            status: 404
+            detail: The requested data file does not exist
+            instance: /api/v1/data/secure/missing.json
+
+    RateLimitError:
+      description: レート制限超過
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://example.com/errors/rate-limit-exceeded
+            title: Too Many Requests
+            status: 429
+            detail: API rate limit exceeded for TIER1
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            example: 30
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+            example: 60
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+            example: 0
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+            example: 1706007600
+
+    ValidationError:
+      description: バリデーションエラー
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+          example:
+            type: https://example.com/errors/validation-failed
+            title: Validation Failed
+            status: 400
+            detail: Request validation failed
+            errors:
+              - field: path
+                message: Path traversal detected
+
+paths:
+  /auth/refresh:
+    post:
+      summary: トークンのリフレッシュ
+      description: |
+        リフレッシュトークンを使用して新しいアクセストークンを取得します。
+        
+        リフレッシュトークンの有効期限は30日間です。
+        新しいトークンペアが発行されると、古いトークンは無効になります。
+      operationId: refreshToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+      responses:
+        '200':
+          description: トークンリフレッシュ成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefreshResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      x-code-samples:
+        - lang: 'cURL'
+          source: |
+            curl -X POST http://localhost:3000/api/v1/auth/refresh \
+              -H "Content-Type: application/json" \
+              -d '{"refresh_token": "your-refresh-token"}'
+        - lang: 'JavaScript'
+          source: |
+            const response = await fetch('http://localhost:3000/api/v1/auth/refresh', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                refresh_token: 'your-refresh-token'
+              })
+            });
+            const data = await response.json();
+        - lang: 'Python'
+          source: |
+            import requests
+            
+            response = requests.post(
+              'http://localhost:3000/api/v1/auth/refresh',
+              json={'refresh_token': 'your-refresh-token'}
+            )
+            data = response.json()
+
+  /auth/logout:
+    post:
+      summary: ログアウト
+      description: |
+        現在のセッションを終了し、ログアウトします。
+        ログイベントが記録されます。
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: ログアウト成功
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      x-code-samples:
+        - lang: 'cURL'
+          source: |
+            curl -X POST http://localhost:3000/api/v1/auth/logout \
+              -H "Authorization: Bearer your-access-token"
+
+  /data/{path}:
+    get:
+      summary: データ取得
+      description: |
+        指定されたパスのデータファイルを取得します。
+        
+        ## パスの形式
+        データファイルのパスは以下の形式で指定します：
+        - `/data/secure/319985/r5.json` - セキュアデータ
+        - `/data/public/category/dataset.json` - 公開データ
+        
+        ## サポートされるファイル形式
+        - JSON (`.json`)
+        - 将来的にCSV、XMLもサポート予定
+        
+        ## キャッシュ
+        - データは最大5分間キャッシュされます
+        - `Cache-Control`ヘッダーでキャッシュ動作を確認できます
+        - `ETag`を使用した条件付きリクエストをサポート
+        
+        ## レスポンスサイズ
+        - 最大レスポンスサイズ: 10MB
+        - 大きなファイルは分割取得を推奨
+      operationId: getData
+      tags:
+        - Data Access
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: データファイルのパス（拡張子を含む）
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9/_.-]+\.json$'
+          example: secure/319985/r5.json
+        - name: If-None-Match
+          in: header
+          required: false
+          description: 条件付きリクエスト用のETag
+          schema:
+            type: string
+          example: '"33a64df551425fcc55e4d42a148795d9f25f89d4"'
+      responses:
+        '200':
+          description: データ取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+              example:
+                data:
+                  title: "令和5年度統計データ"
+                  items: [
+                    { "項目": "人口", "値": 1324473 },
+                    { "項目": "世帯数", "値": 595534 }
+                  ]
+                metadata:
+                  size: 2048
+                  lastModified: "2025-01-15T09:00:00Z"
+                  etag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: レート制限の上限値
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: 残りリクエスト可能数
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: リセット時刻（Unix timestamp）
+            Cache-Control:
+              schema:
+                type: string
+              example: public, max-age=300
+            ETag:
+              schema:
+                type: string
+              example: '"33a64df551425fcc55e4d42a148795d9f25f89d4"'
+            Last-Modified:
+              schema:
+                type: string
+              example: "Wed, 15 Jan 2025 09:00:00 GMT"
+        '304':
+          description: 変更なし（条件付きリクエスト）
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+      x-code-samples:
+        - lang: 'cURL'
+          source: |
+            curl -X GET http://localhost:3000/api/v1/data/secure/319985/r5.json \
+              -H "Authorization: Bearer your-jwt-token" \
+              -H "If-None-Match: \"previous-etag\""
+        - lang: 'JavaScript'
+          source: |
+            const response = await fetch('http://localhost:3000/api/v1/data/secure/319985/r5.json', {
+              headers: {
+                'Authorization': 'Bearer your-jwt-token',
+                'If-None-Match': '"previous-etag"'
+              }
+            });
+            
+            if (response.status === 304) {
+              console.log('Data not modified, use cached version');
+            } else {
+              const data = await response.json();
+              // Store ETag for future requests
+              const etag = response.headers.get('ETag');
+            }
+        - lang: 'Python'
+          source: |
+            import requests
+            
+            headers = {
+              'Authorization': 'Bearer your-jwt-token',
+              'If-None-Match': '"previous-etag"'
+            }
+            
+            response = requests.get(
+              'http://localhost:3000/api/v1/data/secure/319985/r5.json',
+              headers=headers
+            )
+            
+            if response.status_code == 304:
+              print('Data not modified, use cached version')
+            else:
+              data = response.json()
+              # Store ETag for future requests
+              etag = response.headers.get('ETag')
+
+  /health:
+    get:
+      summary: ヘルスチェック
+      description: |
+        APIサービスの基本的な稼働状態を確認します。
+        認証不要でアクセス可能です。
+        
+        監視システムやロードバランサーからの定期的なチェックに使用してください。
+      operationId: checkHealth
+      tags:
+        - System
+      responses:
+        '200':
+          description: サービス正常稼働
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+
+  /health/detailed:
+    get:
+      summary: 詳細ヘルスチェック
+      description: |
+        APIサービスの詳細な稼働状態を確認します。
+        データベース接続、ファイルシステムアクセスなどの状態を含みます。
+        
+        このエンドポイントは認証不要ですが、本番環境では
+        アクセス制限を推奨します。
+      operationId: checkDetailedHealth
+      tags:
+        - System
+      responses:
+        '200':
+          description: サービス正常稼働
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthCheck'
+        '503':
+          description: サービス異常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthCheck'
+              example:
+                status: unhealthy
+                timestamp: 2025-01-23T10:30:00Z
+                uptime: 3600
+                checks:
+                  database:
+                    status: unhealthy
+                    error: Connection timeout
+                  filesystem:
+                    status: healthy
+
+  /metrics:
+    get:
+      summary: メトリクス取得
+      description: |
+        Prometheus形式のメトリクスを取得します。
+        
+        ## 提供されるメトリクス
+        - HTTPリクエスト数とレイテンシ
+        - レート制限の使用状況
+        - 認証試行とエラー
+        - メモリ使用量
+        
+        このエンドポイントは認証不要ですが、本番環境では
+        内部ネットワークからのみアクセス可能にすることを推奨します。
+      operationId: getMetrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: メトリクス取得成功
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP http_request_duration_seconds Duration of HTTP requests in seconds
+                # TYPE http_request_duration_seconds histogram
+                http_request_duration_seconds_bucket{le="0.1",method="GET",route="/api/v1/data/:path",status_code="200"} 523
+                http_request_duration_seconds_bucket{le="0.3",method="GET",route="/api/v1/data/:path",status_code="200"} 789
+                http_request_duration_seconds_sum{method="GET",route="/api/v1/data/:path",status_code="200"} 125.4
+                http_request_duration_seconds_count{method="GET",route="/api/v1/data/:path",status_code="200"} 1024
+
+tags:
+  - name: Authentication
+    description: |
+      認証関連のエンドポイント。
+      Supabase Authと連携してJWTトークンベースの認証を提供します。
+  - name: Data Access
+    description: |
+      データアクセスエンドポイント。
+      認証されたユーザーがオープンデータにアクセスするためのAPIです。
+  - name: System
+    description: |
+      システム関連のエンドポイント。
+      ヘルスチェック、メトリクス、APIドキュメントなど。
+
+x-tagGroups:
+  - name: Core API
+    tags:
+      - Authentication
+      - Data Access
+  - name: Monitoring & Operations
+    tags:
+      - System

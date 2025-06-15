@@ -34,6 +34,9 @@ export default async function buildApp(opts: FastifyServerOptions = {}) {
   // モニタリングプラグインの登録
   await server.register(import('./plugins/monitoring'));
 
+  // APIドキュメントプラグインの登録
+  await server.register(import('./plugins/api-docs'));
+
   // Vercel Analytics（Vercel環境でのみ有効）
   if (process.env.VERCEL) {
     await server.register(import('./plugins/vercel-analytics'));
