@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/Login';
 import { AuthCallbackPage } from '@/pages/auth/callback';
+import { LandingPage } from '@/pages/LandingPage';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import './styles/auth.css';
+import './styles/landing.css';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +47,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/dashboard" element={isAuthenticated ? <div>Dashboard (TODO)</div> : <Navigate to="/login" />} />

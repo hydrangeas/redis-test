@@ -18,7 +18,7 @@ describe('useAuthError', () => {
     <BrowserRouter>{children}</BrowserRouter>
   );
 
-  vi.beforeEach(() => {
+  beforeEach(() => {
     mockSearchParams.delete('error');
   });
 
