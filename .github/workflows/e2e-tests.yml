@@ -1,0 +1,154 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/backend/**'
+      - '.github/workflows/e2e-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/backend/**'
+      - '.github/workflows/e2e-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: |
+          supabase init
+          supabase start
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Get Supabase credentials
+        id: supabase
+        run: |
+          echo "SUPABASE_URL=$(supabase status --json | jq -r .url)" >> $GITHUB_OUTPUT
+          echo "SUPABASE_ANON_KEY=$(supabase status --json | jq -r .anon_key)" >> $GITHUB_OUTPUT
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status --json | jq -r .service_role_key)" >> $GITHUB_OUTPUT
+
+      - name: Create test environment file
+        run: |
+          cat > packages/backend/.env.test <<EOF
+          NODE_ENV=development
+          PORT=0
+          HOST=127.0.0.1
+          LOG_LEVEL=error
+          
+          PUBLIC_SUPABASE_URL=${{ steps.supabase.outputs.SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY=${{ steps.supabase.outputs.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ steps.supabase.outputs.SUPABASE_SERVICE_ROLE_KEY }}
+          
+          JWT_SECRET=test-jwt-secret-at-least-32-characters-long-for-e2e
+          
+          API_BASE_URL=http://localhost:8080
+          FRONTEND_URL=http://localhost:3000
+          
+          RATE_LIMIT_TIER1=60
+          RATE_LIMIT_TIER2=120
+          RATE_LIMIT_TIER3=300
+          RATE_LIMIT_WINDOW=60
+          
+          DATA_DIRECTORY=./test-data
+          EOF
+
+      - name: Run database migrations
+        run: |
+          cd packages/backend
+          supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Create test data directory
+        run: mkdir -p packages/backend/test-data/secure
+
+      - name: Run E2E tests
+        run: |
+          cd packages/backend
+          npm run test:e2e
+        env:
+          CI: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            packages/backend/coverage/e2e/
+            packages/backend/test-results/
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+  e2e-tests-vercel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: e2e-tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run E2E tests against Vercel preview
+        run: |
+          cd packages/backend
+          # Set up environment for Vercel preview URL testing
+          export API_BASE_URL=${{ secrets.VERCEL_PREVIEW_URL }}
+          export PUBLIC_SUPABASE_URL=${{ secrets.PRODUCTION_SUPABASE_URL }}
+          export PUBLIC_SUPABASE_ANON_KEY=${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+          
+          # Run only smoke tests against production-like environment
+          npm run test:e2e -- --grep "should return health status|should serve API documentation"
+        env:
+          CI: true
+        continue-on-error: true # Don't fail the build for preview tests
