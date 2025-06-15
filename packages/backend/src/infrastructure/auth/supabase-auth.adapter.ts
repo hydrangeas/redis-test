@@ -141,6 +141,126 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   }
 
   /**
+   * IDでユーザーを取得
+   */
+  async getUserById(id: string): Promise<any | null> {
+    try {
+      const { data, error } = await this.adminClient.auth.admin.getUserById(id);
+      
+      if (error || !data.user) {
+        this.logger.debug({ userId: id }, 'User not found');
+        return null;
+      }
+      
+      return data.user;
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: id,
+      }, 'Failed to get user by ID');
+      return null;
+    }
+  }
+
+  /**
+   * メールアドレスでユーザーを取得
+   */
+  async getUserByEmail(email: string): Promise<any | null> {
+    try {
+      const { data, error } = await this.adminClient.auth.admin.listUsers();
+      
+      if (error) {
+        this.logger.error({ error: error.message }, 'Failed to list users');
+        return null;
+      }
+      
+      const user = data.users.find(u => u.email === email);
+      return user || null;
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        email,
+      }, 'Failed to get user by email');
+      return null;
+    }
+  }
+
+  /**
+   * ユーザーを作成
+   */
+  async createUser(userData: any): Promise<any | null> {
+    try {
+      const { data, error } = await this.adminClient.auth.admin.createUser({
+        email: userData.email,
+        email_confirm: userData.email_confirmed,
+        app_metadata: userData.app_metadata,
+        user_metadata: userData.user_metadata,
+      });
+      
+      if (error || !data.user) {
+        this.logger.error({ error: error?.message }, 'Failed to create user');
+        return null;
+      }
+      
+      return data.user;
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }, 'Failed to create user');
+      return null;
+    }
+  }
+
+  /**
+   * ユーザー情報を更新
+   */
+  async updateUser(id: string, updates: any): Promise<any | null> {
+    try {
+      const { data, error } = await this.adminClient.auth.admin.updateUserById(id, {
+        email: updates.email,
+        email_confirm: updates.email_confirmed,
+        app_metadata: updates.app_metadata,
+        user_metadata: updates.user_metadata,
+      });
+      
+      if (error || !data.user) {
+        this.logger.error({ error: error?.message }, 'Failed to update user');
+        return null;
+      }
+      
+      return data.user;
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: id,
+      }, 'Failed to update user');
+      return null;
+    }
+  }
+
+  /**
+   * ユーザーを削除
+   */
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      const { error } = await this.adminClient.auth.admin.deleteUser(id);
+      
+      if (error) {
+        this.logger.error({ error: error.message }, 'Failed to delete user');
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: id,
+      }, 'Failed to delete user');
+      return false;
+    }
+  }
+
+  /**
    * Custom Access Token Hookの設定を検証（初期化時に実行）
    */
   async validateCustomClaimsHook(): Promise<boolean> {

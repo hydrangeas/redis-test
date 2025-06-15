@@ -366,10 +366,14 @@ function registerInfrastructureServices(container: DependencyContainer): void {
     });
   });
   
+  // JWTServiceの登録
+  import('../auth/services/jwt.service').then(module => {
+    container.register(DI_TOKENS.JwtService, {
+      useClass: module.JWTService,
+    });
+  });
+  
   // 他のインフラストラクチャサービスは後続タスクで実装
-  // container.register(DI_TOKENS.JwtService, {
-  //   useClass: JwtServiceImpl,
-  // });
   // container.register(DI_TOKENS.FileStorageService, {
   //   useClass: FileStorageServiceImpl,
   // });

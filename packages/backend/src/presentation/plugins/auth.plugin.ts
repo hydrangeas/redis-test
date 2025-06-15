@@ -139,7 +139,9 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       
       if (tokenPayload.tier) {
         // トークンにティア情報が含まれている場合
-        const tierLevel = tokenPayload.tier as TierLevel;
+        // tier文字列を大文字に変換してTierLevelとして使用
+        const tierString = tokenPayload.tier.toUpperCase();
+        const tierLevel = tierString as TierLevel;
         const tierResult = UserTier.create(tierLevel);
         
         if (tierResult.isFailure) {
@@ -150,14 +152,19 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         }
       } else {
         // トークンにティア情報がない場合はユーザー情報から取得
-        const userResult = await userRepository.findById(userId.value);
+        const userResult = await userRepository.findById(userId);
         
         if (userResult.isFailure || !userResult.getValue()) {
           // ユーザーが見つからない場合はデフォルトのTIER1を使用
+          request.log.debug({ userId: userId.value }, 'User not found, using default tier');
           userTier = UserTier.createDefaultTier();
         } else {
           const user = userResult.getValue()!;
           userTier = user.tier;
+          request.log.debug({
+            userId: userId.value,
+            tier: userTier.level,
+          }, 'User tier fetched from repository');
         }
       }
       

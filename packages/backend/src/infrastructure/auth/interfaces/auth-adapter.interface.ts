@@ -4,6 +4,11 @@ export interface IAuthAdapter {
   verifyToken(token: string): Promise<TokenPayload | null>;
   refreshAccessToken(refreshToken: string): Promise<Session | null>;
   signOut(userId: string): Promise<void>;
+  getUserById(id: string): Promise<any | null>;
+  getUserByEmail(email: string): Promise<any | null>;
+  createUser(userData: any): Promise<any | null>;
+  updateUser(id: string, updates: any): Promise<any | null>;
+  deleteUser(id: string): Promise<boolean>;
 }
 
 export interface Session {

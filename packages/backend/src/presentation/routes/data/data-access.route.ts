@@ -64,8 +64,8 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
           },
         ],
       },
-      // 認証が必須
-      preHandler: fastify.authenticate,
+      // 認証とレート制限が必須
+      preHandler: [fastify.authenticate, fastify.checkRateLimit],
     },
     async (request, reply) => {
       const dataPath = request.params['*'];
