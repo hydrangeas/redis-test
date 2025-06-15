@@ -11,6 +11,13 @@ export abstract class Entity<T> {
   constructor(props: T, id?: UniqueEntityId) {
     this._id = id ? id : new UniqueEntityId();
     this.props = props;
+    // Use defineProperty to make props non-configurable but still writable internally
+    Object.defineProperty(this, 'props', {
+      value: this.props,
+      writable: true,
+      enumerable: false,
+      configurable: false
+    });
   }
 
   public equals(object?: Entity<T>): boolean {
