@@ -61,6 +61,16 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+        "/api-docs": {
+          target: env.VITE_API_URL || "http://localhost:8000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/openapi.json": {
+          target: env.VITE_API_URL || "http://localhost:8000",
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
     
