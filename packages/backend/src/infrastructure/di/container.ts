@@ -3,7 +3,7 @@ import { container, DependencyContainer } from 'tsyringe';
 import { Logger } from 'pino';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { DI_TOKENS } from './tokens';
-import { getEnvConfig, type EnvConfig } from '../config/adapter';
+import { getEnvConfig, type EnvConfig } from '../config/env.config';
 import { createLogger } from '../logging';
 import path from 'path';
 import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
@@ -130,8 +130,8 @@ export function setupTestDI(): DependencyContainer {
   // 実際のモックはテストで上書き可能
   container.register(DI_TOKENS.JwtService, {
     useValue: {
-      generateAccessToken: () => Promise.resolve(Result.ok('test-token')),
-      generateRefreshToken: () => Promise.resolve(Result.ok('test-refresh')),
+      generateAccessToken: () => Promise.resolve(Result.ok('test-access-token')),
+      generateRefreshToken: () => Promise.resolve(Result.ok('test-refresh-token')),
       verifyAccessToken: () => Promise.resolve(Result.ok({ sub: 'test-user', tier: 'tier1', exp: Math.floor(Date.now() / 1000) + 3600 })),
       verifyRefreshToken: () => Promise.resolve(Result.ok({ sub: 'test-user' })),
       decodeToken: () => ({ sub: 'test-user' }),

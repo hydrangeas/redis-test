@@ -1,54 +1,94 @@
 /**
- * DIコンテナで使用するトークン定義
- * 型安全な依存性注入のための定数
+ * Dependency Injection tokens for type-safe injection
+ * These tokens are used to register and resolve dependencies in the TSyringe container
  */
+
 export const DI_TOKENS = {
-  // Core Services
-  Logger: Symbol.for('Logger'),
-  EventBus: Symbol.for('EventBus'),
-  EventStore: Symbol.for('EventStore'),
-  
   // Configuration
   EnvConfig: Symbol.for('EnvConfig'),
   DataDirectory: Symbol.for('DataDirectory'),
   
-  // Database
+  // External Services
+  SupabaseService: Symbol.for('SupabaseService'),
   SupabaseClient: Symbol.for('SupabaseClient'),
   
+  // Infrastructure Services
+  EventBus: Symbol.for('IEventBus'),
+  EventStore: Symbol.for('IEventStore'),
+  Database: Symbol.for('IDatabase'),
+  Logger: Symbol.for('ILogger'),
+  Cache: Symbol.for('ICache'),
+  FileStorage: Symbol.for('IFileStorage'),
+  FileStorageService: Symbol.for('IFileStorageService'),
+  
+  // Auth Related
+  AuthAdapter: Symbol.for('IAuthAdapter'),
+  JWTValidator: Symbol.for('IJWTValidator'),
+  JwtService: Symbol.for('IJwtService'),
+  
   // Repositories
-  UserRepository: Symbol.for('UserRepository'),
-  RateLimitRepository: Symbol.for('RateLimitRepository'),
-  RateLimitLogRepository: Symbol.for('RateLimitLogRepository'),
-  AuthLogRepository: Symbol.for('AuthLogRepository'),
-  ApiLogRepository: Symbol.for('ApiLogRepository'),
-  OpenDataRepository: Symbol.for('OpenDataRepository'),
-  APILogRepository: Symbol.for('APILogRepository'),
+  RateLimitRepository: Symbol.for('IRateLimitRepository'),
+  RateLimitLogRepository: Symbol.for('IRateLimitLogRepository'),
+  AuthLogRepository: Symbol.for('IAuthLogRepository'),
+  APILogRepository: Symbol.for('IAPILogRepository'),
+  ApiLogRepository: Symbol.for('IApiLogRepository'), // Alias for backward compatibility
+  UserRepository: Symbol.for('IUserRepository'),
+  OpenDataRepository: Symbol.for('IOpenDataRepository'),
   
   // Domain Services
-  AuthenticationService: Symbol.for('AuthenticationService'),
-  RateLimitService: Symbol.for('RateLimitService'),
-  DataAccessService: Symbol.for('DataAccessService'),
-  APIAccessControlService: Symbol.for('APIAccessControlService'),
-  LogAnalysisService: Symbol.for('LogAnalysisService'),
+  RateLimitService: Symbol.for('IRateLimitService'),
+  AuthenticationService: Symbol.for('IAuthenticationService'),
+  AuthorizationService: Symbol.for('IAuthorizationService'),
+  DataAccessService: Symbol.for('IDataAccessService'),
+  APIAccessControlService: Symbol.for('IAPIAccessControlService'),
   
-  // Application Services
+  // Application Services (Use Cases)
   AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),
-  DataRetrievalUseCase: Symbol.for('DataRetrievalUseCase'),
   DataAccessUseCase: Symbol.for('DataAccessUseCase'),
+  DataRetrievalUseCase: Symbol.for('DataRetrievalUseCase'),
   RateLimitUseCase: Symbol.for('RateLimitUseCase'),
   APIAccessControlUseCase: Symbol.for('APIAccessControlUseCase'),
   
-  // Infrastructure Services
-  JwtService: Symbol.for('JwtService'),
-  JWTValidator: Symbol.for('JWTValidator'),
-  FileStorageService: Symbol.for('FileStorageService'),
-  FileStorage: Symbol.for('FileStorage'),
-  SecurityAuditService: Symbol.for('SecurityAuditService'),
-  SecurityAlertService: Symbol.for('SecurityAlertService'),
-  AuthAdapter: Symbol.for('AuthAdapter'),
-  NotificationService: Symbol.for('NotificationService'),
-  SupabaseService: Symbol.for('SupabaseService'),
-  
   // Factories
-  OpenDataResourceFactory: Symbol.for('OpenDataResourceFactory'),
+  OpenDataResourceFactory: Symbol.for('IOpenDataResourceFactory'),
+  
+  // Event Handlers
+  RateLimitExceededHandler: Symbol.for('RateLimitExceededHandler'),
+  AuthEventHandler: Symbol.for('AuthEventHandler'),
+  
+  // Plugins
+  AuthPlugin: Symbol.for('AuthPlugin'),
+  RateLimitPlugin: Symbol.for('RateLimitPlugin'),
+  ErrorHandlerPlugin: Symbol.for('ErrorHandlerPlugin'),
 } as const;
+
+/**
+ * Type helper to extract the token type
+ */
+export type DIToken = typeof DI_TOKENS[keyof typeof DI_TOKENS];
+
+/**
+ * Interface token type for better type safety
+ */
+export interface InjectionToken<T> {
+  token: symbol;
+  _type?: T; // phantom type for TypeScript inference
+}
+
+/**
+ * Helper function to create typed injection tokens
+ */
+export function createToken<T>(name: string): InjectionToken<T> {
+  return {
+    token: Symbol.for(name),
+  };
+}
+
+/**
+ * Lifecycle scopes for dependency registration
+ */
+export enum LifecycleScope {
+  Singleton = 'singleton',
+  Scoped = 'scoped',
+  Transient = 'transient',
+}
