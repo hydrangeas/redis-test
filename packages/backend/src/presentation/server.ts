@@ -1,6 +1,5 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
-import { fastifySwaggerUi } from '@fastify/swagger-ui';
 import { fastifyCors } from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
@@ -10,6 +9,7 @@ import authPlugin from './plugins/auth.plugin';
 import errorHandlerPlugin from './plugins/error-handler';
 import loggingPlugin from './plugins/logging.plugin';
 import apiRoutes from './routes/api';
+import apiDocsRoute from './routes/api-docs';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
@@ -101,15 +101,8 @@ export async function buildServer(): Promise<FastifyInstance> {
     },
   });
 
-  // Swagger UI
-  await server.register(fastifySwaggerUi, {
-    routePrefix: '/api-docs',
-    uiConfig: {
-      docExpansion: 'list',
-      deepLinking: true,
-    },
-    transformSpecificationClone: true,
-  });
+  // API Documentation route (using Scalar)
+  // Scalar UI will be registered in the api-docs route module
 
   // グローバルプラグイン
   await server.register(errorHandlerPlugin);
@@ -120,6 +113,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   // ルート登録
   await server.register(apiRoutes, { prefix: '/api' });
+  await server.register(apiDocsRoute, { prefix: '/api' });
 
   // ヘルスチェック
   server.get('/health', {
