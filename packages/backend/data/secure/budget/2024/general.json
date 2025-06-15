@@ -1,0 +1,46 @@
+{
+  "fiscalYear": "2024",
+  "prefecture": "奈良県",
+  "totalBudget": 548932000000,
+  "generalAccount": 516243000000,
+  "specialAccounts": 32689000000,
+  "majorCategories": [
+    {
+      "category": "教育費",
+      "amount": 119834000000,
+      "percentage": 21.8,
+      "description": "学校教育、社会教育等"
+    },
+    {
+      "category": "民生費",
+      "amount": 108456000000,
+      "percentage": 19.8,
+      "description": "福祉、子育て支援等"
+    },
+    {
+      "category": "土木費",
+      "amount": 87654000000,
+      "percentage": 16.0,
+      "description": "道路、河川、都市計画等"
+    },
+    {
+      "category": "衛生費",
+      "amount": 54893000000,
+      "percentage": 10.0,
+      "description": "保健衛生、環境保全等"
+    },
+    {
+      "category": "総務費",
+      "amount": 43915000000,
+      "percentage": 8.0,
+      "description": "一般管理、企画、統計等"
+    }
+  ],
+  "metadata": {
+    "source": "奈良県財政課",
+    "lastUpdated": "2024-03-31",
+    "license": "CC BY 4.0",
+    "fiscalPeriod": "2024-04-01 to 2025-03-31",
+    "approvalDate": "2024-03-28"
+  }
+}

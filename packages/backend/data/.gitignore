@@ -1,0 +1,18 @@
+# Ignore temporary files
+*.tmp
+*.bak
+*~
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log
+
+# Keep the directory structure but ignore actual production data
+# Uncomment the following lines for production:
+# *.json
+# !index.json
+# !*/metadata.json
+# !README.md

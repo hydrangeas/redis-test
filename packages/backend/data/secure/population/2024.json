@@ -1,0 +1,59 @@
+{
+  "year": "2024",
+  "prefecture": "奈良県",
+  "totalPopulation": 1324473,
+  "households": 595890,
+  "populationByCity": [
+    {
+      "city": "奈良市",
+      "population": 354630,
+      "households": 166584,
+      "populationDensity": 1286.3
+    },
+    {
+      "city": "橿原市",
+      "population": 120548,
+      "households": 53211,
+      "populationDensity": 3054.2
+    },
+    {
+      "city": "大和高田市",
+      "population": 63025,
+      "households": 29486,
+      "populationDensity": 3847.3
+    },
+    {
+      "city": "大和郡山市",
+      "population": 84179,
+      "households": 37632,
+      "populationDensity": 2030.4
+    },
+    {
+      "city": "天理市",
+      "population": 65203,
+      "households": 27318,
+      "populationDensity": 765.0
+    }
+  ],
+  "ageDistribution": {
+    "0-14": {
+      "count": 150234,
+      "percentage": 11.3
+    },
+    "15-64": {
+      "count": 765423,
+      "percentage": 57.8
+    },
+    "65+": {
+      "count": 408816,
+      "percentage": 30.9
+    }
+  },
+  "metadata": {
+    "source": "奈良県統計課",
+    "lastUpdated": "2024-12-01",
+    "license": "CC BY 4.0",
+    "dataCollectionMethod": "住民基本台帳",
+    "notes": "令和6年1月1日現在の推計人口"
+  }
+}

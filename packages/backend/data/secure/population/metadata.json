@@ -1,0 +1,20 @@
+{
+  "category": "population",
+  "name": "人口統計データ",
+  "description": "奈良県の人口統計に関するオープンデータ",
+  "updateFrequency": "yearly",
+  "dataFormat": "JSON",
+  "fields": {
+    "year": "データの年度",
+    "prefecture": "都道府県名",
+    "totalPopulation": "総人口",
+    "households": "世帯数",
+    "populationByCity": "市町村別人口データ",
+    "ageDistribution": "年齢別人口分布"
+  },
+  "contact": {
+    "organization": "奈良県統計課",
+    "email": "statistics@pref.nara.lg.jp",
+    "url": "https://www.pref.nara.jp/dd.aspx?menuid=1674"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "year": "2024",
+  "prefecture": "奈良県",
+  "schools": {
+    "elementary": {
+      "count": 197,
+      "students": 65432,
+      "teachers": 3876,
+      "studentTeacherRatio": 16.9
+    },
+    "juniorHigh": {
+      "count": 104,
+      "students": 34567,
+      "teachers": 2543,
+      "studentTeacherRatio": 13.6
+    },
+    "highSchool": {
+      "count": 54,
+      "students": 38901,
+      "teachers": 2987,
+      "studentTeacherRatio": 13.0
+    },
+    "university": {
+      "count": 12,
+      "students": 45678,
+      "faculty": 2345
+    }
+  },
+  "literacy": {
+    "rate": 99.8,
+    "internationalRanking": 3
+  },
+  "metadata": {
+    "source": "奈良県教育委員会",
+    "lastUpdated": "2024-10-01",
+    "license": "CC BY 4.0",
+    "surveyPeriod": "2024年度学校基本調査"
+  }
+}

@@ -1,0 +1,10 @@
+# Deny direct access to data files
+# This ensures data is only accessible through the API
+
+Order deny,allow
+Deny from all
+
+# Allow access to specific files if needed in the future
+# <Files "public-file.json">
+#   Allow from all
+# </Files>

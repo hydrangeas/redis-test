@@ -12,7 +12,9 @@
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ext .ts",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist coverage .turbo"
+    "clean": "rm -rf dist coverage .turbo",
+    "validate:json": "node scripts/validate-json.cjs",
+    "setup:data": "bash scripts/setup-data.sh"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -45,6 +47,7 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@vitest/coverage-v8": "^1.6.0",
+    "glob": "^11.0.3",
     "tsx": "^4.11.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"

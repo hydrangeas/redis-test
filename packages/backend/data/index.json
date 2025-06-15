@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-15T00:00:00Z",
+  "categories": {
+    "population": {
+      "name": "人口統計",
+      "description": "奈良県の人口統計データ",
+      "path": "/secure/population",
+      "files": ["2024.json", "2023.json"],
+      "requiresAuth": true
+    },
+    "budget": {
+      "name": "予算",
+      "description": "奈良県の予算データ",
+      "path": "/secure/budget",
+      "files": ["2024/general.json", "2024/details.json"],
+      "requiresAuth": true
+    },
+    "statistics": {
+      "name": "統計データ",
+      "description": "教育・健康・経済に関する統計データ",
+      "path": "/secure/statistics",
+      "files": ["education.json", "health.json", "economy.json"],
+      "requiresAuth": true
+    }
+  }
+}
