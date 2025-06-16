@@ -3,9 +3,11 @@ import { Type, Static } from '@sinclair/typebox';
 import { container } from 'tsyringe';
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
+import { ISecureFileAccess, SecurityContext } from '@/domain/data/interfaces/secure-file-access.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { fileSecurityMiddleware } from '@/presentation/middleware/file-security.middleware';
 
 // パスパラメータのスキーマ
 const DataPathParams = Type.Object({
@@ -66,6 +68,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
   
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(DI_TOKENS.DataRetrievalUseCase);
   const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
+  const secureFileAccess = container.resolve<ISecureFileAccess>(DI_TOKENS.SecureFileAccessService);
 
   // ワイルドカードルートでデータアクセス
   fastify.get<{
@@ -114,7 +117,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         },
       ],
     },
-    preHandler: [fastify.authenticate, fastify.checkRateLimit],
+    preHandler: [fastify.authenticate, fastify.checkRateLimit, fileSecurityMiddleware],
   }, async (request, reply) => {
     try {
       // preHandlerで認証済みなので、request.userは必ず存在する
@@ -133,22 +136,42 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         tier: user.tier.level,
         dataPath,
       }, 'Data access request');
-      // パスの検証
-      if (!dataPath || !dataPath.endsWith('.json')) {
-        const problemDetails = toProblemDetails(
-          {
-            code: 'INVALID_PATH',
-            message: 'Invalid data path format',
-            type: 'VALIDATION' as const,
-            metadata: { path: dataPath },
-          },
-          request.url
-        );
-        return reply.code(400).send(problemDetails);
+
+      // セキュアファイルアクセスによるパス検証
+      const securityContext = request.securityContext || {
+        userId: user.userId.value,
+        userTier: user.tier.level,
+        ipAddress: request.ip,
+        userAgent: request.headers['user-agent'] || 'unknown',
+      };
+
+      const pathValidation = await secureFileAccess.validateAndSanitizePath(dataPath, securityContext);
+      if (pathValidation.isFailure) {
+        const error = pathValidation.getError();
+        const problemDetails = toProblemDetails(error, request.url);
+        
+        let statusCode = 400;
+        if (error.type === 'NOT_FOUND') {
+          statusCode = 404;
+        } else if (error.type === 'SECURITY') {
+          statusCode = 403;
+        }
+        
+        return reply.code(statusCode).send(problemDetails);
       }
 
-      // データ取得処理
-      const result = await dataRetrievalUseCase.retrieveData(dataPath, user);
+      const sanitizedPath = pathValidation.getValue();
+
+      // アクセス権限チェック
+      const accessCheck = await secureFileAccess.checkAccess(sanitizedPath, securityContext);
+      if (accessCheck.isFailure) {
+        const error = accessCheck.getError();
+        const problemDetails = toProblemDetails(error, request.url);
+        return reply.code(403).send(problemDetails);
+      }
+
+      // データ取得処理（サニタイズされたパスを使用）
+      const result = await dataRetrievalUseCase.retrieveData(sanitizedPath, user);
 
       if (result.isFailure) {
         const error = result.getError();
@@ -250,7 +273,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         },
       ],
     },
-    preHandler: [fastify.authenticate, fastify.checkRateLimit],
+    preHandler: [fastify.authenticate, fastify.checkRateLimit, fileSecurityMiddleware],
   }, async (request, reply) => {
     try {
       const user = request.user as AuthenticatedUser;
