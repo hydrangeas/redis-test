@@ -34,26 +34,8 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     document.title = "ダッシュボード - オープンデータ提供API";
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/login");
-        return;
-      }
-      await fetchUserData(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      navigate("/login");
-    }
-  };
-
-  const fetchUserData = async (currentUser: User) => {
+    
+    const fetchUserData = async (currentUser: User) => {
     try {
       setLoading(true);
       // TODO: Replace with actual API calls
@@ -78,17 +60,39 @@ export const DashboardPage: React.FC = () => {
       setUserInfo(mockUserInfo);
       setUsageStats(mockUsageStats);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
     }
   };
+    
+    const checkUser = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/login");
+          return;
+        }
+        await fetchUserData(user);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error fetching user:", error);
+        navigate("/login");
+      }
+    };
+    
+    checkUser();
+  }, [navigate]);
 
   const handleSignOut = async () => {
     setLoggingOut(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Error signing out:", error);
         alert("ログアウトに失敗しました。もう一度お試しください。");
         setLoggingOut(false);
@@ -97,6 +101,7 @@ export const DashboardPage: React.FC = () => {
       // ログアウト成功後、トップページにリダイレクト
       navigate("/");
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error signing out:", error);
       alert("予期せぬエラーが発生しました。");
       setLoggingOut(false);
@@ -111,6 +116,7 @@ export const DashboardPage: React.FC = () => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to copy API key:", error);
     }
   };

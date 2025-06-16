@@ -52,7 +52,17 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
       }
 
       // AuthEvent作成
-      const authEvent = new AuthEvent(EventType.RATE_LIMIT_CHECK);
+      const authEventResult = AuthEvent.create(EventType.RATE_LIMIT_CHECK, 'Rate limit check');
+      if (authEventResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: authEventResult.error,
+          },
+          'Failed to create AuthEvent',
+        );
+        return;
+      }
 
       // Provider, IPAddress, UserAgentを作成（メタデータから取得、または適切なデフォルト値を使用）
       const providerResult = Provider.create('api_key'); // API経由のアクセスはapi_keyプロバイダーとして記録
@@ -94,7 +104,7 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
       // セキュリティイベントとして認証ログに記録
       const logEntryResult = AuthLogEntry.create({
         userId: userIdResult.getValue(),
-        event: authEvent,
+        event: authEventResult.getValue(),
         provider: providerResult.getValue(),
         ipAddress: ipAddressResult.getValue(),
         userAgent: userAgentResult.getValue(),

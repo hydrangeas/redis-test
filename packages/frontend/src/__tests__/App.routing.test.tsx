@@ -8,31 +8,32 @@ vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
-    BrowserRouter: ({ children }: any) => children,
-    Routes: ({ children }: any) => children,
-    Route: ({ path, element }: any) => {
-      if (path === mockLocation.pathname || path === "*") {
+    BrowserRouter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Routes: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Route: ({ path, element, children, index }: { path?: string; element?: React.ReactNode; children?: React.ReactNode; index?: boolean }) => {
+      // Handle index route
+      if (index && mockLocation.pathname === "/") {
         return element;
       }
-      if (path === "/dashboard" && mockLocation.pathname === "/dashboard") {
-        return element;
+      
+      // Handle path routes
+      if (path) {
+        if (path === mockLocation.pathname || 
+            (path === "*" && !["/", "/login", "/dashboard", "/auth/callback", "/api-docs"].includes(mockLocation.pathname))) {
+          return element;
+        }
       }
-      if (path === "/login" && mockLocation.pathname === "/login") {
-        return element;
+      
+      // Handle parent routes with children
+      if (children) {
+        return <div>{children}</div>;
       }
-      if (
-        path === "/auth/callback" &&
-        mockLocation.pathname === "/auth/callback"
-      ) {
-        return element;
-      }
-      if (path === "/api-docs" && mockLocation.pathname === "/api-docs") {
-        return element;
-      }
+      
       return null;
     },
-    Navigate: ({ to }: any) => <div>Navigate to {to}</div>,
+    Navigate: ({ to }: { to: string }) => <div>Navigate to {to}</div>,
     useLocation: () => mockLocation,
+    Outlet: () => null,
   };
 });
 
@@ -47,6 +48,36 @@ vi.mock("@/lib/supabase", () => ({
       }),
     },
   },
+}));
+
+// Mock AuthProvider
+vi.mock("@/hooks/useAuth", () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  useAuth: () => ({ user: null, loading: false, signOut: vi.fn() }),
+}));
+
+// Mock Layout
+vi.mock("@/components/Layout", () => ({
+  Layout: ({ children }: { children?: React.ReactNode }) => <div>{children || <div>Outlet</div>}</div>,
+}));
+
+// Mock Guards
+vi.mock("@/router/guards/AuthGuard", () => ({
+  AuthGuard: ({ children }: { children?: React.ReactNode }) => {
+    if (mockLocation.pathname === "/dashboard") {
+      return <div>Navigate to /login</div>;
+    }
+    return <div>{children}</div>;
+  },
+}));
+
+vi.mock("@/router/guards/GuestGuard", () => ({
+  GuestGuard: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+}));
+
+// Mock LoadingSpinner
+vi.mock("@/components/common/LoadingSpinner", () => ({
+  LoadingSpinner: () => <div>Loading...</div>,
 }));
 
 // Mock components with minimal implementation

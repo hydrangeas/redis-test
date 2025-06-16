@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ResponsiveHeader } from "@/components/Header/ResponsiveHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import type { User } from "@supabase/supabase-js";
 
 // Mock dependencies
 vi.mock("@/hooks/useAuth");
@@ -29,7 +30,11 @@ describe("ResponsiveHeader", () => {
     });
 
     it("should render desktop navigation when not mobile", () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -43,7 +48,11 @@ describe("ResponsiveHeader", () => {
     });
 
     it("should show login/signup buttons for unauthenticated users", () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -53,8 +62,10 @@ describe("ResponsiveHeader", () => {
 
     it("should show dashboard/profile buttons for authenticated users", () => {
       mockUseAuth.mockReturnValue({
-        user: { id: "123", email: "test@example.com" },
-      } as any);
+        user: { id: "123", email: "test@example.com" } as User,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -69,7 +80,11 @@ describe("ResponsiveHeader", () => {
     });
 
     it("should show hamburger menu button on mobile", () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -79,7 +94,11 @@ describe("ResponsiveHeader", () => {
     });
 
     it("should toggle mobile menu when hamburger button is clicked", async () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -110,7 +129,11 @@ describe("ResponsiveHeader", () => {
     });
 
     it("should prevent scrolling when mobile menu is open", () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -128,7 +151,11 @@ describe("ResponsiveHeader", () => {
     });
 
     it("should show abbreviated logo on mobile", () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       renderWithRouter(<ResponsiveHeader />);
 
@@ -141,7 +168,11 @@ describe("ResponsiveHeader", () => {
 
   describe("Responsive Behavior", () => {
     it("should close mobile menu when resizing to desktop", () => {
-      mockUseAuth.mockReturnValue({ user: null } as any);
+      mockUseAuth.mockReturnValue({
+        user: null,
+        loading: false,
+        signOut: vi.fn(),
+      });
 
       // Start as mobile
       mockUseMediaQuery.mockReturnValue(true);

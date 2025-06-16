@@ -64,7 +64,9 @@ describe("ResponsiveTable", () => {
       // Check data
       expect(screen.getByText("Alice")).toBeInTheDocument();
       expect(screen.getByText("bob@example.com")).toBeInTheDocument();
-      expect(screen.getByText("ACTIVE")).toBeInTheDocument();
+      // Multiple ACTIVE status exist, so use getAllByText
+      const activeStatuses = screen.getAllByText("ACTIVE");
+      expect(activeStatuses.length).toBe(2);
     });
 
     it("should apply custom render function", () => {
@@ -77,7 +79,8 @@ describe("ResponsiveTable", () => {
       );
 
       // Status should be uppercase due to render function
-      expect(screen.getByText("ACTIVE")).toBeInTheDocument();
+      const activeStatuses = screen.getAllByText("ACTIVE");
+      expect(activeStatuses.length).toBe(2);
       expect(screen.getByText("INACTIVE")).toBeInTheDocument();
     });
 

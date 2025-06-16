@@ -7,8 +7,8 @@ describe("ApiDocsRedirect", () => {
 
   beforeEach(() => {
     // Mock window.location
-    delete (window as any).location;
-    window.location = { href: "" } as any;
+    delete (window as { location?: Location }).location;
+    window.location = { href: "" } as Location;
   });
 
   afterEach(() => {

@@ -53,12 +53,14 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
       }
 
       // ApiPathの作成
-      const apiPathResult = ApiPath.create(event.dataPath);
-      if (apiPathResult.isFailure) {
+      let apiPath: ApiPath;
+      try {
+        apiPath = new ApiPath(event.dataPath);
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: apiPathResult.error,
+            error: error instanceof Error ? error.message : 'Unknown error',
           },
           'Invalid dataPath in DataRetrieved event',
         );
@@ -80,7 +82,7 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
 
       // Endpointの作成
       const endpointResult = Endpoint.create({
-        path: apiPathResult.getValue(),
+        path: apiPath,
         method: httpMethodResult.getValue(),
       });
       if (endpointResult.isFailure) {
@@ -136,7 +138,7 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
 
       // ログの保存
       const saveResult = await this.apiLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,

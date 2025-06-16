@@ -21,6 +21,7 @@ import { OpenDataRepository } from '../repositories/open-data.repository';
 import { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
 import { JWTValidatorService } from '../auth/services/jwt-validator.service';
 import { Result } from '@/domain/shared/result';
+import { DomainError } from '@/domain/errors';
 
 /**
  * DIコンテナのセットアップ
@@ -111,6 +112,25 @@ export function setupTestDI(): DependencyContainer {
     useValue: testLogger,
   });
 
+  // テスト用Supabaseクライアント
+  const mockSupabaseClient = {
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      admin: {
+        getUserById: () => Promise.resolve({ data: { user: null }, error: null }),
+      },
+    },
+    from: () => ({
+      select: () => ({ data: [], error: null }),
+      insert: () => ({ data: null, error: null }),
+      update: () => ({ data: null, error: null }),
+      delete: () => ({ data: null, error: null }),
+    }),
+  } as any;
+  container.register<SupabaseClient>(DI_TOKENS.SupabaseClient, {
+    useValue: mockSupabaseClient,
+  });
+
   // テスト用データディレクトリ
   container.register<string>(DI_TOKENS.DataDirectory, {
     useValue: path.resolve(process.cwd(), 'test-data'),
@@ -123,6 +143,7 @@ export function setupTestDI(): DependencyContainer {
 
   // テスト用のサービス登録
   registerEventServices(container);
+  registerTestRepositories(container);
   registerDomainServices(container);
   registerApplicationServices(container);
 
@@ -330,6 +351,21 @@ function registerApplicationServices(container: DependencyContainer): void {
   });
 
   // ... 他のアプリケーションサービス
+}
+
+/**
+ * テスト用リポジトリの登録
+ */
+function registerTestRepositories(container: DependencyContainer): void {
+  // InMemoryOpenDataRepositoryモックの登録
+  container.register<IOpenDataRepository>(DI_TOKENS.OpenDataRepository, {
+    useValue: {
+      exists: () => Promise.resolve(Result.ok(false)),
+      getResource: () => Promise.resolve(Result.fail(DomainError.notFound('FILE_NOT_FOUND', 'File not found'))),
+      getResourceSize: () => Promise.resolve(Result.ok(0)),
+      getMimeType: () => Promise.resolve(Result.ok('application/json')),
+    },
+  });
 }
 
 /**

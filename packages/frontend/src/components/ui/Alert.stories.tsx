@@ -68,7 +68,10 @@ export const Dismissible: Story = {
     title: "Success!",
     children: "This alert can be dismissed by clicking the close button.",
     dismissible: true,
-    onDismiss: () => console.log("Alert dismissed"),
+    onDismiss: () => {
+      // eslint-disable-next-line no-console
+      console.log("Alert dismissed");
+    },
   },
 };
 

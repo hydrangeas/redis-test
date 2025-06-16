@@ -50,12 +50,14 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
       }
 
       // ApiPathの作成
-      const apiPathResult = ApiPath.create(event.requestedPath);
-      if (apiPathResult.isFailure) {
+      let apiPath: ApiPath;
+      try {
+        apiPath = new ApiPath(event.requestedPath);
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: apiPathResult.error,
+            error: error instanceof Error ? error.message : 'Unknown error',
           },
           'Invalid requestedPath in DataResourceNotFound event',
         );
@@ -77,7 +79,7 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
 
       // Endpointの作成
       const endpointResult = Endpoint.create({
-        path: apiPathResult.getValue(),
+        path: apiPath,
         method: httpMethodResult.getValue(),
       });
       if (endpointResult.isFailure) {
@@ -132,7 +134,7 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
 
       // ログの保存
       const saveResult = await this.apiLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
@@ -149,7 +151,7 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
         limit: 20,
       });
 
-      if (recentErrorsResult.isSuccess() && recentErrorsResult.getValue().length >= 10) {
+      if (recentErrorsResult.isSuccess && recentErrorsResult.getValue().length >= 10) {
         this.logger.warn(
           {
             eventId: event.eventId,

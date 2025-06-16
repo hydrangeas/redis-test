@@ -16,6 +16,14 @@ vi.mock('pino', () => ({
   })),
 }));
 
+// Mock fs/promises
+vi.mock('fs/promises', () => ({
+  access: vi.fn().mockResolvedValue(undefined),
+  constants: {
+    R_OK: 4,
+  },
+}));
+
 const mockLogger = {
   info: vi.fn(),
   error: vi.fn(),

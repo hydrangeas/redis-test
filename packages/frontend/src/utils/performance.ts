@@ -23,6 +23,7 @@ const METRICS_ENDPOINT = import.meta.env.VITE_METRICS_ENDPOINT;
 // コンソールにメトリクスを出力（開発環境のみ）
 const logMetric = (metric: Metric) => {
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
     console.log(`[Performance] ${metric.name}:`, {
       value: metric.value,
       rating: metric.rating,
@@ -52,6 +53,7 @@ const sendMetrics = async (metrics: PerformanceMetrics) => {
       }),
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to send metrics:", error);
   }
 };
@@ -59,6 +61,7 @@ const sendMetrics = async (metrics: PerformanceMetrics) => {
 // Web Vitalsの測定
 export const measureWebVitals = async () => {
   if (!("PerformanceObserver" in window)) {
+    // eslint-disable-next-line no-console
     console.warn("PerformanceObserver is not supported");
     return;
   }
@@ -101,6 +104,7 @@ export const measureWebVitals = async () => {
       });
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Failed to load web-vitals:", error);
   }
 };
@@ -127,6 +131,7 @@ export const measure = (name: string, startMark: string, endMark?: string) => {
       const lastEntry = entries[entries.length - 1];
 
       if (lastEntry && import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
         console.log(
           `[Performance] ${name}: ${lastEntry.duration.toFixed(2)}ms`
         );
@@ -134,6 +139,7 @@ export const measure = (name: string, startMark: string, endMark?: string) => {
 
       return lastEntry?.duration;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Failed to measure ${name}:`, error);
     }
   }
@@ -168,6 +174,7 @@ export const analyzeResourceTimings = () => {
   );
 
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
     console.log("[Performance] Resource Timings:", resourcesByType);
   }
 
@@ -213,6 +220,7 @@ export const monitorMemoryUsage = () => {
   };
 
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
     console.log("[Performance] Memory Usage:", usage);
   }
 
@@ -229,6 +237,7 @@ export const generatePerformanceReport = () => {
   };
 
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
     console.log("[Performance] Full Report:", report);
   }
 

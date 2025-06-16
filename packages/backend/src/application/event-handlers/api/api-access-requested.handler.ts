@@ -51,12 +51,14 @@ export class APIAccessRequestedHandler implements IEventHandler<APIAccessRequest
       }
 
       // ApiPathの作成
-      const apiPathResult = ApiPath.create(event.path);
-      if (apiPathResult.isFailure) {
+      let apiPath: ApiPath;
+      try {
+        apiPath = new ApiPath(event.path);
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: apiPathResult.error,
+            error: error instanceof Error ? error.message : 'Unknown error',
           },
           'Invalid path in APIAccessRequested event',
         );
@@ -78,7 +80,7 @@ export class APIAccessRequestedHandler implements IEventHandler<APIAccessRequest
 
       // Endpointの作成
       const endpointResult = Endpoint.create({
-        path: apiPathResult.getValue(),
+        path: apiPath,
         method: httpMethodResult.getValue(),
       });
       if (endpointResult.isFailure) {
@@ -135,7 +137,7 @@ export class APIAccessRequestedHandler implements IEventHandler<APIAccessRequest
 
       // ログの保存
       const saveResult = await this.apiLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,

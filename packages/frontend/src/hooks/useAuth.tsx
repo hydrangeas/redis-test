@@ -42,6 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       authListener.subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkUser = async () => {
@@ -51,6 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       } = await supabase.auth.getUser();
       setUser(user);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error checking user:", error);
       setUser(null);
     } finally {
@@ -63,6 +65,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await supabase.auth.signOut();
       setUser(null);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error signing out:", error);
       throw error;
     }
