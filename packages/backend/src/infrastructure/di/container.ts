@@ -390,6 +390,34 @@ function registerInfrastructureServices(container: DependencyContainer): void {
     });
   });
   
+  // SecurityAuditServiceの登録
+  import('../services/security-audit.service').then(module => {
+    container.register(DI_TOKENS.SecurityAuditService, {
+      useClass: module.SecurityAuditService,
+    });
+  });
+  
+  // SecureFileAccessServiceの登録
+  import('../services/secure-file-access.service').then(module => {
+    container.register(DI_TOKENS.SecureFileAccessService, {
+      useClass: module.SecureFileAccessService,
+    });
+  });
+  
+  // DatabaseSeederの登録
+  import('../seeders/database-seeder').then(module => {
+    container.register('DatabaseSeeder', {
+      useClass: module.DatabaseSeeder,
+    });
+  });
+  
+  // ApiLogServiceの登録
+  import('../services/api-log.service').then(module => {
+    container.register(DI_TOKENS.ApiLogService, {
+      useClass: module.ApiLogService,
+    });
+  });
+  
   // 他のインフラストラクチャサービスは後続タスクで実装
   // ... 他のインフラストラクチャサービス
 }

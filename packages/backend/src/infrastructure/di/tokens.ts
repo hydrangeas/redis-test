@@ -41,6 +41,9 @@ export const DI_TOKENS = {
   AuthorizationService: Symbol.for('IAuthorizationService'),
   DataAccessService: Symbol.for('IDataAccessService'),
   APIAccessControlService: Symbol.for('IAPIAccessControlService'),
+  SecurityAuditService: Symbol.for('ISecurityAuditService'),
+  SecureFileAccessService: Symbol.for('ISecureFileAccessService'),
+  ApiLogService: Symbol.for('IApiLogService'),
   
   // Application Services (Use Cases)
   AuthenticationUseCase: Symbol.for('AuthenticationUseCase'),

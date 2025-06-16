@@ -31,6 +31,9 @@ export default async function buildApp(opts: FastifyServerOptions = {}) {
   // レート制限プラグインの登録（認証プラグインの後）
   await server.register(import('./presentation/plugins/rate-limit.plugin'));
 
+  // APIロギングプラグインの登録（認証とレート制限の後）
+  await server.register(import('./presentation/plugins/api-logging.plugin'));
+
   // モニタリングプラグインの登録
   await server.register(import('./plugins/monitoring'));
 
