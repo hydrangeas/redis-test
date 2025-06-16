@@ -8,7 +8,7 @@ import { createHash } from 'crypto';
 @injectable()
 export class DatabaseSeeder {
   constructor(
-    @inject(DI_TOKENS.SupabaseService)
+    @inject(DI_TOKENS.SupabaseClient)
     private readonly supabase: SupabaseClient,
     @inject(DI_TOKENS.Logger)
     private readonly logger: Logger
