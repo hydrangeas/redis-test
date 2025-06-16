@@ -10,7 +10,7 @@ describe('Data Routes Security Tests', () => {
 
   beforeEach(async () => {
     fastify = Fastify();
-    
+
     // Mock dependencies
     const mockDataRetrievalUseCase = {
       retrieveData: vi.fn().mockResolvedValue(
@@ -18,7 +18,7 @@ describe('Data Routes Security Tests', () => {
           content: { test: 'data' },
           checksum: 'test-checksum',
           lastModified: new Date(),
-        })
+        }),
       ),
     };
 
@@ -29,7 +29,7 @@ describe('Data Routes Security Tests', () => {
           limit: 60,
           remaining: 59,
           resetAt: new Date(Date.now() + 60000),
-        })
+        }),
       ),
     };
 
@@ -81,13 +81,7 @@ describe('Data Routes Security Tests', () => {
 
       for (const attack of attacks) {
         mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(
-          Result.fail(
-            new DomainError(
-              'PATH_TRAVERSAL',
-              'Path traversal detected',
-              'SECURITY'
-            )
-          )
+          Result.fail(new DomainError('PATH_TRAVERSAL', 'Path traversal detected', 'SECURITY')),
         );
 
         const response = await fastify.inject({
@@ -109,24 +103,13 @@ describe('Data Routes Security Tests', () => {
 
   describe('File Type Validation', () => {
     it('should reject non-JSON files', async () => {
-      const invalidFiles = [
-        'script.sh',
-        'executable.exe',
-        'document.pdf',
-        'archive.zip',
-      ];
+      const invalidFiles = ['script.sh', 'executable.exe', 'document.pdf', 'archive.zip'];
 
       const mockSecureFileAccess = container.resolve(DI_TOKENS.SecureFileAccessService) as any;
 
       for (const file of invalidFiles) {
         mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(
-          Result.fail(
-            new DomainError(
-              'INVALID_FILE_TYPE',
-              'File type not allowed',
-              'SECURITY'
-            )
-          )
+          Result.fail(new DomainError('INVALID_FILE_TYPE', 'File type not allowed', 'SECURITY')),
         );
 
         const response = await fastify.inject({
@@ -149,19 +132,13 @@ describe('Data Routes Security Tests', () => {
   describe('Access Control', () => {
     it('should enforce access control for secure paths', async () => {
       const mockSecureFileAccess = container.resolve(DI_TOKENS.SecureFileAccessService) as any;
-      
-      mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(
-        Result.ok('secure/data.json')
-      );
-      
+
+      mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(Result.ok('secure/data.json'));
+
       mockSecureFileAccess.checkAccess.mockResolvedValue(
         Result.fail(
-          new DomainError(
-            'ACCESS_DENIED',
-            'Access to this resource is denied',
-            'FORBIDDEN'
-          )
-        )
+          new DomainError('ACCESS_DENIED', 'Access to this resource is denied', 'FORBIDDEN'),
+        ),
       );
 
       const response = await fastify.inject({
@@ -183,14 +160,10 @@ describe('Data Routes Security Tests', () => {
   describe('Security Headers', () => {
     it('should set appropriate security headers', async () => {
       const mockSecureFileAccess = container.resolve(DI_TOKENS.SecureFileAccessService) as any;
-      
-      mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(
-        Result.ok('secure/data.json')
-      );
-      
-      mockSecureFileAccess.checkAccess.mockResolvedValue(
-        Result.ok(undefined)
-      );
+
+      mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(Result.ok('secure/data.json'));
+
+      mockSecureFileAccess.checkAccess.mockResolvedValue(Result.ok(undefined));
 
       const response = await fastify.inject({
         method: 'GET',
@@ -211,14 +184,12 @@ describe('Data Routes Security Tests', () => {
     it('should allow valid requests with proper sanitization', async () => {
       const mockSecureFileAccess = container.resolve(DI_TOKENS.SecureFileAccessService) as any;
       const mockDataRetrievalUseCase = container.resolve(DI_TOKENS.DataRetrievalUseCase) as any;
-      
+
       mockSecureFileAccess.validateAndSanitizePath.mockResolvedValue(
-        Result.ok('secure/population/2024.json')
+        Result.ok('secure/population/2024.json'),
       );
-      
-      mockSecureFileAccess.checkAccess.mockResolvedValue(
-        Result.ok(undefined)
-      );
+
+      mockSecureFileAccess.checkAccess.mockResolvedValue(Result.ok(undefined));
 
       const response = await fastify.inject({
         method: 'GET',
@@ -232,7 +203,7 @@ describe('Data Routes Security Tests', () => {
       expect(response.json()).toEqual({ test: 'data' });
       expect(mockDataRetrievalUseCase.retrieveData).toHaveBeenCalledWith(
         'secure/population/2024.json',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

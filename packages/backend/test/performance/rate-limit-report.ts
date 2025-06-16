@@ -36,23 +36,30 @@ export class PerformanceReporter {
       },
       summary: {
         totalTests: testResults.length,
-        passedTests: testResults.filter(r => r.passed).length,
-        failedTests: testResults.filter(r => !r.passed).length,
+        passedTests: testResults.filter((r) => r.passed).length,
+        failedTests: testResults.filter((r) => !r.passed).length,
       },
-      results: testResults.map(result => ({
+      results: testResults.map((result) => ({
         testName: result.name,
         passed: result.passed,
         metrics: {
           totalRequests: result.metrics.totalRequests,
-          successRate: (result.metrics.successfulRequests / result.metrics.totalRequests * 100).toFixed(2) + '%',
-          rateLimitedRate: (result.metrics.rateLimitedRequests / result.metrics.totalRequests * 100).toFixed(2) + '%',
+          successRate:
+            ((result.metrics.successfulRequests / result.metrics.totalRequests) * 100).toFixed(2) +
+            '%',
+          rateLimitedRate:
+            ((result.metrics.rateLimitedRequests / result.metrics.totalRequests) * 100).toFixed(2) +
+            '%',
           averageResponseTime: result.metrics.averageResponseTime.toFixed(2) + 'ms',
           p50ResponseTime: result.metrics.p50ResponseTime.toFixed(2) + 'ms',
           p95ResponseTime: result.metrics.p95ResponseTime.toFixed(2) + 'ms',
           p99ResponseTime: result.metrics.p99ResponseTime.toFixed(2) + 'ms',
           maxResponseTime: result.metrics.maxResponseTime.toFixed(2) + 'ms',
           minResponseTime: result.metrics.minResponseTime.toFixed(2) + 'ms',
-          requestsPerSecond: (result.metrics.totalRequests / (result.metrics.duration / 1000)).toFixed(2),
+          requestsPerSecond: (
+            result.metrics.totalRequests /
+            (result.metrics.duration / 1000)
+          ).toFixed(2),
           totalDuration: (result.metrics.duration / 1000).toFixed(2) + 's',
           memoryIncrease: {
             heapUsed: (result.metrics.memoryUsage.heapUsed / 1024 / 1024).toFixed(2) + ' MB',
@@ -80,23 +87,14 @@ export class PerformanceReporter {
 
     // HTML レポート生成
     const html = this.generateHTMLReport(report);
-    writeFileSync(
-      join(reportDir, 'rate-limit-performance.html'),
-      html
-    );
+    writeFileSync(join(reportDir, 'rate-limit-performance.html'), html);
 
     // JSON レポート生成
-    writeFileSync(
-      join(reportDir, 'rate-limit-performance.json'),
-      JSON.stringify(report, null, 2)
-    );
+    writeFileSync(join(reportDir, 'rate-limit-performance.json'), JSON.stringify(report, null, 2));
 
     // Markdown レポート生成
     const markdown = this.generateMarkdownReport(report);
-    writeFileSync(
-      join(reportDir, 'rate-limit-performance.md'),
-      markdown
-    );
+    writeFileSync(join(reportDir, 'rate-limit-performance.md'), markdown);
 
     console.log(`\nPerformance reports generated in: ${reportDir}`);
     console.log('- rate-limit-performance.html');
@@ -206,7 +204,9 @@ export class PerformanceReporter {
         <th>Duration</th>
         <th>Memory ↑</th>
       </tr>
-      ${report.results.map((r: any) => `
+      ${report.results
+        .map(
+          (r: any) => `
       <tr>
         <td><strong>${r.testName}</strong></td>
         <td class="${r.passed ? 'passed' : 'failed'}">${r.passed ? '✅ PASS' : '❌ FAIL'}</td>
@@ -222,7 +222,9 @@ export class PerformanceReporter {
         <td class="metric">${r.metrics.totalDuration}</td>
         <td class="metric">${r.metrics.memoryIncrease.heapUsed}</td>
       </tr>
-      `).join('')}
+      `,
+        )
+        .join('')}
     </table>
     
     <h2>🎯 Performance Thresholds</h2>
@@ -255,9 +257,12 @@ export class PerformanceReporter {
 
 | Test Name | Status | Total Requests | Success Rate | Avg Response | P99 Response | Req/Second | Duration |
 |-----------|--------|----------------|--------------|--------------|--------------|------------|----------|
-${report.results.map((r: any) => 
-`| ${r.testName} | ${r.passed ? '✅ PASS' : '❌ FAIL'} | ${r.metrics.totalRequests.toLocaleString()} | ${r.metrics.successRate} | ${r.metrics.averageResponseTime} | ${r.metrics.p99ResponseTime} | ${r.metrics.requestsPerSecond} | ${r.metrics.totalDuration} |`
-).join('\n')}
+${report.results
+  .map(
+    (r: any) =>
+      `| ${r.testName} | ${r.passed ? '✅ PASS' : '❌ FAIL'} | ${r.metrics.totalRequests.toLocaleString()} | ${r.metrics.successRate} | ${r.metrics.averageResponseTime} | ${r.metrics.p99ResponseTime} | ${r.metrics.requestsPerSecond} | ${r.metrics.totalDuration} |`,
+  )
+  .join('\n')}
 
 ## Performance Thresholds
 - **P99 Response Time:** Target < 100ms
@@ -265,7 +270,9 @@ ${report.results.map((r: any) =>
 
 ## Detailed Metrics
 
-${report.results.map((r: any) => `
+${report.results
+  .map(
+    (r: any) => `
 ### ${r.testName}
 - **Status:** ${r.passed ? 'PASSED' : 'FAILED'}
 - **Total Requests:** ${r.metrics.totalRequests.toLocaleString()}
@@ -280,7 +287,9 @@ ${report.results.map((r: any) => `
 - **Memory Usage:**
   - Heap Increase: ${r.metrics.memoryIncrease.heapUsed}
   - RSS Increase: ${r.metrics.memoryIncrease.rss}
-`).join('\n')}
+`,
+  )
+  .join('\n')}
 `;
   }
 }

@@ -27,7 +27,9 @@ describe('ContentType', () => {
     });
 
     it('should handle multiple parameters', () => {
-      const ct = new ContentType('multipart/form-data; boundary=----WebKitFormBoundary; charset=utf-8');
+      const ct = new ContentType(
+        'multipart/form-data; boundary=----WebKitFormBoundary; charset=utf-8',
+      );
       expect(ct.type).toBe('multipart');
       expect(ct.subtype).toBe('form-data');
       expect(ct.getParameter('boundary')).toBe('----webkitformboundary'); // lowercase
@@ -50,7 +52,9 @@ describe('ContentType', () => {
       expect(() => new ContentType('invalid')).toThrow('Invalid content type format');
       expect(() => new ContentType('application')).toThrow('Invalid content type format');
       expect(() => new ContentType('/json')).toThrow('Content type must have type and subtype');
-      expect(() => new ContentType('application/')).toThrow('Content type must have type and subtype');
+      expect(() => new ContentType('application/')).toThrow(
+        'Content type must have type and subtype',
+      );
       expect(() => new ContentType('application/<script>')).toThrow('Invalid content type format');
     });
 
@@ -59,11 +63,11 @@ describe('ContentType', () => {
       expect(() => new ContentType('text/plain')).not.toThrow();
       expect(() => new ContentType('image/png')).not.toThrow();
       expect(() => new ContentType('video/mp4')).not.toThrow();
-      
+
       // With + notation
       expect(() => new ContentType('application/problem+json')).not.toThrow();
       expect(() => new ContentType('application/vnd.api+json')).not.toThrow();
-      
+
       // With dots and dashes
       expect(() => new ContentType('application/vnd.ms-excel')).not.toThrow();
       expect(() => new ContentType('application/x-www-form-urlencoded')).not.toThrow();
@@ -195,7 +199,9 @@ describe('ContentType', () => {
   describe('toString', () => {
     it('should return string representation', () => {
       expect(new ContentType('application/json').toString()).toBe('application/json');
-      expect(new ContentType('text/html; charset=utf-8').toString()).toBe('text/html; charset=utf-8');
+      expect(new ContentType('text/html; charset=utf-8').toString()).toBe(
+        'text/html; charset=utf-8',
+      );
     });
   });
 
@@ -210,7 +216,7 @@ describe('ContentType', () => {
       const original = new ContentType('text/html; charset=utf-8');
       const json = original.toJSON();
       const restored = ContentType.fromJSON(json);
-      
+
       expect(restored.equalsWithParameters(original)).toBe(true);
       expect(restored.value).toBe(original.value);
     });

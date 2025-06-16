@@ -28,7 +28,8 @@ type Story = StoryObj<typeof meta>;
 export const Info: Story = {
   args: {
     variant: "info",
-    children: "This is an informational alert. It provides neutral information to the user.",
+    children:
+      "This is an informational alert. It provides neutral information to the user.",
   },
 };
 

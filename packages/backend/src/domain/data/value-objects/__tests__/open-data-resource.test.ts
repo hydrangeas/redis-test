@@ -15,7 +15,7 @@ describe('OpenDataResource', () => {
       size: 1024 * 10, // 10KB
       lastModified: new Date('2025-01-23T10:00:00Z'),
       etag: '"abc123"',
-      contentType: 'application/json'
+      contentType: 'application/json',
     }).getValue();
     validDate = new Date('2025-01-23T10:00:00Z');
   });
@@ -23,7 +23,7 @@ describe('OpenDataResource', () => {
   describe('create', () => {
     it('should create a valid OpenDataResource', () => {
       const result = OpenDataResource.create(validPath, validMetadata, validDate);
-      
+
       expect(result.isSuccess).toBe(true);
       const resource = result.getValue();
       expect(resource.path).toBe(validPath);
@@ -36,7 +36,7 @@ describe('OpenDataResource', () => {
       const beforeTime = new Date();
       const result = OpenDataResource.create(validPath, validMetadata);
       const afterTime = new Date();
-      
+
       expect(result.isSuccess).toBe(true);
       const resource = result.getValue();
       expect(resource.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
@@ -45,7 +45,7 @@ describe('OpenDataResource', () => {
 
     it('should set accessedAt to createdAt by default', () => {
       const result = OpenDataResource.create(validPath, validMetadata, validDate);
-      
+
       expect(result.isSuccess).toBe(true);
       const resource = result.getValue();
       expect(resource.accessedAt).toEqual(resource.createdAt);
@@ -54,7 +54,7 @@ describe('OpenDataResource', () => {
     it('should accept custom accessedAt', () => {
       const accessedAt = new Date('2025-01-23T11:00:00Z');
       const result = OpenDataResource.create(validPath, validMetadata, validDate, accessedAt);
-      
+
       expect(result.isSuccess).toBe(true);
       const resource = result.getValue();
       expect(resource.accessedAt).toEqual(accessedAt);
@@ -62,7 +62,7 @@ describe('OpenDataResource', () => {
 
     it('should fail when path is missing', () => {
       const result = OpenDataResource.create(null as any, validMetadata);
-      
+
       expect(result.isFailure).toBe(true);
       expect(result.getError()).toBeInstanceOf(ValidationError);
       expect(result.getError().message).toBe('Path is required');
@@ -70,7 +70,7 @@ describe('OpenDataResource', () => {
 
     it('should fail when metadata is missing', () => {
       const result = OpenDataResource.create(validPath, null as any);
-      
+
       expect(result.isFailure).toBe(true);
       expect(result.getError()).toBeInstanceOf(ValidationError);
       expect(result.getError().message).toBe('Metadata is required');
@@ -78,7 +78,7 @@ describe('OpenDataResource', () => {
 
     it('should fail when createdAt is missing', () => {
       const result = OpenDataResource.create(validPath, validMetadata, null as any);
-      
+
       expect(result.isFailure).toBe(true);
       expect(result.getError()).toBeInstanceOf(ValidationError);
       expect(result.getError().message).toBe('CreatedAt is required');
@@ -90,7 +90,7 @@ describe('OpenDataResource', () => {
       const beforeTime = new Date();
       const result = OpenDataResource.createNew(validPath, validMetadata);
       const afterTime = new Date();
-      
+
       expect(result.isSuccess).toBe(true);
       const resource = result.getValue();
       expect(resource.createdAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
@@ -103,7 +103,7 @@ describe('OpenDataResource', () => {
     it('should generate cache key from path and etag', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const cacheKey = resource.getCacheKey();
-      
+
       expect(cacheKey).toBe('/data/secure/319985/r5.json:abc123');
     });
 
@@ -112,12 +112,12 @@ describe('OpenDataResource', () => {
         size: 1024,
         lastModified: new Date(),
         etag: '"xyz789"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       }).getValue();
-      
+
       const resource = OpenDataResource.create(validPath, metadataWithQuotedEtag).getValue();
       const cacheKey = resource.getCacheKey();
-      
+
       expect(cacheKey).toBe('/data/secure/319985/r5.json:xyz789');
     });
   });
@@ -127,7 +127,7 @@ describe('OpenDataResource', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const now = new Date('2025-01-23T10:04:00Z'); // 4 minutes later
       const cacheDurationSeconds = 300; // 5 minutes
-      
+
       expect(resource.isCacheValid(now, cacheDurationSeconds)).toBe(true);
     });
 
@@ -135,7 +135,7 @@ describe('OpenDataResource', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const now = new Date('2025-01-23T10:06:00Z'); // 6 minutes later
       const cacheDurationSeconds = 300; // 5 minutes
-      
+
       expect(resource.isCacheValid(now, cacheDurationSeconds)).toBe(false);
     });
 
@@ -143,7 +143,7 @@ describe('OpenDataResource', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const now = new Date('2025-01-23T10:05:00Z'); // Exactly 5 minutes later
       const cacheDurationSeconds = 300; // 5 minutes
-      
+
       expect(resource.isCacheValid(now, cacheDurationSeconds)).toBe(false);
     });
   });
@@ -151,13 +151,13 @@ describe('OpenDataResource', () => {
   describe('matchesEtag', () => {
     it('should match exact etag', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
-      
+
       expect(resource.matchesEtag('"abc123"')).toBe(true);
     });
 
     it('should not match different etag', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
-      
+
       expect(resource.matchesEtag('"xyz789"')).toBe(false);
     });
   });
@@ -166,21 +166,21 @@ describe('OpenDataResource', () => {
     it('should return true when modified after given date', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const since = new Date('2025-01-23T09:00:00Z'); // 1 hour before
-      
+
       expect(resource.isModifiedSince(since)).toBe(true);
     });
 
     it('should return false when not modified since given date', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const since = new Date('2025-01-23T11:00:00Z'); // 1 hour after
-      
+
       expect(resource.isModifiedSince(since)).toBe(false);
     });
 
     it('should return false when modified at exact same time', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const since = new Date('2025-01-23T10:00:00Z'); // Same time
-      
+
       expect(resource.isModifiedSince(since)).toBe(false);
     });
   });
@@ -188,7 +188,7 @@ describe('OpenDataResource', () => {
   describe('canAccessByTier', () => {
     it('should always return true for any tier', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
-      
+
       expect(resource.canAccessByTier('tier1')).toBe(true);
       expect(resource.canAccessByTier('tier2')).toBe(true);
       expect(resource.canAccessByTier('tier3')).toBe(true);
@@ -202,7 +202,7 @@ describe('OpenDataResource', () => {
         size: 512,
         lastModified: new Date(),
         etag: '"test"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       }).getValue();
       const resource1 = OpenDataResource.create(validPath, metadata1).getValue();
       expect(resource1.getHumanReadableSize()).toBe('512.00 B');
@@ -213,7 +213,7 @@ describe('OpenDataResource', () => {
         size: 1024 * 10.5,
         lastModified: new Date(),
         etag: '"test"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       }).getValue();
       const resource2 = OpenDataResource.create(validPath, metadata2).getValue();
       expect(resource2.getHumanReadableSize()).toBe('10.50 KB');
@@ -224,7 +224,7 @@ describe('OpenDataResource', () => {
         size: 1024 * 1024 * 2.25,
         lastModified: new Date(),
         etag: '"test"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       }).getValue();
       const resource3 = OpenDataResource.create(validPath, metadata3).getValue();
       expect(resource3.getHumanReadableSize()).toBe('2.25 MB');
@@ -235,7 +235,7 @@ describe('OpenDataResource', () => {
         size: 1024 * 1024 * 1024 * 1.5,
         lastModified: new Date(),
         etag: '"test"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       }).getValue();
       const resource4 = OpenDataResource.create(validPath, metadata4).getValue();
       expect(resource4.getHumanReadableSize()).toBe('1.50 GB');
@@ -246,9 +246,9 @@ describe('OpenDataResource', () => {
     it('should create new instance with updated accessedAt', () => {
       const resource = OpenDataResource.create(validPath, validMetadata, validDate).getValue();
       const newAccessTime = new Date('2025-01-23T12:00:00Z');
-      
+
       const updated = resource.withAccessRecorded(newAccessTime);
-      
+
       expect(updated).not.toBe(resource); // Different instance
       expect(updated.accessedAt).toEqual(newAccessTime);
       expect(updated.createdAt).toEqual(resource.createdAt); // Unchanged
@@ -259,9 +259,9 @@ describe('OpenDataResource', () => {
     it('should use current time by default', () => {
       const resource = OpenDataResource.create(validPath, validMetadata, validDate).getValue();
       const beforeTime = new Date();
-      
+
       const updated = resource.withAccessRecorded();
-      
+
       const afterTime = new Date();
       expect(updated.accessedAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
       expect(updated.accessedAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
@@ -275,11 +275,11 @@ describe('OpenDataResource', () => {
         size: 2048,
         lastModified: new Date('2025-01-23T11:00:00Z'),
         etag: '"def456"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       }).getValue();
-      
+
       const updated = resource.withUpdatedMetadata(newMetadata);
-      
+
       expect(updated).not.toBe(resource); // Different instance
       expect(updated.metadata).toBe(newMetadata);
       expect(updated.path).toBe(resource.path); // Same reference
@@ -292,7 +292,7 @@ describe('OpenDataResource', () => {
     it('should return formatted string representation', () => {
       const resource = OpenDataResource.create(validPath, validMetadata).getValue();
       const str = resource.toString();
-      
+
       expect(str).toBe('/data/secure/319985/r5.json (10.00 KB)');
     });
   });

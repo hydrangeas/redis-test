@@ -45,9 +45,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   addEndpoint(endpoint: APIEndpoint): Result<void> {
     const guardResult = Guard.againstNullOrUndefined(endpoint, 'endpoint');
     if (!guardResult.succeeded) {
-      return Result.fail(
-        DomainError.validation('INVALID_ENDPOINT', guardResult.message)
-      );
+      return Result.fail(DomainError.validation('INVALID_ENDPOINT', guardResult.message));
     }
 
     // 既存のエンドポイントかチェック
@@ -55,21 +53,21 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
       return Result.fail(
         DomainError.businessRule(
           'ENDPOINT_ALREADY_EXISTS',
-          `Endpoint ${endpoint.id.value} already exists`
-        )
+          `Endpoint ${endpoint.id.value} already exists`,
+        ),
       );
     }
 
     // 同じパスとメソッドの組み合わせが存在しないかチェック
     const duplicate = Array.from(this.props.endpoints.values()).find(
-      (ep) => ep.path.equals(endpoint.path) && ep.method === endpoint.method
+      (ep) => ep.path.equals(endpoint.path) && ep.method === endpoint.method,
     );
     if (duplicate) {
       return Result.fail(
         DomainError.businessRule(
           'DUPLICATE_ENDPOINT',
-          `Endpoint with path ${endpoint.path.value} and method ${endpoint.method} already exists`
-        )
+          `Endpoint with path ${endpoint.path.value} and method ${endpoint.method} already exists`,
+        ),
       );
     }
 
@@ -83,10 +81,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   removeEndpoint(endpointId: EndpointId): Result<void> {
     if (!this.props.endpoints.has(endpointId.value)) {
       return Result.fail(
-        DomainError.notFound(
-          'ENDPOINT_NOT_FOUND',
-          `Endpoint ${endpointId.value} not found`
-        )
+        DomainError.notFound('ENDPOINT_NOT_FOUND', `Endpoint ${endpointId.value} not found`),
       );
     }
 
@@ -101,10 +96,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     const endpoint = this.props.endpoints.get(endpointId.value);
     if (!endpoint) {
       return Result.fail(
-        DomainError.notFound(
-          'ENDPOINT_NOT_FOUND',
-          `Endpoint ${endpointId.value} not found`
-        )
+        DomainError.notFound('ENDPOINT_NOT_FOUND', `Endpoint ${endpointId.value} not found`),
       );
     }
 
@@ -114,20 +106,14 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * パスとメソッドからエンドポイントを検索
    */
-  findEndpointByPathAndMethod(
-    path: EndpointPath,
-    method: HttpMethod
-  ): Result<APIEndpoint> {
+  findEndpointByPathAndMethod(path: EndpointPath, method: HttpMethod): Result<APIEndpoint> {
     const endpoint = Array.from(this.props.endpoints.values()).find(
-      (ep) => ep.path.equals(path) && ep.method === method
+      (ep) => ep.path.equals(path) && ep.method === method,
     );
 
     if (!endpoint) {
       return Result.fail(
-        DomainError.notFound(
-          'ENDPOINT_NOT_FOUND',
-          `Endpoint ${method} ${path.value} not found`
-        )
+        DomainError.notFound('ENDPOINT_NOT_FOUND', `Endpoint ${method} ${path.value} not found`),
       );
     }
 
@@ -141,7 +127,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     userId: UserId,
     endpointId: EndpointId,
     userTier: UserTier,
-    requestTime: Date = new Date()
+    requestTime: Date = new Date(),
   ): Promise<Result<RateLimitCheckResult>> {
     // エンドポイントを取得
     const endpointResult = this.getEndpoint(endpointId);
@@ -154,8 +140,8 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
           userId.value,
           endpointId.value,
           'ENDPOINT_NOT_FOUND',
-          requestTime
-        )
+          requestTime,
+        ),
       );
       return Result.fail(endpointResult.getError());
     }
@@ -171,14 +157,11 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
           userId.value,
           endpointId.value,
           'ENDPOINT_INACTIVE',
-          requestTime
-        )
+          requestTime,
+        ),
       );
       return Result.fail(
-        DomainError.forbidden(
-          'ENDPOINT_INACTIVE',
-          'This endpoint is currently inactive'
-        )
+        DomainError.forbidden('ENDPOINT_INACTIVE', 'This endpoint is currently inactive'),
       );
     }
 
@@ -194,8 +177,8 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
           endpoint.path.value,
           endpoint.method,
           endpoint.type,
-          requestTime
-        )
+          requestTime,
+        ),
       );
 
       return Result.ok({
@@ -214,8 +197,8 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
         return Result.fail(
           DomainError.internal(
             'NO_RATE_LIMIT_DEFINED',
-            `No rate limit defined for tier ${userTier.level}`
-          )
+            `No rate limit defined for tier ${userTier.level}`,
+          ),
         );
       }
     }
@@ -225,11 +208,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
       : this.props.defaultRateLimits.get(userTier.level)!;
 
     // レート制限チェック
-    const checkResult = endpoint.checkRateLimit(
-      userId,
-      rateLimit,
-      requestTime
-    );
+    const checkResult = endpoint.checkRateLimit(userId, rateLimit, requestTime);
 
     // APIアクセスイベントを発行
     this.addDomainEvent(
@@ -241,8 +220,8 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
         endpoint.path.value,
         endpoint.method,
         endpoint.type,
-        requestTime
-      )
+        requestTime,
+      ),
     );
 
     // レート制限を超えている場合
@@ -255,15 +234,12 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
           endpointId.value,
           checkResult.requestCount.value,
           rateLimit.maxRequests,
-          requestTime
-        )
+          requestTime,
+        ),
       );
     } else {
       // レート制限ログを追加
-      const logResult = await endpoint.addRateLimitLog(
-        userId,
-        requestTime
-      );
+      const logResult = await endpoint.addRateLimitLog(userId, requestTime);
       if (logResult.isFailure) {
         return Result.fail(logResult.getError());
       }
@@ -277,7 +253,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
    */
   async cleanupUserLogs(
     userId: UserId,
-    retentionPeriodMinutes: number = 60
+    retentionPeriodMinutes: number = 60,
   ): Promise<Result<number>> {
     let totalCleaned = 0;
     const cutoffTime = new Date(Date.now() - retentionPeriodMinutes * 60 * 1000);
@@ -295,9 +271,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * すべてのエンドポイントのレート制限ログをクリーンアップ
    */
-  async cleanupAllLogs(
-    retentionPeriodMinutes: number = 60
-  ): Promise<Result<number>> {
+  async cleanupAllLogs(retentionPeriodMinutes: number = 60): Promise<Result<number>> {
     let totalCleaned = 0;
     const cutoffTime = new Date(Date.now() - retentionPeriodMinutes * 60 * 1000);
 
@@ -326,7 +300,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
 
     const endpoint = endpointResult.getValue();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
+
     let totalRequests = 0;
     const uniqueUsers = new Set<string>();
     let requestsInLastHour = 0;
@@ -351,10 +325,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * ファクトリメソッド
    */
-  static create(
-    props?: Partial<APIAggregateProps>,
-    id?: string
-  ): Result<APIAggregate> {
+  static create(props?: Partial<APIAggregateProps>, id?: string): Result<APIAggregate> {
     const defaultProps: APIAggregateProps = {
       endpoints: new Map(),
       defaultRateLimits: new Map([
@@ -375,10 +346,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * 既存のデータから再構築
    */
-  static reconstitute(
-    props: APIAggregateProps,
-    id: string
-  ): APIAggregate {
+  static reconstitute(props: APIAggregateProps, id: string): APIAggregate {
     return new APIAggregate(props, id);
   }
 }

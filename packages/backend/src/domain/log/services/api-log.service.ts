@@ -16,7 +16,7 @@ import { APIAccessRequested } from '@/domain/api/events/api-access-requested.eve
 export class APILogService {
   constructor(
     @inject(DI_TOKENS.APILogRepository) private apiLogRepository: IAPILogRepository,
-    @inject(DI_TOKENS.EventBus) private eventBus: IEventBus
+    @inject(DI_TOKENS.EventBus) private eventBus: IEventBus,
   ) {}
 
   async logAPIAccess(params: {
@@ -32,10 +32,11 @@ export class APILogService {
   }): Promise<Result<void>> {
     try {
       // Create value objects
-      const userIdResult = params.userId === 'anonymous' 
-        ? Result.ok(null)
-        : UserId.create(params.userId).map(id => id);
-      
+      const userIdResult =
+        params.userId === 'anonymous'
+          ? Result.ok(null)
+          : UserId.create(params.userId).map((id) => id);
+
       const endpointResult = APIEndpoint.create(params.endpoint);
       const methodResult = HTTPMethod.create(params.method);
       const statusCodeResult = StatusCode.create(params.statusCode);
@@ -92,7 +93,7 @@ export class APILogService {
         params.endpoint,
         params.method,
         params.statusCode,
-        new Date()
+        new Date(),
       );
       await this.eventBus.publish(event);
 

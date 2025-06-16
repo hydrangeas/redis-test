@@ -33,11 +33,7 @@ describe('Result', () => {
 
   describe('combine', () => {
     it('should return ok when all results are successful', () => {
-      const results = [
-        Result.ok('a'),
-        Result.ok('b'),
-        Result.ok('c'),
-      ];
+      const results = [Result.ok('a'), Result.ok('b'), Result.ok('c')];
 
       const combined = Result.combine(results);
       expect(combined.isSuccess).toBe(true);
@@ -45,11 +41,7 @@ describe('Result', () => {
 
     it('should return first failure when any result fails', () => {
       const error = DomainError.validation('ERROR', 'Error message');
-      const results = [
-        Result.ok('a'),
-        Result.fail(error),
-        Result.ok('c'),
-      ];
+      const results = [Result.ok('a'), Result.fail(error), Result.ok('c')];
 
       const combined = Result.combine(results);
       expect(combined.isFailure).toBe(true);
@@ -77,7 +69,7 @@ describe('Result', () => {
   describe('map', () => {
     it('should transform successful result', () => {
       const result = Result.ok(5);
-      const mapped = result.map(n => n * 2);
+      const mapped = result.map((n) => n * 2);
 
       expect(mapped.isSuccess).toBe(true);
       expect(mapped.getValue()).toBe(10);
@@ -86,7 +78,7 @@ describe('Result', () => {
     it('should pass through failed result', () => {
       const error = DomainError.validation('ERROR', 'Error');
       const result = Result.fail<number>(error);
-      const mapped = result.map(n => n * 2);
+      const mapped = result.map((n) => n * 2);
 
       expect(mapped.isFailure).toBe(true);
       expect(mapped.getError()).toBe(error);
@@ -96,7 +88,7 @@ describe('Result', () => {
   describe('flatMap', () => {
     it('should chain successful results', () => {
       const result = Result.ok(5);
-      const flatMapped = result.flatMap(n => Result.ok(n * 2));
+      const flatMapped = result.flatMap((n) => Result.ok(n * 2));
 
       expect(flatMapped.isSuccess).toBe(true);
       expect(flatMapped.getValue()).toBe(10);
@@ -105,7 +97,7 @@ describe('Result', () => {
     it('should handle failure in chain', () => {
       const error = DomainError.validation('ERROR', 'Error');
       const result = Result.ok(5);
-      const flatMapped = result.flatMap(n => Result.fail<number>(error));
+      const flatMapped = result.flatMap((n) => Result.fail<number>(error));
 
       expect(flatMapped.isFailure).toBe(true);
       expect(flatMapped.getError()).toBe(error);
@@ -115,8 +107,8 @@ describe('Result', () => {
       const error = DomainError.validation('ERROR', 'Error');
       const result = Result.fail<number>(error);
       let called = false;
-      
-      const flatMapped = result.flatMap(n => {
+
+      const flatMapped = result.flatMap((n) => {
         called = true;
         return Result.ok(n * 2);
       });
@@ -130,7 +122,7 @@ describe('Result', () => {
     it('should transform error in failed result', () => {
       const originalError = DomainError.validation('ORIGINAL', 'Original error');
       const newError = DomainError.businessRule('TRANSFORMED', 'Transformed error');
-      
+
       const result = Result.fail<string>(originalError);
       const mapped = result.mapError(() => newError);
 
@@ -169,10 +161,10 @@ describe('Result', () => {
     it('should throw custom error for failed result', () => {
       const domainError = DomainError.validation('ERROR', 'Domain error');
       const result = Result.fail<string>(domainError);
-      
-      expect(() => 
-        result.getOrElseThrow(err => new Error(`Custom: ${err.message}`))
-      ).toThrow('Custom: Domain error');
+
+      expect(() => result.getOrElseThrow((err) => new Error(`Custom: ${err.message}`))).toThrow(
+        'Custom: Domain error',
+      );
     });
   });
 });

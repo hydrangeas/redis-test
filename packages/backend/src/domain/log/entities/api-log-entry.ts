@@ -72,10 +72,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
     return this.props.error;
   }
 
-  public static create(
-    props: APILogEntryProps,
-    id?: LogId
-  ): Result<APILogEntry> {
+  public static create(props: APILogEntryProps, id?: LogId): Result<APILogEntry> {
     // ビジネスルールの検証
     const validationResult = this.validate(props);
     if (validationResult.isFailure) {
@@ -110,8 +107,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
    * アクセスが成功したか
    */
   get isSuccess(): boolean {
-    return this.props.responseInfo.statusCode >= 200 && 
-           this.props.responseInfo.statusCode < 300;
+    return this.props.responseInfo.statusCode >= 200 && this.props.responseInfo.statusCode < 300;
   }
 
   /**
@@ -165,7 +161,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
     const path = this.props.endpoint.path.value;
     const statusCode = this.props.responseInfo.statusCode;
     const responseTime = this.props.responseInfo.responseTime;
-    
+
     return `[${status}] ${method} ${path} - ${statusCode} (${responseTime}ms)`;
   }
 
@@ -174,7 +170,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
    */
   getTags(): string[] {
     const tags: string[] = [];
-    
+
     // ステータスコードベースのタグ
     if (this.isSuccess) tags.push('success');
     if (this.isError) tags.push('error');
@@ -183,7 +179,7 @@ export class APILogEntry extends Entity<APILogEntryProps> {
     if (this.isForbidden) tags.push('forbidden');
     if (this.isNotFound) tags.push('not_found');
     if (this.isInternalError) tags.push('internal_error');
-    
+
     // レスポンスタイムベースのタグ
     const responseTime = this.props.responseInfo.responseTime;
     if (responseTime < 100) {
@@ -195,11 +191,11 @@ export class APILogEntry extends Entity<APILogEntryProps> {
     } else {
       tags.push('very_slow');
     }
-    
+
     // エンドポイントタイプ
     tags.push(`endpoint:${this.props.endpoint.path.value}`);
     tags.push(`method:${this.props.endpoint.method.toLowerCase()}`);
-    
+
     return tags;
   }
 }

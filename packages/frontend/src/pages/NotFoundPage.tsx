@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigation } from '@/hooks/useNavigation';
+import React from "react";
+import { Link } from "react-router-dom";
+import { useNavigation } from "@/hooks/useNavigation";
 
 export const NotFoundPage: React.FC = () => {
   const { goBack } = useNavigation();

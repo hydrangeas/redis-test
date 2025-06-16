@@ -24,7 +24,7 @@ describe('API Documentation Routes', () => {
 
   beforeEach(async () => {
     fastify = Fastify();
-    
+
     // Register swagger plugin (required for fastify.swagger())
     await fastify.register(fastifySwagger, {
       openapi: {
@@ -48,7 +48,7 @@ describe('API Documentation Routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.headers['content-type']).toContain('application/json');
-    
+
     const spec = JSON.parse(response.body);
     expect(spec).toHaveProperty('openapi');
     expect(spec).toHaveProperty('info');
@@ -84,7 +84,7 @@ describe('API Documentation Routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.headers['content-type']).toContain('application/json');
-    
+
     const body = JSON.parse(response.body);
     expect(body).toHaveProperty('message', 'API Documentation');
     expect(body).toHaveProperty('ui', '/api/api-docs');
@@ -99,16 +99,16 @@ describe('API Documentation Routes', () => {
       method: 'GET',
       url: '/openapi.json',
     });
-    
+
     const yamlResponse = await fastify.inject({
       method: 'GET',
       url: '/openapi.yaml',
     });
-    
+
     // Endpoints should work
     expect(jsonResponse.statusCode).toBe(200);
     expect(yamlResponse.statusCode).toBe(200);
-    
+
     // Schema should have hide: true property
     // (This is set in the route definition to hide from Scalar UI)
   });

@@ -125,7 +125,7 @@ describe('FileSize', () => {
       const size1 = new FileSize(1024);
       const size2 = new FileSize(1024);
       const size3 = new FileSize(2048);
-      
+
       expect(size1.equals(size2)).toBe(true);
       expect(size1.equals(size3)).toBe(false);
     });
@@ -149,7 +149,7 @@ describe('FileSize', () => {
       const original = new FileSize(2048);
       const json = original.toJSON();
       const restored = FileSize.fromJSON(json);
-      
+
       expect(restored.equals(original)).toBe(true);
       expect(restored.bytes).toBe(original.bytes);
     });

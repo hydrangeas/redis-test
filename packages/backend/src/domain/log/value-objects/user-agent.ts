@@ -44,11 +44,11 @@ export class UserAgent {
    */
   parse(): UserAgentInfo {
     const value = this._value.toLowerCase();
-    
+
     // ブラウザの検出
     let browser = 'Unknown';
     let browserVersion = '';
-    
+
     if (value.includes('chrome/')) {
       browser = 'Chrome';
       const match = value.match(/chrome\/(\d+\.\d+)/);
@@ -70,7 +70,7 @@ export class UserAgent {
     // OSの検出
     let os = 'Unknown';
     let osVersion = '';
-    
+
     if (value.includes('windows nt')) {
       os = 'Windows';
       const match = value.match(/windows nt (\d+\.\d+)/);
@@ -96,7 +96,7 @@ export class UserAgent {
 
     // デバイスタイプの検出
     let deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown' = 'unknown';
-    
+
     if (value.includes('mobile') || value.includes('android') || value.includes('iphone')) {
       deviceType = 'mobile';
     } else if (value.includes('tablet') || value.includes('ipad')) {
@@ -153,7 +153,7 @@ export class UserAgent {
     ];
 
     const lowerValue = this._value.toLowerCase();
-    return botPatterns.some(pattern => lowerValue.includes(pattern));
+    return botPatterns.some((pattern) => lowerValue.includes(pattern));
   }
 
   /**
@@ -173,7 +173,7 @@ export class UserAgent {
     ];
 
     const lowerValue = this._value.toLowerCase();
-    return crawlerPatterns.some(pattern => lowerValue.includes(pattern));
+    return crawlerPatterns.some((pattern) => lowerValue.includes(pattern));
   }
 
   /**

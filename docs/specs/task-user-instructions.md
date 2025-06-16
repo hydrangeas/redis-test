@@ -11,6 +11,7 @@
 ## Supabaseプロジェクトの設定（タスク0002）
 
 ### 概要
+
 Supabaseプロジェクトを作成し、認証プロバイダーの設定、環境変数の取得を行います。
 
 ### 手順
@@ -25,6 +26,7 @@ Supabaseプロジェクトを作成し、認証プロバイダーの設定、環
 
 1. ダッシュボードで「New project」をクリック
 2. 以下の情報を入力：
+
    - **Project name**: `opendata-api` （任意の名前）
    - **Database Password**: 強力なパスワードを生成して保存
    - **Region**: `Northeast Asia (Tokyo)` または最寄りのリージョン
@@ -49,9 +51,10 @@ Supabaseプロジェクトを作成し、認証プロバイダーの設定、環
 3. **APIs & Services** > **Credentials** に移動
 4. **Create Credentials** > **OAuth client ID** を選択
 5. 以下を設定：
+
    - **Application type**: Web application
    - **Name**: `OpenData API`
-   - **Authorized redirect URIs**: 
+   - **Authorized redirect URIs**:
      - `https://xxxxx.supabase.co/auth/v1/callback`（xxxxx は実際のプロジェクトID）
      - `http://localhost:3000/auth/callback`（開発用）
 
@@ -65,6 +68,7 @@ Supabaseプロジェクトを作成し、認証プロバイダーの設定、環
 1. [GitHub Settings](https://github.com/settings/apps)にアクセス
 2. **OAuth Apps** > **New OAuth App** をクリック
 3. 以下を設定：
+
    - **Application name**: `OpenData API`
    - **Homepage URL**: `http://localhost:3000`
    - **Authorization callback URL**: `https://xxxxx.supabase.co/auth/v1/callback`
@@ -80,7 +84,7 @@ Supabaseプロジェクトを作成し、認証プロバイダーの設定、環
 1. Supabaseダッシュボードで **Authentication** > **Settings** に移動
 2. 以下を確認・設定：
    - **Site URL**: `http://localhost:3000`（開発用）
-   - **Redirect URLs**: 
+   - **Redirect URLs**:
      - `http://localhost:3000/**`
      - `https://your-app.vercel.app/**`（本番用、後で追加）
    - **JWT Expiry**: `3600`（1時間）

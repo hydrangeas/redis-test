@@ -29,7 +29,7 @@ export class AuthEvent {
 
   constructor(
     private readonly _type: EventType,
-    private readonly _description?: string
+    private readonly _description?: string,
   ) {
     Object.freeze(this);
   }
@@ -61,10 +61,7 @@ export class AuthEvent {
   static create(type: EventType, description?: string): Result<AuthEvent> {
     if (!Object.values(EventType).includes(type)) {
       return Result.fail<AuthEvent>(
-        DomainError.validation(
-          'INVALID_AUTH_EVENT_TYPE',
-          '無効な認証イベントタイプです'
-        )
+        DomainError.validation('INVALID_AUTH_EVENT_TYPE', '無効な認証イベントタイプです'),
       );
     }
 

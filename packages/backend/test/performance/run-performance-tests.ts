@@ -6,11 +6,12 @@ console.log('🚀 Starting Rate Limit Performance Tests...\n');
 
 try {
   // Run performance tests with Node.js garbage collection exposed
-  const testCommand = 'node --expose-gc ./node_modules/.bin/vitest run test/performance/rate-limit-load.test.ts';
-  
+  const testCommand =
+    'node --expose-gc ./node_modules/.bin/vitest run test/performance/rate-limit-load.test.ts';
+
   console.log('Running tests with command:', testCommand);
   console.log('This may take a few minutes...\n');
-  
+
   // Execute tests
   execSync(testCommand, {
     stdio: 'inherit',
@@ -19,15 +20,15 @@ try {
       NODE_ENV: 'test',
     },
   });
-  
+
   console.log('\n✅ Performance tests completed successfully!');
-  
+
   // Note: In a real implementation, we would collect test results
   // and pass them to the reporter. For this example, we'll create
   // a sample report structure.
-  
+
   console.log('\n📊 Generating performance reports...');
-  
+
   // Sample results for demonstration
   const sampleResults = [
     {
@@ -100,11 +101,10 @@ try {
       },
     },
   ];
-  
+
   PerformanceReporter.generateReport(sampleResults);
-  
+
   console.log('\n✨ Performance testing complete!');
-  
 } catch (error) {
   console.error('\n❌ Performance tests failed:', error);
   process.exit(1);

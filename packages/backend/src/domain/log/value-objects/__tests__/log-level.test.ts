@@ -59,7 +59,7 @@ describe('LogLevel', () => {
     it('無効な文字列の場合はエラーを返す', () => {
       const invalidInputs = ['INVALID', 'TRACE', 'FATAL', '', '123'];
 
-      invalidInputs.forEach(input => {
+      invalidInputs.forEach((input) => {
         const result = LogLevel.fromString(input);
         expect(result.isFailure).toBe(true);
         expect(result.error).toBe(`無効なログレベル: ${input}`);
@@ -73,11 +73,11 @@ describe('LogLevel', () => {
         expect(LogLevel.DEBUG.isLowerThan(LogLevel.INFO)).toBe(true);
         expect(LogLevel.INFO.isLowerThan(LogLevel.WARN)).toBe(true);
         expect(LogLevel.WARN.isLowerThan(LogLevel.ERROR)).toBe(true);
-        
+
         expect(LogLevel.ERROR.isLowerThan(LogLevel.WARN)).toBe(false);
         expect(LogLevel.WARN.isLowerThan(LogLevel.INFO)).toBe(false);
         expect(LogLevel.INFO.isLowerThan(LogLevel.DEBUG)).toBe(false);
-        
+
         expect(LogLevel.INFO.isLowerThan(LogLevel.INFO)).toBe(false);
       });
     });
@@ -87,11 +87,11 @@ describe('LogLevel', () => {
         expect(LogLevel.ERROR.isHigherThan(LogLevel.WARN)).toBe(true);
         expect(LogLevel.WARN.isHigherThan(LogLevel.INFO)).toBe(true);
         expect(LogLevel.INFO.isHigherThan(LogLevel.DEBUG)).toBe(true);
-        
+
         expect(LogLevel.DEBUG.isHigherThan(LogLevel.INFO)).toBe(false);
         expect(LogLevel.INFO.isHigherThan(LogLevel.WARN)).toBe(false);
         expect(LogLevel.WARN.isHigherThan(LogLevel.ERROR)).toBe(false);
-        
+
         expect(LogLevel.INFO.isHigherThan(LogLevel.INFO)).toBe(false);
       });
     });
@@ -99,7 +99,7 @@ describe('LogLevel', () => {
     describe('meetsMinimumLevel', () => {
       it('最小レベルを満たすかどうかを判定する', () => {
         const minLevel = LogLevel.WARN;
-        
+
         expect(LogLevel.DEBUG.meetsMinimumLevel(minLevel)).toBe(false);
         expect(LogLevel.INFO.meetsMinimumLevel(minLevel)).toBe(false);
         expect(LogLevel.WARN.meetsMinimumLevel(minLevel)).toBe(true);
@@ -146,7 +146,7 @@ describe('LogLevel', () => {
     it('JSON.stringify()で正しくシリアライズされる', () => {
       const obj = { level: LogLevel.INFO };
       const json = JSON.stringify(obj);
-      
+
       expect(json).toBe('{"level":"INFO"}');
     });
   });
@@ -154,11 +154,11 @@ describe('LogLevel', () => {
   describe('不変性', () => {
     it('作成後のログレベルは変更できない', () => {
       const level = LogLevel.INFO;
-      
+
       expect(() => {
         (level as any).level = 'DEBUG';
       }).toThrow();
-      
+
       expect(() => {
         (level as any).value = 10;
       }).toThrow();

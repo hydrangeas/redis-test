@@ -30,13 +30,8 @@ declare module 'fastify' {
   }
 }
 
-const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
-  fastify,
-  options
-) => {
-  const rateLimitService = container.resolve<IRateLimitService>(
-    DI_TOKENS.RateLimitService
-  );
+const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fastify, options) => {
+  const rateLimitService = container.resolve<IRateLimitService>(DI_TOKENS.RateLimitService);
 
   const defaultExcludePaths = [
     '/',
@@ -46,15 +41,9 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
     '/api/v1/auth/refresh', // リフレッシュトークンは除外
   ];
 
-  const excludePaths = [
-    ...defaultExcludePaths,
-    ...(options.excludePaths || []),
-  ];
+  const excludePaths = [...defaultExcludePaths, ...(options.excludePaths || [])];
 
-  const excludePatterns = options.excludePatterns || [
-    /^\/static\//,
-    /^\/public\//,
-  ];
+  const excludePatterns = options.excludePatterns || [/^\/static\//, /^\/public\//];
 
   const includeHeaders = options.includeHeaders !== false; // デフォルトはtrue
 
@@ -98,7 +87,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
       const user = request.user;
       const endpoint = new APIEndpoint(
         HttpMethod[request.method as keyof typeof HttpMethod],
-        new ApiPath(request.url.split('?')[0])
+        new ApiPath(request.url.split('?')[0]),
       );
 
       // レート制限チェック
@@ -119,9 +108,9 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
         });
 
         // 使用率が高い場合の警告
-        const usagePercentage = 
+        const usagePercentage =
           ((rateLimitResult.limit - rateLimitResult.remaining) / rateLimitResult.limit) * 100;
-        
+
         if (usagePercentage >= 80) {
           reply.header('X-RateLimit-Warning', `${Math.round(usagePercentage)}% of rate limit used`);
         }
@@ -144,22 +133,25 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
               limit: rateLimitResult.limit,
               window: `${user.tier.rateLimit.windowSeconds} seconds`,
               tier: user.tier.level,
-            }
+            },
           ),
-          request.url
+          request.url,
         );
 
         // Retry-Afterヘッダーの設定
         reply.header('Retry-After', rateLimitResult.retryAfter.toString());
 
-        request.log.warn({
-          userId: user.userId.value,
-          tier: user.tier.level,
-          limit: rateLimitResult.limit,
-          remaining: rateLimitResult.remaining,
-          resetAt: new Date(rateLimitResult.resetAt * 1000).toISOString(),
-          endpoint: endpoint.toString(),
-        }, 'Rate limit exceeded');
+        request.log.warn(
+          {
+            userId: user.userId.value,
+            tier: user.tier.level,
+            limit: rateLimitResult.limit,
+            remaining: rateLimitResult.remaining,
+            resetAt: new Date(rateLimitResult.resetAt * 1000).toISOString(),
+            endpoint: endpoint.toString(),
+          },
+          'Rate limit exceeded',
+        );
 
         await reply.code(429).send(problemDetails);
         return; // Early return to stop processing
@@ -168,19 +160,24 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
       // レート制限情報をリクエストに付加（後続処理で使用可能）
       request.rateLimitInfo = rateLimitResult;
 
-      request.log.debug({
-        userId: user.userId.value,
-        tier: user.tier.level,
-        remaining: rateLimitResult.remaining,
-        limit: rateLimitResult.limit,
-      }, 'Rate limit check passed');
-
+      request.log.debug(
+        {
+          userId: user.userId.value,
+          tier: user.tier.level,
+          remaining: rateLimitResult.remaining,
+          limit: rateLimitResult.limit,
+        },
+        'Rate limit check passed',
+      );
     } catch (error) {
       // レート制限サービスのエラーはリクエストを通す（fail open）
-      request.log.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Rate limit service error - allowing request');
+      request.log.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Rate limit service error - allowing request',
+      );
 
       // エラーが発生した場合でも、基本的なヘッダーは設定
       if (includeHeaders && request.user) {
@@ -211,22 +208,27 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
       try {
         const endpoint = new APIEndpoint(
           HttpMethod[request.method as keyof typeof HttpMethod],
-          new ApiPath(request.url.split('?')[0])
+          new ApiPath(request.url.split('?')[0]),
         );
 
         await rateLimitService.recordUsage(request.user, endpoint);
 
-        request.log.debug({
-          userId: request.user.userId.value,
-          endpoint: endpoint.toString(),
-          statusCode: reply.statusCode,
-        }, 'Rate limit usage recorded');
-
+        request.log.debug(
+          {
+            userId: request.user.userId.value,
+            endpoint: endpoint.toString(),
+            statusCode: reply.statusCode,
+          },
+          'Rate limit usage recorded',
+        );
       } catch (error) {
         // 記録の失敗はログのみ
-        request.log.error({
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }, 'Failed to record rate limit usage');
+        request.log.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to record rate limit usage',
+        );
       }
     }
   });
@@ -246,7 +248,7 @@ declare module 'fastify' {
       retryAfter: number;
     };
   }
-  
+
   interface FastifyInstance {
     checkRateLimit: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }

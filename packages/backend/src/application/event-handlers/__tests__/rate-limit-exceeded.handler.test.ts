@@ -47,7 +47,7 @@ describe('RateLimitExceededHandler', () => {
         'endpoint-123',
         61,
         60,
-        new Date()
+        new Date(),
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -77,7 +77,7 @@ describe('RateLimitExceededHandler', () => {
           requestCount: 61,
           rateLimit: 60,
         }),
-        'Handling RateLimitExceeded event'
+        'Handling RateLimitExceeded event',
       );
     });
 
@@ -90,22 +90,27 @@ describe('RateLimitExceededHandler', () => {
         'endpoint-123',
         61,
         60,
-        new Date()
+        new Date(),
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
-      
+
       // Mock multiple previous violations
-      const previousViolations = Array(5).fill(null).map(() => ({
-        id: { value: 'log-id' } as any,
-        userId: { value: '550e8400-e29b-41d4-a716-446655440000' } as any,
-        eventType: EventType.RATE_LIMIT_CHECK,
-        result: AuthResult.BLOCKED,
-        createdAt: new Date(),
-      } as AuthLogEntry));
-      
+      const previousViolations = Array(5)
+        .fill(null)
+        .map(
+          () =>
+            ({
+              id: { value: 'log-id' } as any,
+              userId: { value: '550e8400-e29b-41d4-a716-446655440000' } as any,
+              eventType: EventType.RATE_LIMIT_CHECK,
+              result: AuthResult.BLOCKED,
+              createdAt: new Date(),
+            }) as AuthLogEntry,
+        );
+
       vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(
-        Result.ok(previousViolations)
+        Result.ok(previousViolations),
       );
 
       // Act
@@ -118,7 +123,7 @@ describe('RateLimitExceededHandler', () => {
           userId: '550e8400-e29b-41d4-a716-446655440000',
           blockCount: 5,
         }),
-        'Multiple rate limit violations detected for user'
+        'Multiple rate limit violations detected for user',
       );
     });
 
@@ -131,7 +136,7 @@ describe('RateLimitExceededHandler', () => {
         61,
         60,
         new Date(),
-        1
+        1,
       );
 
       // Act
@@ -143,7 +148,7 @@ describe('RateLimitExceededHandler', () => {
         expect.objectContaining({
           eventId: event.eventId,
         }),
-        'Invalid userId in RateLimitExceeded event'
+        'Invalid userId in RateLimitExceeded event',
       );
     });
 
@@ -156,12 +161,10 @@ describe('RateLimitExceededHandler', () => {
         'endpoint-123',
         61,
         60,
-        new Date()
+        new Date(),
       );
 
-      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(
-        Result.fail('Database error')
-      );
+      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.fail('Database error'));
       vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(Result.ok([]));
 
       // Act
@@ -173,7 +176,7 @@ describe('RateLimitExceededHandler', () => {
           eventId: event.eventId,
           error: expect.any(Error),
         }),
-        'Failed to save rate limit exceeded log'
+        'Failed to save rate limit exceeded log',
       );
     });
 
@@ -186,12 +189,12 @@ describe('RateLimitExceededHandler', () => {
         'endpoint-123',
         61,
         60,
-        new Date()
+        new Date(),
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
       vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(
-        Result.fail('Query error')
+        Result.fail('Query error'),
       );
 
       // Act
@@ -201,7 +204,7 @@ describe('RateLimitExceededHandler', () => {
       expect(mockAuthLogRepository.save).toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         expect.anything(),
-        'Multiple rate limit violations detected for user'
+        'Multiple rate limit violations detected for user',
       );
     });
 
@@ -214,7 +217,7 @@ describe('RateLimitExceededHandler', () => {
         'endpoint-123',
         61,
         60,
-        new Date()
+        new Date(),
       );
 
       const error = new Error('Unexpected error');
@@ -222,14 +225,14 @@ describe('RateLimitExceededHandler', () => {
 
       // Act & Assert
       await expect(handler.handle(event)).rejects.toThrow('Unexpected error');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: event.eventId,
           error: 'Unexpected error',
           stack: expect.any(String),
         }),
-        'Error handling RateLimitExceeded event'
+        'Error handling RateLimitExceeded event',
       );
     });
   });

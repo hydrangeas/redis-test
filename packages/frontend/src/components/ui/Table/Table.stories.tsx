@@ -32,10 +32,34 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const sampleData = [
-  { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "Active" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User", status: "Active" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "User", status: "Inactive" },
-  { id: 4, name: "Alice Brown", email: "alice@example.com", role: "Moderator", status: "Active" },
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john@example.com",
+    role: "Admin",
+    status: "Active",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    email: "jane@example.com",
+    role: "User",
+    status: "Active",
+  },
+  {
+    id: 3,
+    name: "Bob Johnson",
+    email: "bob@example.com",
+    role: "User",
+    status: "Inactive",
+  },
+  {
+    id: 4,
+    name: "Alice Brown",
+    email: "alice@example.com",
+    role: "Moderator",
+    status: "Active",
+  },
 ];
 
 export const Basic: Story = {
@@ -144,8 +168,12 @@ export const WithActions: Story = {
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                  <button className="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                  <button className="text-blue-600 hover:text-blue-800 text-sm">
+                    Edit
+                  </button>
+                  <button className="text-red-600 hover:text-red-800 text-sm">
+                    Delete
+                  </button>
                 </div>
               </TableCell>
             </TableRow>
@@ -205,7 +233,9 @@ export const WithStatusBadges: Story = {
                 Active
               </span>
             </TableCell>
-            <TableCell className="text-sm text-gray-500">5 minutes ago</TableCell>
+            <TableCell className="text-sm text-gray-500">
+              5 minutes ago
+            </TableCell>
           </TableRow>
           <TableRow>
             <TableCell>
@@ -248,7 +278,9 @@ export const Empty: Story = {
             <TableCell colSpan={3} className="text-center py-8">
               <div className="text-gray-500">
                 <p className="text-lg font-medium">No data available</p>
-                <p className="text-sm">Try adjusting your filters or add new items.</p>
+                <p className="text-sm">
+                  Try adjusting your filters or add new items.
+                </p>
               </div>
             </TableCell>
           </TableRow>

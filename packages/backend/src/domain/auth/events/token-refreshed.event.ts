@@ -8,7 +8,7 @@ export class TokenRefreshed extends DomainEvent {
     public readonly oldTokenId?: string,
     public readonly newTokenId?: string,
     public readonly refreshCount: number = 1,
-    public readonly sessionId?: string
+    public readonly sessionId?: string,
   ) {
     super(aggregateId, eventVersion);
     Object.freeze(this);

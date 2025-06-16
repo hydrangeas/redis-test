@@ -53,7 +53,7 @@ describe('Rate Limit Performance Tests', () => {
       // パフォーマンス基準
       expect(metrics.p99ResponseTime).toBeLessThan(100); // P99 < 100ms
       expect(metrics.averageResponseTime).toBeLessThan(50); // 平均 < 50ms
-      
+
       // 正確性の検証（TIER1: 60 req/min）
       const expectedSuccessful = 100 * 60; // 各ユーザー60リクエストまで
       expect(metrics.successfulRequests).toBe(expectedSuccessful);
@@ -71,7 +71,7 @@ describe('Rate Limit Performance Tests', () => {
           userTier: tier,
           endpoint: '/secure/test/data.json',
         });
-        
+
         results.push({ tier, metrics });
       }
 
@@ -106,12 +106,9 @@ describe('Rate Limit Performance Tests', () => {
     it('should handle race conditions at window boundaries', async () => {
       // Setup for window boundary test
       vi.useFakeTimers();
-      
+
       const windowDuration = 60000; // 60秒
-      const user = AuthenticatedUser.fromTokenPayload(
-        uuidv4(),
-        TierLevel.TIER1
-      );
+      const user = AuthenticatedUser.fromTokenPayload(uuidv4(), TierLevel.TIER1);
 
       const endpoint = APIEndpoint.fromString('GET /secure/test/data.json');
 
@@ -133,7 +130,7 @@ describe('Rate Limit Performance Tests', () => {
       // 新しいウィンドウでは再び許可される
       const newWindow = await rateLimitService.checkLimit(user, endpoint);
       expect(newWindow.allowed).toBe(true);
-      
+
       vi.useRealTimers();
     });
   });
@@ -165,7 +162,7 @@ describe('Rate Limit Performance Tests', () => {
       const increase = ((lastUsage - firstUsage) / firstUsage) * 100;
 
       console.log(`Memory increase over ${iterations} iterations: ${increase.toFixed(2)}%`);
-      
+
       // メモリ増加が50%未満であることを確認
       expect(increase).toBeLessThan(50);
     });

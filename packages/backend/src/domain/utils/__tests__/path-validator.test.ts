@@ -27,8 +27,9 @@ describe('PathValidator', () => {
       ];
 
       for (const dangerousPath of dangerousPaths) {
-        expect(() => PathValidator.validateAndSanitize(dangerousPath))
-          .toThrow(PathTraversalException);
+        expect(() => PathValidator.validateAndSanitize(dangerousPath)).toThrow(
+          PathTraversalException,
+        );
       }
     });
 
@@ -41,21 +42,17 @@ describe('PathValidator', () => {
       ];
 
       for (const absolutePath of absolutePaths) {
-        expect(() => PathValidator.validateAndSanitize(absolutePath))
-          .toThrow(PathTraversalException);
+        expect(() => PathValidator.validateAndSanitize(absolutePath)).toThrow(
+          PathTraversalException,
+        );
       }
     });
 
     it('should reject home directory references', () => {
-      const homePaths = [
-        '~/Documents/secret.txt',
-        '~/.ssh/id_rsa',
-        '~/../../etc/passwd',
-      ];
+      const homePaths = ['~/Documents/secret.txt', '~/.ssh/id_rsa', '~/../../etc/passwd'];
 
       for (const homePath of homePaths) {
-        expect(() => PathValidator.validateAndSanitize(homePath))
-          .toThrow(PathTraversalException);
+        expect(() => PathValidator.validateAndSanitize(homePath)).toThrow(PathTraversalException);
       }
     });
 
@@ -68,60 +65,49 @@ describe('PathValidator', () => {
       ];
 
       for (const maliciousPath of maliciousPaths) {
-        expect(() => PathValidator.validateAndSanitize(maliciousPath))
-          .toThrow(PathTraversalException);
+        expect(() => PathValidator.validateAndSanitize(maliciousPath)).toThrow(
+          PathTraversalException,
+        );
       }
     });
 
     it('should reject Windows reserved names', () => {
-      const reservedNames = [
-        'con',
-        'prn',
-        'aux',
-        'nul',
-        'com1',
-        'lpt1',
-        'con.txt',
-        'prn.json',
-      ];
+      const reservedNames = ['con', 'prn', 'aux', 'nul', 'com1', 'lpt1', 'con.txt', 'prn.json'];
 
       for (const reservedName of reservedNames) {
-        expect(() => PathValidator.validateAndSanitize(reservedName))
-          .toThrow(PathTraversalException);
+        expect(() => PathValidator.validateAndSanitize(reservedName)).toThrow(
+          PathTraversalException,
+        );
       }
     });
 
     it('should reject hidden files and directories', () => {
-      const hiddenPaths = [
-        '.hidden',
-        '.git/config',
-        'folder/.secret',
-        '.env',
-        '.ssh/id_rsa',
-      ];
+      const hiddenPaths = ['.hidden', '.git/config', 'folder/.secret', '.env', '.ssh/id_rsa'];
 
       for (const hiddenPath of hiddenPaths) {
-        expect(() => PathValidator.validateAndSanitize(hiddenPath))
-          .toThrow(PathTraversalException);
+        expect(() => PathValidator.validateAndSanitize(hiddenPath)).toThrow(PathTraversalException);
       }
     });
 
     it('should validate paths within base directory', () => {
       const basePath = '/app/data';
-      
+
       // Valid paths within base
       expect(() => PathValidator.validateAndSanitize('test.json', basePath)).not.toThrow();
       expect(() => PathValidator.validateAndSanitize('folder/file.json', basePath)).not.toThrow();
-      
+
       // Invalid paths trying to escape base
-      expect(() => PathValidator.validateAndSanitize('../secret.json', basePath))
-        .toThrow(PathTraversalException);
+      expect(() => PathValidator.validateAndSanitize('../secret.json', basePath)).toThrow(
+        PathTraversalException,
+      );
     });
 
     it('should handle empty or invalid input', () => {
       expect(() => PathValidator.validateAndSanitize('')).toThrow(PathTraversalException);
       expect(() => PathValidator.validateAndSanitize(null as any)).toThrow(PathTraversalException);
-      expect(() => PathValidator.validateAndSanitize(undefined as any)).toThrow(PathTraversalException);
+      expect(() => PathValidator.validateAndSanitize(undefined as any)).toThrow(
+        PathTraversalException,
+      );
       expect(() => PathValidator.validateAndSanitize(123 as any)).toThrow(PathTraversalException);
     });
   });
@@ -129,13 +115,13 @@ describe('PathValidator', () => {
   describe('isAllowedExtension', () => {
     it('should check file extensions correctly', () => {
       const allowedExtensions = ['.json', '.txt', '.xml'];
-      
+
       expect(PathValidator.isAllowedExtension('file.json', allowedExtensions)).toBe(true);
       expect(PathValidator.isAllowedExtension('file.txt', allowedExtensions)).toBe(true);
       expect(PathValidator.isAllowedExtension('file.xml', allowedExtensions)).toBe(true);
       expect(PathValidator.isAllowedExtension('file.pdf', allowedExtensions)).toBe(false);
       expect(PathValidator.isAllowedExtension('file.exe', allowedExtensions)).toBe(false);
-      
+
       // Case insensitive
       expect(PathValidator.isAllowedExtension('file.JSON', allowedExtensions)).toBe(true);
       expect(PathValidator.isAllowedExtension('file.TXT', allowedExtensions)).toBe(true);
@@ -147,7 +133,7 @@ describe('PathValidator', () => {
       expect(PathValidator.isValidJsonPath('data.json')).toBe(true);
       expect(PathValidator.isValidJsonPath('folder/file.json')).toBe(true);
       expect(PathValidator.isValidJsonPath('test.JSON')).toBe(true);
-      
+
       expect(PathValidator.isValidJsonPath('data.txt')).toBe(false);
       expect(PathValidator.isValidJsonPath('file.xml')).toBe(false);
       expect(PathValidator.isValidJsonPath('noextension')).toBe(false);

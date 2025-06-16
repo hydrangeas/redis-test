@@ -35,11 +35,8 @@ describe('APIEndpointRepository Integration Tests', () => {
       await repository.save(endpoint2);
 
       expect(repository.count()).toBe(1);
-      
-      const found = await repository.findByPathAndMethod(
-        endpoint1.path,
-        endpoint1.method
-      );
+
+      const found = await repository.findByPathAndMethod(endpoint1.path, endpoint1.method);
       expect(found.getValue()?.type.value).toBe('internal');
     });
 
@@ -51,11 +48,11 @@ describe('APIEndpointRepository Integration Tests', () => {
       await repository.save(postEndpoint);
 
       expect(repository.count()).toBe(2);
-      
+
       // Verify both endpoints exist
       const getResult = await repository.findByPathAndMethod(getEndpoint.path, HttpMethod.GET);
       const postResult = await repository.findByPathAndMethod(postEndpoint.path, HttpMethod.POST);
-      
+
       expect(getResult.getValue()).toBeTruthy();
       expect(postResult.getValue()).toBeTruthy();
     });
@@ -66,10 +63,7 @@ describe('APIEndpointRepository Integration Tests', () => {
       const endpoint = createTestEndpoint('/api/users', 'GET');
       await repository.save(endpoint);
 
-      const result = await repository.findByPathAndMethod(
-        endpoint.path,
-        endpoint.method
-      );
+      const result = await repository.findByPathAndMethod(endpoint.path, endpoint.method);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBeTruthy();
@@ -91,10 +85,7 @@ describe('APIEndpointRepository Integration Tests', () => {
       const endpoint = createTestEndpoint('/api/data', 'POST');
       await repository.save(endpoint);
 
-      const result = await repository.findByPathAndMethod(
-        endpoint.path,
-        HttpMethod.GET
-      );
+      const result = await repository.findByPathAndMethod(endpoint.path, HttpMethod.GET);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBeNull();
@@ -170,10 +161,7 @@ describe('APIEndpointRepository Integration Tests', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(repository.count()).toBe(0);
-      expect(repository.deleteSpy).toHaveBeenCalledWith(
-        endpoint.path,
-        endpoint.method
-      );
+      expect(repository.deleteSpy).toHaveBeenCalledWith(endpoint.path, endpoint.method);
     });
 
     it('存在しないエンドポイントの削除はエラーを返す', async () => {
@@ -211,7 +199,7 @@ describe('APIEndpointRepository Integration Tests', () => {
       repository.seed(endpoints);
 
       expect(repository.count()).toBe(3);
-      
+
       const result = await repository.listAll();
       expect(result.getValue()).toHaveLength(3);
     });
@@ -222,15 +210,15 @@ describe('APIEndpointRepository Integration Tests', () => {
 function createTestEndpoint(
   path: string,
   method: string,
-  endpointType: EndpointType = EndpointType.PROTECTED
+  endpointType: EndpointType = EndpointType.PROTECTED,
 ): APIEndpoint {
   const pathResult = EndpointPath.create(path);
   if (pathResult.isFailure) {
     throw new Error(`Failed to create path: ${pathResult.error?.message}`);
   }
-  
+
   const httpMethod = HttpMethod[method as keyof typeof HttpMethod];
-  
+
   const result = APIEndpoint.create({
     path: pathResult.getValue(),
     method: httpMethod,
@@ -238,11 +226,11 @@ function createTestEndpoint(
     description: `Test endpoint for ${method} ${path}`,
     isActive: true,
   });
-  
+
   if (result.isFailure) {
     throw new Error(`Failed to create endpoint: ${result.error?.message}`);
   }
-  
+
   return result.getValue();
 }
 
@@ -251,7 +239,7 @@ function createInactiveEndpoint(path: string, method: string): APIEndpoint {
   if (pathResult.isFailure) {
     throw new Error(`Failed to create path: ${pathResult.error?.message}`);
   }
-  
+
   const result = APIEndpoint.create({
     path: pathResult.getValue(),
     method: HttpMethod[method as keyof typeof HttpMethod],
@@ -259,10 +247,10 @@ function createInactiveEndpoint(path: string, method: string): APIEndpoint {
     description: `Inactive test endpoint`,
     isActive: false,
   });
-  
+
   if (result.isFailure) {
     throw new Error(`Failed to create inactive endpoint: ${result.error?.message}`);
   }
-  
+
   return result.getValue();
 }

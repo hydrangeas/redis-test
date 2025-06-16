@@ -12,7 +12,7 @@ describe('LogFactory', () => {
       expect(log).toHaveProperty('ip_address');
       expect(log).toHaveProperty('user_agent');
       expect(['success', 'failed']).toContain(log.result);
-      
+
       if (log.result === 'success') {
         expect(log.user_id).toBeTruthy();
         expect(log.error_message).toBeNull();
@@ -92,7 +92,7 @@ describe('LogFactory', () => {
       const logs = LogFactory.createManyAuthLogs(5);
 
       expect(logs).toHaveLength(5);
-      const ids = new Set(logs.map(l => l.id));
+      const ids = new Set(logs.map((l) => l.id));
       expect(ids.size).toBe(5);
     });
 
@@ -101,7 +101,7 @@ describe('LogFactory', () => {
       const logs = LogFactory.createManyApiLogs(userId, 5);
 
       expect(logs).toHaveLength(5);
-      logs.forEach(log => {
+      logs.forEach((log) => {
         expect(log.user_id).toBe(userId);
       });
     });
@@ -111,7 +111,7 @@ describe('LogFactory', () => {
       const logs = LogFactory.createManyRateLimitLogs(userId, 5);
 
       expect(logs).toHaveLength(5);
-      logs.forEach(log => {
+      logs.forEach((log) => {
         expect(log.user_id).toBe(userId);
       });
     });

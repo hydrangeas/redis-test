@@ -1,24 +1,24 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 // Define API endpoint mocks
 export const handlers = [
   // Health check endpoint
-  http.get('/api/health', () => {
-    return HttpResponse.json({ status: 'healthy' });
+  http.get("/api/health", () => {
+    return HttpResponse.json({ status: "healthy" });
   }),
 
   // Mock open data API endpoint
-  http.get('/api/secure/:id/:filename', ({ params }) => {
+  http.get("/api/secure/:id/:filename", ({ params }) => {
     const { id, filename } = params;
-    
+
     // Simulate rate limit exceeded
     if (Math.random() < 0.1) {
       return HttpResponse.json(
         {
-          type: 'https://example.com/errors/rate-limit-exceeded',
-          title: 'Rate limit exceeded',
+          type: "https://example.com/errors/rate-limit-exceeded",
+          title: "Rate limit exceeded",
           status: 429,
-          detail: 'API rate limit exceeded. Please try again later.',
+          detail: "API rate limit exceeded. Please try again later.",
           instance: `/secure/${id}/${filename}`,
         },
         { status: 429 }
@@ -26,13 +26,13 @@ export const handlers = [
     }
 
     // Simulate not found
-    if (id === '404' || filename === 'notfound.json') {
+    if (id === "404" || filename === "notfound.json") {
       return HttpResponse.json(
         {
-          type: 'https://example.com/errors/not-found',
-          title: 'Resource not found',
+          type: "https://example.com/errors/not-found",
+          title: "Resource not found",
           status: 404,
-          detail: 'The requested data file does not exist',
+          detail: "The requested data file does not exist",
           instance: `/secure/${id}/${filename}`,
         },
         { status: 404 }
@@ -45,19 +45,19 @@ export const handlers = [
       filename,
       data: {
         title: `Mock data for ${filename}`,
-        content: 'This is mock data from MSW',
+        content: "This is mock data from MSW",
         timestamp: new Date().toISOString(),
       },
     });
   }),
 
   // Mock authentication endpoint
-  http.post('/api/auth/login', async ({ request }) => {
-    const body = await request.json() as { provider: string };
-    
+  http.post("/api/auth/login", async ({ request }) => {
+    const body = (await request.json()) as { provider: string };
+
     if (!body.provider) {
       return HttpResponse.json(
-        { error: 'Provider is required' },
+        { error: "Provider is required" },
         { status: 400 }
       );
     }
@@ -68,25 +68,22 @@ export const handlers = [
   }),
 
   // Mock logout endpoint
-  http.post('/api/auth/logout', () => {
+  http.post("/api/auth/logout", () => {
     return HttpResponse.json({ success: true });
   }),
 
   // Mock user info endpoint
-  http.get('/api/auth/user', ({ request }) => {
-    const authHeader = request.headers.get('Authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return HttpResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+  http.get("/api/auth/user", ({ request }) => {
+    const authHeader = request.headers.get("Authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     return HttpResponse.json({
-      id: 'test-user-id',
-      email: 'test@example.com',
-      tier: 'tier1',
+      id: "test-user-id",
+      email: "test@example.com",
+      tier: "tier1",
       rateLimit: 60,
     });
   }),

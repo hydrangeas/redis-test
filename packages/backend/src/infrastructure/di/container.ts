@@ -48,7 +48,7 @@ export async function setupDI(): Promise<DependencyContainer> {
         autoRefreshToken: false,
         persistSession: false,
       },
-    }
+    },
   );
   container.register<SupabaseClient>(DI_TOKENS.SupabaseClient, {
     useValue: supabaseClient,
@@ -66,15 +66,15 @@ export async function setupDI(): Promise<DependencyContainer> {
   registerDomainServices(container);
   registerApplicationServices(container);
   registerInfrastructureServices(container);
-  
+
   // イベントハンドラーの登録
-  import('@/application/event-handlers').then(module => {
+  import('@/application/event-handlers').then((module) => {
     module.registerEventHandlers(container);
     logger.info('Event handlers registered');
   });
 
   logger.info('DI container setup completed');
-  
+
   return container;
 }
 
@@ -125,25 +125,28 @@ export function setupTestDI(): DependencyContainer {
   registerEventServices(container);
   registerDomainServices(container);
   registerApplicationServices(container);
-  
+
   // テスト用にJwtServiceのモックを登録（auth.plugin.tsで必要）
   // 実際のモックはテストで上書き可能
   container.register(DI_TOKENS.JwtService, {
     useValue: {
       generateAccessToken: () => Promise.resolve(Result.ok('test-access-token')),
       generateRefreshToken: () => Promise.resolve(Result.ok('test-refresh-token')),
-      verifyAccessToken: () => Promise.resolve(Result.ok({ sub: 'test-user', tier: 'tier1', exp: Math.floor(Date.now() / 1000) + 3600 })),
+      verifyAccessToken: () =>
+        Promise.resolve(
+          Result.ok({ sub: 'test-user', tier: 'tier1', exp: Math.floor(Date.now() / 1000) + 3600 }),
+        ),
       verifyRefreshToken: () => Promise.resolve(Result.ok({ sub: 'test-user' })),
       decodeToken: () => ({ sub: 'test-user' }),
     },
   });
-  
+
   // テスト用にSupabaseUserRepositoryを登録
   const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
   container.register(DI_TOKENS.UserRepository, {
     useClass: SupabaseUserRepository,
   });
-  
+
   // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
   container.register(DI_TOKENS.RateLimitLogRepository, {
     useValue: {
@@ -154,7 +157,7 @@ export function setupTestDI(): DependencyContainer {
       deleteByUserId: () => Promise.resolve(Result.ok()),
     },
   });
-  
+
   // テスト用にAuthLogRepositoryのモックを登録
   container.register(DI_TOKENS.AuthLogRepository, {
     useValue: {
@@ -165,19 +168,22 @@ export function setupTestDI(): DependencyContainer {
       findByIPAddress: () => Promise.resolve(Result.ok([])),
       findFailures: () => Promise.resolve(Result.ok([])),
       findSuspiciousActivities: () => Promise.resolve(Result.ok([])),
-      getStatistics: () => Promise.resolve(Result.ok({
-        totalAttempts: 0,
-        successfulLogins: 0,
-        failedLogins: 0,
-        uniqueUsers: 0,
-        suspiciousActivities: 0,
-        loginsByProvider: new Map(),
-        tokenRefreshCount: 0,
-      })),
+      getStatistics: () =>
+        Promise.resolve(
+          Result.ok({
+            totalAttempts: 0,
+            successfulLogins: 0,
+            failedLogins: 0,
+            uniqueUsers: 0,
+            suspiciousActivities: 0,
+            loginsByProvider: new Map(),
+            tokenRefreshCount: 0,
+          }),
+        ),
       deleteOldLogs: () => Promise.resolve(Result.ok(0)),
     },
   });
-  
+
   // テスト用にAPILogRepositoryのモックを登録
   container.register(DI_TOKENS.APILogRepository, {
     useValue: {
@@ -186,14 +192,17 @@ export function setupTestDI(): DependencyContainer {
       findByUserId: () => Promise.resolve(Result.ok([])),
       findByTimeRange: () => Promise.resolve(Result.ok([])),
       findErrors: () => Promise.resolve(Result.ok([])),
-      getStatistics: () => Promise.resolve(Result.ok({
-        totalRequests: 0,
-        uniqueUsers: 0,
-        errorCount: 0,
-        averageResponseTime: 0,
-        requestsByEndpoint: new Map(),
-        requestsByStatus: new Map(),
-      })),
+      getStatistics: () =>
+        Promise.resolve(
+          Result.ok({
+            totalRequests: 0,
+            uniqueUsers: 0,
+            errorCount: 0,
+            averageResponseTime: 0,
+            requestsByEndpoint: new Map(),
+            requestsByStatus: new Map(),
+          }),
+        ),
       deleteOldLogs: () => Promise.resolve(Result.ok(0)),
     },
   });
@@ -201,20 +210,22 @@ export function setupTestDI(): DependencyContainer {
   // テスト用にRateLimitServiceのモックを登録
   container.register(DI_TOKENS.RateLimitService, {
     useValue: {
-      checkLimit: () => Promise.resolve({
-        allowed: true,
-        limit: 60,
-        remaining: 59,
-        resetAt: new Date(Date.now() + 60000),
-        retryAfter: undefined,
-      }),
+      checkLimit: () =>
+        Promise.resolve({
+          allowed: true,
+          limit: 60,
+          remaining: 59,
+          resetAt: new Date(Date.now() + 60000),
+          retryAfter: undefined,
+        }),
       recordUsage: () => Promise.resolve(),
-      getUsageStatus: () => Promise.resolve({
-        currentCount: 1,
-        limit: 60,
-        windowStart: new Date(),
-        windowEnd: new Date(Date.now() + 60000),
-      }),
+      getUsageStatus: () =>
+        Promise.resolve({
+          currentCount: 1,
+          limit: 60,
+          windowStart: new Date(),
+          windowEnd: new Date(Date.now() + 60000),
+        }),
       resetLimit: () => Promise.resolve(),
     },
   });
@@ -230,7 +241,7 @@ function registerRepositories(container: DependencyContainer): void {
   container.register<IOpenDataRepository>(DI_TOKENS.OpenDataRepository, {
     useClass: OpenDataRepository,
   });
-  
+
   // 他のリポジトリは後続タスクで実装
   // container.register(DI_TOKENS.UserRepository, {
   //   useClass: UserRepositoryImpl,
@@ -252,7 +263,7 @@ function registerRepositories(container: DependencyContainer): void {
 function registerEventServices(container: DependencyContainer): void {
   // EventStoreの登録（シングルトン）
   container.registerSingleton<IEventStore>(DI_TOKENS.EventStore, InMemoryEventStore);
-  
+
   // EventBusの登録（シングルトン）
   container.registerSingleton<IEventBus>(DI_TOKENS.EventBus, EventBus);
 }
@@ -264,24 +275,26 @@ function registerDomainServices(container: DependencyContainer): void {
   container.register(DI_TOKENS.AuthenticationService, {
     useClass: AuthenticationService,
   });
-  
+
   // Import domain services synchronously for tests
-  const { APIAccessControlService } = require('../../domain/api/services/api-access-control.service');
+  const {
+    APIAccessControlService,
+  } = require('../../domain/api/services/api-access-control.service');
   container.register(DI_TOKENS.APIAccessControlService, {
     useClass: APIAccessControlService,
   });
-  
+
   const { DataAccessService } = require('../../domain/data/services/data-access.service');
   container.register(DI_TOKENS.DataAccessService, {
     useClass: DataAccessService,
   });
-  
+
   // RateLimitServiceの実装を登録
   const { InMemoryRateLimitService } = require('../services/in-memory-rate-limit.service');
   container.register(DI_TOKENS.RateLimitService, {
     useClass: InMemoryRateLimitService,
   });
-  
+
   // ... 他のドメインサービス
 }
 
@@ -295,25 +308,27 @@ function registerApplicationServices(container: DependencyContainer): void {
   container.register(DI_TOKENS.DataRetrievalUseCase, {
     useClass: DataRetrievalUseCase,
   });
-  
+
   // DataAccessUseCaseの同期インポート
   const { DataAccessUseCase } = require('../../application/use-cases/data-access.use-case');
   container.register(DI_TOKENS.DataAccessUseCase, {
     useClass: DataAccessUseCase,
   });
-  
+
   // RateLimitUseCaseの同期インポート
   const { RateLimitUseCase } = require('../../application/use-cases/rate-limit.use-case');
   container.register(DI_TOKENS.RateLimitUseCase, {
     useClass: RateLimitUseCase,
   });
-  
+
   // APIAccessControlUseCaseの同期インポート
-  const { APIAccessControlUseCase } = require('../../application/use-cases/api-access-control.use-case');
+  const {
+    APIAccessControlUseCase,
+  } = require('../../application/use-cases/api-access-control.use-case');
   container.register(DI_TOKENS.APIAccessControlUseCase, {
     useClass: APIAccessControlUseCase,
   });
-  
+
   // ... 他のアプリケーションサービス
 }
 
@@ -325,42 +340,44 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   container.register<IAuthAdapter>(DI_TOKENS.AuthAdapter, {
     useClass: SupabaseAuthAdapter,
   });
-  
+
   // JWTValidatorの登録
   container.register<IJWTValidator>(DI_TOKENS.JWTValidator, {
     useClass: JWTValidatorService,
   });
-  
+
   // UserRepositoryの登録
   const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
   container.register(DI_TOKENS.UserRepository, {
     useClass: SupabaseUserRepository,
   });
-  
+
   // AuthLogRepositoryの登録
   const { SupabaseAuthLogRepository } = require('../repositories/log/supabase-auth-log.repository');
   container.register(DI_TOKENS.AuthLogRepository, {
     useClass: SupabaseAuthLogRepository,
   });
-  
+
   // APILogRepositoryの登録
   const { SupabaseAPILogRepository } = require('../repositories/log/supabase-api-log.repository');
   container.register(DI_TOKENS.APILogRepository, {
     useClass: SupabaseAPILogRepository,
   });
-  
+
   // Factoriesの登録
-  const { OpenDataResourceFactory } = require('../../domain/data/factories/open-data-resource.factory');
+  const {
+    OpenDataResourceFactory,
+  } = require('../../domain/data/factories/open-data-resource.factory');
   container.register(DI_TOKENS.OpenDataResourceFactory, {
     useClass: OpenDataResourceFactory,
   });
-  
+
   // JWTServiceの登録
   const { JWTService } = require('../auth/services/jwt.service');
   container.register(DI_TOKENS.JwtService, {
     useClass: JWTService,
   });
-  
+
   // FileStorageServiceの登録
   const { FileStorageService } = require('../storage/file-storage.service');
   container.register(DI_TOKENS.FileStorage, {
@@ -369,37 +386,37 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   container.register(DI_TOKENS.FileStorageService, {
     useClass: FileStorageService,
   });
-  
+
   // SupabaseServiceの登録
   const { SupabaseService } = require('../services/supabase.service');
   container.register(DI_TOKENS.SupabaseService, {
     useClass: SupabaseService,
   });
-  
+
   // SecurityAuditServiceの登録
   const { SecurityAuditService } = require('../services/security-audit.service');
   container.register(DI_TOKENS.SecurityAuditService, {
     useClass: SecurityAuditService,
   });
-  
+
   // SecureFileAccessServiceの登録
   const { SecureFileAccessService } = require('../services/secure-file-access.service');
   container.register(DI_TOKENS.SecureFileAccessService, {
     useClass: SecureFileAccessService,
   });
-  
+
   // DatabaseSeederの登録
   const { DatabaseSeeder } = require('../seeders/database-seeder');
   container.register('DatabaseSeeder', {
     useClass: DatabaseSeeder,
   });
-  
+
   // ApiLogServiceの登録
   const { ApiLogService } = require('../services/api-log.service');
   container.register(DI_TOKENS.ApiLogService, {
     useClass: ApiLogService,
   });
-  
+
   // 他のインフラストラクチャサービスは後続タスクで実装
   // ... 他のインフラストラクチャサービス
 }

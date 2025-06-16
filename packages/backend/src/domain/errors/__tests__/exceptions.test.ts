@@ -72,11 +72,10 @@ describe('Domain Exceptions', () => {
 
   describe('ValidationException', () => {
     it('should create validation exception', () => {
-      const exception = new ValidationException(
-        'email',
-        'invalid@',
-        ['Must be a valid email', 'Must contain domain']
-      );
+      const exception = new ValidationException('email', 'invalid@', [
+        'Must be a valid email',
+        'Must contain domain',
+      ]);
 
       expect(exception.code).toBe('VALIDATION_FAILED');
       expect(exception.message).toBe("Validation failed for field 'email'");
@@ -104,11 +103,13 @@ describe('Domain Exceptions', () => {
       const context = { balance: 100, withdrawal: 150 };
       const exception = new BusinessRuleViolationException(
         'Withdrawal amount cannot exceed balance',
-        context
+        context,
       );
 
       expect(exception.code).toBe('BUSINESS_RULE_VIOLATION');
-      expect(exception.message).toBe('Business rule violation: Withdrawal amount cannot exceed balance');
+      expect(exception.message).toBe(
+        'Business rule violation: Withdrawal amount cannot exceed balance',
+      );
       expect(exception.statusCode).toBe(422);
       expect(exception.rule).toBe('Withdrawal amount cannot exceed balance');
       expect(exception.context).toEqual(context);
@@ -121,11 +122,13 @@ describe('Domain Exceptions', () => {
       const exception = new ExternalServiceException(
         'PaymentGateway',
         'process payment',
-        originalError
+        originalError,
       );
 
       expect(exception.code).toBe('EXTERNAL_SERVICE_ERROR');
-      expect(exception.message).toBe('External service error: PaymentGateway failed during process payment');
+      expect(exception.message).toBe(
+        'External service error: PaymentGateway failed during process payment',
+      );
       expect(exception.statusCode).toBe(503);
       expect(exception.service).toBe('PaymentGateway');
       expect(exception.operation).toBe('process payment');
@@ -135,10 +138,7 @@ describe('Domain Exceptions', () => {
 
   describe('PathTraversalException', () => {
     it('should create path traversal exception', () => {
-      const exception = new PathTraversalException(
-        '../../etc/passwd',
-        'etc/passwd'
-      );
+      const exception = new PathTraversalException('../../etc/passwd', 'etc/passwd');
 
       expect(exception.code).toBe('PATH_TRAVERSAL_DETECTED');
       expect(exception.message).toBe('Invalid path detected: potential security threat');

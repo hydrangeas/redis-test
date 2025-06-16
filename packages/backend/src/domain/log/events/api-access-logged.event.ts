@@ -12,7 +12,7 @@ export class APIAccessLoggedEvent extends DomainEvent {
     public readonly statusCode: number,
     public readonly responseTime: number,
     public readonly ipAddress: string,
-    public readonly occurredAt: Date
+    public readonly occurredAt: Date,
   ) {
     super();
   }

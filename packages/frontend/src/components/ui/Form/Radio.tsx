@@ -7,7 +7,8 @@ export interface RadioOption {
   disabled?: boolean;
 }
 
-export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
+export interface RadioGroupProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
   name: string;
   value?: string;
   onChange?: (value: string) => void;
@@ -43,7 +44,7 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
           {required && <span className="text-red-500 ml-1">*</span>}
         </legend>
       )}
-      
+
       <div
         className={cn(
           orientation === "horizontal" ? "flex space-x-4" : "space-y-2"
@@ -65,14 +66,11 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
           />
         ))}
       </div>
-      
+
       {helperText && (
         <p
           id={helperId}
-          className={cn(
-            "text-sm",
-            error ? "text-red-600" : "text-gray-500"
-          )}
+          className={cn("text-sm", error ? "text-red-600" : "text-gray-500")}
         >
           {helperText}
         </p>
@@ -82,22 +80,13 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
 };
 
 export interface RadioProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
   error?: boolean;
 }
 
 export const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
-  (
-    {
-      className,
-      label,
-      error,
-      id,
-      ...props
-    },
-    ref
-  ) => {
+  ({ className, label, error, id, ...props }, ref) => {
     const radioId = id || `radio-${Math.random().toString(36).substr(2, 9)}`;
 
     return (

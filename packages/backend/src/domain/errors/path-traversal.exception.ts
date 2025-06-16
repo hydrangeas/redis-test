@@ -5,12 +5,8 @@ import { DomainException } from './exceptions';
  */
 export class PathTraversalException extends DomainException {
   constructor(path: string, details?: string) {
-    super(
-      'PATH_TRAVERSAL_DETECTED',
-      `Path traversal attack detected: ${path}`,
-      400
-    );
-    
+    super('PATH_TRAVERSAL_DETECTED', `Path traversal attack detected: ${path}`, 400);
+
     // セキュリティ上の理由から、詳細なパス情報はログに記録するが、
     // クライアントには返さない
     if (details) {

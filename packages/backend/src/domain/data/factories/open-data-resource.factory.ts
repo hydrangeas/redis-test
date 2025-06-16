@@ -21,13 +21,12 @@ export interface FileSystemMetadata {
  */
 @injectable()
 export class OpenDataResourceFactory {
-  
   /**
    * ファイルシステムの情報から新規リソースを作成
    */
   createFromFileSystem(
     pathString: string,
-    fsMetadata: FileSystemMetadata
+    fsMetadata: FileSystemMetadata,
   ): Result<OpenDataResource> {
     try {
       // DataPathの作成
@@ -56,7 +55,7 @@ export class OpenDataResourceFactory {
         fileSize,
         mimeType,
         fsMetadata.lastModified,
-        fsMetadata.etag || this.generateEtag(fsMetadata)
+        fsMetadata.etag || this.generateEtag(fsMetadata),
       );
 
       // ResourceMetadataの作成
@@ -66,7 +65,7 @@ export class OpenDataResourceFactory {
         fileMetadata.size.value,
         fileMetadata.mimeType.value,
         fileMetadata.lastModified,
-        fileMetadata.etag
+        fileMetadata.etag,
       );
 
       // OpenDataResourceの作成
@@ -77,8 +76,8 @@ export class OpenDataResourceFactory {
           'RESOURCE_CREATION_ERROR',
           'Failed to create OpenDataResource',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -112,24 +111,19 @@ export class OpenDataResourceFactory {
         data.size,
         data.mimeType,
         data.lastModified,
-        data.etag
+        data.etag,
       );
 
       // OpenDataResourceの作成
-      return OpenDataResource.create(
-        dataPath,
-        resourceMetadata,
-        data.createdAt,
-        data.accessedAt
-      );
+      return OpenDataResource.create(dataPath, resourceMetadata, data.createdAt, data.accessedAt);
     } catch (error) {
       return Result.fail(
         new DomainError(
           'RESOURCE_RECONSTRUCTION_ERROR',
           'Failed to reconstruct OpenDataResource',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -138,7 +132,7 @@ export class OpenDataResourceFactory {
    * 複数のファイルシステム情報からリソースを一括作成
    */
   createManyFromFileSystem(
-    files: Array<{ path: string; metadata: FileSystemMetadata }>
+    files: Array<{ path: string; metadata: FileSystemMetadata }>,
   ): Result<OpenDataResource[]> {
     const resources: OpenDataResource[] = [];
     const errors: string[] = [];
@@ -158,8 +152,8 @@ export class OpenDataResourceFactory {
           'BATCH_CREATION_ERROR',
           `Failed to create ${errors.length} resources`,
           ErrorType.INTERNAL,
-          { errors }
-        )
+          { errors },
+        ),
       );
     }
 

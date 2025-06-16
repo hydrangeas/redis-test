@@ -51,17 +51,13 @@ export class LoggingService {
   constructor(
     @inject(DI_TOKENS.AuthLogRepository) private authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.APILogRepository) private apiLogRepository: IAPILogRepository,
-    @inject(DI_TOKENS.Logger) private logger: Logger
+    @inject(DI_TOKENS.Logger) private logger: Logger,
   ) {}
 
   /**
    * Log an authentication event
    */
-  async logAuthEvent(
-    userId: string,
-    event: AuthEvent,
-    metadata?: any
-  ): Promise<Result<void>> {
+  async logAuthEvent(userId: string, event: AuthEvent, metadata?: any): Promise<Result<void>> {
     try {
       const userIdResult = UserId.create(userId);
       if (userIdResult.isFailure) {
@@ -88,8 +84,8 @@ export class LoggingService {
         new DomainError(
           'AUTH_LOG_FAILED',
           'Failed to log authentication event',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -150,11 +146,7 @@ export class LoggingService {
     } catch (error) {
       this.logger.error({ error, params }, 'Failed to log API access');
       return Result.fail(
-        new DomainError(
-          'API_LOG_FAILED',
-          'Failed to log API access',
-          ErrorType.INTERNAL
-        )
+        new DomainError('API_LOG_FAILED', 'Failed to log API access', ErrorType.INTERNAL),
       );
     }
   }
@@ -169,10 +161,7 @@ export class LoggingService {
         return Result.fail(userIdResult.getError());
       }
 
-      const logs = await this.authLogRepository.findByUserId(
-        userIdResult.getValue(),
-        limit
-      );
+      const logs = await this.authLogRepository.findByUserId(userIdResult.getValue(), limit);
       return Result.ok(logs);
     } catch (error) {
       this.logger.error({ error, userId }, 'Failed to retrieve auth logs');
@@ -180,8 +169,8 @@ export class LoggingService {
         new DomainError(
           'AUTH_LOGS_RETRIEVAL_FAILED',
           'Failed to retrieve authentication logs',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -200,7 +189,7 @@ export class LoggingService {
         const result = await this.apiLogRepository.findByUserId(
           userIdResult.getValue(),
           undefined,
-          query.limit
+          query.limit,
         );
         return result;
       }
@@ -213,7 +202,7 @@ export class LoggingService {
 
         const result = await this.apiLogRepository.findByEndpoint(
           endpointResult.getValue(),
-          query.limit
+          query.limit,
         );
         return result;
       }
@@ -221,7 +210,7 @@ export class LoggingService {
       if (query.startDate && query.endDate) {
         const result = await this.apiLogRepository.findByTimeRange(
           { startDate: query.startDate, endDate: query.endDate },
-          query.limit
+          query.limit,
         );
         return result;
       }
@@ -233,8 +222,8 @@ export class LoggingService {
         new DomainError(
           'API_LOGS_RETRIEVAL_FAILED',
           'Failed to retrieve API logs',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -242,10 +231,7 @@ export class LoggingService {
   /**
    * Get API statistics for a date range
    */
-  async getAPIStatistics(
-    startDate: Date,
-    endDate: Date
-  ): Promise<Result<APIStatistics>> {
+  async getAPIStatistics(startDate: Date, endDate: Date): Promise<Result<APIStatistics>> {
     try {
       const statsResult = await this.apiLogRepository.getStatistics({
         startDate,
@@ -274,8 +260,8 @@ export class LoggingService {
         new DomainError(
           'API_STATS_RETRIEVAL_FAILED',
           'Failed to retrieve API statistics',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }

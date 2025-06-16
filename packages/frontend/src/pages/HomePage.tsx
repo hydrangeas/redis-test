@@ -1,37 +1,48 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import './HomePage.css';
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import "./HomePage.css";
 
 const HomePageComponent: React.FC = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    document.title = import.meta.env.VITE_APP_NAME || '奈良県オープンデータ提供API';
+    document.title =
+      import.meta.env.VITE_APP_NAME || "奈良県オープンデータ提供API";
   }, []);
 
   return (
     <div className="home-page">
       <section className="hero-section" aria-label="メインコンテンツ">
         <div className="hero-content">
-          <h1 className="hero-title">
-            奈良県オープンデータ提供API
-          </h1>
+          <h1 className="hero-title">奈良県オープンデータ提供API</h1>
           <p className="hero-description">
             奈良県の公式オープンデータを簡単に利用できるAPIサービスです。
             人口統計、予算データ、各種統計情報などを提供しています。
           </p>
           <div className="hero-actions">
             {user ? (
-              <Link to="/dashboard" className="cta-button primary" aria-label="ダッシュボードへ移動">
+              <Link
+                to="/dashboard"
+                className="cta-button primary"
+                aria-label="ダッシュボードへ移動"
+              >
                 ダッシュボードへ
               </Link>
             ) : (
               <>
-                <Link to="/login" className="cta-button primary" aria-label="ログインまたはサインアップ">
+                <Link
+                  to="/login"
+                  className="cta-button primary"
+                  aria-label="ログインまたはサインアップ"
+                >
                   今すぐ始める
                 </Link>
-                <Link to="/api-docs" className="cta-button secondary" aria-label="APIドキュメントを表示">
+                <Link
+                  to="/api-docs"
+                  className="cta-button secondary"
+                  aria-label="APIドキュメントを表示"
+                >
                   APIドキュメント
                 </Link>
               </>
@@ -108,7 +119,11 @@ const HomePageComponent: React.FC = () => {
           <h2>今すぐオープンデータAPIを使い始めましょう</h2>
           <p>無料のTier 1プランから始められます</p>
           {!user && (
-            <Link to="/login" className="cta-button primary large" aria-label="無料プランでサインアップ">
+            <Link
+              to="/login"
+              className="cta-button primary large"
+              aria-label="無料プランでサインアップ"
+            >
               無料で始める
             </Link>
           )}

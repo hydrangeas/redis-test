@@ -8,9 +8,7 @@ import { Logger } from 'pino';
 
 @injectable()
 export class JWTValidatorService implements IJWTValidator {
-  constructor(
-    @inject(DI_TOKENS.Logger) private readonly logger: Logger
-  ) {}
+  constructor(@inject(DI_TOKENS.Logger) private readonly logger: Logger) {}
 
   /**
    * JWTトークンの形式と基本的な検証を行う
@@ -24,8 +22,8 @@ export class JWTValidatorService implements IJWTValidator {
           new DomainError(
             'INVALID_TOKEN_FORMAT',
             'Token is empty or not a string',
-            ErrorType.VALIDATION
-          )
+            ErrorType.VALIDATION,
+          ),
         );
       }
 
@@ -39,8 +37,8 @@ export class JWTValidatorService implements IJWTValidator {
           new DomainError(
             'INVALID_JWT_FORMAT',
             'Token does not have valid JWT format',
-            ErrorType.VALIDATION
-          )
+            ErrorType.VALIDATION,
+          ),
         );
       }
 
@@ -52,8 +50,8 @@ export class JWTValidatorService implements IJWTValidator {
             new DomainError(
               'INVALID_JWT_ENCODING',
               `Part ${i + 1} of JWT is not properly encoded`,
-              ErrorType.VALIDATION
-            )
+              ErrorType.VALIDATION,
+            ),
           );
         }
       }
@@ -66,8 +64,8 @@ export class JWTValidatorService implements IJWTValidator {
             new DomainError(
               'JWT_DECODE_FAILED',
               'Failed to decode JWT payload',
-              ErrorType.VALIDATION
-            )
+              ErrorType.VALIDATION,
+            ),
           );
         }
       } catch (error) {
@@ -75,8 +73,8 @@ export class JWTValidatorService implements IJWTValidator {
           new DomainError(
             'JWT_DECODE_ERROR',
             error instanceof Error ? error.message : 'Failed to decode JWT',
-            ErrorType.VALIDATION
-          )
+            ErrorType.VALIDATION,
+          ),
         );
       }
 
@@ -87,15 +85,15 @@ export class JWTValidatorService implements IJWTValidator {
         {
           error: error instanceof Error ? error.message : 'Unknown error',
         },
-        'JWT validation failed with unexpected error'
+        'JWT validation failed with unexpected error',
       );
 
       return Result.fail(
         new DomainError(
           'JWT_VALIDATION_ERROR',
           error instanceof Error ? error.message : 'JWT validation failed',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
   }
@@ -107,7 +105,7 @@ export class JWTValidatorService implements IJWTValidator {
     try {
       // Bearer形式の場合は除去
       const cleanToken = token.replace(/^Bearer\s+/i, '');
-      
+
       const decoded = jwtDecode<T>(cleanToken);
       return decoded;
     } catch (error) {
@@ -115,7 +113,7 @@ export class JWTValidatorService implements IJWTValidator {
         {
           error: error instanceof Error ? error.message : 'Unknown error',
         },
-        'Failed to decode JWT token'
+        'Failed to decode JWT token',
       );
       return null;
     }

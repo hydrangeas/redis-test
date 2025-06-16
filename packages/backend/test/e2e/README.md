@@ -5,6 +5,7 @@ This directory contains end-to-end tests for the OpenData API backend. These tes
 ## Overview
 
 E2E tests simulate real-world usage scenarios by:
+
 - Starting the actual Fastify application
 - Using real Supabase connections (test environment)
 - Making HTTP requests through the full application stack
@@ -27,16 +28,18 @@ test/e2e/
 ### Prerequisites
 
 1. **Supabase Local Development Setup**
+
    ```bash
    # Start Supabase locally
    supabase start
    ```
 
 2. **Environment Configuration**
+
    ```bash
    # Copy test environment template
    cp .env.test.example .env.test
-   
+
    # Update with your local Supabase credentials
    # Get credentials from: supabase status
    ```
@@ -66,6 +69,7 @@ npm run test:e2e auth.e2e.test.ts
 ## Test Categories
 
 ### Authentication Tests (`auth.e2e.test.ts`)
+
 - Supabase auth callback handling
 - JWT token validation
 - Logout functionality
@@ -74,6 +78,7 @@ npm run test:e2e auth.e2e.test.ts
 - Authentication logging
 
 ### Data API Tests (`data-api.e2e.test.ts`)
+
 - Authenticated data access
 - File format support (JSON, CSV, XML, XLS)
 - 404 handling for missing files
@@ -83,6 +88,7 @@ npm run test:e2e auth.e2e.test.ts
 - Caching and ETags
 
 ### Utility Endpoint Tests (`utility-endpoints.e2e.test.ts`)
+
 - Health check endpoint
 - Service health monitoring
 - API documentation (Scalar)
@@ -92,6 +98,7 @@ npm run test:e2e auth.e2e.test.ts
 - Request validation
 
 ### Performance Tests (`performance.e2e.test.ts`)
+
 - Concurrent request handling
 - Burst traffic management
 - Large payload performance
@@ -115,16 +122,19 @@ npm run test:e2e auth.e2e.test.ts
 ## Best Practices
 
 1. **Test Isolation**
+
    - Each test should be independent
    - Clean up test data after each test
    - Use unique identifiers for test data
 
 2. **Realistic Scenarios**
+
    - Test actual user workflows
    - Include error cases and edge cases
    - Verify side effects (logs, database changes)
 
 3. **Performance Considerations**
+
    - E2E tests are slower than unit tests
    - Run in CI with appropriate timeouts
    - Use concurrent requests sparingly
@@ -137,23 +147,30 @@ npm run test:e2e auth.e2e.test.ts
 ## Common Issues
 
 ### Port Already in Use
+
 E2E tests start Fastify on a random port. If you see port conflicts:
+
 - Ensure no other instances are running
 - Check for hanging test processes
 
 ### Supabase Connection Failed
+
 - Verify Supabase is running: `supabase status`
 - Check `.env.test` configuration
 - Ensure migrations are applied
 
 ### Rate Limit Tests Flaky
+
 Rate limit tests depend on timing. If flaky:
+
 - Increase delays between requests
 - Use mock time if possible
 - Run tests sequentially
 
 ### Memory Tests Failing
+
 Memory tests may fail in CI with limited resources:
+
 - Tests skip automatically in CI
 - Run locally for memory leak detection
 - Use `--expose-gc` flag for accurate results
@@ -161,6 +178,7 @@ Memory tests may fail in CI with limited resources:
 ## CI/CD Integration
 
 E2E tests run in GitHub Actions with:
+
 - Supabase GitHub Action for test database
 - Secrets for test environment variables
 - Sequential execution to avoid conflicts

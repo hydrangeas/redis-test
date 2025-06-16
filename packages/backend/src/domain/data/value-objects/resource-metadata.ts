@@ -12,12 +12,7 @@ export class ResourceMetadata {
   private readonly _etag: string;
   private readonly _contentType: string;
 
-  constructor(params: {
-    size: number;
-    lastModified: Date;
-    etag: string;
-    contentType?: string;
-  }) {
+  constructor(params: { size: number; lastModified: Date; etag: string; contentType?: string }) {
     // サイズの検証
     if (params.size < 0) {
       throw new Error('Size cannot be negative');
@@ -72,23 +67,11 @@ export class ResourceMetadata {
     // サイズの検証
     const sizeGuard = Guard.againstNullOrUndefined(params.size, 'size');
     if (!sizeGuard.succeeded) {
-      return Result.fail(
-        new DomainError(
-          'INVALID_SIZE',
-          'Size is required',
-          'VALIDATION'
-        )
-      );
+      return Result.fail(new DomainError('INVALID_SIZE', 'Size is required', 'VALIDATION'));
     }
 
     if (params.size < 0) {
-      return Result.fail(
-        new DomainError(
-          'INVALID_SIZE',
-          'Size cannot be negative',
-          'VALIDATION'
-        )
-      );
+      return Result.fail(new DomainError('INVALID_SIZE', 'Size cannot be negative', 'VALIDATION'));
     }
 
     // 最終更新日時の検証と変換
@@ -97,11 +80,7 @@ export class ResourceMetadata {
       lastModified = new Date(params.lastModified);
       if (isNaN(lastModified.getTime())) {
         return Result.fail(
-          new DomainError(
-            'INVALID_DATE',
-            'Invalid last modified date',
-            'VALIDATION'
-          )
+          new DomainError('INVALID_DATE', 'Invalid last modified date', 'VALIDATION'),
         );
       }
     } else {
@@ -125,7 +104,7 @@ export class ResourceMetadata {
         size: params.size,
         lastModified,
         etag,
-        contentType: params.contentType
+        contentType: params.contentType,
       });
       return Result.ok(metadata);
     } catch (error) {
@@ -133,8 +112,8 @@ export class ResourceMetadata {
         new DomainError(
           'METADATA_CREATION_ERROR',
           error instanceof Error ? error.message : 'Failed to create metadata',
-          'VALIDATION'
-        )
+          'VALIDATION',
+        ),
       );
     }
   }
@@ -151,7 +130,7 @@ export class ResourceMetadata {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return `"${Math.abs(hash).toString(16)}"`;
@@ -199,17 +178,19 @@ export class ResourceMetadata {
    * 新しいメタデータで更新（イミュータブル）
    * @param updates 更新内容
    */
-  update(updates: Partial<{
-    size: number;
-    lastModified: Date;
-    etag: string;
-    contentType: string;
-  }>): ResourceMetadata {
+  update(
+    updates: Partial<{
+      size: number;
+      lastModified: Date;
+      etag: string;
+      contentType: string;
+    }>,
+  ): ResourceMetadata {
     return new ResourceMetadata({
       size: updates.size ?? this._size,
       lastModified: updates.lastModified ?? this._lastModified,
       etag: updates.etag ?? this._etag,
-      contentType: updates.contentType ?? this._contentType
+      contentType: updates.contentType ?? this._contentType,
     });
   }
 }

@@ -28,9 +28,9 @@ describe('RateLimitLog', () => {
       const props = { ...validProps };
       delete props.timestamp;
       const before = new Date();
-      
+
       const result = RateLimitLog.create(props);
-      
+
       const after = new Date();
       expect(result.isSuccess).toBe(true);
       const log = result.getValue();
@@ -41,9 +41,9 @@ describe('RateLimitLog', () => {
     it('should default exceeded to false if not provided', () => {
       const props = { ...validProps };
       delete props.exceeded;
-      
+
       const result = RateLimitLog.create(props);
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().exceeded).toBe(false);
     });
@@ -56,7 +56,7 @@ describe('RateLimitLog', () => {
         { ...validProps, userId: 123 as any },
       ];
 
-      invalidCases.forEach(props => {
+      invalidCases.forEach((props) => {
         const result = RateLimitLog.create(props);
         expect(result.isFailure).toBe(true);
         expect(result.getError().code).toBe('INVALID_USER_ID');
@@ -72,7 +72,7 @@ describe('RateLimitLog', () => {
         { ...validProps, endpointId: 456 as any },
       ];
 
-      invalidCases.forEach(props => {
+      invalidCases.forEach((props) => {
         const result = RateLimitLog.create(props);
         expect(result.isFailure).toBe(true);
         expect(result.getError().code).toBe('INVALID_ENDPOINT_ID');
@@ -88,7 +88,7 @@ describe('RateLimitLog', () => {
         { ...validProps, requestId: 789 as any },
       ];
 
-      invalidCases.forEach(props => {
+      invalidCases.forEach((props) => {
         const result = RateLimitLog.create(props);
         expect(result.isFailure).toBe(true);
         expect(result.getError().code).toBe('INVALID_REQUEST_ID');
@@ -135,9 +135,9 @@ describe('RateLimitLog', () => {
       const log = result.getValue();
 
       expect(log.exceeded).toBe(false);
-      
+
       log.markAsExceeded();
-      
+
       expect(log.exceeded).toBe(true);
     });
   });

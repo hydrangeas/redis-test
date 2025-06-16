@@ -24,7 +24,7 @@ export interface IAPIAccessControlService {
   canAccessEndpoint(
     user: AuthenticatedUser,
     endpoint: EndpointPath,
-    endpointType: EndpointType
+    endpointType: EndpointType,
   ): Result<boolean>;
 
   /**
@@ -33,7 +33,7 @@ export interface IAPIAccessControlService {
   checkRateLimit(
     user: AuthenticatedUser,
     currentRequestCount: RequestCount,
-    window: RateLimitWindow
+    window: RateLimitWindow,
   ): Result<RateLimitStatus>;
 
   /**
@@ -44,28 +44,27 @@ export interface IAPIAccessControlService {
 
 @injectable()
 export class APIAccessControlService implements IAPIAccessControlService {
-  
   canAccessEndpoint(
     user: AuthenticatedUser,
     endpoint: EndpointPath,
-    endpointType: EndpointType
+    endpointType: EndpointType,
   ): Result<boolean> {
     try {
       if (!user) {
         return Result.fail(new ValidationError('User is required'));
       }
-      
+
       if (!endpoint) {
         return Result.fail(new ValidationError('Endpoint is required'));
       }
-      
+
       if (!endpointType) {
         return Result.fail(new ValidationError('Endpoint type is required'));
       }
 
       // Check if user's tier meets the endpoint requirements
       const canAccess = user.canAccessEndpoint(endpointType.requiredTier);
-      
+
       if (!canAccess) {
         return Result.fail(
           new DomainError(
@@ -75,9 +74,9 @@ export class APIAccessControlService implements IAPIAccessControlService {
             {
               userTier: user.tier.level,
               requiredTier: endpointType.requiredTier,
-              endpoint: endpoint.value
-            }
-          )
+              endpoint: endpoint.value,
+            },
+          ),
         );
       }
 
@@ -88,8 +87,8 @@ export class APIAccessControlService implements IAPIAccessControlService {
           'ACCESS_CHECK_ERROR',
           'Failed to check endpoint access',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -97,17 +96,17 @@ export class APIAccessControlService implements IAPIAccessControlService {
   checkRateLimit(
     user: AuthenticatedUser,
     currentRequestCount: RequestCount,
-    window: RateLimitWindow
+    window: RateLimitWindow,
   ): Result<RateLimitStatus> {
     try {
       if (!user) {
         return Result.fail(new ValidationError('User is required'));
       }
-      
+
       if (!currentRequestCount) {
         return Result.fail(new ValidationError('Current request count is required'));
       }
-      
+
       if (!window) {
         return Result.fail(new ValidationError('Rate limit window is required'));
       }
@@ -115,13 +114,13 @@ export class APIAccessControlService implements IAPIAccessControlService {
       const userRateLimit = user.getRateLimit();
       const resetTime = this.calculateResetTime(window);
       const remainingRequests = Math.max(0, userRateLimit.maxRequests - currentRequestCount.value);
-      
+
       const status: RateLimitStatus = {
         allowed: currentRequestCount.value < userRateLimit.maxRequests,
         currentCount: currentRequestCount.value,
         limit: userRateLimit.maxRequests,
         resetTime,
-        remainingRequests
+        remainingRequests,
       };
 
       if (!status.allowed) {
@@ -129,8 +128,8 @@ export class APIAccessControlService implements IAPIAccessControlService {
           new RateLimitException(
             userRateLimit.maxRequests,
             resetTime,
-            Math.ceil((resetTime.getTime() - Date.now()) / 1000)
-          )
+            Math.ceil((resetTime.getTime() - Date.now()) / 1000),
+          ),
         );
       }
 
@@ -141,8 +140,8 @@ export class APIAccessControlService implements IAPIAccessControlService {
           'RATE_LIMIT_CHECK_ERROR',
           'Failed to check rate limit',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -152,12 +151,12 @@ export class APIAccessControlService implements IAPIAccessControlService {
     const windowStart = window.startTime;
     const windowDurationMs = window.windowSizeSeconds * 1000;
     const windowEndTime = new Date(windowStart.getTime() + windowDurationMs);
-    
+
     // If current time is past window end, the next window starts now
     if (now >= windowEndTime) {
       return new Date(now.getTime() + windowDurationMs);
     }
-    
+
     // Otherwise, return when current window ends
     return windowEndTime;
   }

@@ -17,6 +17,6 @@ export const mediaQueries = {
 } as const;
 
 export const isMobile = () => window.innerWidth < breakpoints.md;
-export const isTablet = () => 
+export const isTablet = () =>
   window.innerWidth >= breakpoints.md && window.innerWidth < breakpoints.lg;
 export const isDesktop = () => window.innerWidth >= breakpoints.lg;

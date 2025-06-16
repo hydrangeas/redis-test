@@ -39,24 +39,27 @@ describe('SupabaseAPILogRepository', () => {
 
   describe('save', () => {
     it('should save API log entry successfully', async () => {
-      const logEntryResult = APILogEntry.create({
-        userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
-        endpoint: new Endpoint(HttpMethod.GET, new ApiPath('/api/data/test.json')),
-        requestInfo: new RequestInfo({
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0',
-          headers: { 'accept': 'application/json' },
-          body: null,
-        }),
-        responseInfo: new ResponseInfo({
-          statusCode: 200,
-          responseTime: 45,
-          size: 1024,
-          headers: { 'content-type': 'application/json' },
-        }),
-        timestamp: new Date()
-      }, LogId.generate());
-      
+      const logEntryResult = APILogEntry.create(
+        {
+          userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
+          endpoint: new Endpoint(HttpMethod.GET, new ApiPath('/api/data/test.json')),
+          requestInfo: new RequestInfo({
+            ipAddress: '192.168.1.1',
+            userAgent: 'Mozilla/5.0',
+            headers: { accept: 'application/json' },
+            body: null,
+          }),
+          responseInfo: new ResponseInfo({
+            statusCode: 200,
+            responseTime: 45,
+            size: 1024,
+            headers: { 'content-type': 'application/json' },
+          }),
+          timestamp: new Date(),
+        },
+        LogId.generate(),
+      );
+
       if (logEntryResult.isFailure) {
         throw new Error(`Failed to create log entry: ${logEntryResult.getError().message}`);
       }
@@ -80,7 +83,7 @@ describe('SupabaseAPILogRepository', () => {
         user_agent: 'Mozilla/5.0',
         error_message: null,
         metadata: {
-          'accept': 'application/json',
+          accept: 'application/json',
           'content-type': 'application/json',
         },
         request_id: logEntry.id.value,
@@ -89,25 +92,28 @@ describe('SupabaseAPILogRepository', () => {
     });
 
     it('should save API log with error message', async () => {
-      const logEntryResult = APILogEntry.create({
-        userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
-        endpoint: new Endpoint(HttpMethod.GET, new ApiPath('/api/data/missing.json')),
-        requestInfo: new RequestInfo({
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0',
-          headers: {},
-          body: null,
-        }),
-        responseInfo: new ResponseInfo({
-          statusCode: 404,
-          responseTime: 10,
-          size: 0,
-          headers: {},
-        }),
-        timestamp: new Date(),
-        error: 'Resource not found'
-      }, LogId.generate());
-      
+      const logEntryResult = APILogEntry.create(
+        {
+          userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
+          endpoint: new Endpoint(HttpMethod.GET, new ApiPath('/api/data/missing.json')),
+          requestInfo: new RequestInfo({
+            ipAddress: '192.168.1.1',
+            userAgent: 'Mozilla/5.0',
+            headers: {},
+            body: null,
+          }),
+          responseInfo: new ResponseInfo({
+            statusCode: 404,
+            responseTime: 10,
+            size: 0,
+            headers: {},
+          }),
+          timestamp: new Date(),
+          error: 'Resource not found',
+        },
+        LogId.generate(),
+      );
+
       if (logEntryResult.isFailure) {
         throw new Error(`Failed to create log entry: ${logEntryResult.getError().message}`);
       }
@@ -122,29 +128,32 @@ describe('SupabaseAPILogRepository', () => {
         expect.objectContaining({
           status_code: 404,
           error_message: 'Resource not found',
-        })
+        }),
       );
     });
 
     it('should handle save error', async () => {
-      const logEntryResult = APILogEntry.create({
-        userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
-        endpoint: new Endpoint(HttpMethod.GET, new ApiPath('/api/data/test.json')),
-        requestInfo: new RequestInfo({
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0',
-          headers: {},
-          body: null,
-        }),
-        responseInfo: new ResponseInfo({
-          statusCode: 200,
-          responseTime: 45,
-          size: 1024,
-          headers: {},
-        }),
-        timestamp: new Date()
-      }, LogId.generate());
-      
+      const logEntryResult = APILogEntry.create(
+        {
+          userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
+          endpoint: new Endpoint(HttpMethod.GET, new ApiPath('/api/data/test.json')),
+          requestInfo: new RequestInfo({
+            ipAddress: '192.168.1.1',
+            userAgent: 'Mozilla/5.0',
+            headers: {},
+            body: null,
+          }),
+          responseInfo: new ResponseInfo({
+            statusCode: 200,
+            responseTime: 45,
+            size: 1024,
+            headers: {},
+          }),
+          timestamp: new Date(),
+        },
+        LogId.generate(),
+      );
+
       if (logEntryResult.isFailure) {
         throw new Error(`Failed to create log entry: ${logEntryResult.getError().message}`);
       }
@@ -235,10 +244,7 @@ describe('SupabaseAPILogRepository', () => {
 
     it('should filter by time range when provided', async () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue();
-      const timeRangeResult = TimeRange.create(
-        new Date('2025-01-01'),
-        new Date('2025-01-31')
-      );
+      const timeRangeResult = TimeRange.create(new Date('2025-01-01'), new Date('2025-01-31'));
       if (timeRangeResult.isFailure) {
         throw new Error(`Failed to create TimeRange: ${timeRangeResult.error}`);
       }
@@ -302,10 +308,7 @@ describe('SupabaseAPILogRepository', () => {
 
   describe('getStatistics', () => {
     it('should calculate statistics correctly', async () => {
-      const timeRangeResult = TimeRange.create(
-        new Date('2025-01-01'),
-        new Date('2025-01-31')
-      );
+      const timeRangeResult = TimeRange.create(new Date('2025-01-01'), new Date('2025-01-31'));
       if (timeRangeResult.isFailure) {
         throw new Error(`Failed to create TimeRange: ${timeRangeResult.error}`);
       }
@@ -395,11 +398,11 @@ describe('SupabaseAPILogRepository', () => {
         callCount++;
         return mockChain;
       });
-      
+
       // Mock count query chain: select() -> lt() -> resolves with count
       mockChain.select.mockReturnValueOnce(mockChain);
       mockChain.lt.mockResolvedValueOnce({ count: mockCount, error: null });
-      
+
       // For the second from() call, need fresh chain behavior
       // Mock delete query chain: delete() -> lt() -> resolves
       mockChain.delete.mockReturnValueOnce(mockChain);
@@ -415,7 +418,7 @@ describe('SupabaseAPILogRepository', () => {
           deletedCount: mockCount,
           beforeDate: beforeDate.toISOString(),
         }),
-        'Old API logs deleted'
+        'Old API logs deleted',
       );
     });
 
@@ -425,7 +428,7 @@ describe('SupabaseAPILogRepository', () => {
       // Mock count query chain: select() -> lt() -> resolves with count
       mockChain.select.mockReturnValueOnce(mockChain);
       mockChain.lt.mockResolvedValueOnce({ count: 500, error: null });
-      
+
       // Mock delete query chain with error: delete() -> lt() -> resolves with error
       mockChain.delete.mockReturnValueOnce(mockChain);
       mockChain.lt.mockResolvedValueOnce({ error: { message: 'Delete failed' } });
@@ -439,10 +442,7 @@ describe('SupabaseAPILogRepository', () => {
 
   describe('findByTimeRange', () => {
     it('should find logs within time range', async () => {
-      const timeRangeResult = TimeRange.create(
-        new Date('2025-01-01'),
-        new Date('2025-01-31')
-      );
+      const timeRangeResult = TimeRange.create(new Date('2025-01-01'), new Date('2025-01-31'));
       if (timeRangeResult.isFailure) {
         throw new Error(`Failed to create TimeRange: ${timeRangeResult.error}`);
       }

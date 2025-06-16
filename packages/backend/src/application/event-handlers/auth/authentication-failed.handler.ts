@@ -22,35 +22,44 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: AuthenticationFailed): Promise<void> {
     try {
-      this.logger.info({
-        eventId: event.eventId,
-        provider: event.provider,
-        reason: event.reason,
-        ipAddress: event.ipAddress,
-      }, 'Handling AuthenticationFailed event');
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          provider: event.provider,
+          reason: event.reason,
+          ipAddress: event.ipAddress,
+        },
+        'Handling AuthenticationFailed event',
+      );
 
       // Providerの作成
       const providerResult = Provider.create(event.provider);
       if (providerResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: providerResult.error,
-        }, 'Invalid provider in AuthenticationFailed event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: providerResult.error,
+          },
+          'Invalid provider in AuthenticationFailed event',
+        );
         return;
       }
 
       // IPアドレスの作成
       const ipResult = IpAddress.create(event.ipAddress);
       if (ipResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: ipResult.error,
-        }, 'Invalid IP address in AuthenticationFailed event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: ipResult.error,
+          },
+          'Invalid IP address in AuthenticationFailed event',
+        );
         return;
       }
 
@@ -61,11 +70,14 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
         if (uaResult.isSuccess) {
           userAgent = uaResult.getValue();
         } else {
-          this.logger.warn({
-            eventId: event.eventId,
-            userAgent: event.userAgent,
-            error: uaResult.error,
-          }, 'Invalid user agent in AuthenticationFailed event');
+          this.logger.warn(
+            {
+              eventId: event.eventId,
+              userAgent: event.userAgent,
+              error: uaResult.error,
+            },
+            'Invalid user agent in AuthenticationFailed event',
+          );
         }
       }
 
@@ -76,11 +88,14 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
         if (userIdResult.isSuccess) {
           userId = userIdResult.getValue();
         } else {
-          this.logger.warn({
-            eventId: event.eventId,
-            attemptedUserId: event.attemptedUserId,
-            error: userIdResult.error,
-          }, 'Invalid attempted userId in AuthenticationFailed event');
+          this.logger.warn(
+            {
+              eventId: event.eventId,
+              attemptedUserId: event.attemptedUserId,
+              error: userIdResult.error,
+            },
+            'Invalid attempted userId in AuthenticationFailed event',
+          );
         }
       }
 
@@ -100,20 +115,26 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: logEntryResult.error,
-        }, 'Failed to create AuthLogEntry for authentication failure');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: logEntryResult.error,
+          },
+          'Failed to create AuthLogEntry for authentication failure',
+        );
         return;
       }
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure()) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: saveResult.error,
-        }, 'Failed to save authentication failure log');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: saveResult.error,
+          },
+          'Failed to save authentication failure log',
+        );
         return;
       }
 
@@ -124,24 +145,32 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
       });
 
       if (recentFailuresResult.isSuccess() && recentFailuresResult.getValue().length >= 5) {
-        this.logger.warn({
-          eventId: event.eventId,
-          ipAddress: event.ipAddress,
-          failureCount: recentFailuresResult.getValue().length,
-        }, 'Multiple authentication failures detected from same IP');
+        this.logger.warn(
+          {
+            eventId: event.eventId,
+            ipAddress: event.ipAddress,
+            failureCount: recentFailuresResult.getValue().length,
+          },
+          'Multiple authentication failures detected from same IP',
+        );
       }
 
-      this.logger.info({
-        eventId: event.eventId,
-        logId: logEntryResult.getValue().id.value,
-      }, 'AuthenticationFailed event handled successfully');
-
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          logId: logEntryResult.getValue().id.value,
+        },
+        'AuthenticationFailed event handled successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        eventId: event.eventId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Error handling AuthenticationFailed event');
+      this.logger.error(
+        {
+          eventId: event.eventId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Error handling AuthenticationFailed event',
+      );
       throw error;
     }
   }

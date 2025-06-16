@@ -13,7 +13,7 @@ async function runSeeder() {
   try {
     // DI設定
     await setupDI();
-    
+
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
     const seeder = container.resolve(DatabaseSeeder);
 
@@ -40,7 +40,7 @@ async function resetDatabase() {
   try {
     // DI設定
     await setupDI();
-    
+
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
     logger.info('Starting database reset process...');
 
@@ -52,7 +52,7 @@ async function resetDatabase() {
 
     // Supabaseのリセット処理
     logger.info('Resetting database tables...');
-    
+
     // Note: 実際のリセットは Supabase CLIのdb resetコマンドを使用することを推奨
     logger.info('Please run "supabase db reset" to reset the database schema');
     logger.info('Then run "npm run db:seed" to populate with test data');

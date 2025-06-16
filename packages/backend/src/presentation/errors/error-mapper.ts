@@ -38,8 +38,13 @@ const APP_STATUS_CODE_MAP: Record<ApplicationErrorType, number> = {
  * エラーをRFC 7807 Problem Details形式に変換
  */
 export function toProblemDetails(
-  error: DomainError | DomainException | ApplicationError | Error | { code: string; message: string; type: string },
-  instance?: string
+  error:
+    | DomainError
+    | DomainException
+    | ApplicationError
+    | Error
+    | { code: string; message: string; type: string },
+  instance?: string,
 ): ProblemDetails {
   const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
   const baseUrl = config.API_BASE_URL;
@@ -57,10 +62,11 @@ export function toProblemDetails(
 
   // プレーンオブジェクトの場合（簡易エラー）
   if (!(error instanceof Error) && 'code' in error && 'message' in error && 'type' in error) {
-    const statusCode = (error.type in APP_STATUS_CODE_MAP) 
-      ? APP_STATUS_CODE_MAP[error.type as ApplicationErrorType] 
-      : 500;
-    
+    const statusCode =
+      error.type in APP_STATUS_CODE_MAP
+        ? APP_STATUS_CODE_MAP[error.type as ApplicationErrorType]
+        : 500;
+
     return {
       type: `${baseUrl}/errors/${error.code.toLowerCase().replace(/_/g, '-')}`,
       title: error.message,
@@ -89,10 +95,12 @@ export function toProblemDetails(
       problemDetails.resetTime = (error as any).resetTime.toISOString();
     }
     if ('field' in error && 'constraints' in error) {
-      problemDetails.errors = [{
-        field: (error as any).field,
-        constraints: (error as any).constraints,
-      }];
+      problemDetails.errors = [
+        {
+          field: (error as any).field,
+          constraints: (error as any).constraints,
+        },
+      ];
     }
 
     return problemDetails;
@@ -108,11 +116,11 @@ export function toProblemDetails(
       status: statusCode,
       detail: error.details ? JSON.stringify(error.details) : error.message,
     };
-    
+
     if (instance) {
       problemDetails.instance = instance;
     }
-    
+
     return problemDetails;
   }
 
@@ -121,9 +129,7 @@ export function toProblemDetails(
     type: `${baseUrl}/errors/internal-server-error`,
     title: 'Internal Server Error',
     status: 500,
-    detail: config.NODE_ENV === 'production' 
-      ? 'An unexpected error occurred'
-      : error.message,
+    detail: config.NODE_ENV === 'production' ? 'An unexpected error occurred' : error.message,
     instance,
   };
 }
@@ -131,10 +137,7 @@ export function toProblemDetails(
 /**
  * Fastifyバリデーションエラーを変換
  */
-export function mapValidationError(
-  validation: any[],
-  instance: string
-): ProblemDetails {
+export function mapValidationError(validation: any[], instance: string): ProblemDetails {
   const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
   const baseUrl = config.API_BASE_URL;
 
@@ -144,7 +147,7 @@ export function mapValidationError(
     status: 400,
     detail: 'Request validation failed',
     instance,
-    errors: validation.map(err => ({
+    errors: validation.map((err) => ({
       field: err.instancePath || err.dataPath,
       message: err.message,
       params: err.params,

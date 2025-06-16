@@ -54,12 +54,14 @@ export class LogFactory {
       ip_address: faker.internet.ipv4(),
       user_agent: faker.internet.userAgent(),
       result: isSuccess ? 'success' : 'failed',
-      error_message: isSuccess ? null : faker.helpers.arrayElement([
-        'Invalid credentials',
-        'Account locked',
-        'Email not verified',
-        'Invalid token',
-      ]),
+      error_message: isSuccess
+        ? null
+        : faker.helpers.arrayElement([
+            'Invalid credentials',
+            'Account locked',
+            'Email not verified',
+            'Invalid token',
+          ]),
       created_at: faker.date.recent({ days: 30 }),
       ...overrides,
     };
@@ -94,7 +96,7 @@ export class LogFactory {
 
   static createRateLimitLog(userId: string, overrides?: Partial<RateLimitLog>): RateLimitLog {
     const windowStart = faker.date.recent({ days: 1 });
-    
+
     return {
       id: faker.string.uuid(),
       user_id: userId,
@@ -118,7 +120,11 @@ export class LogFactory {
     return Array.from({ length: count }, () => this.createApiLog(userId, overrides));
   }
 
-  static createManyRateLimitLogs(userId: string, count: number, overrides?: Partial<RateLimitLog>): RateLimitLog[] {
+  static createManyRateLimitLogs(
+    userId: string,
+    count: number,
+    overrides?: Partial<RateLimitLog>,
+  ): RateLimitLog[] {
     return Array.from({ length: count }, () => this.createRateLimitLog(userId, overrides));
   }
 

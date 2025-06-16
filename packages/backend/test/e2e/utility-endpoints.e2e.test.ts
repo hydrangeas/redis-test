@@ -5,12 +5,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
-import { 
-  setupTestEnvironment, 
-  teardownTestEnvironment,
-  createTestUser,
-  getBaseUrl
-} from './setup';
+import { setupTestEnvironment, teardownTestEnvironment, createTestUser, getBaseUrl } from './setup';
 
 describe('Utility Endpoints E2E', () => {
   let app: FastifyInstance;
@@ -32,7 +27,7 @@ describe('Utility Endpoints E2E', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toContain('application/json');
-      
+
       const body = JSON.parse(response.body);
       expect(body.status).toBe('healthy');
       expect(body.timestamp).toBeDefined();
@@ -52,12 +47,12 @@ describe('Utility Endpoints E2E', () => {
       expect(body.services).toHaveProperty('database');
       expect(body.services).toHaveProperty('fileSystem');
       expect(body.services).toHaveProperty('cache');
-      
+
       // All services should be healthy in test environment
       expect(body.services.database.status).toBe('healthy');
       expect(body.services.fileSystem.status).toBe('healthy');
       expect(body.services.cache.status).toBe('healthy');
-      
+
       // Check response times
       expect(body.services.database.responseTime).toBeDefined();
       expect(body.services.database.responseTime).toBeGreaterThanOrEqual(0);
@@ -103,7 +98,7 @@ describe('Utility Endpoints E2E', () => {
 
       const body = JSON.parse(response.body);
       const bodyString = JSON.stringify(body);
-      
+
       // Should not contain sensitive data
       expect(bodyString).not.toContain('password');
       expect(bodyString).not.toContain('secret');
@@ -158,7 +153,7 @@ describe('Utility Endpoints E2E', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toContain('application/json');
-      
+
       const spec = JSON.parse(response.body);
       expect(spec.openapi).toBeDefined();
       expect(spec.openapi).toMatch(/^3\.\d+\.\d+$/); // OpenAPI 3.x.x
@@ -184,7 +179,7 @@ describe('Utility Endpoints E2E', () => {
       expect(paths).toContain('/auth/logout');
       expect(paths).toContain('/auth/refresh');
       expect(paths).toContain('/auth/me');
-      expect(paths.some(p => p.includes('/secure/'))).toBe(true);
+      expect(paths.some((p) => p.includes('/secure/'))).toBe(true);
     });
 
     it('should include security schemes', async () => {
@@ -210,7 +205,7 @@ describe('Utility Endpoints E2E', () => {
       const spec = JSON.parse(response.body);
       expect(spec.components.schemas).toBeDefined();
       expect(spec.components.schemas.ProblemDetails).toBeDefined();
-      
+
       const problemDetails = spec.components.schemas.ProblemDetails;
       expect(problemDetails.properties).toHaveProperty('type');
       expect(problemDetails.properties).toHaveProperty('title');
@@ -250,7 +245,7 @@ describe('Utility Endpoints E2E', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body.type).toBe('https://api.opendata.nara/errors/not-found');
       expect(body.title).toBe('Not Found');
@@ -292,7 +287,7 @@ describe('Utility Endpoints E2E', () => {
         expect(response.headers['x-content-type-options']).toBe('nosniff');
         expect(response.headers['x-frame-options']).toBe('DENY');
         expect(response.headers['x-xss-protection']).toBe('1; mode=block');
-        
+
         // HSTS header (may be conditional based on HTTPS)
         if (response.headers['strict-transport-security']) {
           expect(response.headers['strict-transport-security']).toContain('max-age=');
@@ -392,7 +387,7 @@ describe('Utility Endpoints E2E', () => {
       // Make several requests
       await app.inject({ method: 'GET', url: '/health' });
       await app.inject({ method: 'GET', url: '/api-docs/json' });
-      
+
       const { token } = await createTestUser('tier1');
       await app.inject({
         method: 'GET',

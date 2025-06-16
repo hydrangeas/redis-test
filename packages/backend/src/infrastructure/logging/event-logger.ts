@@ -10,21 +10,22 @@ import { DomainEvent } from '@/domain/interfaces/domain-event.interface';
  */
 @injectable()
 export class EventLogger implements IEventHandler<DomainEvent> {
-  constructor(
-    @inject(DI_TOKENS.Logger) private readonly logger: Logger
-  ) {}
+  constructor(@inject(DI_TOKENS.Logger) private readonly logger: Logger) {}
 
   async handle(event: DomainEvent): Promise<void> {
-    this.logger.info({
-      event: {
-        name: event.getEventName(),
-        eventId: event.eventId,
-        aggregateId: event.aggregateId,
-        occurredAt: event.occurredAt,
-        data: this.sanitizeEventData(event),
+    this.logger.info(
+      {
+        event: {
+          name: event.getEventName(),
+          eventId: event.eventId,
+          aggregateId: event.aggregateId,
+          occurredAt: event.occurredAt,
+          data: this.sanitizeEventData(event),
+        },
+        context: 'domain_event',
       },
-      context: 'domain_event',
-    }, `Domain event: ${event.getEventName()}`);
+      `Domain event: ${event.getEventName()}`,
+    );
   }
 
   /**
@@ -38,9 +39,9 @@ export class EventLogger implements IEventHandler<DomainEvent> {
       if (typeof obj !== 'object' || obj === null) return obj;
 
       const result: any = Array.isArray(obj) ? [] : {};
-      
+
       for (const key in obj) {
-        if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk.toLowerCase()))) {
+        if (sensitiveKeys.some((sk) => key.toLowerCase().includes(sk.toLowerCase()))) {
           result[key] = '[REDACTED]';
         } else if (typeof obj[key] === 'object') {
           result[key] = removeSensitive(obj[key]);
@@ -48,7 +49,7 @@ export class EventLogger implements IEventHandler<DomainEvent> {
           result[key] = obj[key];
         }
       }
-      
+
       return result;
     };
 

@@ -10,10 +10,7 @@ declare module 'fastify' {
   }
 }
 
-export const fileSecurityMiddleware = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-) => {
+export const fileSecurityMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
   const securityService = container.resolve(SecureFileAccessService);
   const user = request.user;
 
@@ -32,7 +29,7 @@ export const fileSecurityMiddleware = async (
     'X-XSS-Protection': '1; mode=block',
     'Content-Security-Policy': "default-src 'none'",
     'Cache-Control': 'no-store, no-cache, must-revalidate',
-    'Pragma': 'no-cache',
+    Pragma: 'no-cache',
   });
 
   // Attach security context to request

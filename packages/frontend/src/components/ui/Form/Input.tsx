@@ -7,7 +7,8 @@ const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-gray-300 focus:border-purple-500 focus:ring-purple-500",
+        default:
+          "border-gray-300 focus:border-purple-500 focus:ring-purple-500",
         error: "border-red-500 focus:border-red-500 focus:ring-red-500",
         success: "border-green-500 focus:border-green-500 focus:ring-green-500",
       },
@@ -35,25 +36,28 @@ export interface InputProps
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ 
-    className, 
-    variant, 
-    size, 
-    label, 
-    error, 
-    hint,
-    leftIcon,
-    rightIcon,
-    id,
-    ...props 
-  }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      label,
+      error,
+      hint,
+      leftIcon,
+      rightIcon,
+      id,
+      ...props
+    },
+    ref
+  ) => {
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
     const hasError = !!error || variant === "error";
 
     return (
       <div className="w-full">
         {label && (
-          <label 
+          <label
             htmlFor={inputId}
             className="block text-sm font-medium text-gray-700 mb-1"
           >
@@ -61,14 +65,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {props.required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        
+
         <div className="relative">
           {leftIcon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="text-gray-500">{leftIcon}</span>
             </div>
           )}
-          
+
           <input
             id={inputId}
             ref={ref}
@@ -84,20 +88,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             }
             {...props}
           />
-          
+
           {rightIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <span className="text-gray-500">{rightIcon}</span>
             </div>
           )}
         </div>
-        
+
         {error && (
           <p id={`${inputId}-error`} className="mt-1 text-sm text-red-600">
             {error}
           </p>
         )}
-        
+
         {hint && !error && (
           <p id={`${inputId}-hint`} className="mt-1 text-sm text-gray-500">
             {hint}

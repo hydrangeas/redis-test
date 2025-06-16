@@ -64,21 +64,11 @@ describe('DataRetrievalUseCase', () => {
         etag: '"test-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
       const content = { test: 'data' };
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
-      (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(
-        Result.ok(content)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
+      (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(Result.ok(content));
 
       // Act
       const result = await useCase.retrieveData(path);
@@ -91,7 +81,7 @@ describe('DataRetrievalUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           getEventName: expect.any(Function),
-        })
+        }),
       );
 
       // Check that the first event is DataAccessRequested
@@ -108,7 +98,7 @@ describe('DataRetrievalUseCase', () => {
           size: 1024,
           contentType: 'application/json',
         }),
-        'Data retrieved successfully'
+        'Data retrieved successfully',
       );
     });
 
@@ -127,16 +117,13 @@ describe('DataRetrievalUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           getEventName: expect.any(Function),
-        })
+        }),
       );
 
       const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
       expect(event.getEventName()).toBe('DataAccessDenied');
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        { path: invalidPath },
-        'Invalid data path'
-      );
+      expect(mockLogger.warn).toHaveBeenCalledWith({ path: invalidPath }, 'Invalid data path');
     });
 
     it('should handle resource not found', async () => {
@@ -146,11 +133,11 @@ describe('DataRetrievalUseCase', () => {
       const notFoundError = new DomainError(
         'RESOURCE_NOT_FOUND',
         'Resource not found',
-        ErrorType.NOT_FOUND
+        ErrorType.NOT_FOUND,
       );
 
       (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.fail(notFoundError)
+        Result.fail(notFoundError),
       );
 
       // Act
@@ -179,19 +166,11 @@ describe('DataRetrievalUseCase', () => {
         etag: '"test-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
       (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(
-        Result.fail(new DomainError('READ_ERROR', 'Failed to read file', ErrorType.INTERNAL))
+        Result.fail(new DomainError('READ_ERROR', 'Failed to read file', ErrorType.INTERNAL)),
       );
 
       // Act
@@ -222,7 +201,7 @@ describe('DataRetrievalUseCase', () => {
           path,
           error: 'Unexpected error',
         }),
-        'Unexpected error in data retrieval'
+        'Unexpected error in data retrieval',
       );
     });
   });
@@ -239,17 +218,9 @@ describe('DataRetrievalUseCase', () => {
         etag: '"metadata-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
 
       // Act
       const result = await useCase.retrieveMetadata(path);
@@ -289,17 +260,9 @@ describe('DataRetrievalUseCase', () => {
         etag: '"matching-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
 
       // Act
       const result = await useCase.retrieveDataWithETag(path, etag);
@@ -324,21 +287,11 @@ describe('DataRetrievalUseCase', () => {
         etag: '"new-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
       const content = { updated: 'data' };
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
-      (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(
-        Result.ok(content)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
+      (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(Result.ok(content));
 
       // Act
       const result = await useCase.retrieveDataWithETag(path, oldEtag);
@@ -369,17 +322,9 @@ describe('DataRetrievalUseCase', () => {
         etag: '"test-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
 
       // Act
       const result = await useCase.retrieveDataIfModified(path, ifModifiedSince);
@@ -404,21 +349,11 @@ describe('DataRetrievalUseCase', () => {
         etag: '"test-etag"',
         contentType: 'application/json',
       }).getValue();
-      const resource = new OpenDataResource(
-        resourceId,
-        dataPath,
-        metadata,
-        new Date(),
-        new Date()
-      );
+      const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
       const content = { modified: 'data' };
 
-      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
-        Result.ok(resource)
-      );
-      (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(
-        Result.ok(content)
-      );
+      (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
+      (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(Result.ok(content));
 
       // Act
       const result = await useCase.retrieveDataIfModified(path, ifModifiedSince);

@@ -12,14 +12,17 @@ This backend now uses Scalar for interactive API documentation instead of Swagge
 ## Endpoints
 
 ### Documentation UI
+
 - **URL**: `/api/api-docs`
 - **Description**: Interactive API documentation powered by Scalar
 
 ### OpenAPI Specification
+
 - **JSON**: `/api/openapi.json`
 - **YAML**: `/api/openapi.yaml`
 
 ### Documentation Info
+
 - **URL**: `/api`
 - **Description**: Returns links to documentation resources
 
@@ -36,6 +39,7 @@ The Scalar UI is configured in `src/presentation/routes/api-docs/index.ts` with:
 ## Usage
 
 1. Start the backend server:
+
    ```bash
    npm run dev
    ```

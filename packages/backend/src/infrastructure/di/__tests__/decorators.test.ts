@@ -15,9 +15,7 @@ interface ITestRepository {
 // Test implementations
 @injectable()
 class TestService implements ITestService {
-  constructor(
-    @inject('TestRepository') private readonly repository: ITestRepository
-  ) {}
+  constructor(@inject('TestRepository') private readonly repository: ITestRepository) {}
 
   getName(): string {
     return `Service: ${this.repository.getData()}`;
@@ -49,7 +47,7 @@ describe('TSyringe Decorators', () => {
       });
 
       const service = container.resolve<ITestService>('TestService');
-      
+
       expect(service.getName()).toBe('Service: Data 1');
     });
   });
@@ -62,7 +60,7 @@ describe('TSyringe Decorators', () => {
 
       const repo1 = container.resolve<ITestRepository>('TestRepository');
       const repo2 = container.resolve<ITestRepository>('TestRepository');
-      
+
       expect(repo1).toBe(repo2);
       expect(repo1.getData()).toBe('Data 1');
       expect(repo2.getData()).toBe('Data 2'); // Same instance, counter increments
@@ -72,7 +70,7 @@ describe('TSyringe Decorators', () => {
   describe('Token-based injection', () => {
     it('should work with Symbol tokens', () => {
       const TEST_TOKEN = Symbol.for('TestService');
-      
+
       @injectable()
       class SymbolTestService {
         getName(): string {

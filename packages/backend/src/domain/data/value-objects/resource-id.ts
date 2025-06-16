@@ -46,11 +46,7 @@ export class ResourceId {
   static create(value?: string): Result<ResourceId> {
     if (!value || value === null || value === undefined) {
       return Result.fail(
-        new DomainError(
-          'INVALID_RESOURCE_ID',
-          'Resource ID is required',
-          'VALIDATION'
-        )
+        new DomainError('INVALID_RESOURCE_ID', 'Resource ID is required', 'VALIDATION'),
       );
     }
 
@@ -59,8 +55,8 @@ export class ResourceId {
         new DomainError(
           'INVALID_RESOURCE_ID_FORMAT',
           `Resource ID must match format: ${this.ID_FORMAT}`,
-          'VALIDATION'
-        )
+          'VALIDATION',
+        ),
       );
     }
 

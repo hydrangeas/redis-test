@@ -13,16 +13,16 @@ describe('FilePath', () => {
     it('should normalize paths', () => {
       // Windowsスタイルのパス
       expect(new FilePath('data\\users\\profile.json').value).toBe('data/users/profile.json');
-      
+
       // 先頭のスラッシュを削除
       expect(new FilePath('/data/users/profile.json').value).toBe('data/users/profile.json');
-      
+
       // 末尾のスラッシュを削除
       expect(new FilePath('data/users/').value).toBe('data/users');
-      
+
       // 連続するスラッシュを正規化
       expect(new FilePath('data//users///profile.json').value).toBe('data/users/profile.json');
-      
+
       // 空白をトリム
       expect(new FilePath('  data/users/profile.json  ').value).toBe('data/users/profile.json');
     });
@@ -35,18 +35,34 @@ describe('FilePath', () => {
 
     it('should reject dangerous patterns', () => {
       expect(() => new FilePath('../etc/passwd')).toThrow('File path contains dangerous patterns');
-      expect(() => new FilePath('data/../../../etc/passwd')).toThrow('File path contains dangerous patterns');
-      expect(() => new FilePath('data/..\\..\\windows\\system32')).toThrow('File path contains dangerous patterns');
-      expect(() => new FilePath('data/..%2F..%2Fetc')).toThrow('File path contains dangerous patterns');
-      expect(() => new FilePath('data/..%5C..%5Cwindows')).toThrow('File path contains dangerous patterns');
+      expect(() => new FilePath('data/../../../etc/passwd')).toThrow(
+        'File path contains dangerous patterns',
+      );
+      expect(() => new FilePath('data/..\\..\\windows\\system32')).toThrow(
+        'File path contains dangerous patterns',
+      );
+      expect(() => new FilePath('data/..%2F..%2Fetc')).toThrow(
+        'File path contains dangerous patterns',
+      );
+      expect(() => new FilePath('data/..%5C..%5Cwindows')).toThrow(
+        'File path contains dangerous patterns',
+      );
     });
 
     it('should reject invalid characters', () => {
       expect(() => new FilePath('data/<script>')).toThrow('File path contains invalid characters');
-      expect(() => new FilePath('data/users?id=1')).toThrow('File path contains invalid characters');
-      expect(() => new FilePath('data/users#section')).toThrow('File path contains invalid characters');
-      expect(() => new FilePath('data/users&test')).toThrow('File path contains invalid characters');
-      expect(() => new FilePath('data/users space')).toThrow('File path contains invalid characters');
+      expect(() => new FilePath('data/users?id=1')).toThrow(
+        'File path contains invalid characters',
+      );
+      expect(() => new FilePath('data/users#section')).toThrow(
+        'File path contains invalid characters',
+      );
+      expect(() => new FilePath('data/users&test')).toThrow(
+        'File path contains invalid characters',
+      );
+      expect(() => new FilePath('data/users space')).toThrow(
+        'File path contains invalid characters',
+      );
     });
 
     it('should accept valid paths', () => {
@@ -57,7 +73,7 @@ describe('FilePath', () => {
         'files/document_v1.0.docx',
       ];
 
-      validPaths.forEach(path => {
+      validPaths.forEach((path) => {
         expect(() => new FilePath(path)).not.toThrow();
       });
     });
@@ -116,7 +132,7 @@ describe('FilePath', () => {
       const path1 = new FilePath('data/users/profile.json');
       const path2 = new FilePath('data/users/profile.json');
       const path3 = new FilePath('data/users/avatar.png');
-      
+
       expect(path1.equals(path2)).toBe(true);
       expect(path1.equals(path3)).toBe(false);
     });
@@ -140,7 +156,7 @@ describe('FilePath', () => {
       const original = new FilePath('data/users/profile.json');
       const json = original.toJSON();
       const restored = FilePath.fromJSON(json);
-      
+
       expect(restored.equals(original)).toBe(true);
       expect(restored.value).toBe(original.value);
     });

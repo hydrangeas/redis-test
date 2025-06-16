@@ -30,6 +30,7 @@ npm run supabase:start
 ```
 
 This will start:
+
 - PostgreSQL database on port 54322
 - Auth service on port 54321
 - Supabase Studio on port 54323
@@ -42,6 +43,7 @@ npm run supabase:db:push
 ```
 
 This will create the following tables:
+
 - `auth_logs` - Authentication event logging
 - `rate_limits` - API rate limiting data
 - `api_logs` - API access logging

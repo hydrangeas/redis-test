@@ -24,17 +24,11 @@ export class UserTier {
    * @param customRateLimit - カスタムレート制限（省略時はデフォルト値を使用）
    * @returns 成功時はUserTier、失敗時はDomainError
    */
-  static create(
-    level: TierLevel,
-    customRateLimit?: RateLimit
-  ): Result<UserTier, DomainError> {
+  static create(level: TierLevel, customRateLimit?: RateLimit): Result<UserTier, DomainError> {
     const guardResult = Guard.againstNullOrUndefined(level, 'TierLevel');
     if (guardResult.isFailure) {
       return Result.fail(
-        DomainError.validation(
-          'INVALID_TIER_LEVEL',
-          'Tier level cannot be null or undefined'
-        )
+        DomainError.validation('INVALID_TIER_LEVEL', 'Tier level cannot be null or undefined'),
       );
     }
 
@@ -43,8 +37,8 @@ export class UserTier {
         DomainError.validation(
           'INVALID_TIER_LEVEL',
           `Invalid tier level: ${level}. Must be one of: ${Object.values(TierLevel).join(', ')}`,
-          { providedLevel: level }
-        )
+          { providedLevel: level },
+        ),
       );
     }
 
@@ -55,8 +49,8 @@ export class UserTier {
       return Result.fail(
         DomainError.validation(
           'INVALID_USER_TIER',
-          error instanceof Error ? error.message : 'Invalid tier configuration'
-        )
+          error instanceof Error ? error.message : 'Invalid tier configuration',
+        ),
       );
     }
   }
@@ -189,10 +183,7 @@ export class UserTier {
     const nextLevel = this.getNextTier();
     if (!nextLevel) {
       return Result.fail(
-        DomainError.businessRule(
-          'ALREADY_MAX_TIER',
-          'User is already at the highest tier level'
-        )
+        DomainError.businessRule('ALREADY_MAX_TIER', 'User is already at the highest tier level'),
       );
     }
     return UserTier.create(nextLevel);
@@ -205,10 +196,7 @@ export class UserTier {
    */
   equals(other: UserTier): boolean {
     if (!other) return false;
-    return (
-      this._level === other._level &&
-      this._rateLimit.equals(other._rateLimit)
-    );
+    return this._level === other._level && this._rateLimit.equals(other._rateLimit);
   }
 
   /**
@@ -247,21 +235,21 @@ export class UserTier {
     rateLimit?: { maxRequests: number; windowSeconds: number };
   }): UserTier {
     const level = json.level as TierLevel;
-    const rateLimitResult = json.rateLimit 
+    const rateLimitResult = json.rateLimit
       ? RateLimit.create(json.rateLimit.maxRequests, json.rateLimit.windowSeconds)
       : undefined;
-    
+
     if (rateLimitResult && rateLimitResult.isFailure) {
       throw new Error(rateLimitResult.getError().message);
     }
-    
+
     const rateLimit = rateLimitResult ? rateLimitResult.getValue() : undefined;
     const result = UserTier.create(level, rateLimit);
-    
+
     if (result.isFailure) {
       throw new Error(result.getError().message);
     }
-    
+
     return result.getValue();
   }
 

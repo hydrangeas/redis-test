@@ -61,7 +61,7 @@ export class SupabaseService {
    */
   async verifyToken(token: string) {
     const { data, error } = await this.adminClient.auth.getUser(token);
-    
+
     if (error) {
       throw new Error(`Invalid token: ${error.message}`);
     }
@@ -103,11 +103,7 @@ export class SupabaseService {
   /**
    * Log authentication event
    */
-  async logAuthEvent(event: {
-    userId: string;
-    eventType: string;
-    metadata?: any;
-  }) {
+  async logAuthEvent(event: { userId: string; eventType: string; metadata?: any }) {
     const { error } = await this.adminClient.from('auth_logs').insert({
       user_id: event.userId,
       event_type: event.eventType,

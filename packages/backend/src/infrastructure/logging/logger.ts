@@ -8,7 +8,7 @@ import type { EnvConfig } from '../config';
  */
 export function createLoggerConfig(config: EnvConfig): LoggerOptions {
   const isDevelopment = config.NODE_ENV === 'development';
-  
+
   return {
     level: config.LOG_LEVEL,
     formatters: {

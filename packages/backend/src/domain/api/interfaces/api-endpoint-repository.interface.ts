@@ -16,10 +16,7 @@ export interface IAPIEndpointRepository {
   /**
    * パスとメソッドでエンドポイントを検索
    */
-  findByPathAndMethod(
-    path: EndpointPath,
-    method: HttpMethod
-  ): Promise<Result<APIEndpoint | null>>;
+  findByPathAndMethod(path: EndpointPath, method: HttpMethod): Promise<Result<APIEndpoint | null>>;
 
   /**
    * すべてのエンドポイントを取得

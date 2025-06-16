@@ -16,11 +16,11 @@ describe('User', () => {
     const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
     const emailResult = Email.create('test@example.com');
     const tierResult = UserTier.create(TierLevel.TIER1);
-    
+
     if (userIdResult.isFailure || emailResult.isFailure || tierResult.isFailure) {
       throw new Error('Failed to create test data');
     }
-    
+
     userId = userIdResult.getValue();
     email = emailResult.getValue();
     tier = tierResult.getValue();
@@ -35,7 +35,7 @@ describe('User', () => {
       });
 
       expect(result.isSuccess).toBe(true);
-      
+
       const user = result.getValue();
       expect(user.id.equals(userId)).toBe(true);
       expect(user.email.equals(email)).toBe(true);
@@ -59,7 +59,7 @@ describe('User', () => {
     });
 
     it('メタデータを指定して作成できる', () => {
-      const metadata = { 
+      const metadata = {
         provider: 'google',
         providerId: 'google-123',
       };
@@ -248,7 +248,7 @@ describe('User', () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date(originalUpdatedAt.getTime() + 1000));
 
-      user.updateMetadata({ 
+      user.updateMetadata({
         new: 'data',
         provider: 'google',
       });
@@ -286,11 +286,11 @@ describe('User', () => {
 
       const differentEmailResult = Email.create('different@example.com');
       const differentTierResult = UserTier.create(TierLevel.TIER2);
-      
+
       if (differentEmailResult.isFailure || differentTierResult.isFailure) {
         throw new Error('Failed to create test data');
       }
-      
+
       const user2 = User.create({
         id: userId,
         email: differentEmailResult.getValue(),
@@ -311,7 +311,7 @@ describe('User', () => {
       if (differentUserIdResult.isFailure) {
         throw new Error('Failed to create user ID');
       }
-      
+
       const user2 = User.create({
         id: differentUserIdResult.getValue(),
         email,
@@ -332,18 +332,18 @@ describe('User', () => {
 
       // 初期状態の確認
       const initialEmail = user.email;
-      
+
       // メソッドを通じた正しい変更
       const newEmailResult = Email.create('new@example.com');
       if (newEmailResult.isFailure) {
         throw new Error('Failed to create email');
       }
-      
+
       const updateResult = user.updateEmail(newEmailResult.getValue());
       expect(updateResult.isSuccess).toBe(true);
       expect(user.email.equals(newEmailResult.getValue())).toBe(true);
       expect(user.email.equals(initialEmail)).toBe(false);
-      
+
       // エンティティのプロパティはgetterを通じてのみアクセス可能
       expect(user.email).toBeDefined();
       expect(user.tier).toBeDefined();

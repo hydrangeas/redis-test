@@ -104,7 +104,7 @@ describe('Logger', () => {
 
     it('should log messages', () => {
       const logger = createLogger(mockConfig);
-      
+
       // ロガーが正しく動作することを確認
       expect(() => logger.info('test message')).not.toThrow();
       expect(() => logger.error('error message')).not.toThrow();
@@ -114,7 +114,7 @@ describe('Logger', () => {
     it('should create child logger with bindings', () => {
       const logger = createLogger(mockConfig);
       const childLogger = logger.child({ service: 'test-service' });
-      
+
       expect(childLogger).toBeDefined();
       expect(childLogger.bindings()).toHaveProperty('service', 'test-service');
     });

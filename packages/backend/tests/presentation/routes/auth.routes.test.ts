@@ -53,8 +53,12 @@ describe('Auth Routes', () => {
     mockJWTService = {
       generateAccessToken: vi.fn().mockResolvedValue(Result.ok('mock-access-token')),
       generateRefreshToken: vi.fn().mockResolvedValue(Result.ok('mock-refresh-token')),
-      verifyAccessToken: vi.fn().mockResolvedValue(Result.fail(DomainError.unauthorized('INVALID_TOKEN', 'Invalid token'))),
-      verifyRefreshToken: vi.fn().mockResolvedValue(Result.fail(DomainError.unauthorized('INVALID_TOKEN', 'Invalid token'))),
+      verifyAccessToken: vi
+        .fn()
+        .mockResolvedValue(Result.fail(DomainError.unauthorized('INVALID_TOKEN', 'Invalid token'))),
+      verifyRefreshToken: vi
+        .fn()
+        .mockResolvedValue(Result.fail(DomainError.unauthorized('INVALID_TOKEN', 'Invalid token'))),
       decodeToken: vi.fn().mockReturnValue(null),
     };
 
@@ -78,10 +82,12 @@ describe('Auth Routes', () => {
     };
 
     const mockAPIAccessControlUseCase: IAPIAccessControlUseCase = {
-      checkAPIAccess: vi.fn().mockResolvedValue(Result.ok({
-        allowed: true,
-        reason: 'authenticated',
-      })),
+      checkAPIAccess: vi.fn().mockResolvedValue(
+        Result.ok({
+          allowed: true,
+          reason: 'authenticated',
+        }),
+      ),
     };
 
     const mockFileStorage: IFileStorage = {
@@ -160,7 +166,7 @@ describe('Auth Routes', () => {
           provider: 'email',
           iat: Math.floor(Date.now() / 1000),
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Act
@@ -221,7 +227,7 @@ describe('Auth Routes', () => {
           provider: 'email',
           iat: Math.floor(Date.now() / 1000),
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock usage status
@@ -234,7 +240,7 @@ describe('Auth Routes', () => {
           limit: 60,
           windowStart,
           windowEnd,
-        })
+        }),
       );
 
       // Act

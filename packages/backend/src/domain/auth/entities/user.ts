@@ -17,7 +17,7 @@ export interface UserProps {
 
 /**
  * ユーザーエンティティ
- * 
+ *
  * アプリケーションのユーザーを表現するドメインエンティティ
  */
 export class User extends Entity<UserProps> {
@@ -68,15 +68,18 @@ export class User extends Entity<UserProps> {
     metadata?: Record<string, any>;
   }): Result<User> {
     const now = new Date();
-    
-    const user = new User({
-      email: props.email,
-      tier: props.tier,
-      createdAt: now,
-      updatedAt: now,
-      emailVerified: props.emailVerified ?? false,
-      metadata: props.metadata,
-    }, new UniqueEntityId(props.id.value));
+
+    const user = new User(
+      {
+        email: props.email,
+        tier: props.tier,
+        createdAt: now,
+        updatedAt: now,
+        emailVerified: props.emailVerified ?? false,
+        metadata: props.metadata,
+      },
+      new UniqueEntityId(props.id.value),
+    );
 
     return Result.ok(user);
   }
@@ -85,15 +88,18 @@ export class User extends Entity<UserProps> {
    * 既存データからの再構築
    */
   public static reconstruct(props: UserProps & { id: UserId }): User {
-    return new User({
-      email: props.email,
-      tier: props.tier,
-      createdAt: props.createdAt,
-      updatedAt: props.updatedAt,
-      lastAuthenticatedAt: props.lastAuthenticatedAt,
-      emailVerified: props.emailVerified,
-      metadata: props.metadata,
-    }, new UniqueEntityId(props.id.value));
+    return new User(
+      {
+        email: props.email,
+        tier: props.tier,
+        createdAt: props.createdAt,
+        updatedAt: props.updatedAt,
+        lastAuthenticatedAt: props.lastAuthenticatedAt,
+        emailVerified: props.emailVerified,
+        metadata: props.metadata,
+      },
+      new UniqueEntityId(props.id.value),
+    );
   }
 
   /**
@@ -105,15 +111,15 @@ export class User extends Entity<UserProps> {
         new DomainError(
           'EMAIL_NOT_CHANGED',
           'The email address is the same as the current one',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
     this.props.email = email;
     this.props.emailVerified = false; // メール変更時は再検証が必要
     this.props.updatedAt = new Date();
-    
+
     return Result.ok();
   }
 
@@ -126,14 +132,14 @@ export class User extends Entity<UserProps> {
         new DomainError(
           'TIER_NOT_CHANGED',
           'The tier is the same as the current one',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
     this.props.tier = tier;
     this.props.updatedAt = new Date();
-    
+
     return Result.ok();
   }
 

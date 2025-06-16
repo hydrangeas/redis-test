@@ -13,21 +13,25 @@ OpenデータAPIのバックエンドサーバー
 ### 初回セットアップ
 
 1. 環境変数の設定
+
 ```bash
 cp .env.example .env.development
 ```
 
 2. Supabaseローカル環境の起動
+
 ```bash
 supabase start
 ```
 
 3. データベースマイグレーション
+
 ```bash
 npm run db:migrate
 ```
 
 4. シードデータの投入
+
 ```bash
 npm run db:seed
 ```
@@ -72,10 +76,10 @@ npm run db:seed
 
 以下のテストユーザーが作成されます：
 
-| Email | Password | Tier | Rate Limit |
-|-------|----------|------|------------|
-| tier1@example.com | password123 | tier1 | 60 req/min |
-| tier2@example.com | password123 | tier2 | 300 req/min |
+| Email             | Password    | Tier  | Rate Limit   |
+| ----------------- | ----------- | ----- | ------------ |
+| tier1@example.com | password123 | tier1 | 60 req/min   |
+| tier2@example.com | password123 | tier2 | 300 req/min  |
 | tier3@example.com | password123 | tier3 | 1000 req/min |
 
 ### 生成されるデータ
@@ -92,7 +96,8 @@ npm run db:seed
 npm run db:reset
 ```
 
-**注意**: 
+**注意**:
+
 - シーダーは開発環境でのみ実行可能です
 - 本番環境では実行できないよう保護されています
 - APIキーは開発環境でのみコンソールに出力されます

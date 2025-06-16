@@ -1,6 +1,6 @@
 /**
  * Open Data API Client Example - JavaScript
- * 
+ *
  * このサンプルコードは、Open Data APIの基本的な使用方法を示しています。
  */
 
@@ -20,7 +20,7 @@ class OpenDataAPIClient {
     this.rateLimit = {
       limit: null,
       remaining: null,
-      reset: null
+      reset: null,
     };
   }
 
@@ -31,7 +31,7 @@ class OpenDataAPIClient {
     const url = `${this.baseURL}${path}`;
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...options.headers,
     };
 
     if (this.accessToken) {
@@ -41,7 +41,7 @@ class OpenDataAPIClient {
     try {
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
       });
 
       // レート制限情報を更新
@@ -61,14 +61,13 @@ class OpenDataAPIClient {
       apiError.status = response.status;
       apiError.type = error.type;
       apiError.errors = error.errors;
-      
+
       // レート制限エラーの場合、retry-afterを追加
       if (response.status === 429) {
         apiError.retryAfter = parseInt(response.headers.get('Retry-After') || '60');
       }
 
       throw apiError;
-
     } catch (error) {
       // ネットワークエラー等
       if (!error.status) {
@@ -98,13 +97,13 @@ class OpenDataAPIClient {
     const response = await this.request('/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({
-        refresh_token: this.refreshToken
-      })
+        refresh_token: this.refreshToken,
+      }),
     });
 
     this.accessToken = response.access_token;
     this.refreshToken = response.refresh_token;
-    
+
     return response;
   }
 
@@ -114,7 +113,7 @@ class OpenDataAPIClient {
   async getData(path, options = {}) {
     return await this.request(`/data/${path}`, {
       method: 'GET',
-      headers: options.headers
+      headers: options.headers,
     });
   }
 
@@ -132,14 +131,14 @@ class OpenDataAPIClient {
       return {
         modified: true,
         data: response.data,
-        etag: response.metadata.etag
+        etag: response.metadata.etag,
       };
     } catch (error) {
       if (error.status === 304) {
         return {
           modified: false,
           data: null,
-          etag: etag
+          etag: etag,
         };
       }
       throw error;
@@ -151,7 +150,7 @@ class OpenDataAPIClient {
    */
   async logout() {
     await this.request('/auth/logout', {
-      method: 'POST'
+      method: 'POST',
     });
     this.accessToken = null;
     this.refreshToken = null;
@@ -164,10 +163,10 @@ class OpenDataAPIClient {
     // ヘルスチェックは認証不要なので、一時的にトークンを外す
     const token = this.accessToken;
     this.accessToken = null;
-    
+
     try {
       const response = await this.request('/health', {
-        method: 'GET'
+        method: 'GET',
       });
       return response;
     } finally {
@@ -183,7 +182,7 @@ async function main() {
   // クライアントの初期化
   const client = new OpenDataAPIClient({
     accessToken: ACCESS_TOKEN,
-    refreshToken: REFRESH_TOKEN
+    refreshToken: REFRESH_TOKEN,
   });
 
   try {
@@ -199,7 +198,7 @@ async function main() {
     const etag = data.metadata.etag;
     const cached = await client.getDataIfModified('secure/319985/r5.json', etag);
     console.log('Modified:', cached.modified);
-    
+
     // 3. エラーハンドリング
     console.log('\n=== エラーハンドリング ===');
     try {
@@ -225,7 +224,6 @@ async function main() {
     console.log('\n=== ヘルスチェック ===');
     const health = await client.checkHealth();
     console.log('API Status:', health.status);
-
   } catch (error) {
     console.error('Error:', error);
   }
@@ -241,22 +239,22 @@ async function fetchWithAutoRetry(client, path, maxRetries = 3) {
       if (error.status === 429) {
         const waitTime = error.retryAfter || 60;
         console.log(`Rate limited. Waiting ${waitTime} seconds...`);
-        await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+        await new Promise((resolve) => setTimeout(resolve, waitTime * 1000));
         continue;
       }
-      
+
       // 401エラー（認証エラー）の場合、トークンをリフレッシュ
       if (error.status === 401 && i < maxRetries - 1) {
         console.log('Token expired. Refreshing...');
         await client.refreshAccessToken();
         continue;
       }
-      
+
       // その他のエラーは即座に投げる
       throw error;
     }
   }
-  
+
   throw new Error(`Failed after ${maxRetries} retries`);
 }
 
@@ -265,26 +263,26 @@ async function fetchMultipleData(client, paths) {
   // レート制限を考慮した並行処理
   const batchSize = 5; // 同時リクエスト数
   const results = [];
-  
+
   for (let i = 0; i < paths.length; i += batchSize) {
     const batch = paths.slice(i, i + batchSize);
-    const promises = batch.map(path => 
-      client.getData(path).catch(error => ({
+    const promises = batch.map((path) =>
+      client.getData(path).catch((error) => ({
         path,
-        error: error.message
-      }))
+        error: error.message,
+      })),
     );
-    
+
     const batchResults = await Promise.all(promises);
     results.push(...batchResults);
-    
+
     // レート制限に余裕を持たせる
     if (client.rateLimit.remaining < 10 && i + batchSize < paths.length) {
       console.log('Rate limit low. Waiting...');
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
-  
+
   return results;
 }
 

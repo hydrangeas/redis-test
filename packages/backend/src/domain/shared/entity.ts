@@ -16,7 +16,7 @@ export abstract class Entity<T> {
       value: this.props,
       writable: true,
       enumerable: false,
-      configurable: false
+      configurable: false,
     });
   }
 
@@ -71,7 +71,7 @@ export class UniqueEntityId {
     let hash = 0;
     for (let i = 0; i < this._value.length; i++) {
       const char = this._value.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return hash;

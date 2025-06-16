@@ -4,7 +4,8 @@ import fetch from 'node-fetch';
 
 // テスト用の設定
 const BASE_URL = 'http://localhost:3000';
-const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJ0aWVyIjoidGllcjEiLCJleHAiOjk5OTk5OTk5OTl9.test';
+const TEST_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJ0aWVyIjoidGllcjEiLCJleHAiOjk5OTk5OTk5OTl9.test';
 
 async function testDataApi() {
   console.log('🔍 Testing Data API endpoints...\n');
@@ -14,13 +15,13 @@ async function testDataApi() {
   try {
     const response = await fetch(`${BASE_URL}/api/data/secure/population/2024.json`, {
       headers: {
-        'Authorization': `Bearer ${TEST_TOKEN}`
-      }
+        Authorization: `Bearer ${TEST_TOKEN}`,
+      },
     });
 
     console.log(`Status: ${response.status}`);
     console.log(`Headers:`, response.headers.raw());
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('Data:', JSON.stringify(data, null, 2));
@@ -39,12 +40,12 @@ async function testDataApi() {
   try {
     const response = await fetch(`${BASE_URL}/api/data/secure/nonexistent.json`, {
       headers: {
-        'Authorization': `Bearer ${TEST_TOKEN}`
-      }
+        Authorization: `Bearer ${TEST_TOKEN}`,
+      },
     });
 
     console.log(`Status: ${response.status}`);
-    
+
     if (!response.ok) {
       const error = await response.json();
       console.log('Error (expected):', JSON.stringify(error, null, 2));
@@ -61,7 +62,7 @@ async function testDataApi() {
     const response = await fetch(`${BASE_URL}/api/data/secure/population/2024.json`);
 
     console.log(`Status: ${response.status}`);
-    
+
     if (!response.ok) {
       const error = await response.json();
       console.log('Error (expected):', JSON.stringify(error, null, 2));

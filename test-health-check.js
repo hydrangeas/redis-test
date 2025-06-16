@@ -13,7 +13,7 @@ async function testHealthCheck() {
   try {
     const response = await fetch(`${BASE_URL}/health`);
     console.log(`Status: ${response.status}`);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('Response:', JSON.stringify(data, null, 2));
@@ -32,7 +32,7 @@ async function testHealthCheck() {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/health/detailed`);
     console.log(`Status: ${response.status}`);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('Response:', JSON.stringify(data, null, 2));
@@ -51,7 +51,7 @@ async function testHealthCheck() {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/health/live`);
     console.log(`Status: ${response.status}`);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('Response:', JSON.stringify(data, null, 2));
@@ -70,7 +70,7 @@ async function testHealthCheck() {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/health/ready`);
     console.log(`Status: ${response.status}`);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('Response:', JSON.stringify(data, null, 2));

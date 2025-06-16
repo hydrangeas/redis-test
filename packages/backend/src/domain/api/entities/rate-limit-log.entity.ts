@@ -74,7 +74,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
    */
   static create(
     props: CreateRateLimitLogProps,
-    id?: UniqueEntityId
+    id?: UniqueEntityId,
   ): Result<RateLimitLog, DomainError> {
     // Validate userId
     if (!props.userId || typeof props.userId !== 'string') {
@@ -82,8 +82,8 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
         new DomainError(
           'INVALID_USER_ID',
           'User ID is required and must be a string',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -93,8 +93,8 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
         new DomainError(
           'INVALID_ENDPOINT_ID',
           'Endpoint ID is required and must be a string',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -104,8 +104,8 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
         new DomainError(
           'INVALID_REQUEST_ID',
           'Request ID is required and must be a string',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -123,9 +123,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
   /**
    * 既存のデータから再構築
    */
-  static reconstruct(
-    props: RateLimitLogProps & { id: string }
-  ): Result<RateLimitLog, DomainError> {
+  static reconstruct(props: RateLimitLogProps & { id: string }): Result<RateLimitLog, DomainError> {
     const { id, ...logProps } = props;
     return Result.ok(new RateLimitLog(logProps, new UniqueEntityId(id)));
   }

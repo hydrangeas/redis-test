@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface IconProps {
   className?: string;
@@ -38,7 +38,9 @@ export const XIcon: React.FC<IconProps> = ({ className = "h-6 w-6" }) => (
   </svg>
 );
 
-export const CheckCircleIcon: React.FC<IconProps> = ({ className = "h-6 w-6" }) => (
+export const CheckCircleIcon: React.FC<IconProps> = ({
+  className = "h-6 w-6",
+}) => (
   <svg
     className={className}
     fill="none"
@@ -55,7 +57,9 @@ export const CheckCircleIcon: React.FC<IconProps> = ({ className = "h-6 w-6" }) 
   </svg>
 );
 
-export const ExclamationIcon: React.FC<IconProps> = ({ className = "h-6 w-6" }) => (
+export const ExclamationIcon: React.FC<IconProps> = ({
+  className = "h-6 w-6",
+}) => (
   <svg
     className={className}
     fill="none"
@@ -72,7 +76,9 @@ export const ExclamationIcon: React.FC<IconProps> = ({ className = "h-6 w-6" }) 
   </svg>
 );
 
-export const InformationCircleIcon: React.FC<IconProps> = ({ className = "h-6 w-6" }) => (
+export const InformationCircleIcon: React.FC<IconProps> = ({
+  className = "h-6 w-6",
+}) => (
   <svg
     className={className}
     fill="none"

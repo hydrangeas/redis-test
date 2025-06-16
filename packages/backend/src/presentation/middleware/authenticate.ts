@@ -8,14 +8,11 @@ import { DI_TOKENS } from '@/infrastructure/di/tokens';
  * 認証ミドルウェア
  * Authorizationヘッダーからトークンを抽出し、検証する
  */
-export async function authenticate(
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<void> {
+export async function authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   try {
     // Authorizationヘッダーの取得
     const authHeader = request.headers.authorization;
-    
+
     if (!authHeader || typeof authHeader !== 'string') {
       const problemDetails = toProblemDetails(
         {
@@ -23,9 +20,9 @@ export async function authenticate(
           message: 'Missing or invalid authorization header',
           type: 'UNAUTHORIZED',
         },
-        request.url
+        request.url,
       );
-      
+
       reply
         .code(401)
         .header('content-type', 'application/problem+json')
@@ -43,9 +40,9 @@ export async function authenticate(
           message: 'Authorization header must use Bearer scheme',
           type: 'UNAUTHORIZED',
         },
-        request.url
+        request.url,
       );
-      
+
       reply
         .code(401)
         .header('content-type', 'application/problem+json')
@@ -55,22 +52,22 @@ export async function authenticate(
     }
 
     const token = bearerMatch[1];
-    
+
     // トークンの検証
     const authUseCase = container.resolve<AuthenticationUseCase>(DI_TOKENS.AuthenticationUseCase);
     const result = await authUseCase.validateToken(token);
 
     if (!result.success) {
-      const problemDetails = toProblemDetails(
-        result.error,
-        request.url
+      const problemDetails = toProblemDetails(result.error, request.url);
+
+      request.log.warn(
+        {
+          error: result.error?.code,
+          message: result.error?.message,
+        },
+        'Authentication failed',
       );
-      
-      request.log.warn({
-        error: result.error?.code,
-        message: result.error?.message,
-      }, 'Authentication failed');
-      
+
       reply
         .code(401)
         .header('content-type', 'application/problem+json')
@@ -82,17 +79,22 @@ export async function authenticate(
     // 認証成功 - ユーザー情報をリクエストに追加
     request.user = result.data.user;
     request.authenticatedUser = result.data.user;
-    
-    request.log.info({
-      userId: result.data.user.userId.value,
-      tier: result.data.user.tier.level,
-    }, 'User authenticated successfully');
-    
+
+    request.log.info(
+      {
+        userId: result.data.user.userId.value,
+        tier: result.data.user.tier.level,
+      },
+      'User authenticated successfully',
+    );
   } catch (error) {
-    request.log.error({
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    }, 'Unexpected error during authentication');
+    request.log.error(
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      'Unexpected error during authentication',
+    );
 
     const problemDetails = toProblemDetails(
       {
@@ -100,13 +102,10 @@ export async function authenticate(
         message: 'An error occurred during authentication',
         type: 'INTERNAL',
       },
-      request.url
+      request.url,
     );
 
-    reply
-      .code(500)
-      .header('content-type', 'application/problem+json')
-      .send(problemDetails);
+    reply.code(500).header('content-type', 'application/problem+json').send(problemDetails);
   }
 }
 

@@ -81,27 +81,25 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   checkRateLimit(
     userId: UserId,
     rateLimit: RateLimit,
-    currentTime: Date = new Date()
+    currentTime: Date = new Date(),
   ): RateLimitCheckResult {
     const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
     const window = new RateLimitWindow(rateLimit.windowSeconds, currentTime);
-    
+
     // ウィンドウ内のリクエストをカウント
-    const requestsInWindow = userLogs.filter(log => 
-      window.contains(log.timestamp)
-    );
-    
+    const requestsInWindow = userLogs.filter((log) => window.contains(log.timestamp));
+
     const requestCount = new RequestCount(requestsInWindow.length);
     const isExceeded = requestCount.exceeds(rateLimit.maxRequests);
     const remainingRequests = Math.max(0, rateLimit.maxRequests - requestCount.count);
-    
+
     let retryAfterSeconds: number | undefined;
     if (isExceeded && requestsInWindow.length > 0) {
       // 最も古いリクエストがウィンドウから出るまでの時間
       const oldestRequest = requestsInWindow[0];
       retryAfterSeconds = window.getSecondsUntilExpires(oldestRequest.timestamp);
     }
-    
+
     return {
       isExceeded,
       requestCount,
@@ -116,10 +114,10 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   recordAccess(
     userId: UserId,
     requestId: string,
-    currentTime: Date = new Date()
+    currentTime: Date = new Date(),
   ): Result<void, DomainError> {
     const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
-    
+
     // 新しいログエントリを作成
     const newLogResult = RateLimitLog.create({
       userId: userId.value,
@@ -144,11 +142,11 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
    */
   cleanupOldLogs(maxAgeSeconds: number, currentTime: Date = new Date()): void {
     const cutoffTime = new Date(currentTime.getTime() - maxAgeSeconds * 1000);
-    
+
     // 各ユーザーのログをクリーンアップ
     for (const [userId, logs] of this.props.rateLimitLogs.entries()) {
-      const filteredLogs = logs.filter(log => log.timestamp > cutoffTime);
-      
+      const filteredLogs = logs.filter((log) => log.timestamp > cutoffTime);
+
       if (filteredLogs.length === 0) {
         // ログが空になった場合はエントリ自体を削除
         this.props.rateLimitLogs.delete(userId);
@@ -194,10 +192,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   /**
    * APIEndpointを作成
    */
-  static create(
-    props: CreateAPIEndpointProps,
-    id?: EndpointId
-  ): Result<APIEndpoint, DomainError> {
+  static create(props: CreateAPIEndpointProps, id?: EndpointId): Result<APIEndpoint, DomainError> {
     // EndpointPathの作成
     const pathResult = EndpointPath.create(props.path);
     if (pathResult.isFailure) {
@@ -205,8 +200,8 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
         new DomainError(
           'INVALID_ENDPOINT_PATH',
           pathResult.getError().message,
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -221,24 +216,18 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
 
     // Ensure we always have an EndpointId
     const endpointId = id || EndpointId.generate();
-    
+
     return Result.ok(new APIEndpoint(endpointProps, endpointId));
   }
 
   /**
    * 既存のデータから再構築
    */
-  static reconstruct(
-    props: APIEndpointProps & { id: string }
-  ): Result<APIEndpoint, DomainError> {
+  static reconstruct(props: APIEndpointProps & { id: string }): Result<APIEndpoint, DomainError> {
     const idResult = EndpointId.create(props.id);
     if (idResult.isFailure) {
       return Result.fail(
-        new DomainError(
-          'INVALID_ENDPOINT_ID',
-          idResult.getError().message,
-          ErrorType.VALIDATION
-        )
+        new DomainError('INVALID_ENDPOINT_ID', idResult.getError().message, ErrorType.VALIDATION),
       );
     }
 

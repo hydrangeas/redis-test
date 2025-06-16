@@ -13,16 +13,16 @@ describe('ApiPath', () => {
     it('should normalize paths', () => {
       // Add leading slash
       expect(new ApiPath('api/users').value).toBe('/api/users');
-      
+
       // Remove trailing slash (except for root)
       expect(new ApiPath('/api/users/').value).toBe('/api/users');
-      
+
       // Root path should keep trailing slash
       expect(new ApiPath('/').value).toBe('/');
-      
+
       // Normalize multiple slashes
       expect(new ApiPath('//api///users//').value).toBe('/api/users');
-      
+
       // Trim whitespace
       expect(new ApiPath('  /api/users  ').value).toBe('/api/users');
     });
@@ -36,18 +36,28 @@ describe('ApiPath', () => {
     it('should reject dangerous patterns', () => {
       // Path traversal patterns
       expect(() => new ApiPath('../etc/passwd')).toThrow('API path contains dangerous patterns');
-      expect(() => new ApiPath('/api/../../../etc/passwd')).toThrow('API path contains dangerous patterns');
-      expect(() => new ApiPath('/api/..\\windows\\system32')).toThrow('API path contains dangerous patterns');
-      
+      expect(() => new ApiPath('/api/../../../etc/passwd')).toThrow(
+        'API path contains dangerous patterns',
+      );
+      expect(() => new ApiPath('/api/..\\windows\\system32')).toThrow(
+        'API path contains dangerous patterns',
+      );
+
       // URL encoded traversal
-      expect(() => new ApiPath('/api/..%2F..%2Fetc')).toThrow('API path contains dangerous patterns');
-      expect(() => new ApiPath('/api/..%5C..%5Cwindows')).toThrow('API path contains dangerous patterns');
+      expect(() => new ApiPath('/api/..%2F..%2Fetc')).toThrow(
+        'API path contains dangerous patterns',
+      );
+      expect(() => new ApiPath('/api/..%5C..%5Cwindows')).toThrow(
+        'API path contains dangerous patterns',
+      );
     });
 
     it('should reject invalid characters', () => {
       expect(() => new ApiPath('/api/<script>')).toThrow('API path contains invalid characters');
       expect(() => new ApiPath('/api/users?id=1')).toThrow('API path contains invalid characters');
-      expect(() => new ApiPath('/api/users#section')).toThrow('API path contains invalid characters');
+      expect(() => new ApiPath('/api/users#section')).toThrow(
+        'API path contains invalid characters',
+      );
       expect(() => new ApiPath('/api/users&test')).toThrow('API path contains invalid characters');
       expect(() => new ApiPath('/api/users space')).toThrow('API path contains invalid characters');
     });
@@ -55,7 +65,7 @@ describe('ApiPath', () => {
     it('should accept valid paths with dots', () => {
       const path1 = new ApiPath('/secure/319985/r5.json');
       expect(path1.value).toBe('/secure/319985/r5.json');
-      
+
       const path2 = new ApiPath('/api/v1.0/users');
       expect(path2.value).toBe('/api/v1.0/users');
     });
@@ -129,7 +139,7 @@ describe('ApiPath', () => {
       const path1 = new ApiPath('/api/users');
       const path2 = new ApiPath('/api/users');
       const path3 = new ApiPath('/api/posts');
-      
+
       expect(path1.equals(path2)).toBe(true);
       expect(path1.equals(path3)).toBe(false);
     });
@@ -159,7 +169,7 @@ describe('ApiPath', () => {
       const original = new ApiPath('/api/users');
       const json = original.toJSON();
       const restored = ApiPath.fromJSON(json);
-      
+
       expect(restored.equals(original)).toBe(true);
       expect(restored.value).toBe(original.value);
     });

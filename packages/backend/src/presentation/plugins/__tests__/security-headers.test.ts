@@ -27,7 +27,7 @@ describe('Security Headers Plugin', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      
+
       // Basic security headers
       expect(response.headers['x-content-type-options']).toBe('nosniff');
       expect(response.headers['x-frame-options']).toBe('DENY');
@@ -83,7 +83,9 @@ describe('Security Headers Plugin', () => {
         url: '/api/data',
       });
 
-      expect(response.headers['cache-control']).toBe('no-store, no-cache, must-revalidate, private');
+      expect(response.headers['cache-control']).toBe(
+        'no-store, no-cache, must-revalidate, private',
+      );
       expect(response.headers['pragma']).toBe('no-cache');
       expect(response.headers['expires']).toBe('0');
     });
@@ -96,7 +98,9 @@ describe('Security Headers Plugin', () => {
         url: '/api/health',
       });
 
-      expect(response.headers['cache-control']).not.toBe('no-store, no-cache, must-revalidate, private');
+      expect(response.headers['cache-control']).not.toBe(
+        'no-store, no-cache, must-revalidate, private',
+      );
     });
 
     it('should set max-age header for OPTIONS requests', async () => {

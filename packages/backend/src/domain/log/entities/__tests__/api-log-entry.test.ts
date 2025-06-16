@@ -15,7 +15,7 @@ describe('APILogEntry', () => {
     requestInfo = new RequestInfo({
       ipAddress: '192.168.1.1',
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124',
-      headers: { 'accept': 'application/json' },
+      headers: { accept: 'application/json' },
       body: null,
     });
 
@@ -82,7 +82,7 @@ describe('APILogEntry', () => {
     it('should fail without required properties', () => {
       const requiredProps = ['endpoint', 'requestInfo', 'responseInfo', 'timestamp'];
 
-      requiredProps.forEach(prop => {
+      requiredProps.forEach((prop) => {
         const invalidProps = { ...validProps };
         delete invalidProps[prop];
 

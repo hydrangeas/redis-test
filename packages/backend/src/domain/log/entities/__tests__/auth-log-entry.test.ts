@@ -17,7 +17,9 @@ describe('AuthLogEntry', () => {
       event: AuthEvent.login().getValue(),
       provider: Provider.google(),
       ipAddress: IPAddress.create('192.168.1.1').getValue(),
-      userAgent: UserAgent.create('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124').getValue(),
+      userAgent: UserAgent.create(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124',
+      ).getValue(),
       timestamp: new Date(),
       result: AuthResult.SUCCESS,
     };
@@ -61,7 +63,7 @@ describe('AuthLogEntry', () => {
     it('should fail without required properties', () => {
       const requiredProps = ['event', 'provider', 'ipAddress', 'userAgent', 'timestamp', 'result'];
 
-      requiredProps.forEach(prop => {
+      requiredProps.forEach((prop) => {
         const invalidProps = { ...validProps };
         delete invalidProps[prop];
 

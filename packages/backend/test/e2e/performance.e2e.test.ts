@@ -5,21 +5,23 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
-import { 
-  setupTestEnvironment, 
-  teardownTestEnvironment, 
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
   createTestUser,
   createTestDataFile,
   removeTestDataFile,
-  makeConcurrentRequests
+  makeConcurrentRequests,
 } from './setup';
 
 describe('Performance E2E Tests', () => {
   let app: FastifyInstance;
   const testDataPath = 'secure/performance/test.json';
-  const testData = { 
-    test: 'performance', 
-    data: Array(100).fill(0).map((_, i) => ({ id: i, value: Math.random() })) 
+  const testData = {
+    test: 'performance',
+    data: Array(100)
+      .fill(0)
+      .map((_, i) => ({ id: i, value: Math.random() })),
   };
 
   beforeAll(async () => {
@@ -54,7 +56,7 @@ describe('Performance E2E Tests', () => {
     const totalTime = endTime - startTime;
 
     // All requests should succeed
-    const successCount = responses.filter(r => r.statusCode === 200).length;
+    const successCount = responses.filter((r) => r.statusCode === 200).length;
     expect(successCount).toBe(concurrentRequests);
 
     // Total time should be reasonable (5 seconds for 100 requests)
@@ -65,14 +67,14 @@ describe('Performance E2E Tests', () => {
     expect(avgResponseTime).toBeLessThan(50); // Average should be under 50ms
 
     // Check response time consistency
-    const responseTimes = responses.map(r => 
-      parseInt(r.headers['x-response-time'] || '0')
-    ).filter(t => t > 0);
+    const responseTimes = responses
+      .map((r) => parseInt(r.headers['x-response-time'] || '0'))
+      .filter((t) => t > 0);
 
     if (responseTimes.length > 0) {
       const maxResponseTime = Math.max(...responseTimes);
       const minResponseTime = Math.min(...responseTimes);
-      
+
       // Response times should be relatively consistent
       expect(maxResponseTime).toBeLessThan(minResponseTime * 10);
     }
@@ -97,7 +99,7 @@ describe('Performance E2E Tests', () => {
     expect(responses.length).toBe(burstSize);
 
     // Most requests should succeed (tier3 has 300/min limit)
-    const successCount = responses.filter(r => r.statusCode === 200).length;
+    const successCount = responses.filter((r) => r.statusCode === 200).length;
     expect(successCount).toBe(burstSize);
 
     // Burst should complete quickly (under 2 seconds)
@@ -108,7 +110,7 @@ describe('Performance E2E Tests', () => {
       method: 'GET',
       url: '/health',
     });
-    
+
     const health = JSON.parse(healthResponse.body);
     if (health.metrics?.memory) {
       expect(health.metrics.memory.percentage).toBeLessThan(90);
@@ -117,17 +119,21 @@ describe('Performance E2E Tests', () => {
 
   it('should maintain performance with large payloads', async () => {
     const { token } = await createTestUser('tier2');
-    
+
     // Create a larger test file (1MB)
     const largeData = {
-      items: Array(10000).fill(0).map((_, i) => ({
-        id: i,
-        name: `Item ${i}`,
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        values: Array(10).fill(0).map(() => Math.random()),
-      })),
+      items: Array(10000)
+        .fill(0)
+        .map((_, i) => ({
+          id: i,
+          name: `Item ${i}`,
+          description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+          values: Array(10)
+            .fill(0)
+            .map(() => Math.random()),
+        })),
     };
-    
+
     await createTestDataFile('secure/performance/large.json', largeData);
 
     const startTime = Date.now();
@@ -142,7 +148,7 @@ describe('Performance E2E Tests', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.headers['content-type']).toContain('application/json');
-    
+
     // Large file should still be served quickly (under 500ms)
     expect(responseTime).toBeLessThan(500);
 
@@ -167,46 +173,56 @@ describe('Performance E2E Tests', () => {
     const requests = [];
     for (let i = 0; i < totalRequests; i++) {
       const user = users[i % 3];
-      
+
       if (i % 5 === 0) {
         // Health check (no auth needed)
-        requests.push(app.inject({
-          method: 'GET',
-          url: '/health',
-        }));
+        requests.push(
+          app.inject({
+            method: 'GET',
+            url: '/health',
+          }),
+        );
       } else if (i % 5 === 1) {
         // Auth check
-        requests.push(app.inject({
-          method: 'GET',
-          url: '/auth/me',
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }));
+        requests.push(
+          app.inject({
+            method: 'GET',
+            url: '/auth/me',
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }),
+        );
       } else if (i % 5 === 2) {
         // Data API
-        requests.push(app.inject({
-          method: 'GET',
-          url: '/secure/performance/test.json',
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }));
+        requests.push(
+          app.inject({
+            method: 'GET',
+            url: '/secure/performance/test.json',
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }),
+        );
       } else if (i % 5 === 3) {
         // API docs
-        requests.push(app.inject({
-          method: 'GET',
-          url: '/api-docs/json',
-        }));
+        requests.push(
+          app.inject({
+            method: 'GET',
+            url: '/api-docs/json',
+          }),
+        );
       } else {
         // 404 requests
-        requests.push(app.inject({
-          method: 'GET',
-          url: `/secure/missing-${i}.json`,
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }));
+        requests.push(
+          app.inject({
+            method: 'GET',
+            url: `/secure/missing-${i}.json`,
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }),
+        );
       }
     }
 
@@ -214,15 +230,18 @@ describe('Performance E2E Tests', () => {
     const totalTime = Date.now() - startTime;
 
     // Check response distribution
-    const statusCodes = responses.reduce((acc, r) => {
-      acc[r.statusCode] = (acc[r.statusCode] || 0) + 1;
-      return acc;
-    }, {} as Record<number, number>);
+    const statusCodes = responses.reduce(
+      (acc, r) => {
+        acc[r.statusCode] = (acc[r.statusCode] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
 
     // Verify expected status codes
     expect(statusCodes[200]).toBeGreaterThan(0); // Successful requests
     expect(statusCodes[404]).toBeGreaterThan(0); // Not found requests
-    
+
     // All requests should complete within 10 seconds
     expect(totalTime).toBeLessThan(10000);
 
@@ -281,7 +300,7 @@ describe('Performance E2E Tests', () => {
 
     for (let i = 0; i < iterations; i++) {
       const startTime = Date.now();
-      
+
       const responses = await makeConcurrentRequests(requestsPerIteration, () => ({
         method: 'GET',
         url: '/secure/performance/test.json',
@@ -294,18 +313,19 @@ describe('Performance E2E Tests', () => {
       iterationTimes.push(iterationTime);
 
       // All requests should succeed
-      const successCount = responses.filter(r => r.statusCode === 200).length;
+      const successCount = responses.filter((r) => r.statusCode === 200).length;
       expect(successCount).toBe(requestsPerIteration);
 
       // Brief pause between iterations
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     // Calculate standard deviation to check consistency
     const avgTime = iterationTimes.reduce((a, b) => a + b) / iterations;
-    const variance = iterationTimes.reduce((acc, time) => {
-      return acc + Math.pow(time - avgTime, 2);
-    }, 0) / iterations;
+    const variance =
+      iterationTimes.reduce((acc, time) => {
+        return acc + Math.pow(time - avgTime, 2);
+      }, 0) / iterations;
     const stdDev = Math.sqrt(variance);
 
     // Standard deviation should be low (consistent performance)
@@ -319,7 +339,9 @@ describe('Performance E2E Tests', () => {
   it('should handle database connection pool efficiently', async () => {
     // Create multiple users to generate auth logs
     const users = await Promise.all(
-      Array(10).fill(0).map(() => createTestUser('tier2'))
+      Array(10)
+        .fill(0)
+        .map(() => createTestUser('tier2')),
     );
 
     // Make concurrent authenticated requests that hit the database
@@ -332,7 +354,7 @@ describe('Performance E2E Tests', () => {
     }));
 
     // All requests should succeed
-    const successCount = responses.filter(r => r.statusCode === 200).length;
+    const successCount = responses.filter((r) => r.statusCode === 200).length;
     expect(successCount).toBe(50);
 
     // Check that database is still healthy
@@ -340,14 +362,14 @@ describe('Performance E2E Tests', () => {
       method: 'GET',
       url: '/health',
     });
-    
+
     const health = JSON.parse(healthResponse.body);
     expect(health.services.database.status).toBe('healthy');
     expect(health.services.database.responseTime).toBeLessThan(100);
   });
 
   describe('Memory and Resource Management', () => {
-    it('should not leak memory under sustained load', async function() {
+    it('should not leak memory under sustained load', async function () {
       // Skip in CI environments with limited resources
       if (process.env.CI) {
         this.skip();
@@ -376,13 +398,13 @@ describe('Performance E2E Tests', () => {
         }));
 
         // Small delay between iterations
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Check final memory usage

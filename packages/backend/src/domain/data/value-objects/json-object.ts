@@ -10,7 +10,6 @@ export interface JsonObjectProps {
  * JSONオブジェクトを型安全に扱うためのバリューオブジェクト
  */
 export class JsonObject extends ValueObject<JsonObjectProps> {
-  
   get value(): Record<string, any> {
     return { ...this.props.value }; // Return a copy to maintain immutability
   }
@@ -22,7 +21,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   get<T = any>(path: string): T | undefined {
     const keys = path.split('.');
     let current: any = this.props.value;
-    
+
     for (const key of keys) {
       if (current && typeof current === 'object' && key in current) {
         current = current[key];
@@ -30,7 +29,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
         return undefined;
       }
     }
-    
+
     return current as T;
   }
 
@@ -56,7 +55,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
     const keys = path.split('.');
     const newValue = { ...this.props.value };
     let current: any = newValue;
-    
+
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
       if (!current[key] || typeof current[key] !== 'object') {
@@ -66,9 +65,9 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       }
       current = current[key];
     }
-    
+
     current[keys[keys.length - 1]] = value;
-    
+
     return JsonObject.create(newValue);
   }
 
@@ -79,7 +78,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
     const keys = path.split('.');
     const newValue = { ...this.props.value };
     let current: any = newValue;
-    
+
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
       if (!current[key] || typeof current[key] !== 'object') {
@@ -88,9 +87,9 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       current[key] = { ...current[key] };
       current = current[key];
     }
-    
+
     delete current[keys[keys.length - 1]];
-    
+
     return JsonObject.create(newValue);
   }
 
@@ -107,7 +106,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
    */
   private deepMerge(target: any, source: any): any {
     const result = { ...target };
-    
+
     for (const key in source) {
       if (source.hasOwnProperty(key)) {
         if (
@@ -124,7 +123,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
         }
       }
     }
-    
+
     return result;
   }
 
@@ -132,9 +131,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
    * JSON文字列に変換
    */
   toJsonString(pretty = false): string {
-    return pretty 
-      ? JSON.stringify(this.props.value, null, 2)
-      : JSON.stringify(this.props.value);
+    return pretty ? JSON.stringify(this.props.value, null, 2) : JSON.stringify(this.props.value);
   }
 
   /**
@@ -172,7 +169,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return Result.fail(new ValidationError('Value must be a valid object'));
     }
-    
+
     return Result.ok(new JsonObject({ value }));
   }
 

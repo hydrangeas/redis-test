@@ -21,7 +21,7 @@ describe('InMemoryAPIRepository', () => {
 
       expect(result.isSuccess).toBe(true);
       const aggregate = result.getValue()!;
-      
+
       // デフォルトのレート制限が設定されている
       expect(aggregate.defaultRateLimits.size).toBe(3);
       expect(aggregate.defaultRateLimits.has(TierLevel.TIER1)).toBe(true);
@@ -48,7 +48,7 @@ describe('InMemoryAPIRepository', () => {
 
       // カスタムエンドポイントを追加
       const pathResult = EndpointPath.create('/test/endpoint');
-      
+
       if (pathResult.isSuccess) {
         const endpointResult = APIEndpoint.create({
           path: pathResult.getValue()!,
@@ -70,7 +70,7 @@ describe('InMemoryAPIRepository', () => {
       // 取得して確認
       const getResult = await repository.getAggregate();
       expect(getResult.isSuccess).toBe(true);
-      
+
       const retrieved = getResult.getValue()!;
       expect(retrieved.endpoints.size).toBe(1);
       expect(retrieved.defaultRateLimits.get(TierLevel.TIER1)?.maxRequests).toBe(100);
@@ -88,7 +88,7 @@ describe('InMemoryAPIRepository', () => {
 
       const findResult = await repository.findByPathAndMethod(
         pathResult.getValue()!,
-        HttpMethod.GET
+        HttpMethod.GET,
       );
 
       expect(findResult.isSuccess).toBe(true);
@@ -102,7 +102,7 @@ describe('InMemoryAPIRepository', () => {
 
       const findResult = await repository.findByPathAndMethod(
         pathResult.getValue()!,
-        HttpMethod.DELETE
+        HttpMethod.DELETE,
       );
 
       expect(findResult.isSuccess).toBe(true);
@@ -124,16 +124,16 @@ describe('InMemoryAPIRepository', () => {
   describe('exists', () => {
     it('should return true by default', async () => {
       const result = await repository.exists();
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(true);
     });
 
     it('should return false after clear', async () => {
       repository.clear();
-      
+
       const result = await repository.exists();
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(false);
     });
@@ -142,7 +142,7 @@ describe('InMemoryAPIRepository', () => {
   describe('test helpers', () => {
     it('should clear repository', async () => {
       repository.clear();
-      
+
       const result = await repository.getAggregate();
       expect(result.isFailure).toBe(true);
       expect(result.error?.code).toBe('AGGREGATE_NOT_FOUND');
@@ -150,15 +150,15 @@ describe('InMemoryAPIRepository', () => {
 
     it('should reset to defaults', async () => {
       repository.clear();
-      
+
       const clearedResult = await repository.exists();
       expect(clearedResult.getValue()).toBe(false);
-      
+
       repository.reset();
-      
+
       const resetResult = await repository.exists();
       expect(resetResult.getValue()).toBe(true);
-      
+
       const aggregateResult = await repository.getAggregate();
       expect(aggregateResult.isSuccess).toBe(true);
     });

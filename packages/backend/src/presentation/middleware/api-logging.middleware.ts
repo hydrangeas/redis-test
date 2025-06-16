@@ -42,14 +42,10 @@ export const apiLoggingMiddleware = {
   },
 
   // レスポンス送信時
-  onSend: async (
-    request: FastifyRequest,
-    reply: FastifyReply,
-    payload: any
-  ) => {
+  onSend: async (request: FastifyRequest, reply: FastifyReply, payload: any) => {
     const apiLogService = container.resolve<IApiLogService>(DI_TOKENS.ApiLogService);
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
-    
+
     try {
       // レスポンスタイムの計算
       const responseTime = Date.now() - request.context.startTime;
@@ -93,21 +89,19 @@ export const apiLoggingMiddleware = {
       // APIログエントリの作成
       const logEntryResult = APILogEntry.create(
         {
-          userId: request.context.userId 
-            ? UserId.fromString(request.context.userId) 
-            : undefined,
+          userId: request.context.userId ? UserId.fromString(request.context.userId) : undefined,
           endpoint: endpointResult.getValue(),
           requestInfo,
           responseInfo,
           timestamp: new Date(),
           error: reply.statusCode >= 400 ? extractErrorMessage(payload) : undefined,
         },
-        LogId.generate()
+        LogId.generate(),
       );
 
       if (logEntryResult.isSuccess) {
         // 非同期でログを保存
-        apiLogService.saveLog(logEntryResult.getValue()).catch(error => {
+        apiLogService.saveLog(logEntryResult.getValue()).catch((error) => {
           logger.error({ error }, 'Failed to save API log');
         });
       } else {
@@ -123,19 +117,19 @@ export const apiLoggingMiddleware = {
 
 function calculatePayloadSize(payload: any): number {
   if (!payload) return 0;
-  
+
   if (typeof payload === 'string') {
     return Buffer.byteLength(payload, 'utf8');
   }
-  
+
   if (Buffer.isBuffer(payload)) {
     return payload.length;
   }
-  
+
   if (payload instanceof Stream) {
     return -1; // ストリームのサイズは不明
   }
-  
+
   try {
     return Buffer.byteLength(JSON.stringify(payload), 'utf8');
   } catch {
@@ -146,11 +140,11 @@ function calculatePayloadSize(payload: any): number {
 function sanitizeEndpoint(url: string): string {
   // クエリパラメータとフラグメントを除去
   const [path] = url.split('?');
-  
+
   // 動的パラメータを正規化
   return path
     .split('/')
-    .map(segment => {
+    .map((segment) => {
       // UUID pattern
       if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment)) {
         return '{id}';
@@ -173,21 +167,21 @@ function extractErrorMessage(payload: any): string | undefined {
       return payload.substring(0, 500); // 最初の500文字
     }
   }
-  
+
   if (payload && typeof payload === 'object') {
     return payload.error || payload.message || payload.detail;
   }
-  
+
   return undefined;
 }
 
 function sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
   const sanitized = { ...headers };
-  
+
   // 機密情報をマスク
   delete sanitized.authorization;
   delete sanitized.cookie;
   delete sanitized['x-api-key'];
-  
+
   return sanitized;
 }

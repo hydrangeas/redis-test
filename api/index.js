@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   const { default: buildApp } = await import('../packages/backend/dist/app.js');
-  
+
   // Fastifyアプリケーションの初期化
   const fastify = await buildApp({
     logger: {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   // リクエストの処理
   await fastify.ready();
-  
+
   // Vercelアダプターを使用
   const { VercelAdapter } = await import('../packages/backend/dist/adapters/vercel.js');
   const adapter = new VercelAdapter(fastify);

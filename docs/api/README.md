@@ -59,6 +59,7 @@ curl -X POST https://api.example.com/api/v1/auth/refresh \
 ```
 
 レスポンス:
+
 ```json
 {
   "access_token": "new-access-token",
@@ -74,11 +75,11 @@ APIリクエストはユーザーのティアに基づいて制限されます�
 
 ### ティア別制限
 
-| ティア | リクエスト数/分 | 用途 |
-|--------|----------------|------|
-| TIER1 | 60 | 基本利用 |
-| TIER2 | 120 | 標準利用 |
-| TIER3 | 300 | ヘビーユーザー |
+| ティア | リクエスト数/分 | 用途           |
+| ------ | --------------- | -------------- |
+| TIER1  | 60              | 基本利用       |
+| TIER2  | 120             | 標準利用       |
+| TIER3  | 300             | ヘビーユーザー |
 
 ### レート制限ヘッダー
 
@@ -118,6 +119,7 @@ X-RateLimit-Reset: 1706007600
 トークンのリフレッシュ
 
 **リクエスト:**
+
 ```json
 {
   "refresh_token": "your-refresh-token"
@@ -125,6 +127,7 @@ X-RateLimit-Reset: 1706007600
 ```
 
 **レスポンス:**
+
 ```json
 {
   "access_token": "new-access-token",
@@ -147,12 +150,15 @@ X-RateLimit-Reset: 1706007600
 指定されたパスのデータを取得
 
 **パラメータ:**
+
 - `path` - データファイルのパス（例: `secure/319985/r5.json`）
 
 **ヘッダー（オプション）:**
+
 - `If-None-Match` - 条件付きリクエスト用のETag
 
 **レスポンス:**
+
 ```json
 {
   "data": {
@@ -177,6 +183,7 @@ X-RateLimit-Reset: 1706007600
 基本的なヘルスチェック（認証不要）
 
 **レスポンス:**
+
 ```json
 {
   "status": "ok",
@@ -191,6 +198,7 @@ X-RateLimit-Reset: 1706007600
 詳細なヘルスチェック（認証不要）
 
 **レスポンス:**
+
 ```json
 {
   "status": "healthy",
@@ -237,13 +245,13 @@ Prometheus形式のメトリクス（認証不要）
 
 ### 一般的なエラー
 
-| ステータスコード | タイプ | 説明 |
-|-----------------|--------|------|
-| 400 | validation-failed | リクエストのバリデーションエラー |
-| 401 | unauthorized | 認証エラー |
-| 404 | not-found | リソースが見つからない |
-| 429 | rate-limit-exceeded | レート制限超過 |
-| 500 | internal-error | サーバー内部エラー |
+| ステータスコード | タイプ              | 説明                             |
+| ---------------- | ------------------- | -------------------------------- |
+| 400              | validation-failed   | リクエストのバリデーションエラー |
+| 401              | unauthorized        | 認証エラー                       |
+| 404              | not-found           | リソースが見つからない           |
+| 429              | rate-limit-exceeded | レート制限超過                   |
+| 500              | internal-error      | サーバー内部エラー               |
 
 ## クライアントライブラリ
 
@@ -259,15 +267,15 @@ import { OpenDataAPIClient } from '@example/opendata-api-client';
 const client = new OpenDataAPIClient({
   baseURL: 'https://api.example.com',
   auth: {
-    token: 'your-jwt-token'
-  }
+    token: 'your-jwt-token',
+  },
 });
 
 // データ取得
 try {
   const response = await client.data.get('secure/319985/r5.json');
   console.log(response.data);
-  
+
   // レート制限情報
   console.log(client.rateLimit);
   // { limit: 60, remaining: 59, reset: Date }
@@ -296,7 +304,7 @@ client = OpenDataAPIClient(
 try:
     response = client.data.get('secure/319985/r5.json')
     print(response.data)
-    
+
     # レート制限情報
     print(client.rate_limit)
     # RateLimit(limit=60, remaining=59, reset=datetime(...))
@@ -313,15 +321,15 @@ except RateLimitError as e:
 async function fetchData() {
   const response = await fetch('https://api.example.com/api/v1/data/secure/319985/r5.json', {
     headers: {
-      'Authorization': 'Bearer your-jwt-token'
-    }
+      Authorization: 'Bearer your-jwt-token',
+    },
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(`${error.title}: ${error.detail}`);
   }
-  
+
   const result = await response.json();
   return result.data;
 }
@@ -335,29 +343,29 @@ let cachedData = null;
 
 async function fetchDataWithCache() {
   const headers = {
-    'Authorization': 'Bearer your-jwt-token'
+    Authorization: 'Bearer your-jwt-token',
   };
-  
+
   if (cachedETag) {
     headers['If-None-Match'] = cachedETag;
   }
-  
+
   const response = await fetch('https://api.example.com/api/v1/data/secure/319985/r5.json', {
-    headers
+    headers,
   });
-  
+
   if (response.status === 304) {
     // データは変更されていない
     return cachedData;
   }
-  
+
   if (response.ok) {
     cachedETag = response.headers.get('ETag');
     const result = await response.json();
     cachedData = result.data;
     return cachedData;
   }
-  
+
   throw new Error('Failed to fetch data');
 }
 ```
@@ -369,28 +377,28 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const response = await fetch(url, options);
-      
+
       if (response.status === 429) {
         // レート制限エラー
         const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
         console.log(`Rate limited. Waiting ${retryAfter} seconds...`);
-        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
         continue;
       }
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(`${error.title}: ${error.detail}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      
+
       // 指数バックオフ
       const delay = Math.min(1000 * Math.pow(2, i), 10000);
       console.log(`Retry ${i + 1}/${maxRetries} after ${delay}ms`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }

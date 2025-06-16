@@ -3,51 +3,56 @@ import { z } from 'zod';
 /**
  * 環境変数のスキーマ定義
  */
-const envSchema = z.object({
-  // Application
-  NODE_ENV: z.enum(['development', 'staging', 'production'] as const).default('development'),
-  PORT: z.string().transform(Number).pipe(z.number().positive()).default('8080'),
-  HOST: z.string().default('0.0.0.0'),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'] as const).default('info'),
-  
-  // Supabase
-  PUBLIC_SUPABASE_URL: z.string().url().min(1).optional(),
-  PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  // Backward compatibility
-  SUPABASE_URL: z.string().url().min(1).optional(),
-  SUPABASE_ANON_KEY: z.string().min(1).optional(),
-  
-  // JWT
-  JWT_SECRET: z.string().min(32),
-  
-  // API Configuration
-  API_BASE_URL: z.string().url().default('http://localhost:8080'),
-  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
-  
-  // Rate Limiting
-  RATE_LIMIT_TIER1: z.string().transform(Number).pipe(z.number().positive()).default('60'),
-  RATE_LIMIT_TIER2: z.string().transform(Number).pipe(z.number().positive()).default('120'),
-  RATE_LIMIT_TIER3: z.string().transform(Number).pipe(z.number().positive()).default('300'),
-  RATE_LIMIT_WINDOW: z.string().transform(Number).pipe(z.number().positive()).default('60'),
-  
-  // Data Directory
-  DATA_DIRECTORY: z.string().default('./data'),
-}).refine(
-  (data) => {
-    // Ensure we have either PUBLIC_ or regular Supabase credentials
-    const hasPublicUrl = !!data.PUBLIC_SUPABASE_URL;
-    const hasPublicKey = !!data.PUBLIC_SUPABASE_ANON_KEY;
-    const hasUrl = !!data.SUPABASE_URL;
-    const hasKey = !!data.SUPABASE_ANON_KEY;
-    
-    return (hasPublicUrl && hasPublicKey) || (hasUrl && hasKey);
-  },
-  {
-    message: "Either PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL and SUPABASE_ANON_KEY must be provided",
-    path: ["PUBLIC_SUPABASE_URL"],
-  }
-);
+const envSchema = z
+  .object({
+    // Application
+    NODE_ENV: z.enum(['development', 'staging', 'production'] as const).default('development'),
+    PORT: z.string().transform(Number).pipe(z.number().positive()).default('8080'),
+    HOST: z.string().default('0.0.0.0'),
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'] as const)
+      .default('info'),
+
+    // Supabase
+    PUBLIC_SUPABASE_URL: z.string().url().min(1).optional(),
+    PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+    // Backward compatibility
+    SUPABASE_URL: z.string().url().min(1).optional(),
+    SUPABASE_ANON_KEY: z.string().min(1).optional(),
+
+    // JWT
+    JWT_SECRET: z.string().min(32),
+
+    // API Configuration
+    API_BASE_URL: z.string().url().default('http://localhost:8080'),
+    FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+
+    // Rate Limiting
+    RATE_LIMIT_TIER1: z.string().transform(Number).pipe(z.number().positive()).default('60'),
+    RATE_LIMIT_TIER2: z.string().transform(Number).pipe(z.number().positive()).default('120'),
+    RATE_LIMIT_TIER3: z.string().transform(Number).pipe(z.number().positive()).default('300'),
+    RATE_LIMIT_WINDOW: z.string().transform(Number).pipe(z.number().positive()).default('60'),
+
+    // Data Directory
+    DATA_DIRECTORY: z.string().default('./data'),
+  })
+  .refine(
+    (data) => {
+      // Ensure we have either PUBLIC_ or regular Supabase credentials
+      const hasPublicUrl = !!data.PUBLIC_SUPABASE_URL;
+      const hasPublicKey = !!data.PUBLIC_SUPABASE_ANON_KEY;
+      const hasUrl = !!data.SUPABASE_URL;
+      const hasKey = !!data.SUPABASE_ANON_KEY;
+
+      return (hasPublicUrl && hasPublicKey) || (hasUrl && hasKey);
+    },
+    {
+      message:
+        'Either PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL and SUPABASE_ANON_KEY must be provided',
+      path: ['PUBLIC_SUPABASE_URL'],
+    },
+  );
 
 /**
  * 環境変数の型定義
@@ -98,7 +103,8 @@ export function getEnvConfig(): EnvConfig {
     envConfig = {
       ...rawConfig,
       PUBLIC_SUPABASE_URL: rawConfig.PUBLIC_SUPABASE_URL || rawConfig.SUPABASE_URL || '',
-      PUBLIC_SUPABASE_ANON_KEY: rawConfig.PUBLIC_SUPABASE_ANON_KEY || rawConfig.SUPABASE_ANON_KEY || '',
+      PUBLIC_SUPABASE_ANON_KEY:
+        rawConfig.PUBLIC_SUPABASE_ANON_KEY || rawConfig.SUPABASE_ANON_KEY || '',
     };
   }
   return envConfig;

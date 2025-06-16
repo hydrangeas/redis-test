@@ -26,13 +26,13 @@ describe('RateLimitUseCase Integration', () => {
     // Register domain services
     apiAccessControlService = new APIAccessControlService(
       mockDependencies.mockRepositories.rateLimitLog,
-      mockDependencies.mockEventBus
+      mockDependencies.mockEventBus,
     );
     container.registerInstance(DI_TOKENS.APIAccessControlService, apiAccessControlService);
 
     apiLogService = new APILogService(
       mockDependencies.mockRepositories.apiLog,
-      mockDependencies.mockEventBus
+      mockDependencies.mockEventBus,
     );
     container.registerInstance(DI_TOKENS.APILogService, apiLogService);
 
@@ -44,35 +44,27 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
       const method = 'GET';
 
       // Mock rate limit check - under limit
-      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(
-        Result.ok(25)
-      );
-      mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(
-        Result.ok()
-      );
+      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(Result.ok(25));
+      mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(Result.ok());
 
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       expect(result.isSuccess).toBe(true);
       const rateLimitResult = result.getValue();
@@ -83,8 +75,8 @@ describe('RateLimitUseCase Integration', () => {
       // Verify rate limit log was saved
       expect(mockDependencies.mockRepositories.rateLimitLog.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: expect.objectContaining({ value: userId })
-        })
+          userId: expect.objectContaining({ value: userId }),
+        }),
       );
     });
 
@@ -92,32 +84,26 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440001'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
       const method = 'POST';
 
       // Mock rate limit check - at limit
-      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(
-        Result.ok(60)
-      );
+      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(Result.ok(60));
 
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       expect(result.isSuccess).toBe(true);
       const rateLimitResult = result.getValue();
@@ -127,7 +113,7 @@ describe('RateLimitUseCase Integration', () => {
 
       // Verify rate limit exceeded event
       expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(RateLimitExceeded)
+        expect.any(RateLimitExceeded),
       );
     });
 
@@ -135,34 +121,25 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER2');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
-      const tier2User = new AuthenticatedUser(
-        userIdResult.getValue(),
-        userTierResult.getValue()
-      );
+
+      const tier2User = new AuthenticatedUser(userIdResult.getValue(), userTierResult.getValue());
 
       const endpoint = '/secure/data.json';
 
       // Mock rate limit check for tier2 user
       mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(
-        Result.ok(100)
+        Result.ok(100),
       );
-      mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(
-        Result.ok()
-      );
+      mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(Result.ok());
 
-      const result = await useCase.checkAndRecordAccess(
-        tier2User,
-        endpoint,
-        'GET'
-      );
+      const result = await useCase.checkAndRecordAccess(tier2User, endpoint, 'GET');
 
       expect(result.isSuccess).toBe(true);
       const rateLimitResult = result.getValue();
@@ -177,25 +154,27 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440003'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock current usage - findByUser returns logs
-      const mockLogs = Array(30).fill(null).map(() => ({
-        requestCount: { value: 1 }
-      }));
+      const mockLogs = Array(30)
+        .fill(null)
+        .map(() => ({
+          requestCount: { value: 1 },
+        }));
       mockDependencies.mockRepositories.rateLimitLog.findByUser.mockResolvedValue(
-        Result.ok(mockLogs)
+        Result.ok(mockLogs),
       );
 
       const result = await useCase.getUserUsageStatus(authenticatedUser);
@@ -206,7 +185,7 @@ describe('RateLimitUseCase Integration', () => {
       expect(status.limit).toBe(60);
       expect(status.windowStart).toBeInstanceOf(Date);
       expect(status.windowEnd).toBeInstanceOf(Date);
-      
+
       // Window should be 120 seconds (windowEnd is windowSizeSeconds in the future)
       const windowDuration = status.windowEnd.getTime() - status.windowStart.getTime();
       expect(windowDuration).toBe(120000); // 120 seconds in milliseconds (60 seconds past + 60 seconds future)
@@ -216,23 +195,21 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440004'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock no requests
-      mockDependencies.mockRepositories.rateLimitLog.findByUser.mockResolvedValue(
-        Result.ok([])
-      );
+      mockDependencies.mockRepositories.rateLimitLog.findByUser.mockResolvedValue(Result.ok([]));
 
       const result = await useCase.getUserUsageStatus(authenticatedUser);
 
@@ -248,9 +225,7 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440005'; // Valid UUID v4
 
       // Mock cleanup
-      mockDependencies.mockRepositories.rateLimitLog.deleteOldLogs.mockResolvedValue(
-        Result.ok(10)
-      );
+      mockDependencies.mockRepositories.rateLimitLog.deleteOldLogs.mockResolvedValue(Result.ok(10));
 
       const result = await useCase.resetUserLimit(userId);
 
@@ -265,7 +240,7 @@ describe('RateLimitUseCase Integration', () => {
 
       // Mock cleanup failure
       mockDependencies.mockRepositories.rateLimitLog.deleteOldLogs.mockResolvedValue(
-        Result.fail(new DomainError('DELETE_FAILED', 'Database error', ErrorType.INTERNAL))
+        Result.fail(new DomainError('DELETE_FAILED', 'Database error', ErrorType.INTERNAL)),
       );
 
       const result = await useCase.resetUserLimit(userId);
@@ -280,41 +255,37 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440007'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
 
       // Simulate requests approaching the limit
       const requestCounts = [50, 55, 58, 59, 60];
-      
-      for (let i = 0; i < requestCounts.length; i++) {
-        mockDependencies.mockRepositories.rateLimitLog.countRequests
-          .mockResolvedValueOnce(Result.ok(requestCounts[i]));
-        
-        if (requestCounts[i] < 60) {
-          mockDependencies.mockRepositories.rateLimitLog.save
-            .mockResolvedValueOnce(Result.ok());
-        }
 
-        const result = await useCase.checkAndRecordAccess(
-          authenticatedUser,
-          endpoint,
-          'GET'
+      for (let i = 0; i < requestCounts.length; i++) {
+        mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValueOnce(
+          Result.ok(requestCounts[i]),
         );
 
+        if (requestCounts[i] < 60) {
+          mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValueOnce(Result.ok());
+        }
+
+        const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, 'GET');
+
         const rateLimitResult = result.getValue();
-        
+
         if (requestCounts[i] < 60) {
           expect(rateLimitResult.allowed).toBe(true);
           expect(rateLimitResult.remaining).toBe(60 - requestCounts[i] - 1);
@@ -327,10 +298,11 @@ describe('RateLimitUseCase Integration', () => {
 
       // Verify logs were created for allowed requests only (not when rate limit exceeded)
       expect(mockDependencies.mockRepositories.rateLimitLog.save).toHaveBeenCalledTimes(4);
-      
+
       // Verify rate limit exceeded event was published
-      const rateLimitEvents = mockDependencies.mockEventBus.publish.mock.calls
-        .filter(call => call[0] instanceof RateLimitExceeded);
+      const rateLimitEvents = mockDependencies.mockEventBus.publish.mock.calls.filter(
+        (call) => call[0] instanceof RateLimitExceeded,
+      );
       expect(rateLimitEvents.length).toBe(1); // Only when limit is reached
     });
 
@@ -338,17 +310,17 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440008'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
@@ -367,18 +339,14 @@ describe('RateLimitUseCase Integration', () => {
       });
 
       // Simulate concurrent requests
-      const promises = Array(5).fill(null).map(() => 
-        useCase.checkAndRecordAccess(
-          authenticatedUser,
-          endpoint,
-          'GET'
-        )
-      );
+      const promises = Array(5)
+        .fill(null)
+        .map(() => useCase.checkAndRecordAccess(authenticatedUser, endpoint, 'GET'));
 
       const results = await Promise.all(promises);
 
       // All should get the same initial count
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.isSuccess).toBe(true);
         // They all see count 58, so all are allowed
         expect(result.getValue().allowed).toBe(true);
@@ -392,36 +360,29 @@ describe('RateLimitUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440009'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock cleanup returning number of deleted logs
-      mockDependencies.mockRepositories.rateLimitLog.deleteOldLogs
-        .mockResolvedValue(Result.ok(50)); // 50 old logs cleaned
+      mockDependencies.mockRepositories.rateLimitLog.deleteOldLogs.mockResolvedValue(Result.ok(50)); // 50 old logs cleaned
 
-      mockDependencies.mockRepositories.rateLimitLog.countRequests
-        .mockResolvedValue(Result.ok(10));
-      
-      mockDependencies.mockRepositories.rateLimitLog.save
-        .mockResolvedValue(Result.ok());
+      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(Result.ok(10));
+
+      mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(Result.ok());
 
       // Make multiple requests
       for (let i = 0; i < 10; i++) {
-        await useCase.checkAndRecordAccess(
-          authenticatedUser,
-          `/secure/data${i}.json`,
-          'GET'
-        );
+        await useCase.checkAndRecordAccess(authenticatedUser, `/secure/data${i}.json`, 'GET');
       }
 
       // Verify cleanup was attempted (implementation may call it periodically)

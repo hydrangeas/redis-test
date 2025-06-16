@@ -9,57 +9,55 @@ TypeScript/Fastify/Vercel環境でのベストプラクティスに基づいた�
 
 ```typescript
 // src/plugins/cors.ts
-import { FastifyPluginAsync } from 'fastify'
-import cors from '@fastify/cors'
+import { FastifyPluginAsync } from 'fastify';
+import cors from '@fastify/cors';
 
 export const corsPlugin: FastifyPluginAsync = async (fastify) => {
-  const isProduction = process.env.NODE_ENV === 'production'
-  
+  const isProduction = process.env.NODE_ENV === 'production';
+
   await fastify.register(cors, {
     origin: (origin, cb) => {
       // 環境変数から許可するオリジンを取得
-      const allowedOrigins = process.env.ALLOWED_ORIGINS
-        ?.split(',')
-        .map(o => o.trim()) || []
-      
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) || [];
+
       // 開発環境ではlocalhostを自動的に許可
       if (!isProduction) {
-        allowedOrigins.push('http://localhost:3000')
-        allowedOrigins.push('http://localhost:5173') // Vite default
+        allowedOrigins.push('http://localhost:3000');
+        allowedOrigins.push('http://localhost:5173'); // Vite default
       }
-      
+
       if (!origin || allowedOrigins.includes(origin)) {
-        cb(null, true)
+        cb(null, true);
       } else {
-        cb(new Error('Not allowed by CORS'))
+        cb(new Error('Not allowed by CORS'));
       }
     },
     credentials: true,
     methods: ['GET', 'POST'], // GETメインのAPIのため限定
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
-    strictPreflight: true // セキュリティ強化
-  })
-}
+    strictPreflight: true, // セキュリティ強化
+  });
+};
 ```
 
 ### 6.2 セキュリティヘッダー
 
 ```typescript
 // src/plugins/security.ts
-import { FastifyPluginAsync } from 'fastify'
-import helmet from '@fastify/helmet'
+import { FastifyPluginAsync } from 'fastify';
+import helmet from '@fastify/helmet';
 
 export const securityPlugin: FastifyPluginAsync = async (fastify) => {
-  const isProduction = process.env.NODE_ENV === 'production'
-  
+  const isProduction = process.env.NODE_ENV === 'production';
+
   await fastify.register(helmet, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"], // Scalar UI用
-        scriptSrc: ["'self'", "https://cdn.jsdelivr.net"], // Scalar CDN
-        imgSrc: ["'self'", "data:", "https:"],
+        scriptSrc: ["'self'", 'https://cdn.jsdelivr.net'], // Scalar CDN
+        imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: ["'self'"],
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
@@ -67,11 +65,13 @@ export const securityPlugin: FastifyPluginAsync = async (fastify) => {
         frameSrc: ["'none'"],
       },
     },
-    hsts: isProduction ? {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true
-    } : false,
+    hsts: isProduction
+      ? {
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true,
+        }
+      : false,
     noSniff: true,
     xssFilter: true,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
@@ -80,22 +80,22 @@ export const securityPlugin: FastifyPluginAsync = async (fastify) => {
         camera: ["'none'"],
         microphone: ["'none'"],
         geolocation: ["'none'"],
-        payment: ["'none'"]
-      }
-    }
-  })
-  
+        payment: ["'none'"],
+      },
+    },
+  });
+
   // カスタムセキュリティヘッダー
   fastify.addHook('onSend', async (request, reply) => {
-    reply.header('X-Frame-Options', 'DENY')
-    reply.header('X-Content-Type-Options', 'nosniff')
-    
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('X-Content-Type-Options', 'nosniff');
+
     // APIドキュメント以外はダウンロード禁止
     if (!request.url.includes('/api-docs')) {
-      reply.header('X-Download-Options', 'noopen')
+      reply.header('X-Download-Options', 'noopen');
     }
-  })
-}
+  });
+};
 ```
 
 ## 7. キャッシュ戦略
@@ -104,56 +104,56 @@ export const securityPlugin: FastifyPluginAsync = async (fastify) => {
 
 ```typescript
 // src/infrastructure/cache/openDataCache.ts
-import { OpenDataResource } from '@/domain/data/OpenDataResource'
-import { FilePath } from '@/domain/data/FilePath'
+import { OpenDataResource } from '@/domain/data/OpenDataResource';
+import { FilePath } from '@/domain/data/FilePath';
 
 interface CacheEntry {
-  resource: OpenDataResource
-  content: unknown
-  expiresAt: Date
+  resource: OpenDataResource;
+  content: unknown;
+  expiresAt: Date;
 }
 
 export class OpenDataCache {
-  private cache = new Map<string, CacheEntry>()
-  private readonly maxSize = 100 // 最大100ファイル
-  private readonly ttl = 3600 * 1000 // 1時間
+  private cache = new Map<string, CacheEntry>();
+  private readonly maxSize = 100; // 最大100ファイル
+  private readonly ttl = 3600 * 1000; // 1時間
 
   async get(path: FilePath): Promise<{ resource: OpenDataResource; content: unknown } | null> {
-    const key = path.value
-    const entry = this.cache.get(key)
-    
-    if (!entry) return null
-    
+    const key = path.value;
+    const entry = this.cache.get(key);
+
+    if (!entry) return null;
+
     if (new Date() > entry.expiresAt) {
-      this.cache.delete(key)
-      return null
+      this.cache.delete(key);
+      return null;
     }
-    
+
     // LRU: アクセスされたアイテムを最後に移動
-    this.cache.delete(key)
-    this.cache.set(key, entry)
-    
-    return { resource: entry.resource, content: entry.content }
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+
+    return { resource: entry.resource, content: entry.content };
   }
 
   set(path: FilePath, resource: OpenDataResource, content: unknown): void {
-    const key = path.value
-    
+    const key = path.value;
+
     // キャッシュサイズ制限
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-      const firstKey = this.cache.keys().next().value
-      this.cache.delete(firstKey)
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, {
       resource,
       content,
-      expiresAt: new Date(Date.now() + this.ttl)
-    })
+      expiresAt: new Date(Date.now() + this.ttl),
+    });
   }
 
   clear(): void {
-    this.cache.clear()
+    this.cache.clear();
   }
 }
 ```
@@ -162,43 +162,44 @@ export class OpenDataCache {
 
 ```typescript
 // src/routes/data.ts
-import { FastifyPluginAsync } from 'fastify'
+import { FastifyPluginAsync } from 'fastify';
 
 const dataRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{
-    Params: { '*': string }
+    Params: { '*': string };
   }>('/*', {
     preHandler: fastify.auth([fastify.authenticate, fastify.rateLimit]),
     handler: async (request, reply) => {
-      const path = request.params['*']
-      const result = await dataUseCase.getData(path)
-      
+      const path = request.params['*'];
+      const result = await dataUseCase.getData(path);
+
       if (result.isFailure) {
-        return reply.code(404).send(toProblemDetails(result.error))
+        return reply.code(404).send(toProblemDetails(result.error));
       }
-      
-      const data = result.value
-      
+
+      const data = result.value;
+
       // Vercel Edge Cacheヘッダー設定
-      reply.header('Cache-Control', 'public, max-age=0, must-revalidate')
-      reply.header('CDN-Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
-      reply.header('Vercel-CDN-Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
-      
+      reply.header('Cache-Control', 'public, max-age=0, must-revalidate');
+      reply.header('CDN-Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+      reply.header(
+        'Vercel-CDN-Cache-Control',
+        'public, max-age=3600, stale-while-revalidate=86400',
+      );
+
       // ETa生成（ファイルのハッシュまたは最終更新日時）
-      const etag = `"${data.resource.lastModified.getTime()}"`
-      reply.header('ETag', etag)
-      
+      const etag = `"${data.resource.lastModified.getTime()}"`;
+      reply.header('ETag', etag);
+
       // 条件付きリクエストの処理
       if (request.headers['if-none-match'] === etag) {
-        return reply.code(304).send()
+        return reply.code(304).send();
       }
-      
-      return reply
-        .type(data.resource.contentType.mimeType)
-        .send(data.content)
-    }
-  })
-}
+
+      return reply.type(data.resource.contentType.mimeType).send(data.content);
+    },
+  });
+};
 ```
 
 ### 7.3 キャッシュキー生成戦略
@@ -208,16 +209,16 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
 export class CacheKeyGenerator {
   static forOpenData(path: string, tier?: string): string {
     // ティアごとに異なるデータを返す場合の考慮
-    const base = `opendata:${path}`
-    return tier ? `${base}:${tier}` : base
+    const base = `opendata:${path}`;
+    return tier ? `${base}:${tier}` : base;
   }
-  
+
   static forRateLimit(userId: string): string {
-    return `ratelimit:${userId}`
+    return `ratelimit:${userId}`;
   }
-  
+
   static forAPIEndpoint(path: string): string {
-    return `endpoint:${path}`
+    return `endpoint:${path}`;
   }
 }
 ```
@@ -228,13 +229,13 @@ export class CacheKeyGenerator {
 
 ```typescript
 // src/config/logger.ts
-import pino from 'pino'
+import pino from 'pino';
 
-const isProduction = process.env.NODE_ENV === 'production'
+const isProduction = process.env.NODE_ENV === 'production';
 
 export const loggerConfig = {
   level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
-  
+
   // 構造化ログ設定
   formatters: {
     level: (label: string) => ({ level: label }),
@@ -243,10 +244,10 @@ export const loggerConfig = {
       hostname: bindings.hostname,
       node_version: process.version,
       environment: process.env.NODE_ENV,
-      service: 'opendata-api'
+      service: 'opendata-api',
     }),
   },
-  
+
   // リクエスト/レスポンスのシリアライズ
   serializers: {
     req: (request: any) => ({
@@ -257,15 +258,15 @@ export const loggerConfig = {
       tier: request.user?.tier,
       ip: request.ip,
       userAgent: request.headers['user-agent'],
-      requestId: request.id
+      requestId: request.id,
     }),
     res: (reply: any) => ({
       statusCode: reply.statusCode,
-      responseTime: reply.getResponseTime?.() || 0
+      responseTime: reply.getResponseTime?.() || 0,
     }),
-    err: pino.stdSerializers.err
+    err: pino.stdSerializers.err,
   },
-  
+
   // 本番環境での最適化
   ...(isProduction && {
     transport: {
@@ -273,95 +274,95 @@ export const loggerConfig = {
       options: {
         colorize: false,
         translateTime: 'UTC:yyyy-mm-dd HH:MM:ss.l',
-        ignore: 'pid,hostname'
-      }
-    }
-  })
-}
+        ignore: 'pid,hostname',
+      },
+    },
+  }),
+};
 ```
 
 ### 8.2 メトリクス収集
 
 ```typescript
 // src/plugins/metrics.ts
-import { FastifyPluginAsync } from 'fastify'
-import { Counter, Histogram, register } from 'prom-client'
+import { FastifyPluginAsync } from 'fastify';
+import { Counter, Histogram, register } from 'prom-client';
 
 // メトリクス定義
 const httpRequestDuration = new Histogram({
   name: 'http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
-  labelNames: ['method', 'route', 'status_code', 'tier']
-})
+  labelNames: ['method', 'route', 'status_code', 'tier'],
+});
 
 const httpRequestTotal = new Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status_code', 'tier']
-})
+  labelNames: ['method', 'route', 'status_code', 'tier'],
+});
 
 const rateLimitHits = new Counter({
   name: 'rate_limit_hits_total',
   help: 'Total number of rate limit hits',
-  labelNames: ['tier', 'endpoint']
-})
+  labelNames: ['tier', 'endpoint'],
+});
 
 const dataAccessTotal = new Counter({
   name: 'data_access_total',
   help: 'Total number of data access requests',
-  labelNames: ['path', 'status', 'cache_hit']
-})
+  labelNames: ['path', 'status', 'cache_hit'],
+});
 
 export const metricsPlugin: FastifyPluginAsync = async (fastify) => {
   // メトリクスエンドポイント
   fastify.get('/metrics', async (request, reply) => {
-    reply.type('text/plain')
-    return register.metrics()
-  })
-  
+    reply.type('text/plain');
+    return register.metrics();
+  });
+
   // リクエストメトリクス収集
   fastify.addHook('onResponse', async (request, reply) => {
     const labels = {
       method: request.method,
       route: request.routerPath || request.url,
       status_code: reply.statusCode.toString(),
-      tier: request.user?.tier || 'anonymous'
-    }
-    
-    httpRequestTotal.inc(labels)
-    httpRequestDuration.observe(labels, reply.getResponseTime() / 1000)
-  })
-}
+      tier: request.user?.tier || 'anonymous',
+    };
+
+    httpRequestTotal.inc(labels);
+    httpRequestDuration.observe(labels, reply.getResponseTime() / 1000);
+  });
+};
 
 // メトリクスエクスポート
-export { httpRequestDuration, httpRequestTotal, rateLimitHits, dataAccessTotal }
+export { httpRequestDuration, httpRequestTotal, rateLimitHits, dataAccessTotal };
 ```
 
 ### 8.3 エラー追跡
 
 ```typescript
 // src/plugins/errorTracking.ts
-import { FastifyPluginAsync } from 'fastify'
+import { FastifyPluginAsync } from 'fastify';
 
 interface ErrorReport {
-  timestamp: Date
+  timestamp: Date;
   error: {
-    message: string
-    stack?: string
-    code?: string
-  }
+    message: string;
+    stack?: string;
+    code?: string;
+  };
   request: {
-    method: string
-    url: string
-    userId?: string
-    ip: string
-  }
-  context: Record<string, unknown>
+    method: string;
+    url: string;
+    userId?: string;
+    ip: string;
+  };
+  context: Record<string, unknown>;
 }
 
 export const errorTrackingPlugin: FastifyPluginAsync = async (fastify) => {
-  const errorReports: ErrorReport[] = []
-  
+  const errorReports: ErrorReport[] = [];
+
   fastify.setErrorHandler(async (error, request, reply) => {
     // エラーレポート作成
     const report: ErrorReport = {
@@ -369,34 +370,37 @@ export const errorTrackingPlugin: FastifyPluginAsync = async (fastify) => {
       error: {
         message: error.message,
         stack: error.stack,
-        code: error.code
+        code: error.code,
       },
       request: {
         method: request.method,
         url: request.url,
         userId: request.user?.id,
-        ip: request.ip
+        ip: request.ip,
       },
       context: {
         environment: process.env.NODE_ENV,
-        nodeVersion: process.version
-      }
-    }
-    
+        nodeVersion: process.version,
+      },
+    };
+
     // 本番環境では外部サービスに送信
     if (process.env.NODE_ENV === 'production') {
       // Sentryやその他のエラー追跡サービスに送信
       // await sendToErrorTrackingService(report)
     } else {
-      errorReports.push(report)
+      errorReports.push(report);
     }
-    
+
     // 構造化ログ出力
-    request.log.error({
-      err: error,
-      report
-    }, 'Request error')
-    
+    request.log.error(
+      {
+        err: error,
+        report,
+      },
+      'Request error',
+    );
+
     // エラーレスポンス
     if (error.validation) {
       return reply.code(400).send({
@@ -404,20 +408,21 @@ export const errorTrackingPlugin: FastifyPluginAsync = async (fastify) => {
         title: 'Validation Error',
         status: 400,
         detail: error.message,
-        errors: error.validation
-      })
+        errors: error.validation,
+      });
     }
-    
+
     return reply.code(error.statusCode || 500).send({
       type: 'https://api.example.com/errors/internal',
       title: 'Internal Server Error',
       status: error.statusCode || 500,
-      detail: process.env.NODE_ENV === 'production' 
-        ? 'An error occurred processing your request'
-        : error.message
-    })
-  })
-}
+      detail:
+        process.env.NODE_ENV === 'production'
+          ? 'An error occurred processing your request'
+          : error.message,
+    });
+  });
+};
 ```
 
 ## 9. 環境別設定
@@ -426,7 +431,7 @@ export const errorTrackingPlugin: FastifyPluginAsync = async (fastify) => {
 
 ```typescript
 // src/config/env.ts
-import { z } from 'zod'
+import { z } from 'zod';
 
 // 環境変数スキーマ定義
 const envSchema = z.object({
@@ -435,16 +440,16 @@ const envSchema = z.object({
   APP_ENV: z.enum(['local', 'development', 'staging', 'production']).default('local'),
   PORT: z.string().transform(Number).default('3000'),
   HOST: z.string().default('0.0.0.0'),
-  
+
   // Supabase設定
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  
+
   // セキュリティ設定
   ALLOWED_ORIGINS: z.string().default(''),
   JWT_SECRET: z.string().optional(), // Supabaseが管理
-  
+
   // レート制限設定（オプショナル、デフォルト値あり）
   RATE_LIMIT_TIER1_MAX: z.string().transform(Number).default('60'),
   RATE_LIMIT_TIER1_WINDOW: z.string().transform(Number).default('60'),
@@ -452,40 +457,40 @@ const envSchema = z.object({
   RATE_LIMIT_TIER2_WINDOW: z.string().transform(Number).default('60'),
   RATE_LIMIT_TIER3_MAX: z.string().transform(Number).default('300'),
   RATE_LIMIT_TIER3_WINDOW: z.string().transform(Number).default('60'),
-  
+
   // キャッシュ設定
   CACHE_TTL_SECONDS: z.string().transform(Number).default('3600'),
   CACHE_MAX_SIZE: z.string().transform(Number).default('100'),
-  
+
   // ロギング設定
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
-  
+
   // データストレージ設定
   DATA_BASE_PATH: z.string().default('/data'),
-  
+
   // Vercel固有設定
   VERCEL_ENV: z.enum(['production', 'preview', 'development']).optional(),
   VERCEL_URL: z.string().optional(),
-})
+});
 
 // 型定義
-type Env = z.infer<typeof envSchema>
+type Env = z.infer<typeof envSchema>;
 
 // バリデーションと型安全な環境変数
-let env: Env
+let env: Env;
 
 try {
-  env = envSchema.parse(process.env)
+  env = envSchema.parse(process.env);
 } catch (error) {
   if (error instanceof z.ZodError) {
-    console.error('❌ Invalid environment variables:')
-    console.error(error.flatten().fieldErrors)
-    process.exit(1)
+    console.error('❌ Invalid environment variables:');
+    console.error(error.flatten().fieldErrors);
+    process.exit(1);
   }
-  throw error
+  throw error;
 }
 
-export { env }
+export { env };
 
 // TypeScript用の型定義
 declare global {
@@ -499,51 +504,51 @@ declare global {
 
 ```typescript
 // src/config/index.ts
-import { env } from './env'
+import { env } from './env';
 
 interface RateLimitConfig {
-  maxRequests: number
-  windowSeconds: number
+  maxRequests: number;
+  windowSeconds: number;
 }
 
 interface AppConfig {
-  environment: string
-  isProduction: boolean
-  isDevelopment: boolean
-  port: number
-  host: string
-  
+  environment: string;
+  isProduction: boolean;
+  isDevelopment: boolean;
+  port: number;
+  host: string;
+
   supabase: {
-    url: string
-    anonKey: string
-    serviceRoleKey?: string
-  }
-  
+    url: string;
+    anonKey: string;
+    serviceRoleKey?: string;
+  };
+
   security: {
-    allowedOrigins: string[]
-    enableHSTS: boolean
-    enableCSP: boolean
-  }
-  
+    allowedOrigins: string[];
+    enableHSTS: boolean;
+    enableCSP: boolean;
+  };
+
   rateLimit: {
-    tier1: RateLimitConfig
-    tier2: RateLimitConfig
-    tier3: RateLimitConfig
-  }
-  
+    tier1: RateLimitConfig;
+    tier2: RateLimitConfig;
+    tier3: RateLimitConfig;
+  };
+
   cache: {
-    ttlSeconds: number
-    maxSize: number
-  }
-  
+    ttlSeconds: number;
+    maxSize: number;
+  };
+
   logging: {
-    level: string
-    prettyPrint: boolean
-  }
-  
+    level: string;
+    prettyPrint: boolean;
+  };
+
   data: {
-    basePath: string
-  }
+    basePath: string;
+  };
 }
 
 export const config: AppConfig = {
@@ -552,19 +557,21 @@ export const config: AppConfig = {
   isDevelopment: env.NODE_ENV === 'development',
   port: env.PORT,
   host: env.HOST,
-  
+
   supabase: {
     url: env.SUPABASE_URL,
     anonKey: env.SUPABASE_ANON_KEY,
     serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
   },
-  
+
   security: {
-    allowedOrigins: env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean),
+    allowedOrigins: env.ALLOWED_ORIGINS.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean),
     enableHSTS: env.NODE_ENV === 'production',
     enableCSP: true,
   },
-  
+
   rateLimit: {
     tier1: {
       maxRequests: env.RATE_LIMIT_TIER1_MAX,
@@ -579,21 +586,21 @@ export const config: AppConfig = {
       windowSeconds: env.RATE_LIMIT_TIER3_WINDOW,
     },
   },
-  
+
   cache: {
     ttlSeconds: env.CACHE_TTL_SECONDS,
     maxSize: env.CACHE_MAX_SIZE,
   },
-  
+
   logging: {
     level: env.LOG_LEVEL,
     prettyPrint: env.NODE_ENV !== 'production',
   },
-  
+
   data: {
     basePath: env.DATA_BASE_PATH,
   },
-}
+};
 ```
 
 ### 9.3 .envファイルのテンプレート
@@ -650,7 +657,7 @@ CREATE TABLE IF NOT EXISTS rate_limit_logs (
 );
 
 -- インデックス作成（レート制限チェックの高速化）
-CREATE INDEX idx_rate_limit_logs_user_requested 
+CREATE INDEX idx_rate_limit_logs_user_requested
   ON rate_limit_logs (user_id, requested_at DESC);
 
 -- RLS (Row Level Security) の有効化
@@ -675,9 +682,9 @@ CREATE TABLE IF NOT EXISTS auth_logs (
 );
 
 -- インデックス作成
-CREATE INDEX idx_auth_logs_user_timestamp 
+CREATE INDEX idx_auth_logs_user_timestamp
   ON auth_logs (user_id, timestamp DESC);
-CREATE INDEX idx_auth_logs_event_timestamp 
+CREATE INDEX idx_auth_logs_event_timestamp
   ON auth_logs (event_type, timestamp DESC);
 
 -- API Access Logs テーブル
@@ -693,9 +700,9 @@ CREATE TABLE IF NOT EXISTS api_logs (
 );
 
 -- インデックス作成
-CREATE INDEX idx_api_logs_user_timestamp 
+CREATE INDEX idx_api_logs_user_timestamp
   ON api_logs (user_id, timestamp DESC);
-CREATE INDEX idx_api_logs_path_timestamp 
+CREATE INDEX idx_api_logs_path_timestamp
   ON api_logs (path, timestamp DESC);
 
 -- API Endpoints設定テーブル（静的データ）
@@ -772,15 +779,15 @@ BEGIN
   IF current_setting('app.environment', true) IN ('development', 'test') THEN
     -- テスト用のレート制限ログ
     INSERT INTO rate_limit_logs (user_id, endpoint, requested_at)
-    SELECT 
+    SELECT
       'test-user-' || generate_series,
       '/secure/test/data.json',
       NOW() - (random() * INTERVAL '5 minutes')
     FROM generate_series(1, 10);
-    
+
     -- テスト用の認証ログ
     INSERT INTO auth_logs (user_id, event_type, provider, result)
-    VALUES 
+    VALUES
       ('test-user-1', 'LOGIN', 'google', 'SUCCESS'),
       ('test-user-2', 'LOGIN', 'github', 'SUCCESS'),
       ('test-user-3', 'LOGIN', 'google', 'FAILURE');
@@ -804,20 +811,20 @@ DECLARE
 BEGIN
   -- ユーザーのapp_metadataを取得
   user_metadata := event->'claims'->'app_metadata';
-  
+
   -- tierが設定されていない場合はTIER1を設定
   IF user_metadata->>'tier' IS NULL THEN
     user_tier := 'tier1';
-    
+
     -- auth.usersテーブルのapp_metadataを更新
     UPDATE auth.users
-    SET raw_app_meta_data = 
+    SET raw_app_meta_data =
       COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('tier', 'tier1')
     WHERE id = (event->'claims'->>'sub')::uuid;
   ELSE
     user_tier := user_metadata->>'tier';
   END IF;
-  
+
   -- JWTクレームにtierを追加
   RETURN jsonb_set(
     event,
@@ -834,54 +841,50 @@ $$;
 
 ```typescript
 // scripts/migrate.ts
-import { createClient } from '@supabase/supabase-js'
-import { config } from '../src/config'
-import fs from 'fs/promises'
-import path from 'path'
+import { createClient } from '@supabase/supabase-js';
+import { config } from '../src/config';
+import fs from 'fs/promises';
+import path from 'path';
 
 async function runMigrations() {
-  const supabase = createClient(
-    config.supabase.url,
-    config.supabase.serviceRoleKey!,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      }
-    }
-  )
-  
-  const migrationsDir = path.join(__dirname, '../supabase/migrations')
-  const files = await fs.readdir(migrationsDir)
-  const sqlFiles = files.filter(f => f.endsWith('.sql')).sort()
-  
-  console.log(`Found ${sqlFiles.length} migration files`)
-  
+  const supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey!, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+
+  const migrationsDir = path.join(__dirname, '../supabase/migrations');
+  const files = await fs.readdir(migrationsDir);
+  const sqlFiles = files.filter((f) => f.endsWith('.sql')).sort();
+
+  console.log(`Found ${sqlFiles.length} migration files`);
+
   for (const file of sqlFiles) {
-    console.log(`Running migration: ${file}`)
-    const sql = await fs.readFile(path.join(migrationsDir, file), 'utf-8')
-    
-    const { error } = await supabase.rpc('exec_sql', { sql_query: sql })
-    
+    console.log(`Running migration: ${file}`);
+    const sql = await fs.readFile(path.join(migrationsDir, file), 'utf-8');
+
+    const { error } = await supabase.rpc('exec_sql', { sql_query: sql });
+
     if (error) {
-      console.error(`Error running migration ${file}:`, error)
-      process.exit(1)
+      console.error(`Error running migration ${file}:`, error);
+      process.exit(1);
     }
-    
-    console.log(`✅ ${file} completed`)
+
+    console.log(`✅ ${file} completed`);
   }
-  
-  console.log('All migrations completed successfully')
+
+  console.log('All migrations completed successfully');
 }
 
 // 環境チェック
 if (config.environment === 'production' && !process.env.FORCE_PRODUCTION_MIGRATION) {
-  console.error('❌ Production migrations must be run through CI/CD pipeline')
-  console.error('Set FORCE_PRODUCTION_MIGRATION=true to override (not recommended)')
-  process.exit(1)
+  console.error('❌ Production migrations must be run through CI/CD pipeline');
+  console.error('Set FORCE_PRODUCTION_MIGRATION=true to override (not recommended)');
+  process.exit(1);
 }
 
-runMigrations().catch(console.error)
+runMigrations().catch(console.error);
 ```
 
 ## デプロイメントチェックリスト
@@ -922,6 +925,6 @@ runMigrations().catch(console.error)
 
 ## 変更履歴
 
-|更新日時|変更点|
-|-|-|
-|2025-01-23T12:00:00+09:00|新規作成 - 実装詳細ガイド|
+| 更新日時                  | 変更点                    |
+| ------------------------- | ------------------------- |
+| 2025-01-23T12:00:00+09:00 | 新規作成 - 実装詳細ガイド |

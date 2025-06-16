@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 export const GuestGuard: React.FC = () => {
   const { user, loading } = useAuth();

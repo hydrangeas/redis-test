@@ -21,50 +21,65 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: UserAuthenticated): Promise<void> {
     try {
       // AuthEventの作成
-      const authEventResult = AuthEvent.create(EventType.LOGIN_SUCCESS, 'User authenticated successfully');
+      const authEventResult = AuthEvent.create(
+        EventType.LOGIN_SUCCESS,
+        'User authenticated successfully',
+      );
       if (authEventResult.isFailure) {
-        this.logger.error({
-          error: authEventResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to create auth event');
+        this.logger.error(
+          {
+            error: authEventResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to create auth event',
+        );
         return;
       }
 
       // UserIdの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          error: userIdResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to create user id');
+        this.logger.error(
+          {
+            error: userIdResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to create user id',
+        );
         return;
       }
 
       // Providerの作成
       const providerResult = Provider.create(event.provider);
       if (providerResult.isFailure) {
-        this.logger.error({
-          error: providerResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to create provider');
+        this.logger.error(
+          {
+            error: providerResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to create provider',
+        );
         return;
       }
 
       // IPAddressの作成
-      const ipAddressResult = event.ipAddress 
+      const ipAddressResult = event.ipAddress
         ? IPAddress.create(event.ipAddress)
         : IPAddress.unknown();
       if (ipAddressResult.isFailure) {
-        this.logger.error({
-          error: ipAddressResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to create IP address');
+        this.logger.error(
+          {
+            error: ipAddressResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to create IP address',
+        );
         return;
       }
 
@@ -73,10 +88,13 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
         ? UserAgent.create(event.userAgent)
         : UserAgent.unknown();
       if (userAgentResult.isFailure) {
-        this.logger.error({
-          error: userAgentResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to create user agent');
+        this.logger.error(
+          {
+            error: userAgentResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to create user agent',
+        );
         return;
       }
 
@@ -97,35 +115,46 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          error: logEntryResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to create log entry');
+        this.logger.error(
+          {
+            error: logEntryResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to create log entry',
+        );
         return;
       }
 
       // リポジトリに保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
-      
+
       if (saveResult.isFailure) {
-        this.logger.error({
-          error: saveResult.error,
-          event: event.getMetadata(),
-        }, 'Failed to save authentication log');
+        this.logger.error(
+          {
+            error: saveResult.error,
+            event: event.getMetadata(),
+          },
+          'Failed to save authentication log',
+        );
         return;
       }
 
-      this.logger.info({
-        event: event.getMetadata(),
-        logId: logEntryResult.getValue().id.value,
-      }, 'Authentication event logged successfully');
-      
+      this.logger.info(
+        {
+          event: event.getMetadata(),
+          logId: logEntryResult.getValue().id.value,
+        },
+        'Authentication event logged successfully',
+      );
     } catch (error) {
       // ログ記録の失敗はメイン処理に影響させない
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        event: event.getMetadata(),
-      }, 'Failed to log authentication event');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          event: event.getMetadata(),
+        },
+        'Failed to log authentication event',
+      );
     }
   }
 }

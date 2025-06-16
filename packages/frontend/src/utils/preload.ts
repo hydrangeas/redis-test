@@ -6,24 +6,30 @@
 // ページコンポーネントのプリロード関数
 export const preloadComponent = (componentPath: string) => {
   switch (componentPath) {
-    case 'Dashboard':
-      return import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage }));
-    case 'Login':
-      return import('@/pages/Login').then(m => ({ default: m.LoginPage }));
-    case 'Landing':
-      return import('@/pages/LandingPage').then(m => ({ default: m.LandingPage }));
-    case 'ApiDocs':
-      return import('@/components/ApiDocsRedirect').then(m => ({ default: m.ApiDocsRedirect }));
+    case "Dashboard":
+      return import("@/pages/DashboardPage").then((m) => ({
+        default: m.DashboardPage,
+      }));
+    case "Login":
+      return import("@/pages/Login").then((m) => ({ default: m.LoginPage }));
+    case "Landing":
+      return import("@/pages/LandingPage").then((m) => ({
+        default: m.LandingPage,
+      }));
+    case "ApiDocs":
+      return import("@/components/ApiDocsRedirect").then((m) => ({
+        default: m.ApiDocsRedirect,
+      }));
     default:
       return Promise.resolve();
   }
 };
 
 // 特定ページのプリロード関数
-export const preloadDashboard = () => preloadComponent('Dashboard');
-export const preloadLogin = () => preloadComponent('Login');
-export const preloadLanding = () => preloadComponent('Landing');
-export const preloadApiDocs = () => preloadComponent('ApiDocs');
+export const preloadDashboard = () => preloadComponent("Dashboard");
+export const preloadLogin = () => preloadComponent("Login");
+export const preloadLanding = () => preloadComponent("Landing");
+export const preloadApiDocs = () => preloadComponent("ApiDocs");
 
 // 画像のプリロード
 export const preloadImage = (src: string): Promise<void> => {
@@ -37,25 +43,25 @@ export const preloadImage = (src: string): Promise<void> => {
 
 // 複数の画像を並列でプリロード
 export const preloadImages = (srcs: string[]): Promise<void[]> => {
-  return Promise.all(srcs.map(src => preloadImage(src)));
+  return Promise.all(srcs.map((src) => preloadImage(src)));
 };
 
 // CSSのプリロード
 export const preloadCSS = (href: string): void => {
-  const link = document.createElement('link');
-  link.rel = 'preload';
-  link.as = 'style';
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "style";
   link.href = href;
   document.head.appendChild(link);
 };
 
 // フォントのプリロード
 export const preloadFont = (href: string): void => {
-  const link = document.createElement('link');
-  link.rel = 'preload';
-  link.as = 'font';
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "font";
   link.href = href;
-  link.crossOrigin = 'anonymous';
+  link.crossOrigin = "anonymous";
   document.head.appendChild(link);
 };
 
@@ -65,8 +71,8 @@ export const setupLinkPreloading = () => {
 
   const handleLinkHover = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    const link = target.closest('a');
-    
+    const link = target.closest("a");
+
     if (!link || !link.href || preloadedUrls.has(link.href)) {
       return;
     }
@@ -82,38 +88,38 @@ export const setupLinkPreloading = () => {
     preloadedUrls.add(link.href);
 
     // パスに基づいてコンポーネントをプリロード
-    if (pathname === '/dashboard') {
+    if (pathname === "/dashboard") {
       preloadDashboard();
-    } else if (pathname === '/login') {
+    } else if (pathname === "/login") {
       preloadLogin();
-    } else if (pathname === '/api-docs') {
+    } else if (pathname === "/api-docs") {
       preloadApiDocs();
-    } else if (pathname === '/') {
+    } else if (pathname === "/") {
       preloadLanding();
     }
   };
 
   // すべてのリンクにホバーイベントを設定
-  document.addEventListener('mouseover', handleLinkHover);
+  document.addEventListener("mouseover", handleLinkHover);
 
   // クリーンアップ関数を返す
   return () => {
-    document.removeEventListener('mouseover', handleLinkHover);
+    document.removeEventListener("mouseover", handleLinkHover);
   };
 };
 
 // プリフェッチヒントを追加
 export const addPrefetchHint = (url: string) => {
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
+  const link = document.createElement("link");
+  link.rel = "prefetch";
   link.href = url;
   document.head.appendChild(link);
 };
 
 // DNSプリフェッチヒントを追加
 export const addDnsPrefetch = (hostname: string) => {
-  const link = document.createElement('link');
-  link.rel = 'dns-prefetch';
+  const link = document.createElement("link");
+  link.rel = "dns-prefetch";
   link.href = `//${hostname}`;
   document.head.appendChild(link);
 };
@@ -127,10 +133,7 @@ export const initializeResourceHints = () => {
   }
 
   // CDNや外部リソースのDNSプリフェッチ
-  const externalHosts = [
-    'fonts.googleapis.com',
-    'fonts.gstatic.com',
-  ];
+  const externalHosts = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
-  externalHosts.forEach(host => addDnsPrefetch(host));
+  externalHosts.forEach((host) => addDnsPrefetch(host));
 };

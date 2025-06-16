@@ -134,10 +134,12 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
           duration,
           size: reply.getHeader('content-length'),
         },
-        user: request.user ? {
-          id: request.user.userId.value,
-          tier: request.user.tier.level,
-        } : undefined,
+        user: request.user
+          ? {
+              id: request.user.userId.value,
+              tier: request.user.tier.level,
+            }
+          : undefined,
       });
 
       // Track rate limit metrics
@@ -150,7 +152,7 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
       // Track data access metrics
       if (request.routerPath?.startsWith('/api/v1/data/') && reply.statusCode < 400) {
         dataAccessTotal.inc({ resource_type: 'json', status: 'success' });
-        
+
         const contentLength = reply.getHeader('content-length');
         if (contentLength) {
           dataTransferBytes.inc({ direction: 'out' }, parseInt(contentLength as string, 10));
@@ -200,7 +202,7 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.get('/health/detailed', async (request, reply) => {
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
-    
+
     const healthCheck = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -226,9 +228,9 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
     };
 
     const isHealthy = Object.values(healthCheck.checks).every(
-      check => check.status === 'healthy'
+      (check) => check.status === 'healthy',
     );
-    
+
     reply.status(isHealthy ? 200 : 503).send(healthCheck);
   });
 
@@ -241,11 +243,11 @@ async function checkDatabase(): Promise<{ status: string; latency?: number; erro
     // For now, we'll assume the database is healthy if we can resolve the Supabase client
     const supabaseClient = container.resolve(DI_TOKENS.SupabaseClient);
     const latency = Date.now() - start;
-    
+
     return { status: 'healthy', latency };
   } catch (error) {
-    return { 
-      status: 'unhealthy', 
+    return {
+      status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -255,14 +257,14 @@ async function checkFilesystem(): Promise<{ status: string; error?: string }> {
   try {
     const fs = await import('fs/promises');
     const dataDir = container.resolve<string>(DI_TOKENS.DataDirectory);
-    
+
     // Check if data directory exists and is readable
     await fs.access(dataDir, fs.constants.R_OK);
-    
+
     return { status: 'healthy' };
   } catch (error) {
-    return { 
-      status: 'unhealthy', 
+    return {
+      status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }

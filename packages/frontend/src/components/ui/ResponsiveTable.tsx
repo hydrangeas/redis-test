@@ -68,7 +68,10 @@ export function ResponsiveTable<T>({
           {data.map((item) => (
             <tr key={keyExtractor(item)}>
               {columns.map((col) => (
-                <td key={String(col.key)} className="px-6 py-4 whitespace-nowrap">
+                <td
+                  key={String(col.key)}
+                  className="px-6 py-4 whitespace-nowrap"
+                >
                   {col.render
                     ? col.render(item[col.key], item)
                     : String(item[col.key])}

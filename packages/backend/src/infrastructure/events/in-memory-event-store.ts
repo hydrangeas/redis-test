@@ -16,16 +16,16 @@ export class InMemoryEventStore implements IEventStore {
   }
 
   async getByAggregateId(aggregateId: string): Promise<DomainEvent[]> {
-    return this.events.filter(event => event.getAggregateId() === aggregateId);
+    return this.events.filter((event) => event.getAggregateId() === aggregateId);
   }
 
   async getByEventName(eventName: string, limit?: number): Promise<DomainEvent[]> {
-    const filtered = this.events.filter(event => event.getEventName() === eventName);
-    
+    const filtered = this.events.filter((event) => event.getEventName() === eventName);
+
     if (limit && limit > 0) {
       return filtered.slice(0, limit);
     }
-    
+
     return filtered;
   }
 

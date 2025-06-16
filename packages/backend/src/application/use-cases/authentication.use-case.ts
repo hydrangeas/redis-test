@@ -1,5 +1,9 @@
 import { injectable, inject } from 'tsyringe';
-import { IAuthenticationUseCase, TokenRefreshResult, TokenValidationResult } from '../interfaces/authentication-use-case.interface';
+import {
+  IAuthenticationUseCase,
+  TokenRefreshResult,
+  TokenValidationResult,
+} from '../interfaces/authentication-use-case.interface';
 import { Result } from '../errors/result';
 import { ApplicationError } from '../errors/application-error';
 import { ApplicationResult } from '../errors/result';
@@ -27,7 +31,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async validateToken(token: string): Promise<Result<TokenValidationResult>> {
@@ -39,14 +43,14 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           new ApplicationError(
             'INVALID_TOKEN_FORMAT',
             jwtValidation.getError().message,
-            'VALIDATION'
-          )
+            'VALIDATION',
+          ),
         );
       }
 
       // Verify token with auth adapter
       const tokenPayload = await this.authAdapter.verifyToken(token);
-      
+
       if (!tokenPayload) {
         // Log authentication failure event
         const failureEvent = new AuthenticationFailed(
@@ -54,7 +58,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           1,
           'unknown',
           'JWT_VERIFICATION_FAILED',
-          token.substring(0, 10) + '...'
+          token.substring(0, 10) + '...',
         );
         await this.eventBus.publish(failureEvent);
 
@@ -62,59 +66,60 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           new ApplicationError(
             'TOKEN_VERIFICATION_FAILED',
             'Token verification failed',
-            'UNAUTHORIZED'
-          )
+            'UNAUTHORIZED',
+          ),
         );
       }
 
       // Validate with domain service
       const validationResult = this.authService.validateToken(tokenPayload);
-      
+
       if (validationResult.isFailure) {
         const error = validationResult.getError();
-        
+
         // Log authentication failure event
         const failureEvent = new AuthenticationFailed(
           tokenPayload.sub || 'unknown',
           1,
           tokenPayload.sub || 'unknown',
-          error.message
+          error.message,
         );
         await this.eventBus.publish(failureEvent);
 
         return ApplicationResult.fail(
-          new ApplicationError(
-            'TOKEN_VALIDATION_FAILED',
-            error.message,
-            'UNAUTHORIZED'
-          )
+          new ApplicationError('TOKEN_VALIDATION_FAILED', error.message, 'UNAUTHORIZED'),
         );
       }
 
       const authenticatedUser = validationResult.getValue();
 
-      this.logger.info({
-        userId: authenticatedUser.userId.value,
-        tier: authenticatedUser.tier.level,
-      }, 'Token validated successfully');
+      this.logger.info(
+        {
+          userId: authenticatedUser.userId.value,
+          tier: authenticatedUser.tier.level,
+        },
+        'Token validated successfully',
+      );
 
       return ApplicationResult.ok({
         user: authenticatedUser,
         tokenId: tokenPayload.jti,
       });
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Unexpected error during token validation');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Unexpected error during token validation',
+      );
 
       return ApplicationResult.fail(
         new ApplicationError(
           'INTERNAL_ERROR',
           'An unexpected error occurred during token validation',
-          'INTERNAL'
-        )
+          'INTERNAL',
+        ),
       );
     }
   }
@@ -127,28 +132,28 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           new ApplicationError(
             'INVALID_REFRESH_TOKEN_FORMAT',
             'Refresh token format is invalid',
-            'VALIDATION'
-          )
+            'VALIDATION',
+          ),
         );
       }
 
       // Refresh token with auth adapter
       const session = await this.authAdapter.refreshAccessToken(refreshToken);
-      
+
       if (!session) {
         return ApplicationResult.fail(
           new ApplicationError(
             'REFRESH_TOKEN_INVALID',
             'Invalid or expired refresh token',
-            'UNAUTHORIZED'
-          )
+            'UNAUTHORIZED',
+          ),
         );
       }
 
       // Extract token IDs if available
       let oldTokenId: string | undefined;
       let newTokenId: string | undefined;
-      
+
       try {
         // Try to decode tokens to get JTI claims
         const decoded = this.jwtValidator.decodeToken<any>(session.access_token);
@@ -165,14 +170,17 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
         oldTokenId,
         newTokenId,
         1, // First refresh
-        refreshToken.substring(0, 10) // Session ID proxy
+        refreshToken.substring(0, 10), // Session ID proxy
       );
       await this.eventBus.publish(refreshEvent);
 
-      this.logger.info({
-        userId: session.user.id,
-        tier: session.user.app_metadata?.tier || 'tier1',
-      }, 'Token refreshed successfully');
+      this.logger.info(
+        {
+          userId: session.user.id,
+          tier: session.user.app_metadata?.tier || 'tier1',
+        },
+        'Token refreshed successfully',
+      );
 
       return ApplicationResult.ok({
         accessToken: session.access_token,
@@ -181,19 +189,21 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
         userId: session.user.id,
         tier: session.user.app_metadata?.tier || 'tier1',
       });
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Unexpected error during token refresh');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Unexpected error during token refresh',
+      );
 
       return ApplicationResult.fail(
         new ApplicationError(
           'INTERNAL_ERROR',
           'An unexpected error occurred during token refresh',
-          'INTERNAL'
-        )
+          'INTERNAL',
+        ),
       );
     }
   }
@@ -203,11 +213,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
       // Validate user ID format
       if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
         return ApplicationResult.fail(
-          new ApplicationError(
-            'INVALID_USER_ID',
-            'User ID is invalid',
-            'VALIDATION'
-          )
+          new ApplicationError('INVALID_USER_ID', 'User ID is invalid', 'VALIDATION'),
         );
       }
 
@@ -215,33 +221,33 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
       await this.authAdapter.signOut(userId);
 
       // Publish user logged out event
-      const logoutEvent = new UserLoggedOut(
-        userId,
-        1,
-        userId,
-        'user_initiated'
-      );
+      const logoutEvent = new UserLoggedOut(userId, 1, userId, 'user_initiated');
       await this.eventBus.publish(logoutEvent);
 
-      this.logger.info({
-        userId,
-      }, 'User signed out successfully');
+      this.logger.info(
+        {
+          userId,
+        },
+        'User signed out successfully',
+      );
 
       return ApplicationResult.ok(undefined);
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        userId,
-      }, 'Unexpected error during sign out');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          userId,
+        },
+        'Unexpected error during sign out',
+      );
 
       return ApplicationResult.fail(
         new ApplicationError(
           'INTERNAL_ERROR',
           'An unexpected error occurred during sign out',
-          'INTERNAL'
-        )
+          'INTERNAL',
+        ),
       );
     }
   }

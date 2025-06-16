@@ -61,7 +61,7 @@ describe('SupabaseUserRepository', () => {
     it('エラーが発生した場合は失敗を返す', async () => {
       const userId = '123e4567-e89b-12d3-a456-426614174000';
       const userIdVO = UserId.create(userId).getValue();
-      
+
       vi.spyOn(mockAuthAdapter, 'getUserById').mockRejectedValue(new Error('Database error'));
 
       const result = await repository.findById(userIdVO);
@@ -101,32 +101,32 @@ describe('SupabaseUserRepository', () => {
         throw new Error(`Failed to create UserId: ${userIdResult.getError().message}`);
       }
       const userId = userIdResult.getValue();
-      
+
       const emailResult = Email.create('newuser@example.com');
       if (!emailResult.isSuccess) {
         throw new Error(`Failed to create Email: ${emailResult.getError().message}`);
       }
       const email = emailResult.getValue();
-      
+
       const tierResult = UserTier.create(TierLevel.TIER1);
       if (!tierResult.isSuccess) {
         throw new Error(`Failed to create UserTier: ${tierResult.getError().message}`);
       }
       const tier = tierResult.getValue();
-      
+
       const userResult = User.create({
         id: userId,
         email: email,
         tier: tier,
         emailVerified: true,
       });
-      
+
       const user = userResult.getValue();
 
       const result = await repository.save(user);
 
       expect(result.isSuccess).toBe(true);
-      
+
       // モックで作成されたことを確認
       const createdUser = await mockAuthAdapter.getUserById(user.id.value);
       expect(createdUser).not.toBeNull();
@@ -141,25 +141,25 @@ describe('SupabaseUserRepository', () => {
         throw new Error(`Failed to create UserId: ${userIdResult.getError().message}`);
       }
       const userId = userIdResult.getValue();
-      
+
       const emailResult = Email.create('newuser@example.com');
       if (!emailResult.isSuccess) {
         throw new Error(`Failed to create Email: ${emailResult.getError().message}`);
       }
       const email = emailResult.getValue();
-      
+
       const tierResult = UserTier.create(TierLevel.TIER1);
       if (!tierResult.isSuccess) {
         throw new Error(`Failed to create UserTier: ${tierResult.getError().message}`);
       }
       const tier = tierResult.getValue();
-      
+
       const userResult = User.create({
         id: userId,
         email: email,
         tier: tier,
       });
-      
+
       const user = userResult.getValue();
 
       const result = await repository.save(user);
@@ -183,7 +183,7 @@ describe('SupabaseUserRepository', () => {
       const result = await repository.update(existingUser);
 
       expect(result.isSuccess).toBe(true);
-      
+
       // モックで更新されたことを確認
       const updatedUser = await mockAuthAdapter.getUserById(existingUser.id.value);
       expect(updatedUser.email).toBe('updated@example.com');
@@ -210,7 +210,7 @@ describe('SupabaseUserRepository', () => {
       const result = await repository.delete(userId);
 
       expect(result.isSuccess).toBe(true);
-      
+
       // モックで削除されたことを確認
       const deletedUser = await mockAuthAdapter.getUserById(userId.value);
       expect(deletedUser).toBeNull();

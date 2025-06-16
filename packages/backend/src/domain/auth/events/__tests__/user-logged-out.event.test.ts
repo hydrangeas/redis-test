@@ -16,7 +16,7 @@ describe('UserLoggedOut Event', () => {
         userId,
         reason,
         sessionId,
-        allSessions
+        allSessions,
       );
 
       expect(event.aggregateId).toBe(aggregateId);
@@ -30,12 +30,7 @@ describe('UserLoggedOut Event', () => {
     });
 
     it('should create a UserLoggedOut event with default allSessions value', () => {
-      const event = new UserLoggedOut(
-        'aggregate-id',
-        1,
-        'user-id',
-        'Session expired'
-      );
+      const event = new UserLoggedOut('aggregate-id', 1, 'user-id', 'Session expired');
 
       expect(event.userId).toBe('user-id');
       expect(event.reason).toBe('Session expired');
@@ -44,12 +39,7 @@ describe('UserLoggedOut Event', () => {
     });
 
     it('should be immutable', () => {
-      const event = new UserLoggedOut(
-        'aggregate-id',
-        1,
-        'user-id',
-        'reason'
-      );
+      const event = new UserLoggedOut('aggregate-id', 1, 'user-id', 'reason');
 
       expect(() => {
         (event as any).userId = 'new-user-id';
@@ -59,12 +49,7 @@ describe('UserLoggedOut Event', () => {
 
   describe('getEventName', () => {
     it('should return the correct event name', () => {
-      const event = new UserLoggedOut(
-        'aggregate-id',
-        1,
-        'user-id',
-        'reason'
-      );
+      const event = new UserLoggedOut('aggregate-id', 1, 'user-id', 'reason');
 
       expect(event.getEventName()).toBe('UserLoggedOut');
     });
@@ -78,7 +63,7 @@ describe('UserLoggedOut Event', () => {
         'user-id',
         'Manual logout',
         'session-456',
-        true
+        true,
       );
 
       const data = event.getData();
@@ -92,12 +77,7 @@ describe('UserLoggedOut Event', () => {
     });
 
     it('should return data with undefined optional fields', () => {
-      const event = new UserLoggedOut(
-        'aggregate-id',
-        1,
-        'user-id',
-        'Token expired'
-      );
+      const event = new UserLoggedOut('aggregate-id', 1, 'user-id', 'Token expired');
 
       const data = event.getData();
 
@@ -112,12 +92,7 @@ describe('UserLoggedOut Event', () => {
 
   describe('getMetadata', () => {
     it('should return event metadata', () => {
-      const event = new UserLoggedOut(
-        'aggregate-id',
-        3,
-        'user-id',
-        'reason'
-      );
+      const event = new UserLoggedOut('aggregate-id', 3, 'user-id', 'reason');
 
       const metadata = event.getMetadata();
 
@@ -139,7 +114,7 @@ describe('UserLoggedOut Event', () => {
         'user-123',
         'User clicked logout',
         'session-abc',
-        false
+        false,
       );
 
       expect(event.sessionId).toBe('session-abc');
@@ -153,7 +128,7 @@ describe('UserLoggedOut Event', () => {
         'user-123',
         'Security breach detected',
         undefined,
-        true
+        true,
       );
 
       expect(event.sessionId).toBeUndefined();
@@ -167,7 +142,7 @@ describe('UserLoggedOut Event', () => {
         1,
         'user-123',
         'Session timeout',
-        'session-xyz'
+        'session-xyz',
       );
 
       expect(event.reason).toBe('Session timeout');

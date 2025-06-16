@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { 
-  HttpMethod, 
-  isValidHttpMethod, 
-  parseHttpMethod, 
-  isSafeMethod, 
-  isIdempotentMethod 
+import {
+  HttpMethod,
+  isValidHttpMethod,
+  parseHttpMethod,
+  isSafeMethod,
+  isIdempotentMethod,
 } from '../http-method';
 
 describe('HttpMethod', () => {

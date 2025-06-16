@@ -22,44 +22,56 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
     @inject(DI_TOKENS.APILogRepository)
     private readonly apiLogRepository: IAPILogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: DataResourceNotFound): Promise<void> {
     try {
-      this.logger.info({
-        eventId: event.eventId,
-        userId: event.userId,
-        requestedPath: event.requestedPath,
-      }, 'Handling DataResourceNotFound event');
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          userId: event.userId,
+          requestedPath: event.requestedPath,
+        },
+        'Handling DataResourceNotFound event',
+      );
 
       // UserIdの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: userIdResult.error,
-        }, 'Invalid userId in DataResourceNotFound event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: userIdResult.error,
+          },
+          'Invalid userId in DataResourceNotFound event',
+        );
         return;
       }
 
       // ApiPathの作成
       const apiPathResult = ApiPath.create(event.requestedPath);
       if (apiPathResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: apiPathResult.error,
-        }, 'Invalid requestedPath in DataResourceNotFound event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: apiPathResult.error,
+          },
+          'Invalid requestedPath in DataResourceNotFound event',
+        );
         return;
       }
 
       // HttpMethodの作成（データ取得はGETメソッド）
       const httpMethodResult = ApiHttpMethod.create('GET');
       if (httpMethodResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: httpMethodResult.error,
-        }, 'Failed to create HttpMethod');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: httpMethodResult.error,
+          },
+          'Failed to create HttpMethod',
+        );
         return;
       }
 
@@ -69,10 +81,13 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
         method: httpMethodResult.getValue(),
       });
       if (endpointResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: endpointResult.error,
-        }, 'Failed to create Endpoint');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: endpointResult.error,
+          },
+          'Failed to create Endpoint',
+        );
         return;
       }
 
@@ -81,9 +96,12 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
       const responseTimeResult = ResponseTime.create(0); // エラーレスポンスは即座に返される
 
       if (statusCodeResult.isFailure || responseTimeResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-        }, 'Failed to create status code or response time');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+          },
+          'Failed to create status code or response time',
+        );
         return;
       }
 
@@ -102,20 +120,26 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: logEntryResult.error,
-        }, 'Failed to create APILogEntry for resource not found');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: logEntryResult.error,
+          },
+          'Failed to create APILogEntry for resource not found',
+        );
         return;
       }
 
       // ログの保存
       const saveResult = await this.apiLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure()) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: saveResult.error,
-        }, 'Failed to save resource not found log');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: saveResult.error,
+          },
+          'Failed to save resource not found log',
+        );
         return;
       }
 
@@ -126,23 +150,31 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
       });
 
       if (recentErrorsResult.isSuccess() && recentErrorsResult.getValue().length >= 10) {
-        this.logger.warn({
-          eventId: event.eventId,
-          errorCount: recentErrorsResult.getValue().length,
-        }, 'High number of 404 errors detected');
+        this.logger.warn(
+          {
+            eventId: event.eventId,
+            errorCount: recentErrorsResult.getValue().length,
+          },
+          'High number of 404 errors detected',
+        );
       }
 
-      this.logger.info({
-        eventId: event.eventId,
-        logId: logEntryResult.getValue().id.value,
-      }, 'DataResourceNotFound event handled successfully');
-
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          logId: logEntryResult.getValue().id.value,
+        },
+        'DataResourceNotFound event handled successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        eventId: event.eventId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Error handling DataResourceNotFound event');
+      this.logger.error(
+        {
+          eventId: event.eventId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Error handling DataResourceNotFound event',
+      );
       throw error;
     }
   }

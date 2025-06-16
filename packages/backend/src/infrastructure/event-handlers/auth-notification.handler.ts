@@ -14,7 +14,7 @@ export class AuthNotificationHandler implements IEventHandler<UserAuthenticated>
     @inject(DI_TOKENS.NotificationService)
     private readonly notificationService: INotificationService,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: UserAuthenticated): Promise<void> {
@@ -28,10 +28,13 @@ export class AuthNotificationHandler implements IEventHandler<UserAuthenticated>
           timestamp: event.occurredAt,
         });
 
-        this.logger.info({
-          userId: event.userId,
-          userAgent: event.userAgent,
-        }, 'New device login alert sent');
+        this.logger.info(
+          {
+            userId: event.userId,
+            userAgent: event.userAgent,
+          },
+          'New device login alert sent',
+        );
       }
 
       // 異常なログインパターンの検出
@@ -42,17 +45,23 @@ export class AuthNotificationHandler implements IEventHandler<UserAuthenticated>
           details: event.getData(),
         });
 
-        this.logger.warn({
-          userId: event.userId,
-          eventData: event.getData(),
-        }, 'Suspicious login alert sent');
+        this.logger.warn(
+          {
+            userId: event.userId,
+            eventData: event.getData(),
+          },
+          'Suspicious login alert sent',
+        );
       }
     } catch (error) {
       // 通知の失敗はメイン処理に影響させない
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        event: event.getMetadata(),
-      }, 'Failed to send authentication notification');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          event: event.getMetadata(),
+        },
+        'Failed to send authentication notification',
+      );
     }
   }
 

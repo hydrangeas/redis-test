@@ -83,9 +83,9 @@ describe('Environment Configuration', () => {
       // Set env before calling getEnvConfig
       process.env = envWithOldNames;
       resetEnvConfig();
-      
+
       const config = getEnvConfig();
-      
+
       // The backward compatibility mapping should work
       expect(config.PUBLIC_SUPABASE_URL).toBe('https://old.supabase.co');
       expect(config.PUBLIC_SUPABASE_ANON_KEY).toBe('old-anon-key');
@@ -101,8 +101,8 @@ describe('Environment Configuration', () => {
 
     it('should validate NODE_ENV enum values', () => {
       const validEnvs = ['development', 'staging', 'production'];
-      
-      validEnvs.forEach(env => {
+
+      validEnvs.forEach((env) => {
         const config = validateEnv({
           NODE_ENV: env,
           PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -113,13 +113,15 @@ describe('Environment Configuration', () => {
         expect(config.NODE_ENV).toBe(env);
       });
 
-      expect(() => validateEnv({
-        NODE_ENV: 'invalid',
-        PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-        PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
-        SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
-        JWT_SECRET: 'a-very-long-secret-key-that-is-at-least-32-chars',
-      })).toThrow();
+      expect(() =>
+        validateEnv({
+          NODE_ENV: 'invalid',
+          PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
+          PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+          SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
+          JWT_SECRET: 'a-very-long-secret-key-that-is-at-least-32-chars',
+        }),
+      ).toThrow();
     });
 
     it('should validate URL formats', () => {
@@ -170,8 +172,8 @@ describe('Environment Configuration', () => {
 
     it('should validate LOG_LEVEL enum values', () => {
       const validLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
-      
-      validLevels.forEach(level => {
+
+      validLevels.forEach((level) => {
         const config = validateEnv({
           LOG_LEVEL: level,
           PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
@@ -182,13 +184,15 @@ describe('Environment Configuration', () => {
         expect(config.LOG_LEVEL).toBe(level);
       });
 
-      expect(() => validateEnv({
-        LOG_LEVEL: 'invalid',
-        PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
-        PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
-        SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
-        JWT_SECRET: 'a-very-long-secret-key-that-is-at-least-32-chars',
-      })).toThrow();
+      expect(() =>
+        validateEnv({
+          LOG_LEVEL: 'invalid',
+          PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
+          PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+          SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
+          JWT_SECRET: 'a-very-long-secret-key-that-is-at-least-32-chars',
+        }),
+      ).toThrow();
     });
   });
 

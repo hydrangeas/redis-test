@@ -4,9 +4,18 @@ import { Provider } from '../provider';
 describe('Provider', () => {
   describe('create', () => {
     it('should create Provider with valid provider name', () => {
-      const validProviders = ['email', 'google', 'github', 'microsoft', 'apple', 'jwt', 'api_key', 'anonymous'];
+      const validProviders = [
+        'email',
+        'google',
+        'github',
+        'microsoft',
+        'apple',
+        'jwt',
+        'api_key',
+        'anonymous',
+      ];
 
-      validProviders.forEach(provider => {
+      validProviders.forEach((provider) => {
         const result = Provider.create(provider);
         expect(result.isSuccess).toBe(true);
         expect(result.getValue().value).toBe(provider);

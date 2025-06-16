@@ -20,7 +20,7 @@ Viteの設定で自動的にベンダーチャンクを分割しています：
 ページコンポーネントは動的インポートを使用して遅延ロードされます：
 
 ```typescript
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 ```
 
 ### 3. 圧縮
@@ -64,21 +64,25 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 ## ビルドコマンド
 
 ### 開発環境
+
 ```bash
 npm run dev
 ```
 
 ### 本番ビルド
+
 ```bash
 npm run build:production
 ```
 
 ### ステージング環境ビルド
+
 ```bash
 npm run build:staging
 ```
 
 ### バンドルサイズ分析
+
 ```bash
 npm run build:analyze
 ```
@@ -86,6 +90,7 @@ npm run build:analyze
 分析結果は `dist/stats.html` に出力されます。
 
 ### ビルドサイズ確認
+
 ```bash
 npm run size
 ```

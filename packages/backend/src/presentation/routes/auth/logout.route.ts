@@ -64,7 +64,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
       try {
         // 認証済みユーザーの取得（preHandlerで保証される）
         const authenticatedUser = request.user;
-        
+
         if (!authenticatedUser) {
           const problemDetails = toProblemDetails(
             {
@@ -72,46 +72,52 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
               message: 'User not authenticated',
               type: 'UNAUTHORIZED',
             },
-            request.url
+            request.url,
           );
-          
+
           return reply
             .code(401)
             .header('content-type', 'application/problem+json')
             .send(problemDetails);
         }
 
-        request.log.info({
-          userId: authenticatedUser.userId.value,
-          tier: authenticatedUser.tier.level,
-        }, 'Logout request received');
+        request.log.info(
+          {
+            userId: authenticatedUser.userId.value,
+            tier: authenticatedUser.tier.level,
+          },
+          'Logout request received',
+        );
 
         // ログアウト処理
         const result = await authUseCase.signOut(authenticatedUser.userId.value);
 
         if (!result.success) {
-          const problemDetails = toProblemDetails(
-            result.error,
-            request.url
+          const problemDetails = toProblemDetails(result.error, request.url);
+
+          request.log.error(
+            {
+              userId: authenticatedUser.userId.value,
+              error: result.error?.code,
+            },
+            'Logout failed',
           );
-          
-          request.log.error({
-            userId: authenticatedUser.userId.value,
-            error: result.error?.code,
-          }, 'Logout failed');
 
           // エラーの種類によってステータスコードを決定
           const statusCode = result.error?.type === 'EXTERNAL_SERVICE' ? 503 : 500;
-          
+
           return reply
             .code(statusCode)
             .header('content-type', 'application/problem+json')
             .send(problemDetails);
         }
 
-        request.log.info({
-          userId: authenticatedUser.userId.value,
-        }, 'User logged out successfully');
+        request.log.info(
+          {
+            userId: authenticatedUser.userId.value,
+          },
+          'User logged out successfully',
+        );
 
         // 成功レスポンス
         const response: LogoutResponseType = {
@@ -121,14 +127,17 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
 
         // クライアントへのヒント：トークンを削除するよう指示
         reply.header('Clear-Site-Data', '"storage"');
-        
+
         return reply.send(response);
       } catch (error) {
-        request.log.error({
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          userId: request.user?.userId.value,
-        }, 'Unexpected error during logout');
+        request.log.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+            userId: request.user?.userId.value,
+          },
+          'Unexpected error during logout',
+        );
 
         const problemDetails = toProblemDetails(
           {
@@ -136,7 +145,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
             message: 'An error occurred during logout',
             type: 'EXTERNAL_SERVICE',
           },
-          request.url
+          request.url,
         );
 
         return reply
@@ -144,7 +153,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
           .header('content-type', 'application/problem+json')
           .send(problemDetails);
       }
-    }
+    },
   );
 };
 

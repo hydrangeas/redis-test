@@ -38,7 +38,10 @@ describe('Data Directory Structure', () => {
 
     for (const file of expectedFiles) {
       const filePath = path.join(dataDir, file);
-      const exists = await fs.access(filePath).then(() => true).catch(() => false);
+      const exists = await fs
+        .access(filePath)
+        .then(() => true)
+        .catch(() => false);
       expect(exists, `File ${file} should exist`).toBe(true);
     }
   });
@@ -58,7 +61,7 @@ describe('Data Directory Structure', () => {
 
   it('should have valid population data with required metadata', async () => {
     const files = ['2024.json', '2023.json'];
-    
+
     for (const file of files) {
       const filePath = path.join(dataDir, 'secure/population', file);
       const content = await fs.readFile(filePath, 'utf-8');
@@ -71,7 +74,7 @@ describe('Data Directory Structure', () => {
       expect(data).toHaveProperty('households');
       expect(data).toHaveProperty('populationByCity');
       expect(data).toHaveProperty('ageDistribution');
-      
+
       // Check metadata
       expect(data).toHaveProperty('metadata');
       expect(data.metadata).toHaveProperty('source');
@@ -83,7 +86,7 @@ describe('Data Directory Structure', () => {
   it('should prevent direct file access with .htaccess', async () => {
     const htaccessPath = path.join(dataDir, '.htaccess');
     const content = await fs.readFile(htaccessPath, 'utf-8');
-    
+
     expect(content).toContain('Deny from all');
     expect(content).toContain('Order deny,allow');
   });
@@ -95,16 +98,13 @@ describe('Data Directory Structure', () => {
       return;
     }
 
-    const files = [
-      'secure/population/2024.json',
-      'secure/budget/2024/general.json',
-    ];
+    const files = ['secure/population/2024.json', 'secure/budget/2024/general.json'];
 
     for (const file of files) {
       const filePath = path.join(dataDir, file);
       const stats = await fs.stat(filePath);
       const mode = (stats.mode & parseInt('777', 8)).toString(8);
-      
+
       // Files should be readable but may have different permissions based on system
       // Accept common file permissions
       expect(['644', '664', '755', '777']).toContain(mode);

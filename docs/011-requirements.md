@@ -47,6 +47,7 @@
       - HTTP 429 (Too Many Requests) を返します
       - 次にリクエスト可能になるまでの時間情報を含めます
 - APIエラーレスポンス
+
   - データが存在しない場合はHTTP 404 (Not Found)を返します
   - エラーレスポンスはRFC 7807 (Problem Details for HTTP APIs)に準拠した形式とします
   - エラーレスポンスの例：
@@ -62,6 +63,7 @@
     ```
 
   - エラーレスポンスもAPIレート制限のリクエスト数にカウントされます
+
 - セキュリティ要件
   - JWTトークンはAuthorizationヘッダーで送信（Bearer形式）
   - すべての通信はHTTPS/TLS 1.3以上で暗号化

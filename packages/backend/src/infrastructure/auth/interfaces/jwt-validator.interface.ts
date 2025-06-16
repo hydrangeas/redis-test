@@ -8,7 +8,7 @@ export interface IJWTValidator {
    * @returns 検証結果
    */
   validateToken(token: string): Promise<Result<void>>;
-  
+
   /**
    * トークンをデコードしてペイロードを取得（検証なし）
    * @param token JWTトークン文字列

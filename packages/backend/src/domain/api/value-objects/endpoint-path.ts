@@ -38,7 +38,7 @@ export class EndpointPath {
       .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // エスケープ
       .replace(/\*/g, '.*') // * を .* に変換
       .replace(/:(\w+)/g, '([^/]+)'); // :param を ([^/]+) に変換
-    
+
     return new RegExp(`^${pattern}$`);
   }
 

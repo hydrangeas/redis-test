@@ -18,7 +18,7 @@ describe('AuthenticationFailed Event', () => {
         reason,
         ipAddress,
         userAgent,
-        attemptedUserId
+        attemptedUserId,
       );
 
       expect(event.aggregateId).toBe(aggregateId);
@@ -38,7 +38,7 @@ describe('AuthenticationFailed Event', () => {
         1,
         'GitHub',
         'Account locked',
-        '10.0.0.1'
+        '10.0.0.1',
       );
 
       expect(event.provider).toBe('GitHub');
@@ -54,7 +54,7 @@ describe('AuthenticationFailed Event', () => {
         1,
         'JWT',
         'Token expired',
-        '127.0.0.1'
+        '127.0.0.1',
       );
 
       expect(() => {
@@ -70,7 +70,7 @@ describe('AuthenticationFailed Event', () => {
         1,
         'SAML',
         'Invalid signature',
-        '192.168.0.1'
+        '192.168.0.1',
       );
 
       expect(event.getEventName()).toBe('AuthenticationFailed');
@@ -86,7 +86,7 @@ describe('AuthenticationFailed Event', () => {
         'Invalid token',
         '172.16.0.1',
         'Chrome/96.0',
-        'attempted-user-456'
+        'attempted-user-456',
       );
 
       const data = event.getData();
@@ -101,13 +101,7 @@ describe('AuthenticationFailed Event', () => {
     });
 
     it('should return data with undefined optional fields', () => {
-      const event = new AuthenticationFailed(
-        'aggregate-id',
-        1,
-        'Basic',
-        'Wrong password',
-        '::1'
-      );
+      const event = new AuthenticationFailed('aggregate-id', 1, 'Basic', 'Wrong password', '::1');
 
       const data = event.getData();
 
@@ -128,7 +122,7 @@ describe('AuthenticationFailed Event', () => {
         5,
         'LDAP',
         'User not found',
-        '10.10.10.10'
+        '10.10.10.10',
       );
 
       const metadata = event.getMetadata();
@@ -152,7 +146,7 @@ describe('AuthenticationFailed Event', () => {
         'Invalid credentials',
         '192.168.1.50',
         'Mozilla/5.0',
-        'john.doe@example.com'
+        'john.doe@example.com',
       );
 
       expect(event.reason).toBe('Invalid credentials');
@@ -167,7 +161,7 @@ describe('AuthenticationFailed Event', () => {
         'Account locked due to multiple failed attempts',
         '10.0.0.100',
         'Safari/15.0',
-        'github-user-123'
+        'github-user-123',
       );
 
       expect(event.reason).toContain('Account locked');
@@ -180,7 +174,7 @@ describe('AuthenticationFailed Event', () => {
         1,
         'JWT',
         'Token has expired',
-        '172.16.0.50'
+        '172.16.0.50',
       );
 
       expect(event.reason).toBe('Token has expired');
@@ -195,7 +189,7 @@ describe('AuthenticationFailed Event', () => {
         'OAuth2',
         'Suspicious activity detected',
         '203.0.113.0',
-        'curl/7.68.0'
+        'curl/7.68.0',
       );
 
       expect(event.reason).toBe('Suspicious activity detected');

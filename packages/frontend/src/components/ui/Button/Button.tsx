@@ -1,9 +1,10 @@
-import React, { forwardRef } from 'react';
-import { cn } from '../../../lib/utils';
+import React, { forwardRef } from "react";
+import { cn } from "../../../lib/utils";
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
   loading?: boolean;
   leftIcon?: React.ReactNode;
@@ -14,8 +15,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
-      variant = 'primary',
-      size = 'md',
+      variant = "primary",
+      size = "md",
       fullWidth = false,
       loading = false,
       disabled,
@@ -26,20 +27,26 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+    const baseStyles =
+      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
 
     const variants = {
-      primary: 'bg-purple-600 text-white hover:bg-purple-700 focus-visible:ring-purple-600',
-      secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus-visible:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
-      outline: 'border border-gray-300 bg-transparent hover:bg-gray-100 focus-visible:ring-gray-500 dark:border-gray-600 dark:hover:bg-gray-800',
-      ghost: 'hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-100',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600',
+      primary:
+        "bg-purple-600 text-white hover:bg-purple-700 focus-visible:ring-purple-600",
+      secondary:
+        "bg-gray-200 text-gray-900 hover:bg-gray-300 focus-visible:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
+      outline:
+        "border border-gray-300 bg-transparent hover:bg-gray-100 focus-visible:ring-gray-500 dark:border-gray-600 dark:hover:bg-gray-800",
+      ghost:
+        "hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+      danger:
+        "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
     };
 
     const sizes = {
-      sm: 'h-8 px-3 text-sm rounded-md gap-1.5',
-      md: 'h-10 px-4 text-base rounded-lg gap-2',
-      lg: 'h-12 px-6 text-lg rounded-lg gap-2.5',
+      sm: "h-8 px-3 text-sm rounded-md gap-1.5",
+      md: "h-10 px-4 text-base rounded-lg gap-2",
+      lg: "h-12 px-6 text-lg rounded-lg gap-2.5",
     };
 
     return (
@@ -49,7 +56,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           baseStyles,
           variants[variant],
           sizes[size],
-          fullWidth && 'w-full',
+          fullWidth && "w-full",
           className
         )}
         disabled={disabled || loading}
@@ -93,6 +100,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 
-Button.displayName = 'Button';
+Button.displayName = "Button";
 
 export default Button;

@@ -9,24 +9,18 @@ import { DI_TOKENS } from './tokens';
  */
 export const registerEventHandlers = (): void => {
   const eventBus = container.resolve<IEventBus>(DI_TOKENS.EventBus);
-  
+
   // UserAuthenticatedイベントのハンドラー登録
-  eventBus.subscribe(
-    'UserAuthenticated',
-    container.resolve(AuthLogHandler)
-  );
-  
-  eventBus.subscribe(
-    'UserAuthenticated',
-    container.resolve(AuthNotificationHandler)
-  );
-  
+  eventBus.subscribe('UserAuthenticated', container.resolve(AuthLogHandler));
+
+  eventBus.subscribe('UserAuthenticated', container.resolve(AuthNotificationHandler));
+
   // TokenRefreshedイベントのハンドラー登録
   // TODO: TokenRefreshedハンドラーの実装後に追加
-  
+
   // UserLoggedOutイベントのハンドラー登録
   // TODO: UserLoggedOutハンドラーの実装後に追加
-  
+
   // AuthenticationFailedイベントのハンドラー登録
   // TODO: AuthenticationFailedハンドラーの実装後に追加
 };

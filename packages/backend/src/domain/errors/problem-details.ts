@@ -48,7 +48,7 @@ export function createProblemDetails(
   status: number,
   detail?: string,
   instance?: string,
-  extensions?: Record<string, any>
+  extensions?: Record<string, any>,
 ): ProblemDetails {
   return {
     type,

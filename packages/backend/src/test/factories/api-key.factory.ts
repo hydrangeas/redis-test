@@ -24,7 +24,7 @@ export class ApiKeyFactory {
 
   static create(userId: string, overrides?: Partial<ApiKey>): ApiKey & { raw_key?: string } {
     const rawKey = this.generateRawKey();
-    
+
     return {
       id: faker.string.uuid(),
       user_id: userId,
@@ -38,7 +38,11 @@ export class ApiKeyFactory {
     };
   }
 
-  static createMany(userId: string, count: number, overrides?: Partial<ApiKey>): Array<ApiKey & { raw_key?: string }> {
+  static createMany(
+    userId: string,
+    count: number,
+    overrides?: Partial<ApiKey>,
+  ): Array<ApiKey & { raw_key?: string }> {
     return Array.from({ length: count }, () => this.create(userId, overrides));
   }
 
@@ -49,7 +53,10 @@ export class ApiKeyFactory {
     });
   }
 
-  static createNeverUsed(userId: string, overrides?: Partial<ApiKey>): ApiKey & { raw_key?: string } {
+  static createNeverUsed(
+    userId: string,
+    overrides?: Partial<ApiKey>,
+  ): ApiKey & { raw_key?: string } {
     return this.create(userId, {
       last_used_at: null,
       ...overrides,

@@ -58,13 +58,13 @@ export function createRotatingLogger() {
       },
       timestamp: pino.stdTimeFunctions.isoTime,
     },
-    pino.multistream(streams)
+    pino.multistream(streams),
   );
 }
 
 // ログファイルのクリーンアップ関数
 export async function cleanupOldLogs(daysToKeep: number = 30) {
-  const { readdir, stat, unlink } = await import('fs').then(m => m.promises);
+  const { readdir, stat, unlink } = await import('fs').then((m) => m.promises);
   const files = await readdir(logsDir);
   const now = Date.now();
   const maxAge = daysToKeep * 24 * 60 * 60 * 1000;
@@ -72,7 +72,7 @@ export async function cleanupOldLogs(daysToKeep: number = 30) {
   for (const file of files) {
     const filePath = join(logsDir, file);
     const stats = await stat(filePath);
-    
+
     if (now - stats.mtime.getTime() > maxAge) {
       await unlink(filePath);
       console.log(`Deleted old log file: ${file}`);

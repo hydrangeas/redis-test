@@ -26,7 +26,7 @@ export interface IRateLimitLogRepository {
   findByUserAndEndpoint(
     userId: UserId,
     endpointId: EndpointId,
-    window: RateLimitWindow
+    window: RateLimitWindow,
   ): Promise<Result<RateLimitLog[], DomainError>>;
 
   /**
@@ -34,7 +34,7 @@ export interface IRateLimitLogRepository {
    */
   findByUser(
     userId: UserId,
-    window?: RateLimitWindow
+    window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[], DomainError>>;
 
   /**
@@ -42,7 +42,7 @@ export interface IRateLimitLogRepository {
    */
   findByEndpoint(
     endpointId: EndpointId,
-    window?: RateLimitWindow
+    window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[], DomainError>>;
 
   /**
@@ -56,6 +56,6 @@ export interface IRateLimitLogRepository {
   countRequests(
     userId: UserId,
     endpointId: EndpointId,
-    window: RateLimitWindow
+    window: RateLimitWindow,
   ): Promise<Result<number, DomainError>>;
 }

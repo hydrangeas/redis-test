@@ -15,14 +15,14 @@ export class RateLimitWindow {
     }
 
     this._windowSizeSeconds = windowSizeSeconds;
-    
+
     // For sliding window: window ends at current time and starts windowSize seconds before
     const currentMs = currentTime.getTime();
     const windowMs = windowSizeSeconds * 1000;
-    
+
     this._endTime = new Date(currentMs);
     this._startTime = new Date(currentMs - windowMs);
-    
+
     Object.freeze(this);
   }
 

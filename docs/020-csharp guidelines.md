@@ -10,17 +10,17 @@
 
 ### クリーンアーキテクチャのレイヤー構造
 
-* ドメインレイヤー - すべてのビジネスエンティティとルールを含む最内層
-* アプリケーションレイヤー - ユースケース、アプリケーションサービス、インターフェース定義
-* インフラストラクチャレイヤー - 永続化、外部サービス連携、技術的実装
-* プレゼンテーションレイヤー - UI、API、ユーザーインターフェース
+- ドメインレイヤー - すべてのビジネスエンティティとルールを含む最内層
+- アプリケーションレイヤー - ユースケース、アプリケーションサービス、インターフェース定義
+- インフラストラクチャレイヤー - 永続化、外部サービス連携、技術的実装
+- プレゼンテーションレイヤー - UI、API、ユーザーインターフェース
 
 ### 依存関係の方向
 
-* 依存関係は常に内側に向かわなければならない
-* 外側のレイヤーは内側のレイヤーに依存するが、その逆は許されない
-* ドメインレイヤーは他のどのレイヤーにも依存してはならない
-* インターフェースは内側のレイヤーで定義し、外側のレイヤーで実装する
+- 依存関係は常に内側に向かわなければならない
+- 外側のレイヤーは内側のレイヤーに依存するが、その逆は許されない
+- ドメインレイヤーは他のどのレイヤーにも依存してはならない
+- インターフェースは内側のレイヤーで定義し、外側のレイヤーで実装する
 
 ```text
 // プロジェクト構造の例
@@ -48,16 +48,16 @@
 //             └── DTOs/       // API専用レスポンスオブジェクト
 ```
 
-* PresentationはWebとApiなど複数存在しなければ子ディレクトリを用意する必要はない
-* Solutionはアプリケーション名、Domain、Application、Infrastructure、Presentationをそれぞれプロジェクト名とする
+- PresentationはWebとApiなど複数存在しなければ子ディレクトリを用意する必要はない
+- Solutionはアプリケーション名、Domain、Application、Infrastructure、Presentationをそれぞれプロジェクト名とする
 
 ## SOLID原則
 
 ### 単一責任の原則 (SRP)
 
-* クラスは単一の責任のみを持つべき
-* 変更理由が一つだけになるようにクラスを設計する
-* 大きなクラスは小さな単一責任のクラスに分割する
+- クラスは単一の責任のみを持つべき
+- 変更理由が一つだけになるようにクラスを設計する
+- 大きなクラスは小さな単一責任のクラスに分割する
 
 ```csharp
 // 良い例: 単一責任を持つクラス
@@ -76,13 +76,13 @@ public class OrderProcessor
 {
     private readonly IOrderRepository _repository;
     private readonly OrderValidator _validator;
-    
+
     public OrderProcessor(IOrderRepository repository, OrderValidator validator)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
     }
-    
+
     public void ProcessOrder(Order order)
     {
         var validationResult = _validator.ValidateOrder(order);
@@ -90,7 +90,7 @@ public class OrderProcessor
         {
             throw new OrderValidationException(validationResult.Errors);
         }
-        
+
         _repository.Save(order);
     }
 }
@@ -104,9 +104,9 @@ public class OrderValidationException : Exception { public OrderValidationExcept
 
 ### 開放/閉鎖原則 (OCP)
 
-* ソフトウェアエンティティは拡張に対しては開いているが、修正に対しては閉じているべき
-* インターフェースと抽象クラスを活用して拡張ポイントを確保する
-* 継承より構成を優先する
+- ソフトウェアエンティティは拡張に対しては開いているが、修正に対しては閉じているべき
+- インターフェースと抽象クラスを活用して拡張ポイントを確保する
+- 継承より構成を優先する
 
 ```csharp
 // 良い例: 拡張に開いているが、修正には閉じている設計
@@ -129,12 +129,12 @@ public class PremiumDiscountStrategy : IDiscountStrategy
 public class DiscountService
 {
     private readonly IDiscountStrategy _discountStrategy;
-    
+
     public DiscountService(IDiscountStrategy discountStrategy)
     {
         _discountStrategy = discountStrategy ?? throw new ArgumentNullException(nameof(discountStrategy));
     }
-    
+
     public decimal CalculateDiscount(Order order)
     {
         if (order == null) throw new ArgumentNullException(nameof(order));
@@ -148,9 +148,9 @@ public class Order { public decimal Total { get; set; } /* ... */ }
 
 ### リスコフの置換原則 (LSP)
 
-* サブタイプはそのベースタイプとして置換可能であるべき
-* 継承関係においては、派生クラスは基底クラスの動作を尊重すべき
-* 契約による設計（Design by Contract）を意識する
+- サブタイプはそのベースタイプとして置換可能であるべき
+- 継承関係においては、派生クラスは基底クラスの動作を尊重すべき
+- 契約による設計（Design by Contract）を意識する
 
 ```csharp
 // 良い例: 派生クラスはベースクラスの動作に準拠
@@ -163,14 +163,14 @@ public class Rectangle : Shape
 {
     public double Width { get; set; }
     public double Height { get; set; }
-    
+
     public override double CalculateArea() => Width * Height;
 }
 
 public class Circle : Shape
 {
     public double Radius { get; set; }
-    
+
     public override double CalculateArea() => Math.PI * Radius * Radius;
 }
 
@@ -187,9 +187,9 @@ public class AreaCalculator
 
 ### インターフェース分離の原則 (ISP)
 
-* クライアントは使用しないメソッドに依存すべきでない
-* 大きなインターフェースは小さく特化したインターフェースに分割する
-* ロールインターフェースを活用する
+- クライアントは使用しないメソッドに依存すべきでない
+- 大きなインターフェースは小さく特化したインターフェースに分割する
+- ロールインターフェースを活用する
 
 ```csharp
 // 良い例: 特化した小さなインターフェース
@@ -214,12 +214,12 @@ public interface IOrderDeleter
 public class OrderReportingService
 {
     private readonly IOrderReader _orderReader;
-    
+
     public OrderReportingService(IOrderReader orderReader)
     {
         _orderReader = orderReader ?? throw new ArgumentNullException(nameof(orderReader));
     }
-    
+
     public OrderSummary GenerateReport(Guid customerId)
     {
         var orders = _orderReader.GetByCustomerId(customerId);
@@ -235,9 +235,9 @@ public class OrderSummary { /* ... */ }
 
 ### 依存性逆転の原則 (DIP)
 
-* 上位モジュールは下位モジュールに依存すべきでない。どちらも抽象に依存すべき
-* 抽象は詳細に依存すべきでない。詳細が抽象に依存すべき
-* 依存性注入を活用して実装の詳細を隠蔽する
+- 上位モジュールは下位モジュールに依存すべきでない。どちらも抽象に依存すべき
+- 抽象は詳細に依存すべきでない。詳細が抽象に依存すべき
+- 依存性注入を活用して実装の詳細を隠蔽する
 
 ```csharp
 // 良い例: 上位モジュールと下位モジュールがともに抽象に依存
@@ -271,17 +271,17 @@ public class SmsService : INotificationService
 public class NotificationManager
 {
     private readonly INotificationService _notificationService;
-    
+
     public NotificationManager(INotificationService notificationService)
     {
         _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
-    
+
     public async Task NotifyUserAsync(User user, Notification notification)
     {
         if (user == null) throw new ArgumentNullException(nameof(user));
         if (notification == null) throw new ArgumentNullException(nameof(notification));
-        
+
         await _notificationService.SendAsync(
             user.ContactInfo,
             notification.Subject,
@@ -299,13 +299,13 @@ public class Notification { public string Subject { get; set; } public string Me
 
 ### 一般的な命名規則
 
-* **名前空間**: PascalCaseで`[Company].[Product].[Module].[Feature]`の形式
-* **クラス/インターフェース**: PascalCaseで、クラスは名詞、インターフェースは形容詞+名詞またはI+名詞
-* **メソッド**: PascalCaseで動詞または動詞句
-* **プロパティ**: PascalCaseで名詞または形容詞+名詞
-* **変数/パラメータ**: camelCaseで意味のある名前
-* **定数**: PascalCaseで説明的な名前
-* **プライベートフィールド**: camelCaseで先頭にアンダースコア(_)
+- **名前空間**: PascalCaseで`[Company].[Product].[Module].[Feature]`の形式
+- **クラス/インターフェース**: PascalCaseで、クラスは名詞、インターフェースは形容詞+名詞またはI+名詞
+- **メソッド**: PascalCaseで動詞または動詞句
+- **プロパティ**: PascalCaseで名詞または形容詞+名詞
+- **変数/パラメータ**: camelCaseで意味のある名前
+- **定数**: PascalCaseで説明的な名前
+- **プライベートフィールド**: camelCaseで先頭にアンダースコア(\_)
 
 ```csharp
 // 命名規則の例
@@ -330,17 +330,17 @@ namespace MyCompany.MyProduct.Billing.Invoices
     {
         Invoice GenerateInvoice(Order order);
     }
-    
+
     public class InvoiceGenerator : IInvoiceGenerator
     {
         private readonly ITaxCalculator _taxCalculator;
         private const decimal MinimumOrderAmount = 10.0m;
-        
+
         public InvoiceGenerator(ITaxCalculator taxCalculator)
         {
             _taxCalculator = taxCalculator ?? throw new ArgumentNullException(nameof(taxCalculator));
         }
-        
+
         public Invoice GenerateInvoice(Order order)
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
@@ -352,7 +352,7 @@ namespace MyCompany.MyProduct.Billing.Invoices
             }
 
             var taxAmount = _taxCalculator.CalculateTax(subtotal);
-            
+
             return new Invoice
             {
                 OrderId = order.Id,
@@ -363,7 +363,7 @@ namespace MyCompany.MyProduct.Billing.Invoices
                 TotalAmount = subtotal + taxAmount
             };
         }
-        
+
         private decimal CalculateSubtotal(Order order)
         {
             // 仮実装
@@ -372,36 +372,36 @@ namespace MyCompany.MyProduct.Billing.Invoices
     }
 
     // Supporting types for the example
-    public class Order 
-    { 
+    public class Order
+    {
         public Guid Id { get; set; }
         public Guid CustomerId { get; set; }
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
-    public class OrderItem 
-    { 
-        public int Quantity { get; set; } 
-        public decimal Price { get; set; } 
+    public class OrderItem
+    {
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
     }
 }
 ```
 
 ### ファイルとフォルダ構成
 
-* ファイル名はクラス名と一致させる
-* 1ファイル1クラス（小さな関連クラスは例外）
-* フォルダ構造は名前空間と一致させる
-* 機能ごとにフォルダを整理する
-* テストプロジェクトは対応する製品コードと同じ構造にする
+- ファイル名はクラス名と一致させる
+- 1ファイル1クラス（小さな関連クラスは例外）
+- フォルダ構造は名前空間と一致させる
+- 機能ごとにフォルダを整理する
+- テストプロジェクトは対応する製品コードと同じ構造にする
 
 ### コードスタイル
 
-* インデントは4スペース（タブではなく）
-* 中括弧は新しい行に配置する（Allmanスタイル）
-* すべての制御構造に中括弧を使用する（1行の場合も）
-* 1行は120文字以内に収める
-* 意味のある論理的なブロック間には空行を入れる
-* 変数宣言は使用直前に行う
+- インデントは4スペース（タブではなく）
+- 中括弧は新しい行に配置する（Allmanスタイル）
+- すべての制御構造に中括弧を使用する（1行の場合も）
+- 1行は120文字以内に収める
+- 意味のある論理的なブロック間には空行を入れる
+- 変数宣言は使用直前に行う
 
 ```csharp
 // コードスタイルの例
@@ -411,12 +411,12 @@ public bool IsValidOrder(Order order)
     {
         return false;
     }
-    
+
     if (order.Items == null || !order.Items.Any()) // Using Any() instead of Count == 0
     {
         return false;
     }
-    
+
     foreach (var item in order.Items)
     {
         if (item.Quantity <= 0 || item.Price < 0)
@@ -424,19 +424,19 @@ public bool IsValidOrder(Order order)
             return false;
         }
     }
-    
+
     return true;
 }
 
 // Supporting types for the example
-public class Order 
-{ 
+public class Order
+{
     public List<OrderItem> Items { get; set; } = new List<OrderItem>();
 }
-public class OrderItem 
-{ 
-    public int Quantity { get; set; } 
-    public decimal Price { get; set; } 
+public class OrderItem
+{
+    public int Quantity { get; set; }
+    public decimal Price { get; set; }
 }
 ```
 
@@ -444,10 +444,10 @@ public class OrderItem
 
 ### エンティティ
 
-* 同一性（ID）によって識別される
-* エンティティは不変条件を自身で検証する
-* エンティティのビジネスロジックはエンティティクラス内に含める
-* IDはValue Objectとして実装する
+- 同一性（ID）によって識別される
+- エンティティは不変条件を自身で検証する
+- エンティティのビジネスロジックはエンティティクラス内に含める
+- IDはValue Objectとして実装する
 
 ```csharp
 // エンティティの例
@@ -461,16 +461,16 @@ public enum OrderStatus { Pending, Submitted, Shipped, Cancelled }
 public class Order
 {
     private readonly List<OrderItem> _items = new();
-    
+
     public OrderId Id { get; private set; }
     public CustomerId CustomerId { get; private set; }
     public OrderStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
     public string Currency { get; private set; } // Added for Money Value Object
-    
+
     private Order() { } // ORMのためのコンストラクタ
-    
+
     public Order(OrderId id, CustomerId customerId, string currency = "USD")
     {
         Id = id;
@@ -479,14 +479,14 @@ public class Order
         CreatedAt = DateTime.UtcNow;
         Currency = currency; // Assuming default currency or passed in
     }
-    
+
     public void AddItem(ProductId productId, int quantity, Money unitPrice)
     {
         if (Status != OrderStatus.Pending)
         {
             throw new InvalidOperationException("Cannot add items to non-pending order.");
         }
-        
+
         if (quantity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be positive.");
@@ -496,7 +496,7 @@ public class Order
         {
             throw new InvalidOperationException("Item currency must match order currency.");
         }
-        
+
         var existingItem = _items.FirstOrDefault(i => i.ProductId == productId);
         if (existingItem != null)
         {
@@ -507,19 +507,19 @@ public class Order
             _items.Add(new OrderItem(new OrderItemId(Guid.NewGuid()), Id, productId, quantity, unitPrice));
         }
     }
-    
+
     public void Submit()
     {
         if (Status != OrderStatus.Pending)
         {
             throw new InvalidOperationException("Only pending orders can be submitted.");
         }
-        
+
         if (!_items.Any())
         {
             throw new InvalidOperationException("Cannot submit order without items.");
         }
-        
+
         Status = OrderStatus.Submitted;
         // ここでドメインイベントを発行することも考えられる (e.g., OrderSubmittedEvent)
     }
@@ -557,10 +557,10 @@ public class OrderItem
 
 ### Value Objects
 
-* その属性によって識別される（IDを持たない）
-* 常に不変（Immutable）
-* 値の等価性によって比較される
-* 自己完結型で副作用を持たない
+- その属性によって識別される（IDを持たない）
+- 常に不変（Immutable）
+- 値の等価性によって比較される
+- 自己完結型で副作用を持たない
 
 ```csharp
 // Value Objectの例: Money
@@ -568,23 +568,23 @@ public readonly record struct Money
 {
     public decimal Amount { get; }
     public string Currency { get; }
-    
+
     public Money(decimal amount, string currency)
     {
         if (amount < 0)
         {
             throw new ArgumentException("Amount cannot be negative.", nameof(amount));
         }
-        
+
         if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
         {
             throw new ArgumentException("Currency must be a valid 3-letter ISO code.", nameof(currency));
         }
-        
+
         Amount = amount;
         Currency = currency.ToUpperInvariant();
     }
-    
+
     public static Money Zero(string currency = "USD") => new Money(0, currency);
 
     public Money Add(Money other)
@@ -593,7 +593,7 @@ public readonly record struct Money
         {
             throw new InvalidOperationException($"Cannot add money with different currencies: {Currency} and {other.Currency}.");
         }
-        
+
         return new Money(Amount + other.Amount, Currency);
     }
 
@@ -603,26 +603,26 @@ public readonly record struct Money
         {
             throw new InvalidOperationException($"Cannot subtract money with different currencies: {Currency} and {other.Currency}.");
         }
-        
+
         return new Money(Amount - other.Amount, Currency);
     }
-    
+
     public Money Multiply(decimal multiplier)
     {
         // multiplier can be negative for discounts etc.
         return new Money(Amount * multiplier, Currency);
     }
-    
+
     public override string ToString() => $"{Amount:F2} {Currency}"; // Format to 2 decimal places
 }
 ```
 
 ### 集約
 
-* トランザクション境界を定義する関連エンティティのグループ
-* 集約ルート（親エンティティ）を介してのみアクセスする
-* 集約内の整合性は常に保持する
-* リポジトリは集約単位で操作する
+- トランザクション境界を定義する関連エンティティのグループ
+- 集約ルート（親エンティティ）を介してのみアクセスする
+- 集約内の整合性は常に保持する
+- リポジトリは集約単位で操作する
 
 ```csharp
 // 集約ルート (Order) と集約内のエンティティ (OrderItem) の例
@@ -647,14 +647,14 @@ public partial class Order // Assuming Order is already defined as an Aggregate 
         {
             throw new InvalidOperationException("Cannot remove items from non-pending order.");
         }
-        
+
         var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item == null)
         {
             // または、何もしないか、Resultパターンで失敗を返す
             throw new InvalidOperationException($"Item with ID {itemId.Value} not found in order.");
         }
-        
+
         _items.Remove(item);
     }
 }
@@ -662,9 +662,9 @@ public partial class Order // Assuming Order is already defined as an Aggregate 
 
 ### ドメインサービス
 
-* 単一のエンティティに自然に属さない操作を実装する
-* 複数の集約にまたがる操作はドメインサービスで実装する
-* ステートレスにする
+- 単一のエンティティに自然に属さない操作を実装する
+- 複数の集約にまたがる操作はドメインサービスで実装する
+- ステートレスにする
 
 ```csharp
 // ドメインサービスの例
@@ -689,19 +689,19 @@ public class OrderPricingService
 {
     private readonly IProductRepository _productRepository;
     private readonly IDiscountPolicy _discountPolicy;
-    
+
     public OrderPricingService(IProductRepository productRepository, IDiscountPolicy discountPolicy)
     {
         _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
         _discountPolicy = discountPolicy ?? throw new ArgumentNullException(nameof(discountPolicy));
     }
-    
+
     public async Task<OrderPricingSummary> CalculateOrderPriceAsync(Order order)
     {
         if (order == null) throw new ArgumentNullException(nameof(order));
 
         Money subtotal = Money.Zero(order.Currency);
-        
+
         foreach (var item in order.Items)
         {
             // Item.UnitPrice should ideally be set when item is added based on product price at that time
@@ -709,15 +709,15 @@ public class OrderPricingService
             // For simplicity, assume item.UnitPrice is already correct.
             subtotal = subtotal.Add(item.UnitPrice.Multiply(item.Quantity));
         }
-        
+
         var discount = _discountPolicy.CalculateDiscount(order, subtotal);
         var discountedSubtotal = subtotal.Subtract(discount);
         var tax = CalculateTax(discountedSubtotal); // Assuming a simple tax calculation
         var total = discountedSubtotal.Add(tax);
-        
+
         return new OrderPricingSummary(subtotal, discount, tax, total);
     }
-    
+
     private Money CalculateTax(Money amount) // This might be a separate TaxService
     {
         // 仮の税金計算ロジック
@@ -732,9 +732,9 @@ public record OrderPricingSummary(Money Subtotal, Money Discount, Money Tax, Mon
 
 ### CQRS パターン
 
-* Command Query Responsibility Segregation（コマンドクエリ責務分離）
-* コマンド（状態変更）とクエリ（データ取得）を分離する
-* MediatRライブラリを使った実装
+- Command Query Responsibility Segregation（コマンドクエリ責務分離）
+- コマンド（状態変更）とクエリ（データ取得）を分離する
+- MediatRライブラリを使った実装
 
 ```csharp
 // CQRSパターンの例 (MediatRを使用)
@@ -764,8 +764,8 @@ public class Result
 public class Result<T> : Result
 {
     public T Value { get; }
-    protected internal Result(bool isSuccess, T value, Error error) : base(isSuccess, error) 
-    { 
+    protected internal Result(bool isSuccess, T value, Error error) : base(isSuccess, error)
+    {
         // Ensure value is not accessed if not successful, base constructor handles error checks
         if (isSuccess) Value = value;
         // else Value remains default, but shouldn't be accessed due to IsSuccess check
@@ -788,24 +788,24 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
 {
     private readonly IOrderRepository _orderRepository; // Domain layer repository
     private readonly IUnitOfWork _unitOfWork;
-    
+
     public CreateOrderCommandHandler(IOrderRepository orderRepository, IUnitOfWork unitOfWork)
     {
         _orderRepository = orderRepository;
         _unitOfWork = unitOfWork;
     }
-    
+
     public async Task<Result<Guid>> Handle(CreateOrderCommand command, CancellationToken cancellationToken)
     {
         try
         {
             var orderId = new OrderId(Guid.NewGuid());
             var customerId = new CustomerId(command.CustomerId);
-            
+
             // Assuming a default currency or it's part of the command
             var orderCurrency = command.Items.FirstOrDefault()?.Currency ?? "USD";
-            var order = new Order(orderId, customerId, orderCurrency); 
-            
+            var order = new Order(orderId, customerId, orderCurrency);
+
             foreach (var itemDto in command.Items)
             {
                 var productId = new ProductId(itemDto.ProductId);
@@ -822,10 +822,10 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
             {
                  return Result.Failure<Guid>(new Error("Order.Creation.NoItems", "Order must contain at least one item."));
             }
-            
+
             await _orderRepository.AddAsync(order, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
+
             return Result.Success(orderId.Value);
         }
         catch (ArgumentException ex) // Catch specific domain validation exceptions
@@ -863,25 +863,25 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Resul
     // that is optimized for reads, bypassing the domain model if necessary.
     // Here, for simplicity, we'll assume IOrderRepository can also provide read data.
     private readonly IOrderRepository _orderRepository; // Or a specific IOrderQueryRepository
-    
+
     public GetOrderByIdQueryHandler(IOrderRepository orderRepository)
     {
         _orderRepository = orderRepository;
     }
-    
+
     public async Task<Result<OrderDto>> Handle(GetOrderByIdQuery query, CancellationToken cancellationToken)
     {
         var orderId = new OrderId(query.OrderId);
         var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken); // Fetches domain model
-        
+
         if (order == null)
         {
             return Result.Failure<OrderDto>(new Error("Order.NotFound", $"Order with ID {query.OrderId} not found."));
         }
-        
+
         return Result.Success(MapToDto(order)); // Map domain model to DTO
     }
-    
+
     private OrderDto MapToDto(Order order)
     {
         // AutoMapper or manual mapping logic
@@ -915,9 +915,9 @@ public interface IUnitOfWork { Task SaveChangesAsync(CancellationToken cancellat
 
 ### バリデーション
 
-* コマンド/クエリの入力検証はアプリケーションレイヤーで行う
-* FluentValidationを使用して宣言的な検証ルールを定義する
-* パイプラインを使って自動的にバリデーションを適用する
+- コマンド/クエリの入力検証はアプリケーションレイヤーで行う
+- FluentValidationを使用して宣言的な検証ルールを定義する
+- パイプラインを使って自動的にバリデーションを適用する
 
 ```csharp
 // バリデーションの例 (FluentValidation と MediatR Pipeline)
@@ -928,11 +928,11 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
     public CreateOrderCommandValidator()
     {
         RuleFor(x => x.CustomerId).NotEmpty();
-        
+
         RuleFor(x => x.Items)
             .NotEmpty()
             .WithMessage("Order must contain at least one item.");
-            
+
         RuleForEach(x => x.Items).SetValidator(new OrderItemDtoValidator());
     }
 }
@@ -942,11 +942,11 @@ public class OrderItemDtoValidator : AbstractValidator<OrderItemDto>
     public OrderItemDtoValidator()
     {
         RuleFor(x => x.ProductId).NotEmpty();
-        
+
         RuleFor(x => x.Quantity)
             .GreaterThan(0)
             .WithMessage("Quantity must be greater than zero.");
-            
+
         RuleFor(x => x.UnitPrice)
             .GreaterThanOrEqualTo(0)
             .WithMessage("Unit price cannot be negative.");
@@ -960,7 +960,7 @@ public class OrderItemDtoValidator : AbstractValidator<OrderItemDto>
 
 // MediatR Pipeline Behavior for validation
 // This is a simplified MediatR IPipelineBehavior for demonstration.
-public interface IPipelineBehavior<in TRequest, TResponse> 
+public interface IPipelineBehavior<in TRequest, TResponse>
     where TRequest : IRequest<TResponse> // MediatR IRequest
 {
     Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next);
@@ -968,52 +968,52 @@ public interface IPipelineBehavior<in TRequest, TResponse>
 public delegate Task<TResponse> RequestHandlerDelegate<TResponse>(); // From MediatR
 
 // Custom ValidationException to be potentially handled by middleware
-public class ValidationException : Exception 
+public class ValidationException : Exception
 {
     public IReadOnlyCollection<ValidationFailure> Errors { get; }
-    public ValidationException(IEnumerable<ValidationFailure> errors) 
-        : base("One or more validation failures have occurred.") 
-    { 
-        Errors = errors.ToList().AsReadOnly(); 
+    public ValidationException(IEnumerable<ValidationFailure> errors)
+        : base("One or more validation failures have occurred.")
+    {
+        Errors = errors.ToList().AsReadOnly();
     }
 }
 
 
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse> 
+    where TRequest : IRequest<TResponse>
     where TResponse : Result // Assuming all responses use the Result pattern
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
-    
+
     public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
     {
         _validators = validators;
     }
-    
+
     public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
     {
         if (!_validators.Any())
         {
             return await next();
         }
-        
+
         var context = new ValidationContext<TRequest>(request);
-        
+
         var validationResults = await Task.WhenAll(
             _validators.Select(v => v.ValidateAsync(context, cancellationToken)));
-            
+
         var failures = validationResults
             .SelectMany(r => r.Errors)
             .Where(f => f != null)
             .ToList();
-            
+
         if (failures.Any())
         {
             // Instead of throwing, return a Failure Result
             // This requires TResponse to be constructible as a Failure Result.
             // We need a way to create a generic Result<T>.Failure from a non-generic context
             // or ensure Result itself can represent failure.
-            var error = new Error("Validation.Error", 
+            var error = new Error("Validation.Error",
                 string.Join("; ", failures.Select(f => $"{f.PropertyName}: {f.ErrorMessage}")));
 
             // This is tricky because TResponse is generic.
@@ -1034,15 +1034,15 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             }
 
             // If the above dynamic invocation is too complex for rules, throw or simplify:
-            throw new ValidationException(failures); 
+            throw new ValidationException(failures);
         }
-        
+
         return await next();
     }
 }
 
 // FluentValidation types (simplified for rule compilation)
-public abstract class AbstractValidator<T> : IValidator<T> 
+public abstract class AbstractValidator<T> : IValidator<T>
 {
     protected IRuleBuilderInitial<T, TProperty> RuleFor<TProperty>(System.Linq.Expressions.Expression<Func<T, TProperty>> expression) { return null; }
     protected IRuleBuilderInitial<T, IEnumerable<TElement>> RuleForEach<TElement>(System.Linq.Expressions.Expression<Func<T, IEnumerable<TElement>>> expression) { return null; }
@@ -1079,9 +1079,9 @@ namespace FluentValidation
 
 ### 結果パターン
 
-* 例外ではなく戻り値を使用して成功/失敗を表現する
-* エラー情報を明示的に伝達する
-* 例外はシステムの異常状態にのみ使用する
+- 例外ではなく戻り値を使用して成功/失敗を表現する
+- エラー情報を明示的に伝達する
+- 例外はシステムの異常状態にのみ使用する
 
 ```csharp
 // 結果パターンの例 (CQRSセクションの Result と Error を参照)
@@ -1102,7 +1102,7 @@ public class SomeController // : ControllerBase (if ASP.NET Core)
     {
         var command = _mapper.Map<CreateOrderCommand>(request); // Map API request to Command
         var result = await _mediator.Send(command); // Result<Guid>
-        
+
         if (result.IsFailure)
         {
             // Map error to appropriate HTTP response
@@ -1118,9 +1118,9 @@ public class SomeController // : ControllerBase (if ASP.NET Core)
             // Default to 400 for other business rule failures
             return new BadRequestObjectResult(new { title = "Order creation failed", detail = result.Error.Message, status = 400 });
         }
-        
+
         // Access result.Value only if IsSuccess is true (Result<T> pattern)
-        var orderIdValue = ((Result<Guid>)result).Value; 
+        var orderIdValue = ((Result<Guid>)result).Value;
 
         // Return 201 Created with location header
         return new CreatedAtActionResult(nameof(GetOrderByIdEndpoint), "SomeController", new { id = orderIdValue }, new { orderId = orderIdValue });
@@ -1160,10 +1160,10 @@ public class FromBodyAttribute : Attribute { } // ASP.NET Core attribute
 
 ### リポジトリパターン
 
-* ドメインオブジェクトの永続化と取得を抽象化する
-* インターフェースはアプリケーションレイヤーで定義する
-* 実装はインフラストラクチャレイヤーで行う
-* 集約の境界を尊重する
+- ドメインオブジェクトの永続化と取得を抽象化する
+- インターフェースはアプリケーションレイヤーで定義する
+- 実装はインフラストラクチャレイヤーで行う
+- 集約の境界を尊重する
 
 ```csharp
 // リポジトリパターンの例
@@ -1191,11 +1191,11 @@ public class ApplicationDbContext : Microsoft.EntityFrameworkCore.DbContext // E
     protected override void OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<OrderEntity>(builder => 
+        modelBuilder.Entity<OrderEntity>(builder =>
         {
             builder.HasKey(o => o.Id);
-            builder.Property(o => o.Id).ValueGeneratedNever(); 
-            
+            builder.Property(o => o.Id).ValueGeneratedNever();
+
             // Example of mapping a Value Object owned by the entity
             builder.OwnsOne(o => o.CustomerIdValue, ownedNavigationBuilder => {
                 ownedNavigationBuilder.Property(c => c.Value).HasColumnName("CustomerId").IsRequired();
@@ -1203,11 +1203,11 @@ public class ApplicationDbContext : Microsoft.EntityFrameworkCore.DbContext // E
 
             builder.Property(o => o.Status).IsRequired().HasMaxLength(50);
             builder.Property(o => o.Currency).IsRequired().HasMaxLength(3);
-            
+
             // For OrderItems, typically a separate OrderItemEntity and a HasMany relationship.
             // For simplicity here, if it were a simple collection of value types, OwnsMany could be used.
             // If ItemsJson is used:
-            // builder.Property(o => o.ItemsJson); 
+            // builder.Property(o => o.ItemsJson);
         });
     }
 }
@@ -1247,13 +1247,13 @@ public class OrderRepository : IOrderRepository // Implements domain interface
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         // _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
-    
+
     public async Task<Order> GetByIdAsync(OrderId id, CancellationToken cancellationToken)
     {
         var orderEntity = await _dbContext.Orders
             .Include(o => o.Items) // Eager load items
             .FirstOrDefaultAsync(o => o.Id == id.Value, cancellationToken);
-            
+
         return orderEntity != null ? MapToDomainModel(orderEntity) : null;
     }
 
@@ -1263,17 +1263,17 @@ public class OrderRepository : IOrderRepository // Implements domain interface
             .Include(o => o.Items)
             .Where(o => o.CustomerIdValue.Value == customerId.Value)
             .ToListAsync(cancellationToken);
-        
+
         return orderEntities.Select(MapToDomainModel).ToList();
     }
-    
+
     public async Task AddAsync(Order order, CancellationToken cancellationToken)
     {
         var orderEntity = MapToEntity(order);
         await _dbContext.Orders.AddAsync(orderEntity, cancellationToken);
         // No SaveChangesAsync here, that's UnitOfWork's responsibility
     }
-    
+
     public async Task UpdateAsync(Order order, CancellationToken cancellationToken)
     {
         // For updates, fetch the existing entity, apply changes from domain model, then save.
@@ -1295,7 +1295,7 @@ public class OrderRepository : IOrderRepository // Implements domain interface
         // It might involve a private constructor or a static factory method on Order.
         var orderId = new OrderId(entity.Id);
         var customerId = new CustomerId(entity.CustomerIdValue.Value);
-        
+
         // Example: Order.Reconstitute(id, customerId, statusEnum, createdAt, currency, items)
         // For simplicity, assuming Order has a constructor or setters accessible for mapping.
         var order = new Order(orderId, customerId, entity.Currency); // This might set defaults
@@ -1319,7 +1319,7 @@ public class OrderRepository : IOrderRepository // Implements domain interface
         }
         return order; // Placeholder for a fully mapped domain model
     }
-    
+
     private OrderEntity MapToEntity(Order domainModel)
     {
         // Manual mapping or AutoMapper.
@@ -1353,7 +1353,7 @@ public class OrderRepository : IOrderRepository // Implements domain interface
         existingEntity.Items.Clear(); // Simplistic: remove all and re-add
         foreach(var domainItem in domainModel.Items)
         {
-            existingEntity.Items.Add(new OrderItemEntity 
+            existingEntity.Items.Add(new OrderItemEntity
             {
                 Id = domainItem.Id.Value,
                 OrderId = domainModel.Id.Value,
@@ -1374,8 +1374,8 @@ namespace Microsoft.EntityFrameworkCore
     public class DbContext { public DbContext(DbContextOptions options) {} public virtual Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) { return Task.FromResult(0); } public ChangeTracking.ChangeTracker ChangeTracker { get; } public Infrastructure.DatabaseFacade Database { get; } }
     public class DbContextOptions { }
     public class DbContextOptions<TContext> : DbContextOptions where TContext : DbContext { }
-    public abstract class DbSet<TEntity> : IQueryable<TEntity> where TEntity : class 
-    { 
+    public abstract class DbSet<TEntity> : IQueryable<TEntity> where TEntity : class
+    {
         public abstract System.Linq.Expressions.Expression Expression { get; }
         public abstract IQueryProvider Provider { get; }
         public abstract System.Collections.Generic.IEnumerator<TEntity> GetEnumerator();
@@ -1387,29 +1387,29 @@ namespace Microsoft.EntityFrameworkCore
 
     namespace Metadata.Builders
     {
-        public class EntityTypeBuilder<TEntity> where TEntity : class 
-        { 
-            public EntityTypeBuilder<TEntity> HasKey(System.Linq.Expressions.Expression<Func<TEntity, object>> keyExpression) { return this; } 
-            public PropertyBuilder<TProperty> Property<TProperty>(System.Linq.Expressions.Expression<Func<TEntity, TProperty>> propertyExpression) { return new PropertyBuilder<TProperty>(); } 
+        public class EntityTypeBuilder<TEntity> where TEntity : class
+        {
+            public EntityTypeBuilder<TEntity> HasKey(System.Linq.Expressions.Expression<Func<TEntity, object>> keyExpression) { return this; }
+            public PropertyBuilder<TProperty> Property<TProperty>(System.Linq.Expressions.Expression<Func<TEntity, TProperty>> propertyExpression) { return new PropertyBuilder<TProperty>(); }
             public OwnedNavigationBuilder<TEntity, TRelatedEntity> OwnsOne<TRelatedEntity>(System.Linq.Expressions.Expression<Func<TEntity, TRelatedEntity>> navigationExpression, Action<OwnedNavigationBuilder<TEntity, TRelatedEntity>> buildAction) where TRelatedEntity : class { return new OwnedNavigationBuilder<TEntity, TRelatedEntity>(); }
             public EntityTypeBuilder<TEntity> HasMany<TRelatedEntity>(System.Linq.Expressions.Expression<Func<TEntity, IEnumerable<TRelatedEntity>>> navigationExpression) where TRelatedEntity : class { return this; }
         }
-        public class PropertyBuilder<TProperty> 
-        { 
-            public PropertyBuilder<TProperty> ValueGeneratedNever() { return this; } 
+        public class PropertyBuilder<TProperty>
+        {
+            public PropertyBuilder<TProperty> ValueGeneratedNever() { return this; }
             public PropertyBuilder<TProperty> HasColumnName(string name) { return this; }
             public PropertyBuilder<TProperty> IsRequired(bool required = true) { return this; }
             public PropertyBuilder<TProperty> HasMaxLength(int maxLength) { return this; }
         }
-        public class OwnedNavigationBuilder<TEntity, TRelatedEntity> where TEntity : class where TRelatedEntity : class 
-        { 
-            public PropertyBuilder<TProperty> Property<TProperty>(System.Linq.Expressions.Expression<Func<TRelatedEntity, TProperty>> propertyExpression) { return new PropertyBuilder<TProperty>(); } 
+        public class OwnedNavigationBuilder<TEntity, TRelatedEntity> where TEntity : class where TRelatedEntity : class
+        {
+            public PropertyBuilder<TProperty> Property<TProperty>(System.Linq.Expressions.Expression<Func<TRelatedEntity, TProperty>> propertyExpression) { return new PropertyBuilder<TProperty>(); }
         }
     }
      namespace ChangeTracking { public class ChangeTracker { } public class EntityEntry<TEntity> where TEntity: class {} }
      namespace Infrastructure { public abstract class DatabaseFacade { public abstract bool EnsureCreated(); } }
 
-    public static class RelationalQueryableExtensions 
+    public static class RelationalQueryableExtensions
     {
         public static IQueryable<TEntity> Include<TEntity, TProperty>(this IQueryable<TEntity> source, System.Linq.Expressions.Expression<Func<TEntity, TProperty>> navigationPropertyPath) where TEntity : class { return source; }
     }
@@ -1424,8 +1424,8 @@ namespace Microsoft.EntityFrameworkCore
 
 ### ユニットオブワーク
 
-* 複数のリポジトリにまたがるトランザクション管理
-* グループ化された変更を一括でコミットまたはロールバック
+- 複数のリポジトリにまたがるトランザクション管理
+- グループ化された変更を一括でコミットまたはロールバック
 
 ```csharp
 // ユニットオブワークの例
@@ -1435,12 +1435,12 @@ namespace Microsoft.EntityFrameworkCore
 public class UnitOfWork : IUnitOfWork // Implements domain/application interface
 {
     private readonly ApplicationDbContext _dbContext; // EF Core DbContext
-    
+
     public UnitOfWork(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
-    
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         // This is where DbContext.SaveChangesAsync() is called.
@@ -1454,9 +1454,9 @@ public class UnitOfWork : IUnitOfWork // Implements domain/application interface
 
 ### 依存性注入の設定
 
-* 依存関係の明示的な宣言とライフタイム管理
-* モジュール単位で依存関係を登録
-* テスト容易性のため、常にインターフェースに対して依存する
+- 依存関係の明示的な宣言とライフタイム管理
+- モジュール単位で依存関係を登録
+- テスト容易性のため、常にインターフェースに対して依存する
 
 ```csharp
 // 依存性注入の設定例 (ASP.NET Core Program.cs or Startup.cs)
@@ -1464,10 +1464,10 @@ public class UnitOfWork : IUnitOfWork // Implements domain/application interface
 // Simplified stubs for Microsoft.Extensions.DependencyInjection
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public interface IServiceCollection 
-    { 
-        IServiceCollection AddScoped<TService, TImplementation>() where TService : class where TImplementation : class, TService; 
-        IServiceCollection AddTransient<TService, TImplementation>() where TService : class where TImplementation : class, TService; 
+    public interface IServiceCollection
+    {
+        IServiceCollection AddScoped<TService, TImplementation>() where TService : class where TImplementation : class, TService;
+        IServiceCollection AddTransient<TService, TImplementation>() where TService : class where TImplementation : class, TService;
         IServiceCollection AddSingleton<TService, TImplementation>() where TService : class where TImplementation : class, TService;
         IServiceCollection AddHttpClient<TClient, TImplementation>(Action<System.Net.Http.HttpClient> configureClient) where TClient : class where TImplementation : class, TClient;
         IServiceCollection AddDbContext<TContext>(Action<Microsoft.EntityFrameworkCore.DbContextOptionsBuilder> optionsAction, ServiceLifetime contextLifetime = ServiceLifetime.Scoped, ServiceLifetime optionsLifetime = ServiceLifetime.Scoped) where TContext : Microsoft.EntityFrameworkCore.DbContext;
@@ -1495,15 +1495,15 @@ public static class DependencyInjection
         // データベース設定 (EF Core)
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-            
+
         // リポジトリ登録 (Scoped lifetime is common for DbContext related services)
         services.AddScoped<ICustomerRepository, CustomerRepository>(); // Assuming CustomerRepository exists
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IProductRepository, ProductRepository>(); // Assuming ProductRepository exists
-        
+
         // ユニットオブワーク
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        
+
         // 外部サービス
         services.AddTransient<IEmailService, SmtpEmailService>(); // Transient or Scoped depending on SmtpEmailService needs
         services.AddHttpClient<IPaymentGateway, StripePaymentGateway>(client =>
@@ -1511,7 +1511,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(configuration["PaymentGateway:BaseUrl"]);
             // Add other HttpClient configurations like headers, timeouts
         });
-        
+
         return services;
     }
 
@@ -1520,17 +1520,17 @@ public static class DependencyInjection
     {
         // MediatR registration (actual registration depends on MediatR version, e.g., using Scrutor for older versions)
         // services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateOrderCommand).Assembly));
-        
+
         // FluentValidation validators
         // services.AddValidatorsFromAssembly(typeof(CreateOrderCommandValidator).Assembly, ServiceLifetime.Transient); // Or Scoped
-        
+
         // MediatR Pipeline Behaviors
         // services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         // services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>)); // Example logging
 
         // Domain Services
-        services.AddScoped<OrderPricingService>(); 
-        services.AddScoped<IDiscountPolicy, DefaultDiscountPolicy>(); 
+        services.AddScoped<OrderPricingService>();
+        services.AddScoped<IDiscountPolicy, DefaultDiscountPolicy>();
 
         // Mappers (e.g. AutoMapper)
         // services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -1556,10 +1556,10 @@ public class CustomerRepository : ICustomerRepository { public CustomerRepositor
 
 ### ユニットテスト
 
-* ビジネスロジックをクラスレベルで単体テスト
-* 外部依存はモックまたはスタブに置き換え
-* テストは隔離された環境で実行可能にする
-* AAA（Arrange-Act-Assert）パターンに従う
+- ビジネスロジックをクラスレベルで単体テスト
+- 外部依存はモックまたはスタブに置き換え
+- テストは隔離された環境で実行可能にする
+- AAA（Arrange-Act-Assert）パターンに従う
 
 ```csharp
 // ユニットテストの例 (xUnit, Moq, FluentAssertions を使用)
@@ -1572,13 +1572,13 @@ namespace Xunit
 }
 namespace Moq
 {
-    public class Mock<T> where T : class 
-    { 
-        public T Object { get; } 
+    public class Mock<T> where T : class
+    {
+        public T Object { get; }
         public Mock() { Object = default(T); } // Simplified
-        public Language.ISetup<T> Setup(System.Linq.Expressions.Expression<Action<T>> expression) { return null; } 
-        public Language.ISetup<T, TResult> Setup<TResult>(System.Linq.Expressions.Expression<Func<T, TResult>> expression) { return null; } 
-        public void Verify(System.Linq.Expressions.Expression<Action<T>> expression, Times times) { } 
+        public Language.ISetup<T> Setup(System.Linq.Expressions.Expression<Action<T>> expression) { return null; }
+        public Language.ISetup<T, TResult> Setup<TResult>(System.Linq.Expressions.Expression<Func<T, TResult>> expression) { return null; }
+        public void Verify(System.Linq.Expressions.Expression<Action<T>> expression, Times times) { }
         public void Verify<TResult>(System.Linq.Expressions.Expression<Func<T, TResult>> expression, Times times) { }
     }
     public enum Times { Once, Never, AtLeastOnce, Exactly(int callCount) }
@@ -1590,8 +1590,8 @@ namespace FluentAssertions
     public static class ObjectAssertionsExtensions { public static Primitives.ObjectAssertions Should(this object actualValue) => new Primitives.ObjectAssertions(actualValue); }
     public static class BooleanAssertionsExtensions { public static Primitives.BooleanAssertions Should(this bool actualValue) => new Primitives.BooleanAssertions(actualValue); }
     public static class GuidAssertionsExtensions { public static Primitives.GuidAssertions Should(this Guid actualValue) => new Primitives.GuidAssertions(actualValue); }
-    namespace Primitives 
-    { 
+    namespace Primitives
+    {
         public class ObjectAssertions { public ObjectAssertions(object value){} public void NotBeNull(string because = "", params object[] becauseArgs) { } public void BeNull(string because = "", params object[] becauseArgs) { } }
         public class BooleanAssertions { public BooleanAssertions(bool value){} public void BeTrue(string because = "", params object[] becauseArgs) { } public void BeFalse(string because = "", params object[] becauseArgs) { } }
         public class GuidAssertions { public GuidAssertions(Guid value){} public void NotBeEmpty(string because = "", params object[] becauseArgs) { } }
@@ -1605,18 +1605,18 @@ public class CreateOrderCommandHandlerTests
     private readonly Mock<IOrderRepository> _orderRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly CreateOrderCommandHandler _handler;
-    
+
     public CreateOrderCommandHandlerTests()
     {
         _orderRepositoryMock = new Mock<IOrderRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        
+
         _handler = new CreateOrderCommandHandler(
             _orderRepositoryMock.Object,
             _unitOfWorkMock.Object
         );
     }
-    
+
     [Xunit.Fact]
     public async Task Handle_WithValidCommand_ShouldCreateOrderAndSaveChanges()
     {
@@ -1629,24 +1629,24 @@ public class CreateOrderCommandHandlerTests
                 new() { ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 10.99m, Currency = "USD" }
             }
         );
-        
+
         _orderRepositoryMock
             .Setup(r => r.AddAsync(Moq.It.IsAny<Order>(), Moq.It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-            
+
         _unitOfWorkMock
             .Setup(u => u.SaveChangesAsync(Moq.It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        
+
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
-        
+
         // Assert
         result.IsSuccess.Should().BeTrue();
-        ((Result<Guid>)result).Value.Should().NotBeEmpty(); 
-        
+        ((Result<Guid>)result).Value.Should().NotBeEmpty();
+
         _orderRepositoryMock.Verify(
-            r => r.AddAsync(Moq.It.Is<Order>(o => 
+            r => r.AddAsync(Moq.It.Is<Order>(o =>
                 o.CustomerId.Value == command.CustomerId &&
                 o.Items.Count == 1 &&
                 o.Items.First().ProductId.Value == command.Items.First().ProductId &&
@@ -1654,13 +1654,13 @@ public class CreateOrderCommandHandlerTests
             ), Moq.It.IsAny<CancellationToken>()),
             Moq.Times.Once()
         );
-        
+
         _unitOfWorkMock.Verify(
             u => u.SaveChangesAsync(Moq.It.IsAny<CancellationToken>()),
             Moq.Times.Once()
         );
     }
-    
+
     [Xunit.Fact]
     public async Task Handle_WhenOrderRepositoryThrowsException_ShouldReturnFailureAndNotSaveChanges()
     {
@@ -1674,16 +1674,16 @@ public class CreateOrderCommandHandlerTests
         _orderRepositoryMock
             .Setup(r => r.AddAsync(Moq.It.IsAny<Order>(), Moq.It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Database error")); // Simulate DB error
-        
+
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
-        
+
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().NotBeNull();
-        result.Error.Code.Should().Be("Order.Creation.Failed"); 
+        result.Error.Code.Should().Be("Order.Creation.Failed");
         result.Error.Message.Should().Contain("Database error");
-        
+
         _unitOfWorkMock.Verify( // SaveChanges should not be called if AddAsync failed
             u => u.SaveChangesAsync(Moq.It.IsAny<CancellationToken>()),
             Moq.Times.Never()
@@ -1694,25 +1694,25 @@ public class CreateOrderCommandHandlerTests
 
 ### 統合テスト
 
-* 複数のコンポーネント間の相互作用をテスト
-* データベースや外部サービスとの連携部分をテスト
-* テスト用のデータベースやモックサービスを使用する
-* アプリケーションの主要なユースケースをカバーする
+- 複数のコンポーネント間の相互作用をテスト
+- データベースや外部サービスとの連携部分をテスト
+- テスト用のデータベースやモックサービスを使用する
+- アプリケーションの主要なユースケースをカバーする
 
 ```csharp
 // 統合テストの例 (ASP.NET Core WebApplicationFactory, Testcontainers を使用した例)
 // Requires Microsoft.AspNetCore.Mvc.Testing, Testcontainers.PostgreSql (or other db)
 
 // --- Stubs for Testcontainers and WebApplicationFactory ---
-namespace Microsoft.AspNetCore.Mvc.Testing 
-{ 
-    public class WebApplicationFactory<TEntryPoint> : IDisposable where TEntryPoint : class 
-    { 
-        public System.Net.Http.HttpClient CreateClient() => new System.Net.Http.HttpClient(); 
-        public IServiceProvider Services => null; 
+namespace Microsoft.AspNetCore.Mvc.Testing
+{
+    public class WebApplicationFactory<TEntryPoint> : IDisposable where TEntryPoint : class
+    {
+        public System.Net.Http.HttpClient CreateClient() => new System.Net.Http.HttpClient();
+        public IServiceProvider Services => null;
         public virtual void Dispose() { }
         protected virtual void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder) { }
-    } 
+    }
 }
 namespace Microsoft.AspNetCore.Hosting { public interface IWebHostBuilder { Microsoft.AspNetCore.Hosting.IWebHostBuilder ConfigureServices(Action<Microsoft.Extensions.DependencyInjection.IServiceCollection> configureServices); Microsoft.AspNetCore.Hosting.IWebHostBuilder UseEnvironment(string environment); } }
 namespace Microsoft.Extensions.DependencyInjection { public static class ServiceCollectionDescriptorExtensions { public static Microsoft.Extensions.DependencyInjection.IServiceCollection RemoveAll<TService>(this Microsoft.Extensions.DependencyInjection.IServiceCollection services) { return services; } } } // Simplified
@@ -1723,7 +1723,7 @@ namespace Xunit { public interface IClassFixture<TFixture> where TFixture : clas
 // --- End Stubs ---
 
 // Assume Program.cs or a similar entry point for the API project
-// public class Program { } 
+// public class Program { }
 
 public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
 {
@@ -1740,8 +1740,8 @@ public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStar
 
     // protected override void ConfigureWebHost(IWebHostBuilder builder)
     // {
-    //     // _dbContainer.StartAsync().GetAwaiter().GetResult(); 
-        
+    //     // _dbContainer.StartAsync().GetAwaiter().GetResult();
+
     //     builder.UseEnvironment("Test"); // Use a specific environment for tests
     //     builder.ConfigureServices(services =>
     //     {
@@ -1752,7 +1752,7 @@ public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStar
     //         // Add ApplicationDbContext using test database connection.
     //         services.AddDbContext<ApplicationDbContext>(options =>
     //         {
-    //             // options.UseNpgsql(_dbContainer.GetConnectionString()); 
+    //             // options.UseNpgsql(_dbContainer.GetConnectionString());
     //             options.UseInMemoryDatabase("TestDb_Integration"); // Easier alternative for some tests
     //         });
 
@@ -1807,9 +1807,9 @@ public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStar
 
 //         var responseString = await response.Content.ReadAsStringAsync();
 //         // Assuming the API returns a simple object with orderId
-//         var createdResponse = System.Text.Json.JsonSerializer.Deserialize<CreateOrderApiResponse>(responseString, 
-//             new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }); 
-        
+//         var createdResponse = System.Text.Json.JsonSerializer.Deserialize<CreateOrderApiResponse>(responseString,
+//             new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
 //         createdResponse.OrderId.Should().NotBeEmpty();
 
 //         // Optionally, verify data in the test database
@@ -1826,10 +1826,10 @@ public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStar
 
 ### エンドツーエンド(E2E)テスト
 
-* ユーザーの視点からシステム全体をテスト
-* UI操作をシミュレート（例: Selenium, Playwright）
-* APIレベルでのE2Eテストも有効
-* 主要なユーザーストーリーや業務フローを検証する
+- ユーザーの視点からシステム全体をテスト
+- UI操作をシミュレート（例: Selenium, Playwright）
+- APIレベルでのE2Eテストも有効
+- 主要なユーザーストーリーや業務フローを検証する
 
 ```csharp
 // E2Eテストの概念 (Playwright を使用した例 - コードは擬似的)
@@ -1844,8 +1844,8 @@ namespace Microsoft.Playwright
     public class BrowserTypeLaunchOptions { public bool Headless { get; set; } public System.Collections.Generic.IList<string> Args { get; set; } }
     public interface IBrowser : IAsyncDisposable { Task<IPage> NewPageAsync(BrowserNewPageOptions options = null); Task CloseAsync(); }
     public class BrowserNewPageOptions { }
-    public interface IPage : IAsyncDisposable 
-    { 
+    public interface IPage : IAsyncDisposable
+    {
         Task GotoAsync(string url, PageGotoOptions options = null);
         Task ClickAsync(string selector, PageClickOptions options = null);
         Task FillAsync(string selector, string value, PageFillOptions options = null);
@@ -1873,8 +1873,8 @@ namespace Microsoft.Playwright
 //     public async Task InitializeAsync()
 //     {
 //         _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
-//         _browser = await _playwright.Chromium.LaunchAsync(new Microsoft.Playwright.BrowserTypeLaunchOptions 
-//         { 
+//         _browser = await _playwright.Chromium.LaunchAsync(new Microsoft.Playwright.BrowserTypeLaunchOptions
+//         {
 //             Headless = true // Set to false to watch the browser
 //             // Args = new[] { "--start-maximized" } // Example argument
 //         });
@@ -1899,7 +1899,7 @@ namespace Microsoft.Playwright
 //     public async Task UserCanPlaceOrderSuccessfully_Scenario()
 //     {
 //         // Arrange: Navigate to the application's home page or product page
-//         await _page.GotoAsync(AppBaseUrl + "/products"); 
+//         await _page.GotoAsync(AppBaseUrl + "/products");
 
 //         // Act: Simulate user actions
 //         // 1. Add item to cart
@@ -1919,7 +1919,7 @@ namespace Microsoft.Playwright
 //         await _page.FillAsync("#shipping-address-line1", "123 E2E Street");
 //         await _page.FillAsync("#shipping-city", "Testville");
 //         // ... fill other required form fields ...
-        
+
 //         // 5. Place order
 //         await _page.ClickAsync("#confirm-order-button");
 
@@ -1939,11 +1939,11 @@ namespace Microsoft.Playwright
 
 ## 全般的なガイドライン
 
-* **コメント**:複雑なロジックや「なぜ」そうしたのかを説明するためにコメントを使用する。「何」をしているかはコードで明確に表現する。
-* **エラー処理**: Resultパターンを優先し、例外は真に予期しない状況のために使用する。エラーメッセージはユーザーフレンドリーかつ開発者にも役立つ情報を含むべき。
-* **非同期処理**: `async/await` を適切に使用し、ブロッキング呼び出しを避ける。`ConfigureAwait(false)` をライブラリコードで使用する。
-* **LINQ**: 可読性を損なわない範囲でLINQを活用する。複雑なクエリはメソッドに分割するか、より明示的なループを使用する。遅延実行に注意する。
-* **セキュリティ**: SQLインジェクション、XSS、CSRFなどの一般的な脆弱性対策を常に意識する。入力検証は必須。機密情報は適切に保護する。
-* **コードレビュー**: すべてのコードはマージ前にチームメンバーによるレビューを受けるべき。建設的なフィードバックを奨励する文化を育む。
-* **静的解析**: StyleCop、Roslyn Analyzerなどの静的解析ツールを導入し、早期に問題を検出する。
-* **ログ**: 構造化ログ（Serilogなど）を使用し、診断やデバッグに役立つ情報を記録する。個人情報や機密情報のログ記録には注意する。
+- **コメント**:複雑なロジックや「なぜ」そうしたのかを説明するためにコメントを使用する。「何」をしているかはコードで明確に表現する。
+- **エラー処理**: Resultパターンを優先し、例外は真に予期しない状況のために使用する。エラーメッセージはユーザーフレンドリーかつ開発者にも役立つ情報を含むべき。
+- **非同期処理**: `async/await` を適切に使用し、ブロッキング呼び出しを避ける。`ConfigureAwait(false)` をライブラリコードで使用する。
+- **LINQ**: 可読性を損なわない範囲でLINQを活用する。複雑なクエリはメソッドに分割するか、より明示的なループを使用する。遅延実行に注意する。
+- **セキュリティ**: SQLインジェクション、XSS、CSRFなどの一般的な脆弱性対策を常に意識する。入力検証は必須。機密情報は適切に保護する。
+- **コードレビュー**: すべてのコードはマージ前にチームメンバーによるレビューを受けるべき。建設的なフィードバックを奨励する文化を育む。
+- **静的解析**: StyleCop、Roslyn Analyzerなどの静的解析ツールを導入し、早期に問題を検出する。
+- **ログ**: 構造化ログ（Serilogなど）を使用し、診断やデバッグに役立つ情報を記録する。個人情報や機密情報のログ記録には注意する。

@@ -16,14 +16,14 @@ const serializers = {
     remoteAddress: req.ip,
     userId: req.user?.id,
   }),
-  
+
   res: (res: any) => ({
     statusCode: res.statusCode,
     headers: res.getHeaders(),
   }),
-  
+
   err: pino.stdSerializers.err,
-  
+
   user: (user: any) => ({
     id: user.id,
     email: user.email,
@@ -66,9 +66,7 @@ const developmentOptions: pino.LoggerOptions = {
 };
 
 // ロガーの作成
-export const logger = pino(
-  isProduction() ? productionOptions : developmentOptions
-);
+export const logger = pino(isProduction() ? productionOptions : developmentOptions);
 
 // 子ロガーの作成
 export function createLogger(context: string) {

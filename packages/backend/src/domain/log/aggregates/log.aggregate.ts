@@ -66,18 +66,15 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
   /**
    * ログ集約を作成
    */
-  public static create(
-    retentionDays?: number,
-    id?: LogId
-  ): Result<LogAggregate, DomainError> {
+  public static create(retentionDays?: number, id?: LogId): Result<LogAggregate, DomainError> {
     const days = retentionDays !== undefined ? retentionDays : this.DEFAULT_RETENTION_DAYS;
-    
+
     if (days < 1 || days > 365) {
       return Result.fail(
         DomainError.validation(
           'INVALID_RETENTION_DAYS',
-          'Retention days must be between 1 and 365'
-        )
+          'Retention days must be between 1 and 365',
+        ),
       );
     }
 
@@ -87,7 +84,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
         authLogs: [],
         retentionDays: retentionDays || this.DEFAULT_RETENTION_DAYS,
       },
-      id || LogId.generate()
+      id || LogId.generate(),
     );
 
     return Result.ok(aggregate);
@@ -101,15 +98,15 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     endpoint: Endpoint,
     requestInfo: RequestInfo,
     responseInfo: ResponseInfo,
-    error?: string
+    error?: string,
   ): Result<void, DomainError> {
     // ログ数の上限チェック
     if (this.props.apiLogs.length >= LogAggregate.MAX_LOGS_PER_TYPE) {
       return Result.fail(
         DomainError.businessRule(
           'API_LOG_LIMIT_EXCEEDED',
-          `API log limit of ${LogAggregate.MAX_LOGS_PER_TYPE} exceeded`
-        )
+          `API log limit of ${LogAggregate.MAX_LOGS_PER_TYPE} exceeded`,
+        ),
       );
     }
 
@@ -139,8 +136,8 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
         responseInfo.statusCode,
         responseInfo.responseTime,
         requestInfo.ipAddress,
-        new Date()
-      )
+        new Date(),
+      ),
     );
 
     // パフォーマンス問題の検出
@@ -150,8 +147,8 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
           endpoint.path.value,
           responseInfo.responseTime,
           'SLOW_RESPONSE',
-          new Date()
-        )
+          new Date(),
+        ),
       );
     }
 
@@ -169,15 +166,15 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     result: AuthResult,
     userId?: UserId,
     errorMessage?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): Result<void, DomainError> {
     // ログ数の上限チェック
     if (this.props.authLogs.length >= LogAggregate.MAX_LOGS_PER_TYPE) {
       return Result.fail(
         DomainError.businessRule(
           'AUTH_LOG_LIMIT_EXCEEDED',
-          `Auth log limit of ${LogAggregate.MAX_LOGS_PER_TYPE} exceeded`
-        )
+          `Auth log limit of ${LogAggregate.MAX_LOGS_PER_TYPE} exceeded`,
+        ),
       );
     }
 
@@ -209,8 +206,8 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
         provider.value,
         result,
         ipAddress.value,
-        new Date()
-      )
+        new Date(),
+      ),
     );
 
     // セキュリティアラートの検出
@@ -227,8 +224,8 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
             result,
             errorMessage,
           },
-          new Date()
-        )
+          new Date(),
+        ),
       );
     }
 
@@ -245,8 +242,8 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
               failureCount: recentFailures.length,
               timeWindow: '5_minutes',
             },
-            new Date()
-          )
+            new Date(),
+          ),
         );
       }
     }
@@ -266,16 +263,17 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
 
     // APIログのクリーンアップ
     this.props.apiLogs = this.props.apiLogs.filter(
-      log => log.timestamp.getTime() >= cutoffDate.getTime()
+      (log) => log.timestamp.getTime() >= cutoffDate.getTime(),
     );
 
     // 認証ログのクリーンアップ
     this.props.authLogs = this.props.authLogs.filter(
-      log => log.timestamp.getTime() >= cutoffDate.getTime()
+      (log) => log.timestamp.getTime() >= cutoffDate.getTime(),
     );
 
-    const removedCount = 
-      (initialApiLogCount - this.props.apiLogs.length) +
+    const removedCount =
+      initialApiLogCount -
+      this.props.apiLogs.length +
       (initialAuthLogCount - this.props.authLogs.length);
 
     this.props.lastCleanedAt = new Date();
@@ -293,14 +291,12 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     averageResponseTime: number;
     endpointUsage: Map<string, number>;
   } {
-    const userLogs = this.props.apiLogs.filter(
-      log => log.userId && log.userId.equals(userId)
-    );
+    const userLogs = this.props.apiLogs.filter((log) => log.userId && log.userId.equals(userId));
 
     const stats = {
       totalRequests: userLogs.length,
-      successfulRequests: userLogs.filter(log => log.isSuccess).length,
-      failedRequests: userLogs.filter(log => log.isError).length,
+      successfulRequests: userLogs.filter((log) => log.isSuccess).length,
+      failedRequests: userLogs.filter((log) => log.isError).length,
       averageResponseTime: 0,
       endpointUsage: new Map<string, number>(),
     };
@@ -308,17 +304,14 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     if (userLogs.length > 0) {
       const totalResponseTime = userLogs.reduce(
         (sum, log) => sum + log.responseInfo.responseTime,
-        0
+        0,
       );
       stats.averageResponseTime = totalResponseTime / userLogs.length;
 
       // エンドポイント使用統計
-      userLogs.forEach(log => {
+      userLogs.forEach((log) => {
         const path = log.endpoint.path.value;
-        stats.endpointUsage.set(
-          path,
-          (stats.endpointUsage.get(path) || 0) + 1
-        );
+        stats.endpointUsage.set(path, (stats.endpointUsage.get(path) || 0) + 1);
       });
     }
 
@@ -328,12 +321,9 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
   /**
    * ユーザーの認証履歴を取得
    */
-  public getUserAuthHistory(
-    userId: UserId,
-    limit: number = 10
-  ): AuthLogEntry[] {
+  public getUserAuthHistory(userId: UserId, limit: number = 10): AuthLogEntry[] {
     return this.props.authLogs
-      .filter(log => log.userId && log.userId.equals(userId))
+      .filter((log) => log.userId && log.userId.equals(userId))
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
   }
@@ -341,17 +331,14 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
   /**
    * IPアドレスの最近の認証失敗を取得
    */
-  private getRecentAuthFailures(
-    ipAddress: IPAddress,
-    timeWindowMs: number
-  ): AuthLogEntry[] {
+  private getRecentAuthFailures(ipAddress: IPAddress, timeWindowMs: number): AuthLogEntry[] {
     const cutoffTime = Date.now() - timeWindowMs;
-    
+
     return this.props.authLogs.filter(
-      log =>
+      (log) =>
         log.ipAddress.equals(ipAddress) &&
         log.result === AuthResult.FAILED &&
-        log.timestamp.getTime() >= cutoffTime
+        log.timestamp.getTime() >= cutoffTime,
     );
   }
 
@@ -365,9 +352,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     p99ResponseTime: number;
     errorRate: number;
   } {
-    const logs = this.props.apiLogs.filter(
-      log => log.endpoint.path.value === endpoint
-    );
+    const logs = this.props.apiLogs.filter((log) => log.endpoint.path.value === endpoint);
 
     if (logs.length === 0) {
       return {
@@ -379,12 +364,10 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
       };
     }
 
-    const responseTimes = logs
-      .map(log => log.responseInfo.responseTime)
-      .sort((a, b) => a - b);
+    const responseTimes = logs.map((log) => log.responseInfo.responseTime).sort((a, b) => a - b);
 
     const totalResponseTime = responseTimes.reduce((sum, time) => sum + time, 0);
-    const errorCount = logs.filter(log => log.isError).length;
+    const errorCount = logs.filter((log) => log.isError).length;
 
     return {
       requestCount: logs.length,
@@ -416,14 +399,14 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
   } {
     const cutoffTime = Date.now() - timeWindowMs;
     const recentAuthLogs = this.props.authLogs.filter(
-      log => log.timestamp.getTime() >= cutoffTime
+      (log) => log.timestamp.getTime() >= cutoffTime,
     );
 
     const summary = {
       totalAuthAttempts: recentAuthLogs.length,
-      successfulAuths: recentAuthLogs.filter(log => log.result === AuthResult.SUCCESS).length,
-      failedAuths: recentAuthLogs.filter(log => log.result === AuthResult.FAILED).length,
-      blockedAuths: recentAuthLogs.filter(log => log.result === AuthResult.BLOCKED).length,
+      successfulAuths: recentAuthLogs.filter((log) => log.result === AuthResult.SUCCESS).length,
+      failedAuths: recentAuthLogs.filter((log) => log.result === AuthResult.FAILED).length,
+      blockedAuths: recentAuthLogs.filter((log) => log.result === AuthResult.BLOCKED).length,
       suspiciousIPs: [] as string[],
       topFailureReasons: new Map<string, number>(),
     };
@@ -431,16 +414,16 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     // 疑わしいIPアドレスの特定
     const ipFailureCounts = new Map<string, number>();
     recentAuthLogs
-      .filter(log => log.result === AuthResult.FAILED)
-      .forEach(log => {
+      .filter((log) => log.result === AuthResult.FAILED)
+      .forEach((log) => {
         const ip = log.ipAddress.value;
         ipFailureCounts.set(ip, (ipFailureCounts.get(ip) || 0) + 1);
-        
+
         // 失敗理由の集計
         if (log.errorMessage) {
           summary.topFailureReasons.set(
             log.errorMessage,
-            (summary.topFailureReasons.get(log.errorMessage) || 0) + 1
+            (summary.topFailureReasons.get(log.errorMessage) || 0) + 1,
           );
         }
       });
@@ -461,14 +444,14 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     apiLogs: APILogEntry[],
     authLogs: AuthLogEntry[],
     retentionDays: number,
-    lastCleanedAt?: Date
+    lastCleanedAt?: Date,
   ): Result<LogAggregate, DomainError> {
     if (retentionDays < 1 || retentionDays > 365) {
       return Result.fail(
         DomainError.validation(
           'INVALID_RETENTION_DAYS',
-          'Retention days must be between 1 and 365'
-        )
+          'Retention days must be between 1 and 365',
+        ),
       );
     }
 
@@ -479,7 +462,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
         retentionDays,
         lastCleanedAt,
       },
-      id
+      id,
     );
 
     return Result.ok(aggregate);

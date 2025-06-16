@@ -13,23 +13,36 @@ export interface IDataRetrievalUseCase {
    * @param user 認証済みユーザー
    * @returns データ内容とメタデータ
    */
-  retrieveData(path: string, user: AuthenticatedUser): Promise<Result<{
-    content: any;
-    checksum: string;
-    lastModified: Date;
-  }, DomainError>>;
+  retrieveData(
+    path: string,
+    user: AuthenticatedUser,
+  ): Promise<
+    Result<
+      {
+        content: any;
+        checksum: string;
+        lastModified: Date;
+      },
+      DomainError
+    >
+  >;
 
   /**
    * 指定されたパスのデータメタデータを取得
    * @param path データパス
    * @returns データのメタデータ（サイズ、更新日時、ETag等）
    */
-  retrieveMetadata(path: string): Promise<Result<{
-    size: number;
-    lastModified: Date;
-    etag: string;
-    contentType: string;
-  }, DomainError>>;
+  retrieveMetadata(path: string): Promise<
+    Result<
+      {
+        size: number;
+        lastModified: Date;
+        etag: string;
+        contentType: string;
+      },
+      DomainError
+    >
+  >;
 
   /**
    * 条件付きデータ取得（ETagベース）
@@ -37,11 +50,19 @@ export interface IDataRetrievalUseCase {
    * @param etag クライアントが持つETag
    * @returns データ内容またはNot Modified
    */
-  retrieveDataWithETag(path: string, etag: string): Promise<Result<{
-    data?: any;
-    notModified: boolean;
-    newEtag?: string;
-  }, DomainError>>;
+  retrieveDataWithETag(
+    path: string,
+    etag: string,
+  ): Promise<
+    Result<
+      {
+        data?: any;
+        notModified: boolean;
+        newEtag?: string;
+      },
+      DomainError
+    >
+  >;
 
   /**
    * 条件付きデータ取得（Last-Modifiedベース）
@@ -49,9 +70,17 @@ export interface IDataRetrievalUseCase {
    * @param ifModifiedSince クライアントが持つ最終更新日時
    * @returns データ内容またはNot Modified
    */
-  retrieveDataIfModified(path: string, ifModifiedSince: Date): Promise<Result<{
-    data?: any;
-    notModified: boolean;
-    lastModified?: Date;
-  }, DomainError>>;
+  retrieveDataIfModified(
+    path: string,
+    ifModifiedSince: Date,
+  ): Promise<
+    Result<
+      {
+        data?: any;
+        notModified: boolean;
+        lastModified?: Date;
+      },
+      DomainError
+    >
+  >;
 }

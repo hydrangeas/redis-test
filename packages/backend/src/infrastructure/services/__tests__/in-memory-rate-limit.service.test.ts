@@ -14,15 +14,16 @@ describe('InMemoryRateLimitService', () => {
 
   const createMockUser = (tier: string = 'TIER1', userIdValue?: string): AuthenticatedUser => {
     // Generate unique UUID if not provided
-    const id = userIdValue || `550e8400-e29b-41d4-a716-${Math.random().toString(16).substring(2, 14)}`;
+    const id =
+      userIdValue || `550e8400-e29b-41d4-a716-${Math.random().toString(16).substring(2, 14)}`;
     const userIdResult = UserId.create(id);
     if (userIdResult.isFailure) throw new Error('Invalid user ID');
     const userId = userIdResult.getValue();
-    
+
     const userTierResult = UserTier.create(tier.toUpperCase() as any);
     if (userTierResult.isFailure) throw new Error(`Invalid tier: ${tier}`);
     const userTier = userTierResult.getValue();
-    
+
     return new AuthenticatedUser(userId, userTier);
   };
 
@@ -65,7 +66,7 @@ describe('InMemoryRateLimitService', () => {
 
       // First check
       await service.checkLimit(user, endpoint);
-      
+
       // Record usage
       await service.recordUsage(user, endpoint);
 
@@ -101,8 +102,8 @@ describe('InMemoryRateLimitService', () => {
       await service.recordUsage(user, endpoint);
 
       // Wait a bit and check - should still count previous requests
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       let result = await service.checkLimit(user, endpoint);
       expect(result.remaining).toBe(58);
 

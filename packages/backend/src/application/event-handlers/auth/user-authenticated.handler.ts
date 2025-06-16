@@ -22,34 +22,43 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: UserAuthenticated): Promise<void> {
     try {
-      this.logger.info({
-        eventId: event.eventId,
-        userId: event.userId,
-        provider: event.provider,
-        tier: event.tier,
-      }, 'Handling UserAuthenticated event');
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          userId: event.userId,
+          provider: event.provider,
+          tier: event.tier,
+        },
+        'Handling UserAuthenticated event',
+      );
 
       // Value Objectsの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: userIdResult.error,
-        }, 'Invalid userId in UserAuthenticated event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: userIdResult.error,
+          },
+          'Invalid userId in UserAuthenticated event',
+        );
         return;
       }
 
       const providerResult = Provider.create(event.provider);
       if (providerResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: providerResult.error,
-        }, 'Invalid provider in UserAuthenticated event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: providerResult.error,
+          },
+          'Invalid provider in UserAuthenticated event',
+        );
         return;
       }
 
@@ -60,11 +69,14 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
         if (ipResult.isSuccess) {
           ipAddress = ipResult.getValue();
         } else {
-          this.logger.warn({
-            eventId: event.eventId,
-            ipAddress: event.ipAddress,
-            error: ipResult.error,
-          }, 'Invalid IP address in UserAuthenticated event');
+          this.logger.warn(
+            {
+              eventId: event.eventId,
+              ipAddress: event.ipAddress,
+              error: ipResult.error,
+            },
+            'Invalid IP address in UserAuthenticated event',
+          );
         }
       }
 
@@ -75,11 +87,14 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
         if (uaResult.isSuccess) {
           userAgent = uaResult.getValue();
         } else {
-          this.logger.warn({
-            eventId: event.eventId,
-            userAgent: event.userAgent,
-            error: uaResult.error,
-          }, 'Invalid user agent in UserAuthenticated event');
+          this.logger.warn(
+            {
+              eventId: event.eventId,
+              userAgent: event.userAgent,
+              error: uaResult.error,
+            },
+            'Invalid user agent in UserAuthenticated event',
+          );
         }
       }
 
@@ -100,34 +115,45 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: logEntryResult.error,
-        }, 'Failed to create AuthLogEntry');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: logEntryResult.error,
+          },
+          'Failed to create AuthLogEntry',
+        );
         return;
       }
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure()) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: saveResult.error,
-        }, 'Failed to save auth log');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: saveResult.error,
+          },
+          'Failed to save auth log',
+        );
         return;
       }
 
-      this.logger.info({
-        eventId: event.eventId,
-        logId: logEntryResult.getValue().id.value,
-      }, 'UserAuthenticated event handled successfully');
-
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          logId: logEntryResult.getValue().id.value,
+        },
+        'UserAuthenticated event handled successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        eventId: event.eventId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Error handling UserAuthenticated event');
+      this.logger.error(
+        {
+          eventId: event.eventId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Error handling UserAuthenticated event',
+      );
       throw error;
     }
   }

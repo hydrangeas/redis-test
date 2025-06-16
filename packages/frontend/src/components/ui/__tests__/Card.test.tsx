@@ -21,15 +21,21 @@ describe("Card", () => {
     expect(screen.getByText("Small padding").parentElement).toHaveClass("p-3");
 
     rerender(<Card padding="large">Large padding</Card>);
-    expect(screen.getByText("Large padding").parentElement).toHaveClass("p-6 md:p-8");
+    expect(screen.getByText("Large padding").parentElement).toHaveClass(
+      "p-6 md:p-8"
+    );
   });
 
   it("renders with different shadow sizes", () => {
     const { rerender } = render(<Card shadow="small">Small shadow</Card>);
-    expect(screen.getByText("Small shadow").parentElement).toHaveClass("shadow-sm");
+    expect(screen.getByText("Small shadow").parentElement).toHaveClass(
+      "shadow-sm"
+    );
 
     rerender(<Card shadow="large">Large shadow</Card>);
-    expect(screen.getByText("Large shadow").parentElement).toHaveClass("shadow-lg");
+    expect(screen.getByText("Large shadow").parentElement).toHaveClass(
+      "shadow-lg"
+    );
   });
 
   it("renders with hover effect", () => {
@@ -63,14 +69,14 @@ describe("Card", () => {
         <CardTitle>Title</CardTitle>
       </CardHeader>
     );
-    
+
     const header = screen.getByText("Title").parentElement;
     expect(header).toHaveClass("pb-4 border-b border-gray-200");
   });
 
   it("CardTitle renders as h3 with proper styling", () => {
     render(<CardTitle>Title Text</CardTitle>);
-    
+
     const title = screen.getByText("Title Text");
     expect(title.tagName).toBe("H3");
     expect(title).toHaveClass("text-lg font-semibold text-gray-900");
@@ -78,7 +84,7 @@ describe("Card", () => {
 
   it("CardDescription renders as paragraph with proper styling", () => {
     render(<CardDescription>Description text</CardDescription>);
-    
+
     const description = screen.getByText("Description text");
     expect(description.tagName).toBe("P");
     expect(description).toHaveClass("mt-1 text-sm text-gray-600");
@@ -91,7 +97,7 @@ describe("Card", () => {
 
   it("CardFooter has proper styling", () => {
     render(<CardFooter>Footer</CardFooter>);
-    
+
     const footer = screen.getByText("Footer").parentElement;
     expect(footer).toHaveClass("pt-4 mt-4 border-t border-gray-200");
   });
@@ -108,11 +114,19 @@ describe("Card", () => {
       </Card>
     );
 
-    expect(screen.getByText("Title").closest(".custom-card")).toBeInTheDocument();
-    expect(screen.getByText("Title").closest(".custom-header")).toBeInTheDocument();
+    expect(
+      screen.getByText("Title").closest(".custom-card")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Title").closest(".custom-header")
+    ).toBeInTheDocument();
     expect(screen.getByText("Title")).toHaveClass("custom-title");
     expect(screen.getByText("Desc")).toHaveClass("custom-desc");
-    expect(screen.getByText("Content").parentElement).toHaveClass("custom-content");
-    expect(screen.getByText("Footer").parentElement).toHaveClass("custom-footer");
+    expect(screen.getByText("Content").parentElement).toHaveClass(
+      "custom-content"
+    );
+    expect(screen.getByText("Footer").parentElement).toHaveClass(
+      "custom-footer"
+    );
   });
 });

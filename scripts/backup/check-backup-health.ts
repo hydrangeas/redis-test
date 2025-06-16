@@ -30,7 +30,7 @@ const CONFIG = {
   region: process.env.AWS_REGION || 'ap-northeast-1',
   backupTypes: ['daily', 'weekly', 'monthly'] as const,
   expectedIntervals: {
-    daily: 24 * 60 * 60 * 1000,      // 24 hours
+    daily: 24 * 60 * 60 * 1000, // 24 hours
     weekly: 7 * 24 * 60 * 60 * 1000, // 7 days
     monthly: 30 * 24 * 60 * 60 * 1000, // 30 days
   },
@@ -59,7 +59,7 @@ export async function checkBackupHealth(): Promise<BackupStatus[]> {
 
       // Find the latest backup by looking for metadata files
       const metadataFiles = backups
-        .filter(obj => obj.Key?.endsWith('metadata.json'))
+        .filter((obj) => obj.Key?.endsWith('metadata.json'))
         .sort((a, b) => (b.LastModified?.getTime() || 0) - (a.LastModified?.getTime() || 0));
 
       if (metadataFiles.length === 0) {
@@ -111,7 +111,6 @@ export async function checkBackupHealth(): Promise<BackupStatus[]> {
         size: metadata?.backup_size,
         fileCount: metadata?.files.length,
       });
-
     } catch (error: any) {
       logger.error(`Failed to check ${type} backup health`, error);
       results.push({
@@ -156,16 +155,16 @@ async function main() {
 
   try {
     const results = await checkBackupHealth();
-    
+
     // Display results
     let allHealthy = true;
     for (const result of results) {
       const status = result.isHealthy ? '✓' : '✗';
       const color = result.isHealthy ? '\x1b[32m' : '\x1b[31m'; // Green or Red
       const reset = '\x1b[0m';
-      
+
       console.log(`${color}${status}${reset} ${result.type.padEnd(10)} - ${result.message}`);
-      
+
       if (result.size) {
         console.log(`  Size: ${result.size}, Files: ${result.fileCount}`);
       }
@@ -173,7 +172,7 @@ async function main() {
         console.log(`  Last backup: ${result.lastBackup.toISOString()}`);
       }
       console.log();
-      
+
       if (!result.isHealthy) {
         allHealthy = false;
       }
@@ -186,7 +185,6 @@ async function main() {
 
     // Exit with appropriate code
     process.exit(allHealthy ? 0 : 1);
-
   } catch (error) {
     console.error('Backup health check failed:', error);
     process.exit(2);

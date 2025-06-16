@@ -13,7 +13,7 @@ export class DataRetrieved extends DomainEvent {
     public readonly resourceSize: number,
     public readonly mimeType: string,
     public readonly cached: boolean,
-    public readonly responseTime: number // milliseconds
+    public readonly responseTime: number, // milliseconds
   ) {
     super(aggregateId, eventVersion);
     Object.freeze(this);

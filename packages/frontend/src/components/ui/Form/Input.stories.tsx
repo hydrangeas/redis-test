@@ -157,11 +157,17 @@ export const WithPrefixAndSuffix: Story = {
   decorators: [
     (Story) => (
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Price
+        </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+            $
+          </span>
           <Story />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">USD</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+            USD
+          </span>
         </div>
       </div>
     ),

@@ -19,11 +19,7 @@ export class APILogId extends ValueObject<APILogIdProps> {
   public static create(id: string): Result<APILogId> {
     if (!id || id.trim().length === 0) {
       return Result.fail(
-        new DomainError(
-          'INVALID_API_LOG_ID',
-          'API Log ID cannot be empty',
-          ErrorType.VALIDATION
-        )
+        new DomainError('INVALID_API_LOG_ID', 'API Log ID cannot be empty', ErrorType.VALIDATION),
       );
     }
 

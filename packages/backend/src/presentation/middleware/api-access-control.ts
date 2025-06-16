@@ -14,10 +14,10 @@ import { createProblemDetails } from '../errors/error-mapper';
  */
 export async function apiAccessControlMiddleware(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ): Promise<void> {
   const apiAccessControlUseCase = container.resolve<IAPIAccessControlUseCase>(
-    DI_TOKENS.APIAccessControlUseCase
+    DI_TOKENS.APIAccessControlUseCase,
   );
 
   // ユーザー情報の取得（認証ミドルウェアで設定されたもの）
@@ -28,7 +28,7 @@ export async function apiAccessControlMiddleware(
       title: 'Unauthorized',
       status: 401,
       detail: 'Authentication required',
-      instance: request.url
+      instance: request.url,
     });
     return reply.code(401).send(problemDetails);
   }
@@ -41,7 +41,7 @@ export async function apiAccessControlMiddleware(
       title: 'Internal Server Error',
       status: 500,
       detail: 'Invalid user ID format',
-      instance: request.url
+      instance: request.url,
     });
     return reply.code(500).send(problemDetails);
   }
@@ -49,10 +49,10 @@ export async function apiAccessControlMiddleware(
   // ティア情報の取得（デフォルトはtier1）
   const tierLevel = user.tier || 'tier1';
   const rateLimitConfig = getRateLimitForTier(tierLevel);
-  
+
   const tierResult = UserTier.create({
     level: tierLevel,
-    rateLimit: new RateLimit(rateLimitConfig.limit, rateLimitConfig.window)
+    rateLimit: new RateLimit(rateLimitConfig.limit, rateLimitConfig.window),
   });
 
   if (tierResult.isFailure) {
@@ -61,7 +61,7 @@ export async function apiAccessControlMiddleware(
       title: 'Internal Server Error',
       status: 500,
       detail: 'Invalid tier configuration',
-      instance: request.url
+      instance: request.url,
     });
     return reply.code(500).send(problemDetails);
   }
@@ -70,7 +70,7 @@ export async function apiAccessControlMiddleware(
     id: userIdResult.getValue(),
     email: user.email || '',
     tier: tierResult.getValue(),
-    provider: user.provider || 'unknown'
+    provider: user.provider || 'unknown',
   });
 
   if (authenticatedUserResult.isFailure) {
@@ -79,7 +79,7 @@ export async function apiAccessControlMiddleware(
       title: 'Internal Server Error',
       status: 500,
       detail: 'Failed to create authenticated user',
-      instance: request.url
+      instance: request.url,
     });
     return reply.code(500).send(problemDetails);
   }
@@ -90,30 +90,33 @@ export async function apiAccessControlMiddleware(
   const metadata = {
     ipAddress: request.ip,
     userAgent: request.headers['user-agent'],
-    correlationId: request.id
+    correlationId: request.id,
   };
 
   const accessResult = await apiAccessControlUseCase.checkAndRecordAccess(
     authenticatedUserResult.getValue(),
     endpoint,
     method,
-    metadata
+    metadata,
   );
 
   if (accessResult.isFailure) {
-    request.log.error({
-      error: accessResult.error,
-      userId: user.sub,
-      endpoint,
-      method
-    }, 'API access control check failed');
+    request.log.error(
+      {
+        error: accessResult.error,
+        userId: user.sub,
+        endpoint,
+        method,
+      },
+      'API access control check failed',
+    );
 
     const problemDetails = createProblemDetails({
       type: 'internal_error',
       title: 'Internal Server Error',
       status: 500,
       detail: 'Failed to check access permissions',
-      instance: request.url
+      instance: request.url,
     });
     return reply.code(500).send(problemDetails);
   }
@@ -127,7 +130,10 @@ export async function apiAccessControlMiddleware(
         // レート制限ヘッダーの設定
         if (decision.rateLimitStatus) {
           reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
-          reply.header('X-RateLimit-Remaining', decision.rateLimitStatus.remainingRequests.toString());
+          reply.header(
+            'X-RateLimit-Remaining',
+            decision.rateLimitStatus.remainingRequests.toString(),
+          );
           reply.header('X-RateLimit-Reset', decision.rateLimitStatus.windowEnd.toISOString());
           if (decision.rateLimitStatus.retryAfter) {
             reply.header('Retry-After', decision.rateLimitStatus.retryAfter.toString());
@@ -139,7 +145,7 @@ export async function apiAccessControlMiddleware(
           title: 'Too Many Requests',
           status: 429,
           detail: decision.message || 'Rate limit exceeded',
-          instance: request.url
+          instance: request.url,
         });
         return reply.code(429).send(rateLimitDetails);
 
@@ -149,7 +155,7 @@ export async function apiAccessControlMiddleware(
           title: 'Forbidden',
           status: 403,
           detail: decision.message || 'Access to this resource is forbidden',
-          instance: request.url
+          instance: request.url,
         });
         return reply.code(403).send(unauthorizedDetails);
 
@@ -159,7 +165,7 @@ export async function apiAccessControlMiddleware(
           title: 'Not Found',
           status: 404,
           detail: decision.message || 'Endpoint not found',
-          instance: request.url
+          instance: request.url,
         });
         return reply.code(404).send(notFoundDetails);
 
@@ -169,7 +175,7 @@ export async function apiAccessControlMiddleware(
           title: 'Forbidden',
           status: 403,
           detail: 'Access denied',
-          instance: request.url
+          instance: request.url,
         });
         return reply.code(403).send(genericDetails);
     }
@@ -193,7 +199,7 @@ function getRateLimitForTier(tier: string): { limit: number; window: number } {
   const config = {
     tier1: { limit: 60, window: 60 },
     tier2: { limit: 120, window: 60 },
-    tier3: { limit: 300, window: 60 }
+    tier3: { limit: 300, window: 60 },
   };
 
   return config[tier as keyof typeof config] || config.tier1;
@@ -204,10 +210,10 @@ function getRateLimitForTier(tier: string): { limit: number; window: number } {
  */
 export async function publicAccessLoggingMiddleware(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ): Promise<void> {
   const apiAccessControlUseCase = container.resolve<IAPIAccessControlUseCase>(
-    DI_TOKENS.APIAccessControlUseCase
+    DI_TOKENS.APIAccessControlUseCase,
   );
 
   const endpoint = request.url.split('?')[0];
@@ -215,7 +221,7 @@ export async function publicAccessLoggingMiddleware(
   const metadata = {
     ipAddress: request.ip,
     userAgent: request.headers['user-agent'],
-    correlationId: request.id
+    correlationId: request.id,
   };
 
   // 公開エンドポイントへのアクセスを記録（エラーは無視）

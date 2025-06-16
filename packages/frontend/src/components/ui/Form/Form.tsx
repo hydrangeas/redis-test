@@ -62,7 +62,8 @@ export const FormLabel: React.FC<FormLabelProps> = ({
   );
 };
 
-interface FormHelperTextProps extends React.HTMLAttributes<HTMLParagraphElement> {
+interface FormHelperTextProps
+  extends React.HTMLAttributes<HTMLParagraphElement> {
   error?: boolean;
 }
 
@@ -94,7 +95,7 @@ export const FormError: React.FC<FormErrorProps> = ({
   ...props
 }) => {
   if (!children) return null;
-  
+
   return (
     <p
       className={cn("text-sm text-red-600", className)}

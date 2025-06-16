@@ -11,7 +11,7 @@ export class DatabaseSeeder {
     @inject(DI_TOKENS.SupabaseClient)
     private readonly supabase: SupabaseClient,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async seed(): Promise<void> {
@@ -62,7 +62,7 @@ export class DatabaseSeeder {
     // テストユーザーの削除（email が example.com で終わるもののみ）
     const { data: users } = await this.supabase.auth.admin.listUsers();
     if (users?.users) {
-      const testUsers = users.users.filter(user => user.email?.endsWith('@example.com'));
+      const testUsers = users.users.filter((user) => user.email?.endsWith('@example.com'));
       for (const user of testUsers) {
         const { error } = await this.supabase.auth.admin.deleteUser(user.id);
         if (error) {
@@ -133,7 +133,7 @@ export class DatabaseSeeder {
     const { data: users } = await this.supabase.auth.admin.listUsers();
     if (!users?.users) return;
 
-    const testUsers = users.users.filter(user => user.email?.endsWith('@example.com'));
+    const testUsers = users.users.filter((user) => user.email?.endsWith('@example.com'));
 
     for (const user of testUsers) {
       // 既存のAPIキーを確認
@@ -148,23 +148,24 @@ export class DatabaseSeeder {
       }
 
       const apiKey = this.generateApiKey();
-      
-      const { error } = await this.supabase
-        .from('api_keys')
-        .insert({
-          user_id: user.id,
-          key_hash: await this.hashApiKey(apiKey),
-          key_prefix: apiKey.substring(0, 8),
-          last_used_at: faker.date.recent({ days: 7 }),
-          created_at: faker.date.past({ years: 1 }),
-        });
+
+      const { error } = await this.supabase.from('api_keys').insert({
+        user_id: user.id,
+        key_hash: await this.hashApiKey(apiKey),
+        key_prefix: apiKey.substring(0, 8),
+        last_used_at: faker.date.recent({ days: 7 }),
+        created_at: faker.date.past({ years: 1 }),
+      });
 
       if (!error) {
-        this.logger.info({ 
-          userId: user.id, 
-          email: user.email,
-          apiKey // 開発環境のみログ出力
-        }, 'API key created');
+        this.logger.info(
+          {
+            userId: user.id,
+            email: user.email,
+            apiKey, // 開発環境のみログ出力
+          },
+          'API key created',
+        );
       } else {
         this.logger.error({ error, userId: user.id }, 'Failed to create API key');
       }
@@ -177,7 +178,7 @@ export class DatabaseSeeder {
     const { data: users } = await this.supabase.auth.admin.listUsers();
     if (!users?.users) return;
 
-    const testUsers = users.users.filter(user => user.email?.endsWith('@example.com'));
+    const testUsers = users.users.filter((user) => user.email?.endsWith('@example.com'));
     const endpoints = ['/secure/population/2024.json', '/secure/statistics/budget.json'];
     const now = new Date();
 
@@ -188,14 +189,12 @@ export class DatabaseSeeder {
         const requestCount = faker.number.int({ min: 0, max: 10 });
 
         if (requestCount > 0) {
-          const { error } = await this.supabase
-            .from('rate_limit_logs')
-            .insert({
-              user_id: user.id,
-              endpoint: faker.helpers.arrayElement(endpoints),
-              window_start: timestamp.toISOString(),
-              request_count: requestCount,
-            });
+          const { error } = await this.supabase.from('rate_limit_logs').insert({
+            user_id: user.id,
+            endpoint: faker.helpers.arrayElement(endpoints),
+            window_start: timestamp.toISOString(),
+            request_count: requestCount,
+          });
 
           if (error) {
             this.logger.error({ error }, 'Failed to create rate limit log');
@@ -211,30 +210,28 @@ export class DatabaseSeeder {
     const { data: users } = await this.supabase.auth.admin.listUsers();
     if (!users?.users) return;
 
-    const testUsers = users.users.filter(user => user.email?.endsWith('@example.com'));
+    const testUsers = users.users.filter((user) => user.email?.endsWith('@example.com'));
     const events = ['login_success', 'logout', 'token_refresh', 'login_failed'];
     const providers = ['email', 'google', 'github'];
 
     for (const user of testUsers) {
       // 過去30日間の認証ログを生成
       const logCount = faker.number.int({ min: 10, max: 50 });
-      
+
       for (let i = 0; i < logCount; i++) {
         const event = faker.helpers.arrayElement(events);
         const isSuccess = !event.includes('failed');
 
-        const { error } = await this.supabase
-          .from('auth_logs')
-          .insert({
-            user_id: isSuccess ? user.id : null,
-            event,
-            provider: faker.helpers.arrayElement(providers),
-            ip_address: faker.internet.ipv4(),
-            user_agent: faker.internet.userAgent(),
-            result: isSuccess ? 'success' : 'failed',
-            error_message: !isSuccess ? 'Invalid credentials' : null,
-            created_at: faker.date.recent({ days: 30 }).toISOString(),
-          });
+        const { error } = await this.supabase.from('auth_logs').insert({
+          user_id: isSuccess ? user.id : null,
+          event,
+          provider: faker.helpers.arrayElement(providers),
+          ip_address: faker.internet.ipv4(),
+          user_agent: faker.internet.userAgent(),
+          result: isSuccess ? 'success' : 'failed',
+          error_message: !isSuccess ? 'Invalid credentials' : null,
+          created_at: faker.date.recent({ days: 30 }).toISOString(),
+        });
 
         if (error) {
           this.logger.error({ error }, 'Failed to create auth log');
@@ -249,7 +246,7 @@ export class DatabaseSeeder {
     const { data: users } = await this.supabase.auth.admin.listUsers();
     if (!users?.users) return;
 
-    const testUsers = users.users.filter(user => user.email?.endsWith('@example.com'));
+    const testUsers = users.users.filter((user) => user.email?.endsWith('@example.com'));
     const endpoints = [
       '/secure/population/2024.json',
       '/secure/budget/2024.json',
@@ -262,26 +259,24 @@ export class DatabaseSeeder {
     for (const user of testUsers) {
       // 過去7日間のAPIログを生成
       const logCount = faker.number.int({ min: 50, max: 200 });
-      
+
       for (let i = 0; i < logCount; i++) {
         const statusCode = faker.helpers.arrayElement(statusCodes);
         const endpoint = faker.helpers.arrayElement(endpoints);
         const responseTime = faker.number.int({ min: 10, max: 500 });
 
-        const { error } = await this.supabase
-          .from('api_logs')
-          .insert({
-            user_id: user.id,
-            method: 'GET',
-            endpoint,
-            status_code: statusCode,
-            response_time: responseTime,
-            response_size: statusCode === 200 ? faker.number.int({ min: 100, max: 10000 }) : 0,
-            ip_address: faker.internet.ipv4(),
-            user_agent: faker.internet.userAgent(),
-            error_message: statusCode !== 200 ? this.getErrorMessage(statusCode) : null,
-            created_at: faker.date.recent({ days: 7 }).toISOString(),
-          });
+        const { error } = await this.supabase.from('api_logs').insert({
+          user_id: user.id,
+          method: 'GET',
+          endpoint,
+          status_code: statusCode,
+          response_time: responseTime,
+          response_size: statusCode === 200 ? faker.number.int({ min: 100, max: 10000 }) : 0,
+          ip_address: faker.internet.ipv4(),
+          user_agent: faker.internet.userAgent(),
+          error_message: statusCode !== 200 ? this.getErrorMessage(statusCode) : null,
+          created_at: faker.date.recent({ days: 7 }).toISOString(),
+        });
 
         if (error) {
           this.logger.error({ error }, 'Failed to create API log');

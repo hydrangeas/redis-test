@@ -18,7 +18,6 @@ export interface APIEndpointProps {
  * イミュータブルで、エンドポイントの定義情報のみを保持
  */
 export class APIEndpoint extends ValueObject<APIEndpointProps> {
-  
   get path(): EndpointPath {
     return this.props.path;
   }
@@ -68,11 +67,11 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
     if (!props.path) {
       return Result.fail(new ValidationError('Path is required'));
     }
-    
+
     if (!props.method) {
       return Result.fail(new ValidationError('Method is required'));
     }
-    
+
     if (!props.type) {
       return Result.fail(new ValidationError('Type is required'));
     }
@@ -87,14 +86,14 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
     path: EndpointPath,
     method: HttpMethod,
     type: EndpointType,
-    description?: string
+    description?: string,
   ): Result<APIEndpoint> {
     return APIEndpoint.create({
       path,
       method,
       type,
       description,
-      isActive: true
+      isActive: true,
     });
   }
 
@@ -105,14 +104,14 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
     path: EndpointPath,
     method: HttpMethod,
     type: EndpointType,
-    description?: string
+    description?: string,
   ): Result<APIEndpoint> {
     return APIEndpoint.create({
       path,
       method,
       type,
       description,
-      isActive: false
+      isActive: false,
     });
   }
 
@@ -123,10 +122,10 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
     if (this.props.isActive) {
       return this;
     }
-    
+
     return new APIEndpoint({
       ...this.props,
-      isActive: true
+      isActive: true,
     });
   }
 
@@ -137,10 +136,10 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
     if (!this.props.isActive) {
       return this;
     }
-    
+
     return new APIEndpoint({
       ...this.props,
-      isActive: false
+      isActive: false,
     });
   }
 
@@ -150,7 +149,7 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
   withDescription(description: string): APIEndpoint {
     return new APIEndpoint({
       ...this.props,
-      description
+      description,
     });
   }
 

@@ -13,7 +13,7 @@ export class JWTService implements IJWTService {
 
   constructor(
     @inject(DI_TOKENS.EnvConfig) private readonly config: EnvConfig,
-    @inject(DI_TOKENS.Logger) private readonly logger: Logger
+    @inject(DI_TOKENS.Logger) private readonly logger: Logger,
   ) {}
 
   /**

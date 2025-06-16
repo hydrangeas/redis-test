@@ -16,16 +16,16 @@ describe('APIEndpoint', () => {
       type: EndpointType.PROTECTED,
       isActive: true,
     });
-    
+
     if (endpointResult.isFailure) {
       throw new Error(`Failed to create endpoint: ${endpointResult.getError().message}`);
     }
-    
+
     return endpointResult.getValue();
   };
-  
+
   let endpoint: APIEndpoint;
-  
+
   beforeEach(() => {
     endpoint = createEndpoint();
   });
@@ -42,13 +42,13 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(5, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       const result = endpoint.checkRateLimit(userId, rateLimit);
-      
+
       expect(result.requestCount.count).toBe(0);
       expect(result.isExceeded).toBe(false);
       expect(result.remainingRequests).toBe(5);
@@ -61,7 +61,7 @@ describe('APIEndpoint', () => {
       expect(testPathResult.isSuccess).toBe(true);
       const testPath = testPathResult.getValue();
       expect(endpoint.matchesPath(testPath)).toBe(true);
-      
+
       const nonMatchingPathResult = EndpointPath.create('/api/other/test.json');
       expect(nonMatchingPathResult.isSuccess).toBe(true);
       const nonMatchingPath = nonMatchingPathResult.getValue();
@@ -77,11 +77,11 @@ describe('APIEndpoint', () => {
       });
       expect(exactEndpointResult.isSuccess).toBe(true);
       const exactEndpoint = exactEndpointResult.getValue();
-      
+
       const exactPathResult = EndpointPath.create('/health');
       expect(exactPathResult.isSuccess).toBe(true);
       expect(exactEndpoint.matchesPath(exactPathResult.getValue())).toBe(true);
-      
+
       const differentPathResult = EndpointPath.create('/healthz');
       expect(differentPathResult.isSuccess).toBe(true);
       expect(exactEndpoint.matchesPath(differentPathResult.getValue())).toBe(false);
@@ -93,19 +93,19 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(5, 60); // 5 requests per minute
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       const now = new Date();
       // Record 3 requests within the past 30 seconds
       endpoint.recordAccess(userId, 'req-1', new Date(now.getTime() - 30000)); // 30 seconds ago
       endpoint.recordAccess(userId, 'req-2', new Date(now.getTime() - 20000)); // 20 seconds ago
       endpoint.recordAccess(userId, 'req-3', new Date(now.getTime() - 10000)); // 10 seconds ago
-      
+
       const result = endpoint.checkRateLimit(userId, rateLimit, now);
-      
+
       expect(result.requestCount.count).toBe(3);
       expect(result.isExceeded).toBe(false);
       expect(result.remainingRequests).toBe(2);
@@ -115,20 +115,20 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(3, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       const now = new Date();
       // Record 4 requests within the window (exceeds limit of 3)
       endpoint.recordAccess(userId, 'req-1', new Date(now.getTime() - 40000));
       endpoint.recordAccess(userId, 'req-2', new Date(now.getTime() - 30000));
       endpoint.recordAccess(userId, 'req-3', new Date(now.getTime() - 20000));
       endpoint.recordAccess(userId, 'req-4', new Date(now.getTime() - 10000));
-      
+
       const result = endpoint.checkRateLimit(userId, rateLimit, now);
-      
+
       expect(result.requestCount.count).toBe(4);
       expect(result.isExceeded).toBe(true);
       expect(result.remainingRequests).toBe(0);
@@ -140,25 +140,25 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(10, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       const now = new Date();
       // Add old logs (outside 60-second window)
       endpoint.recordAccess(userId, 'req-1', new Date(now.getTime() - 120000)); // 2 minutes ago
-      endpoint.recordAccess(userId, 'req-2', new Date(now.getTime() - 90000));  // 1.5 minutes ago
+      endpoint.recordAccess(userId, 'req-2', new Date(now.getTime() - 90000)); // 1.5 minutes ago
       // Add recent logs
-      endpoint.recordAccess(userId, 'req-3', new Date(now.getTime() - 30000));  // 30 seconds ago
-      
+      endpoint.recordAccess(userId, 'req-3', new Date(now.getTime() - 30000)); // 30 seconds ago
+
       // Should only count recent logs
       const result = endpoint.checkRateLimit(userId, rateLimit, now);
       expect(result.requestCount.count).toBe(1);
-      
+
       // Cleanup logs older than 60 seconds
       endpoint.cleanupOldLogs(60, now);
-      
+
       // Check that old logs are removed
       const resultAfterCleanup = endpoint.checkRateLimit(userId, rateLimit, now);
       expect(resultAfterCleanup.requestCount.count).toBe(1);
@@ -168,31 +168,31 @@ describe('APIEndpoint', () => {
       const userId1Result = UserId.create('550e8400-e29b-41d4-a716-446655440001');
       expect(userId1Result.isSuccess).toBe(true);
       const userId1 = userId1Result.getValue();
-      
+
       const userId2Result = UserId.create('550e8400-e29b-41d4-a716-446655440002');
       expect(userId2Result.isSuccess).toBe(true);
       const userId2 = userId2Result.getValue();
-      
+
       const rateLimitResult = RateLimit.create(3, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       const now = new Date();
-      
+
       // User 1 makes 2 requests
       endpoint.recordAccess(userId1, 'req-1', now);
       endpoint.recordAccess(userId1, 'req-2', now);
-      
+
       // User 2 makes 3 requests
       endpoint.recordAccess(userId2, 'req-1', now);
       endpoint.recordAccess(userId2, 'req-2', now);
       endpoint.recordAccess(userId2, 'req-3', now);
-      
+
       // Check rate limits are tracked independently
       const result1 = endpoint.checkRateLimit(userId1, rateLimit, now);
       expect(result1.requestCount.count).toBe(2);
       expect(result1.isExceeded).toBe(false);
-      
+
       const result2 = endpoint.checkRateLimit(userId2, rateLimit, now);
       expect(result2.requestCount.count).toBe(3);
       expect(result2.isExceeded).toBe(false); // At the limit but not exceeded
@@ -202,20 +202,20 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(2, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       const now = new Date('2024-01-01T00:01:00Z');
-      
+
       // Add requests that exceed the limit
       endpoint.recordAccess(userId, 'req-1', new Date('2024-01-01T00:00:30Z')); // 30 seconds ago
       endpoint.recordAccess(userId, 'req-2', new Date('2024-01-01T00:00:40Z')); // 20 seconds ago
       endpoint.recordAccess(userId, 'req-3', new Date('2024-01-01T00:00:50Z')); // 10 seconds ago
-      
+
       const result = endpoint.checkRateLimit(userId, rateLimit, now);
-      
+
       expect(result.isExceeded).toBe(true);
       expect(result.retryAfterSeconds).toBe(30); // Oldest request expires in 30 seconds
     });
@@ -231,7 +231,7 @@ describe('APIEndpoint', () => {
       });
       expect(inactiveEndpointResult.isSuccess).toBe(true);
       const inactiveEndpoint = inactiveEndpointResult.getValue();
-      
+
       expect(inactiveEndpoint.isActive).toBe(false);
       inactiveEndpoint.activate();
       expect(inactiveEndpoint.isActive).toBe(true);
@@ -262,15 +262,15 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const tier1Result = UserTier.create(TierLevel.TIER1);
       expect(tier1Result.isSuccess).toBe(true);
       const tier1 = tier1Result.getValue();
-      
+
       const rateLimitResult = tier1.getRateLimit();
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       expect(rateLimit.maxRequests).toBe(60);
       expect(rateLimit.windowSeconds).toBe(60);
     });
@@ -281,13 +281,13 @@ describe('APIEndpoint', () => {
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       const userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(5, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       const rateLimit = rateLimitResult.getValue();
-      
+
       await endpoint.recordAccess(userId, 'req-1');
-      
+
       const result = endpoint.checkRateLimit(userId, rateLimit);
       expect(result.requestCount.count).toBe(1);
     });
@@ -296,23 +296,23 @@ describe('APIEndpoint', () => {
       const userId1Result = UserId.create('550e8400-e29b-41d4-a716-446655440001');
       expect(userId1Result.isSuccess).toBe(true);
       const userId1 = userId1Result.getValue();
-      
+
       const userId2Result = UserId.create('550e8400-e29b-41d4-a716-446655440002');
       expect(userId2Result.isSuccess).toBe(true);
       const userId2 = userId2Result.getValue();
-      
+
       // Add logs for both users
       endpoint.recordAccess(userId1, 'req-1');
       endpoint.recordAccess(userId2, 'req-1');
-      
+
       expect(endpoint.getUserLogCount(userId1)).toBe(1);
       expect(endpoint.getUserLogCount(userId2)).toBe(1);
-      
+
       // Clean up logs for user1 using cleanupOldLogs with 0 seconds
       const now = new Date();
       const future = new Date(now.getTime() + 1000); // 1 second in future
       endpoint.cleanupOldLogs(0, future); // All logs are "old"
-      
+
       expect(endpoint.getUserLogCount(userId1)).toBe(0);
       expect(endpoint.getUserLogCount(userId2)).toBe(0);
     });
@@ -321,24 +321,24 @@ describe('APIEndpoint', () => {
       const userId1Result = UserId.create('550e8400-e29b-41d4-a716-446655440001');
       expect(userId1Result.isSuccess).toBe(true);
       const userId1 = userId1Result.getValue();
-      
+
       const userId2Result = UserId.create('550e8400-e29b-41d4-a716-446655440002');
       expect(userId2Result.isSuccess).toBe(true);
       const userId2 = userId2Result.getValue();
-      
+
       const now = new Date();
-      
+
       // Add old and new logs
       endpoint.recordAccess(userId1, 'req-1', new Date(now.getTime() - 120000)); // 2 minutes ago
       endpoint.recordAccess(userId1, 'req-2', now);
       endpoint.recordAccess(userId2, 'req-1', new Date(now.getTime() - 90000)); // 1.5 minutes ago
       endpoint.recordAccess(userId2, 'req-2', now);
-      
+
       expect(endpoint.getTotalLogCount()).toBe(4);
-      
+
       // Cleanup logs older than 60 seconds
       endpoint.cleanupOldLogs(60, now);
-      
+
       expect(endpoint.getTotalLogCount()).toBe(2); // Only recent logs remain
       expect(endpoint.getUserLogCount(userId1)).toBe(1);
       expect(endpoint.getUserLogCount(userId2)).toBe(1);
@@ -355,7 +355,7 @@ describe('APIEndpoint', () => {
       });
       expect(publicEndpointResult.isSuccess).toBe(true);
       const publicEndpoint = publicEndpointResult.getValue();
-      
+
       expect(publicEndpoint.isPublic).toBe(true);
     });
 
@@ -373,7 +373,7 @@ describe('APIEndpoint', () => {
       });
       expect(adminEndpointResult.isSuccess).toBe(true);
       const adminEndpoint = adminEndpointResult.getValue();
-      
+
       expect(adminEndpoint.type).toBe(EndpointType.ADMIN);
       expect(adminEndpoint.isPublic).toBe(false);
     });

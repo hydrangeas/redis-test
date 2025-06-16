@@ -21,18 +21,19 @@ export class RequestDuration extends ValueObject<RequestDurationProps> {
         new DomainError(
           'INVALID_REQUEST_DURATION',
           'Request duration cannot be negative',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
-    if (milliseconds > 300000) { // 5 minutes max
+    if (milliseconds > 300000) {
+      // 5 minutes max
       return Result.fail(
         new DomainError(
           'REQUEST_DURATION_TOO_LONG',
           'Request duration exceeds maximum allowed time',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 

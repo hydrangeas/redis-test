@@ -18,24 +18,24 @@ vi.mock('fs/promises', () => ({
     readdir: vi.fn(),
     access: vi.fn(),
     constants: {
-      F_OK: 0
-    }
+      F_OK: 0,
+    },
   },
   stat: vi.fn(),
   readFile: vi.fn(),
   readdir: vi.fn(),
   access: vi.fn(),
   constants: {
-    F_OK: 0
-  }
+    F_OK: 0,
+  },
 }));
 
 vi.mock('crypto', () => ({
   createHash: vi.fn(() => ({
     update: vi.fn().mockReturnThis(),
-    digest: vi.fn(() => 'mock-hash-value-123456789012')
+    digest: vi.fn(() => 'mock-hash-value-123456789012'),
   })),
-  randomBytes: vi.fn(() => Buffer.from('mockrandombytes'))
+  randomBytes: vi.fn(() => Buffer.from('mockrandombytes')),
 }));
 
 describe('OpenDataRepository', () => {
@@ -52,7 +52,7 @@ describe('OpenDataRepository', () => {
       debug: vi.fn(),
       warn: vi.fn(),
       fatal: vi.fn(),
-      trace: vi.fn()
+      trace: vi.fn(),
     } as any;
 
     mockFileStorage = {
@@ -72,11 +72,11 @@ describe('OpenDataRepository', () => {
         isFile: () => true,
         size: 1024,
         birthtime: new Date('2024-01-01'),
-        mtime: new Date('2024-01-02')
+        mtime: new Date('2024-01-02'),
       };
-      
+
       (fs.stat as Mock).mockResolvedValue(mockStats);
-      
+
       const dataPathResult = DataPath.create('secure/test.json');
       expect(dataPathResult.isSuccess).toBe(true);
       const dataPath = dataPathResult.getValue();
@@ -112,11 +112,11 @@ describe('OpenDataRepository', () => {
     it('should return error when path is directory', async () => {
       const mockStats = {
         isFile: () => false,
-        isDirectory: () => true
+        isDirectory: () => true,
       };
-      
+
       (fs.stat as Mock).mockResolvedValue(mockStats);
-      
+
       const dataPathResult = DataPath.create('secure/directory.json');
       if (dataPathResult.isFailure) {
         throw new Error('Failed to create test path');
@@ -164,14 +164,14 @@ describe('OpenDataRepository', () => {
     it('should return cached content when available', async () => {
       const jsonContent = { cached: true };
       const resource = createMockResource('cached.json', 'application/json');
-      
+
       // First call to cache the content
       (fs.readFile as Mock).mockResolvedValue(JSON.stringify(jsonContent));
       await repository.getContent(resource);
-      
+
       // Reset mock to ensure it's not called again
       (fs.readFile as Mock).mockClear();
-      
+
       // Second call should use cache
       const result = await repository.getContent(resource);
 
@@ -200,16 +200,16 @@ describe('OpenDataRepository', () => {
       const mockDirents = [
         { name: 'file1.json', isFile: () => true, isDirectory: () => false },
         { name: 'file2.json', isFile: () => true, isDirectory: () => false },
-        { name: 'subdir', isFile: () => false, isDirectory: () => true }
+        { name: 'subdir', isFile: () => false, isDirectory: () => true },
       ];
-      
+
       (fs.readdir as Mock).mockResolvedValue(mockDirents);
-      
+
       const mockStats = {
         isFile: () => true,
         size: 1024,
         birthtime: new Date(),
-        mtime: new Date()
+        mtime: new Date(),
       };
       (fs.stat as Mock).mockResolvedValue(mockStats);
 
@@ -295,22 +295,24 @@ describe('OpenDataRepository', () => {
 // Helper function to create mock resources
 function createMockResource(filename: string, mimeType: string): OpenDataResource {
   // Ensure filename ends with .json as required by DataPath
-  const jsonFilename = filename.endsWith('.json') ? filename : filename.replace(/\.[^.]+$/, '.json');
+  const jsonFilename = filename.endsWith('.json')
+    ? filename
+    : filename.replace(/\.[^.]+$/, '.json');
   const dataPathResult = DataPath.create(jsonFilename);
   if (dataPathResult.isFailure) {
     throw new Error(`Failed to create DataPath: ${dataPathResult.error!.message}`);
   }
   const dataPath = dataPathResult.getValue();
-  
+
   const resourceId = ResourceId.generate();
-  
+
   const metadataResult = ResourceMetadata.create({
     size: 1024,
     lastModified: new Date(),
     etag: '"test-etag"',
-    contentType: mimeType
+    contentType: mimeType,
   });
-  
+
   if (metadataResult.isFailure) {
     throw new Error('Failed to create ResourceMetadata');
   }
@@ -320,6 +322,6 @@ function createMockResource(filename: string, mimeType: string): OpenDataResourc
     dataPath,
     metadataResult.getValue(),
     new Date(),
-    new Date()
+    new Date(),
   );
 }

@@ -22,47 +22,59 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
     @inject(DI_TOKENS.APILogRepository)
     private readonly apiLogRepository: IAPILogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: DataRetrieved): Promise<void> {
     try {
-      this.logger.info({
-        eventId: event.eventId,
-        userId: event.userId,
-        dataPath: event.dataPath,
-        resourceSize: event.resourceSize,
-        responseTime: event.responseTime,
-        cached: event.cached,
-      }, 'Handling DataRetrieved event');
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          userId: event.userId,
+          dataPath: event.dataPath,
+          resourceSize: event.resourceSize,
+          responseTime: event.responseTime,
+          cached: event.cached,
+        },
+        'Handling DataRetrieved event',
+      );
 
       // UserIdの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: userIdResult.error,
-        }, 'Invalid userId in DataRetrieved event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: userIdResult.error,
+          },
+          'Invalid userId in DataRetrieved event',
+        );
         return;
       }
 
       // ApiPathの作成
       const apiPathResult = ApiPath.create(event.dataPath);
       if (apiPathResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: apiPathResult.error,
-        }, 'Invalid dataPath in DataRetrieved event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: apiPathResult.error,
+          },
+          'Invalid dataPath in DataRetrieved event',
+        );
         return;
       }
 
       // HttpMethodの作成（データ取得はGETメソッド）
       const httpMethodResult = ApiHttpMethod.create('GET');
       if (httpMethodResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: httpMethodResult.error,
-        }, 'Failed to create HttpMethod');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: httpMethodResult.error,
+          },
+          'Failed to create HttpMethod',
+        );
         return;
       }
 
@@ -72,10 +84,13 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
         method: httpMethodResult.getValue(),
       });
       if (endpointResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: endpointResult.error,
-        }, 'Failed to create Endpoint');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: endpointResult.error,
+          },
+          'Failed to create Endpoint',
+        );
         return;
       }
 
@@ -84,9 +99,12 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
       const responseTimeResult = ResponseTime.create(event.responseTime);
 
       if (statusCodeResult.isFailure || responseTimeResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-        }, 'Failed to create status code or response time');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+          },
+          'Failed to create status code or response time',
+        );
         return;
       }
 
@@ -106,44 +124,58 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: logEntryResult.error,
-        }, 'Failed to create APILogEntry for data retrieval');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: logEntryResult.error,
+          },
+          'Failed to create APILogEntry for data retrieval',
+        );
         return;
       }
 
       // ログの保存
       const saveResult = await this.apiLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure()) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: saveResult.error,
-        }, 'Failed to save data retrieval log');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: saveResult.error,
+          },
+          'Failed to save data retrieval log',
+        );
         return;
       }
 
       // パフォーマンスメトリクスの記録
       if (event.responseTime > 5000) {
-        this.logger.warn({
-          eventId: event.eventId,
-          dataPath: event.dataPath,
-          responseTime: event.responseTime,
-          resourceSize: event.resourceSize,
-        }, 'Slow data retrieval detected');
+        this.logger.warn(
+          {
+            eventId: event.eventId,
+            dataPath: event.dataPath,
+            responseTime: event.responseTime,
+            resourceSize: event.resourceSize,
+          },
+          'Slow data retrieval detected',
+        );
       }
 
-      this.logger.info({
-        eventId: event.eventId,
-        logId: logEntryResult.getValue().id.value,
-      }, 'DataRetrieved event handled successfully');
-
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          logId: logEntryResult.getValue().id.value,
+        },
+        'DataRetrieved event handled successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        eventId: event.eventId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Error handling DataRetrieved event');
+      this.logger.error(
+        {
+          eventId: event.eventId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Error handling DataRetrieved event',
+      );
       throw error;
     }
   }

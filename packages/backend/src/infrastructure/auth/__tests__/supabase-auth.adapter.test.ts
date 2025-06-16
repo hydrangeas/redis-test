@@ -94,16 +94,16 @@ describe('SupabaseAuthAdapter', () => {
         };
 
         mockAdapter.setMockSession(refreshToken, session);
-        
+
         // Verify session exists
         expect(await mockAdapter.refreshAccessToken(refreshToken)).toEqual(session);
-        
+
         // Sign out
         await mockAdapter.signOut(userId);
-        
+
         // Verify user is signed out
         expect(mockAdapter.isUserSignedOut(userId)).toBe(true);
-        
+
         // Verify session is removed
         expect(await mockAdapter.refreshAccessToken(refreshToken)).toBeNull();
       });
@@ -125,14 +125,14 @@ describe('SupabaseAuthAdapter', () => {
 
         mockAdapter.setMockToken(token, payload);
         mockAdapter.signOut('550e8400-e29b-41d4-a716-446655440000');
-        
+
         // Verify data is set
         expect(mockAdapter.verifyToken(token)).resolves.toEqual(payload);
         expect(mockAdapter.isUserSignedOut('550e8400-e29b-41d4-a716-446655440000')).toBe(true);
-        
+
         // Reset
         mockAdapter.reset();
-        
+
         // Verify data is cleared
         expect(mockAdapter.verifyToken(token)).resolves.toBeNull();
         expect(mockAdapter.isUserSignedOut('550e8400-e29b-41d4-a716-446655440000')).toBe(false);

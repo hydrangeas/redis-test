@@ -8,7 +8,7 @@ export class Result<T> {
   private constructor(
     private readonly value: T | null,
     private readonly error: DomainError | null,
-    public readonly isSuccess: boolean
+    public readonly isSuccess: boolean,
   ) {}
 
   /**

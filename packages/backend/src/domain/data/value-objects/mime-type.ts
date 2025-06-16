@@ -5,7 +5,6 @@ import { ValidationError } from '../../errors/validation-error';
  * ファイルタイプの検証と判定
  */
 export class MimeType {
-
   /**
    * 拡張子とMIMEタイプのマッピング
    */
@@ -30,7 +29,7 @@ export class MimeType {
   /**
    * MIMEタイプの検証用正規表現
    */
-  private static readonly MIME_TYPE_PATTERN = 
+  private static readonly MIME_TYPE_PATTERN =
     /^[a-zA-Z0-9][a-zA-Z0-9!#$&^_+\-.]*(\/[a-zA-Z0-9][a-zA-Z0-9!#$&^_+\-.]*)?$/;
 
   private readonly _type: string;
@@ -45,7 +44,7 @@ export class MimeType {
     }
 
     const trimmedValue = value.trim().toLowerCase();
-    
+
     const parts = trimmedValue.split('/');
     if (parts.length !== 2) {
       throw new ValidationError('MIME type must have type and subtype', {
@@ -129,9 +128,9 @@ export class MimeType {
    * テキストタイプかどうかを判定
    */
   isText(): boolean {
-    return this._type === 'text' || 
-           this.value === 'application/json' ||
-           this.value === 'application/xml';
+    return (
+      this._type === 'text' || this.value === 'application/json' || this.value === 'application/xml'
+    );
   }
 
   /**
@@ -145,8 +144,7 @@ export class MimeType {
    * JSONタイプかどうかを判定
    */
   isJson(): boolean {
-    return this.value === 'application/json' || 
-           this._subtype.endsWith('+json');
+    return this.value === 'application/json' || this._subtype.endsWith('+json');
   }
 
   /**

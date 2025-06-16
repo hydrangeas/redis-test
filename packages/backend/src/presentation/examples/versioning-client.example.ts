@@ -1,6 +1,6 @@
 /**
  * API Versioning Client Examples
- * 
+ *
  * This file demonstrates how clients can specify API versions
  * in their requests using different methods.
  */
@@ -9,14 +9,14 @@
 async function getDataWithUrlVersion() {
   const response = await fetch('/api/v1/data/secure/319985/r5.json', {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+    },
   });
-  
+
   // Response headers will include:
   // X-API-Version: 1
   // X-API-Deprecation-Warning: Version 1 is deprecated...
-  
+
   return response.json();
 }
 
@@ -24,14 +24,14 @@ async function getDataWithUrlVersion() {
 async function getDataWithHeaderVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Accept-Version': '2'
-    }
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+      'Accept-Version': '2',
+    },
   });
-  
+
   // Response headers will include:
   // X-API-Version: 2
-  
+
   return response.json();
 }
 
@@ -39,11 +39,11 @@ async function getDataWithHeaderVersion() {
 async function getDataWithXApiVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'X-API-Version': '2.1'
-    }
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+      'X-API-Version': '2.1',
+    },
   });
-  
+
   return response.json();
 }
 
@@ -51,10 +51,10 @@ async function getDataWithXApiVersion() {
 async function getDataWithQueryVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json?version=1', {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+    },
   });
-  
+
   return response.json();
 }
 
@@ -62,16 +62,16 @@ async function getDataWithQueryVersion() {
 async function getDataWithUnsupportedVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Accept-Version': '1.5' // Not directly supported
-    }
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+      'Accept-Version': '1.5', // Not directly supported
+    },
   });
-  
+
   // Response headers will include:
   // X-API-Version-Requested: 1.5
   // X-API-Version-Served: 1
   // X-API-Deprecation-Warning: Version 1 is deprecated...
-  
+
   return response.json();
 }
 
@@ -90,9 +90,9 @@ class ApiClient {
   async getData(path: string): Promise<any> {
     const response = await fetch(`${this.baseUrl}/api/data/${path}`, {
       headers: {
-        'Authorization': `Bearer ${this.token}`,
-        'Accept-Version': this.apiVersion
-      }
+        Authorization: `Bearer ${this.token}`,
+        'Accept-Version': this.apiVersion,
+      },
     });
 
     // Check for deprecation warnings
@@ -121,8 +121,8 @@ class ApiClient {
   async getFeatures(): Promise<any> {
     const response = await fetch(`${this.baseUrl}/api/features`, {
       headers: {
-        'Accept-Version': this.apiVersion
-      }
+        'Accept-Version': this.apiVersion,
+      },
     });
     return response.json();
   }
@@ -131,22 +131,21 @@ class ApiClient {
 // Usage example
 async function main() {
   const client = new ApiClient('https://api.example.com', 'YOUR_TOKEN', '2');
-  
+
   try {
     // Get version information
     const versions = await client.getVersions();
     console.log('Available versions:', versions);
     // Output: { current: '2', supported: ['1', '2', '2.1'], deprecated: ['1'] }
-    
+
     // Get features for current version
     const features = await client.getFeatures();
     console.log('Features:', features);
     // Output: { base: ['data_access', 'rate_limiting'], advanced: ['filtering', 'sorting'] }
-    
+
     // Get data
     const data = await client.getData('secure/319985/r5.json');
     console.log('Data:', data);
-    
   } catch (error) {
     console.error('Error:', error);
   }

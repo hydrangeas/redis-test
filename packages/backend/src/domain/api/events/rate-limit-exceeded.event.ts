@@ -8,7 +8,7 @@ export class RateLimitExceeded extends DomainEvent {
     public readonly endpointId: string,
     public readonly requestCount: number,
     public readonly rateLimit: number,
-    public readonly requestTime: Date
+    public readonly requestTime: Date,
   ) {
     super(aggregateId, eventVersion);
   }

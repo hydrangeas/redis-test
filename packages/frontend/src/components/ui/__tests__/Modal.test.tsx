@@ -10,7 +10,7 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
+
     expect(screen.getByText("Modal content")).toBeInTheDocument();
   });
 
@@ -20,7 +20,7 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
+
     expect(screen.queryByText("Modal content")).not.toBeInTheDocument();
   });
 
@@ -35,7 +35,7 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
+
     expect(screen.getByText("Modal Title")).toBeInTheDocument();
     expect(screen.getByText("Modal description text")).toBeInTheDocument();
   });
@@ -47,9 +47,11 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
+
     // Click on overlay (background)
-    const overlay = screen.getByText("Modal content").closest('[role="dialog"]')?.parentElement;
+    const overlay = screen
+      .getByText("Modal content")
+      .closest('[role="dialog"]')?.parentElement;
     if (overlay) {
       fireEvent.click(overlay);
       await waitFor(() => {
@@ -65,8 +67,10 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
-    const overlay = screen.getByText("Modal content").closest('[role="dialog"]')?.parentElement;
+
+    const overlay = screen
+      .getByText("Modal content")
+      .closest('[role="dialog"]')?.parentElement;
     if (overlay) {
       fireEvent.click(overlay);
       expect(handleClose).not.toHaveBeenCalled();
@@ -80,10 +84,10 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
+
     const closeButton = screen.getByLabelText("閉じる");
     expect(closeButton).toBeInTheDocument();
-    
+
     fireEvent.click(closeButton);
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
@@ -94,7 +98,7 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
+
     expect(screen.queryByLabelText("閉じる")).not.toBeInTheDocument();
   });
 
@@ -104,26 +108,26 @@ describe("Modal", () => {
         Small modal
       </Modal>
     );
-    
-    let panel = screen.getByText("Small modal").closest('.transform');
+
+    let panel = screen.getByText("Small modal").closest(".transform");
     expect(panel).toHaveClass("max-w-md");
-    
+
     rerender(
       <Modal isOpen={true} onClose={() => {}} size="large">
         Large modal
       </Modal>
     );
-    
-    panel = screen.getByText("Large modal").closest('.transform');
+
+    panel = screen.getByText("Large modal").closest(".transform");
     expect(panel).toHaveClass("max-w-2xl");
-    
+
     rerender(
       <Modal isOpen={true} onClose={() => {}} size="full">
         Full modal
       </Modal>
     );
-    
-    panel = screen.getByText("Full modal").closest('.transform');
+
+    panel = screen.getByText("Full modal").closest(".transform");
     expect(panel).toHaveClass("max-w-full");
   });
 
@@ -133,8 +137,8 @@ describe("Modal", () => {
         Modal content
       </Modal>
     );
-    
-    const panel = screen.getByText("Modal content").closest('.transform');
+
+    const panel = screen.getByText("Modal content").closest(".transform");
     expect(panel).toHaveClass("custom-modal");
   });
 });

@@ -1,5 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { IRateLimitUseCase, RateLimitCheckResult } from '@/application/interfaces/rate-limit-use-case.interface';
+import {
+  IRateLimitUseCase,
+  RateLimitCheckResult,
+} from '@/application/interfaces/rate-limit-use-case.interface';
 import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
@@ -29,7 +32,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   /**
@@ -38,7 +41,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
   async checkAndRecordAccess(
     user: AuthenticatedUser,
     endpoint: string,
-    method: string
+    method: string,
   ): Promise<Result<RateLimitCheckResult, DomainError>> {
     try {
       // EndpointIdを生成
@@ -46,7 +49,8 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       // ユーザーのレート制限値を取得
       const limit = user.tier.rateLimit.maxRequests;
-      const windowSizeSeconds = user.tier.rateLimit.windowSeconds || RateLimitUseCase.WINDOW_SIZE_SECONDS;
+      const windowSizeSeconds =
+        user.tier.rateLimit.windowSeconds || RateLimitUseCase.WINDOW_SIZE_SECONDS;
 
       // 現在時刻とウィンドウ開始時刻を計算
       const now = new Date();
@@ -58,13 +62,13 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       const countResult = await this.rateLimitRepository.countRequests(
         user.userId,
         endpointId,
-        window
+        window,
       );
 
       if (countResult.isFailure) {
         this.logger.error(
           { userId: user.userId.value, error: countResult.error },
-          'Failed to count rate limit logs'
+          'Failed to count rate limit logs',
         );
         return Result.fail(countResult.error!);
       }
@@ -78,33 +82,35 @@ export class RateLimitUseCase implements IRateLimitUseCase {
         const retryAfter = Math.ceil((windowEnd.getTime() - now.getTime()) / 1000);
 
         this.logger.warn(
-          { 
-            userId: user.userId.value, 
-            currentCount, 
+          {
+            userId: user.userId.value,
+            currentCount,
             limit,
             endpoint,
-            method 
+            method,
           },
-          'Rate limit exceeded'
+          'Rate limit exceeded',
         );
 
         // レート制限超過イベントを発行
-        await this.eventBus.publish(new RateLimitExceeded(
-          user.userId.value,
-          1,
-          user.userId.value,
-          endpoint,
-          currentCount,
-          limit,
-          new Date()
-        ));
+        await this.eventBus.publish(
+          new RateLimitExceeded(
+            user.userId.value,
+            1,
+            user.userId.value,
+            endpoint,
+            currentCount,
+            limit,
+            new Date(),
+          ),
+        );
 
         return Result.ok({
           allowed: false,
           limit,
           remaining: 0,
           resetAt,
-          retryAfter
+          retryAfter,
         });
       }
 
@@ -118,8 +124,8 @@ export class RateLimitUseCase implements IRateLimitUseCase {
         requestMetadata: {
           method,
           ip: 'unknown', // TODO: 実際のIPアドレスを取得
-          userAgent: 'unknown' // TODO: 実際のUser-Agentを取得
-        }
+          userAgent: 'unknown', // TODO: 実際のUser-Agentを取得
+        },
       });
 
       if (logResult.isFailure) {
@@ -132,51 +138,46 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       if (saveResult.isFailure) {
         this.logger.error(
           { userId: user.userId.value, error: saveResult.error },
-          'Failed to save rate limit log'
+          'Failed to save rate limit log',
         );
         return Result.fail(saveResult.error!);
       }
 
       // APIアクセス記録イベントを発行
-      await this.eventBus.publish(new APIAccessRecorded(
-        user.userId.value,
-        1,
-        endpoint,
-        method,
-        new Date()
-      ));
+      await this.eventBus.publish(
+        new APIAccessRecorded(user.userId.value, 1, endpoint, method, new Date()),
+      );
 
       // 成功レスポンス
       const remaining = limit - currentCount - 1; // 今回のアクセスを含めて減算
       const resetAt = Math.floor(windowEnd.getTime() / 1000);
 
       this.logger.debug(
-        { 
-          userId: user.userId.value, 
+        {
+          userId: user.userId.value,
           endpoint,
           method,
           remaining,
-          limit 
+          limit,
         },
-        'API access recorded'
+        'API access recorded',
       );
 
       return Result.ok({
         allowed: true,
         limit,
         remaining,
-        resetAt
+        resetAt,
       });
-
     } catch (error) {
       this.logger.error(
-        { 
+        {
           userId: user.userId.value,
           endpoint,
           method,
-          error: error instanceof Error ? error.message : 'Unknown error' 
+          error: error instanceof Error ? error.message : 'Unknown error',
         },
-        'Unexpected error in rate limit check'
+        'Unexpected error in rate limit check',
       );
 
       return Result.fail(
@@ -184,8 +185,8 @@ export class RateLimitUseCase implements IRateLimitUseCase {
           'RATE_LIMIT_CHECK_ERROR',
           'Failed to check rate limit',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -193,17 +194,21 @@ export class RateLimitUseCase implements IRateLimitUseCase {
   /**
    * ユーザーの現在の使用状況を取得
    */
-  async getUserUsageStatus(
-    user: AuthenticatedUser
-  ): Promise<Result<{
-    currentCount: number;
-    limit: number;
-    windowStart: Date;
-    windowEnd: Date;
-  }, DomainError>> {
+  async getUserUsageStatus(user: AuthenticatedUser): Promise<
+    Result<
+      {
+        currentCount: number;
+        limit: number;
+        windowStart: Date;
+        windowEnd: Date;
+      },
+      DomainError
+    >
+  > {
     try {
       const limit = user.tier.rateLimit.maxRequests;
-      const windowSizeSeconds = user.tier.rateLimit.windowSeconds || RateLimitUseCase.WINDOW_SIZE_SECONDS;
+      const windowSizeSeconds =
+        user.tier.rateLimit.windowSeconds || RateLimitUseCase.WINDOW_SIZE_SECONDS;
 
       const now = new Date();
       const windowStart = new Date(now.getTime() - windowSizeSeconds * 1000);
@@ -211,7 +216,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       // スライディングウィンドウ内のアクセス数をカウント
       const window = new RateLimitWindow(windowSizeSeconds, now);
-      
+
       // すべてのエンドポイントのリクエスト数を集計するため、ユーザーの全ログを取得
       const logsResult = await this.rateLimitRepository.findByUser(user.userId, window);
 
@@ -226,17 +231,13 @@ export class RateLimitUseCase implements IRateLimitUseCase {
         currentCount,
         limit,
         windowStart,
-        windowEnd
+        windowEnd,
       });
-
     } catch (error) {
       return Result.fail(
-        new DomainError(
-          'USAGE_STATUS_ERROR',
-          'Failed to get usage status',
-          ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('USAGE_STATUS_ERROR', 'Failed to get usage status', ErrorType.INTERNAL, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -256,26 +257,22 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       // ユーザーのレート制限ログを削除（古いログを削除することでリセット）
       const now = new Date();
       const deleteResult = await this.rateLimitRepository.deleteOldLogs(now);
-      
+
       if (deleteResult.isFailure) {
         return Result.fail(deleteResult.error!);
       }
 
-      this.logger.info(
-        { userId },
-        'Rate limit reset successfully'
-      );
+      this.logger.info({ userId }, 'Rate limit reset successfully');
 
       return Result.ok();
-
     } catch (error) {
       return Result.fail(
         new DomainError(
           'RATE_LIMIT_RESET_FAILED',
           'Failed to reset rate limit',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }

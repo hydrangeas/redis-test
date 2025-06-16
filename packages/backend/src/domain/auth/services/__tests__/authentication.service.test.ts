@@ -66,7 +66,7 @@ describe('AuthenticationService', () => {
       const payload = createValidPayload({
         app_metadata: {},
       });
-      
+
       const user = service.extractUserFromToken(payload);
       expect(user.tier.level).toBe(TierLevel.TIER1);
     });
@@ -93,8 +93,7 @@ describe('AuthenticationService', () => {
         sub: 'not-a-uuid',
       });
 
-      expect(() => service.extractUserFromToken(payload))
-        .toThrow('Invalid user ID in token');
+      expect(() => service.extractUserFromToken(payload)).toThrow('Invalid user ID in token');
     });
   });
 

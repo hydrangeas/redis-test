@@ -4,6 +4,6 @@ export class EventContext {
   constructor(
     public readonly correlationId: CorrelationId,
     public readonly causationId?: string,
-    public readonly metadata: Record<string, any> = {}
+    public readonly metadata: Record<string, any> = {},
   ) {}
 }

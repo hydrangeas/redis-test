@@ -21,7 +21,7 @@ export class UserAuthenticated extends DomainEvent {
     public readonly tier: string,
     public readonly sessionId?: string,
     public readonly ipAddress?: string,
-    public readonly userAgent?: string
+    public readonly userAgent?: string,
   ) {
     super(aggregateId, eventVersion);
     Object.freeze(this);

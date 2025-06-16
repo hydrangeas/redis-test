@@ -9,43 +9,44 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const isProduction = mode === "production";
   const isAnalyze = mode === "analyze";
-  
+
   return {
     plugins: [
       react({
         fastRefresh: !isProduction,
         babel: {
-          plugins: [
-            ["@babel/plugin-proposal-decorators", { legacy: true }],
-          ],
+          plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
         },
       }),
       // ベンダーチャンクの自動分割
       splitVendorChunkPlugin(),
       // Gzip圧縮
-      isProduction && viteCompression({
-        algorithm: 'gzip',
-        ext: '.gz',
-        threshold: 1024,
-        deleteOriginFile: false,
-      }),
+      isProduction &&
+        viteCompression({
+          algorithm: "gzip",
+          ext: ".gz",
+          threshold: 1024,
+          deleteOriginFile: false,
+        }),
       // Brotli圧縮
-      isProduction && viteCompression({
-        algorithm: 'brotliCompress',
-        ext: '.br',
-        threshold: 1024,
-        deleteOriginFile: false,
-      }),
+      isProduction &&
+        viteCompression({
+          algorithm: "brotliCompress",
+          ext: ".br",
+          threshold: 1024,
+          deleteOriginFile: false,
+        }),
       // ビルドサイズの可視化
-      (isAnalyze || process.env.ANALYZE === 'true') && visualizer({
-        filename: "./dist/stats.html",
-        open: true,
-        gzipSize: true,
-        brotliSize: true,
-        template: 'treemap',
-      }),
+      (isAnalyze || process.env.ANALYZE === "true") &&
+        visualizer({
+          filename: "./dist/stats.html",
+          open: true,
+          gzipSize: true,
+          brotliSize: true,
+          template: "treemap",
+        }),
     ].filter(Boolean),
-    
+
     resolve: {
       alias: {
         "@": resolve(__dirname, "./src"),
@@ -58,7 +59,7 @@ export default defineConfig(({ mode }) => {
         "@shared": resolve(__dirname, "../shared/src"),
       },
     },
-    
+
     server: {
       port: 3000,
       host: true,
@@ -93,42 +94,57 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    
+
     build: {
       target: "es2015",
       outDir: "dist",
       assetsDir: "assets",
-      sourcemap: isProduction ? false : 'inline',
-      minify: isProduction ? 'terser' : false,
-      terserOptions: isProduction ? {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-          pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'],
-        },
-        format: {
-          comments: false,
-        },
-      } : undefined,
+      sourcemap: isProduction ? false : "inline",
+      minify: isProduction ? "terser" : false,
+      terserOptions: isProduction
+        ? {
+            compress: {
+              drop_console: true,
+              drop_debugger: true,
+              pure_funcs: [
+                "console.log",
+                "console.info",
+                "console.debug",
+                "console.trace",
+              ],
+            },
+            format: {
+              comments: false,
+            },
+          }
+        : undefined,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
             // node_modules内のパッケージを分析
-            if (id.includes('node_modules')) {
+            if (id.includes("node_modules")) {
               // React関連
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'react-vendor';
+              if (
+                id.includes("react") ||
+                id.includes("react-dom") ||
+                id.includes("react-router")
+              ) {
+                return "react-vendor";
               }
               // Supabase関連
-              if (id.includes('@supabase')) {
-                return 'supabase-vendor';
+              if (id.includes("@supabase")) {
+                return "supabase-vendor";
               }
               // UIライブラリ
-              if (id.includes('@headlessui') || id.includes('class-variance-authority') || id.includes('clsx')) {
-                return 'ui-vendor';
+              if (
+                id.includes("@headlessui") ||
+                id.includes("class-variance-authority") ||
+                id.includes("clsx")
+              ) {
+                return "ui-vendor";
               }
               // その他のユーティリティ
-              return 'vendor';
+              return "vendor";
             }
           },
           assetFileNames: (assetInfo) => {
@@ -143,14 +159,16 @@ export default defineConfig(({ mode }) => {
             return `assets/[name]-[hash][extname]`;
           },
           chunkFileNames: (chunkInfo) => {
-            const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : '';
+            const facadeModuleId = chunkInfo.facadeModuleId
+              ? chunkInfo.facadeModuleId.split("/").pop()
+              : "";
             return `js/[name]-[hash].js`;
           },
           entryFileNames: "js/[name]-[hash].js",
         },
         // Tree shakingの最適化
         treeshake: {
-          moduleSideEffects: 'no-external',
+          moduleSideEffects: "no-external",
           propertyReadSideEffects: false,
           tryCatchDeoptimization: false,
         },
@@ -163,7 +181,7 @@ export default defineConfig(({ mode }) => {
       // アセットのインライン化の閾値
       assetsInlineLimit: 4096,
     },
-    
+
     optimizeDeps: {
       include: [
         "react",
@@ -181,36 +199,36 @@ export default defineConfig(({ mode }) => {
       // 事前バンドルの強制
       force: true,
     },
-    
+
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
       // 本番環境でReact DevToolsを無効化
       ...(isProduction && {
-        'process.env.NODE_ENV': '"production"',
+        "process.env.NODE_ENV": '"production"',
       }),
     },
-    
+
     test: {
       globals: true,
-      environment: 'jsdom',
-      setupFiles: './src/test/setup.ts',
+      environment: "jsdom",
+      setupFiles: "./src/test/setup.ts",
       css: {
         modules: {
-          classNameStrategy: 'non-scoped',
+          classNameStrategy: "non-scoped",
         },
       },
       coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
+        provider: "v8",
+        reporter: ["text", "json", "html"],
         exclude: [
-          'node_modules/',
-          'src/test/',
-          '**/*.d.ts',
-          '**/*.config.*',
-          '**/__mocks__/**',
-          'src/main.tsx',
-          'dist/',
+          "node_modules/",
+          "src/test/",
+          "**/*.d.ts",
+          "**/*.config.*",
+          "**/__mocks__/**",
+          "src/main.tsx",
+          "dist/",
         ],
       },
     },

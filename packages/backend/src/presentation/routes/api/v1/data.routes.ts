@@ -7,7 +7,9 @@ import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
-  const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(DI_TOKENS.DataRetrievalUseCase);
+  const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
+    DI_TOKENS.DataRetrievalUseCase,
+  );
 
   // v1専用のエンドポイント
   fastify.get('/*', {
@@ -22,19 +24,19 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
         if (result.isFailure) {
           const error = result.getError();
           const problemDetails = toProblemDetails(error, request.url);
-          
+
           let statusCode = 500;
           if (error.type === 'NOT_FOUND') {
             statusCode = 404;
           } else if (error.type === 'VALIDATION') {
             statusCode = 400;
           }
-          
+
           return reply.code(statusCode).send(problemDetails);
         }
 
         const data = result.getValue();
-        
+
         // v1では基本的なヘッダーのみ
         reply.headers({
           'Cache-Control': 'public, max-age=3600',
@@ -52,7 +54,7 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
             message: 'An unexpected error occurred',
             type: 'INTERNAL' as const,
           },
-          request.url
+          request.url,
         );
 
         return reply.code(500).send(problemDetails);

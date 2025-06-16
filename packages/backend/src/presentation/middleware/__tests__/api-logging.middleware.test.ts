@@ -14,10 +14,12 @@ vi.mock('@/domain/api/value-objects/api-path', () => ({
 
 vi.mock('@/domain/api/value-objects/endpoint', () => ({
   Endpoint: {
-    create: vi.fn().mockReturnValue(Result.ok({
-      method: 'GET',
-      path: { value: '/api/data/test.json' },
-    })),
+    create: vi.fn().mockReturnValue(
+      Result.ok({
+        method: 'GET',
+        path: { value: '/api/data/test.json' },
+      }),
+    ),
   },
 }));
 
@@ -52,50 +54,54 @@ vi.mock('@/domain/log/value-objects/response-info', () => ({
     getRateLimitInfo: () => ({
       limit: parseInt(props.headers['x-ratelimit-limit'] || '0'),
       remaining: parseInt(props.headers['x-ratelimit-remaining'] || '0'),
-      reset: props.headers['x-ratelimit-reset'] ? new Date(parseInt(props.headers['x-ratelimit-reset']) * 1000) : undefined,
+      reset: props.headers['x-ratelimit-reset']
+        ? new Date(parseInt(props.headers['x-ratelimit-reset']) * 1000)
+        : undefined,
     }),
   })),
 }));
 
 vi.mock('@/domain/log/entities/api-log-entry', () => ({
   APILogEntry: {
-    create: vi.fn().mockReturnValue(Result.ok({
-      id: { value: 'test-log-id' },
-      userId: { value: 'test-user-id' },
-      endpoint: {
-        method: 'GET',
-        path: { value: '/api/data/test.json' },
-      },
-      requestInfo: {
-        ipAddress: '192.168.1.1',
-        userAgent: 'Mozilla/5.0 Test Browser',
-        headers: {
-          'user-agent': 'Mozilla/5.0 Test Browser',
-          'accept-language': 'en-US',
-          'referer': 'https://example.com',
+    create: vi.fn().mockReturnValue(
+      Result.ok({
+        id: { value: 'test-log-id' },
+        userId: { value: 'test-user-id' },
+        endpoint: {
+          method: 'GET',
+          path: { value: '/api/data/test.json' },
         },
-      },
-      responseInfo: {
-        statusCode: 200,
-        responseTime: 100,
-        size: 17,
-        headers: {
-          'content-type': 'application/json',
-          'cache-control': 'max-age=3600',
-          'x-ratelimit-limit': '60',
-          'x-ratelimit-remaining': '59',
-          'x-ratelimit-reset': '1234567890',
+        requestInfo: {
+          ipAddress: '192.168.1.1',
+          userAgent: 'Mozilla/5.0 Test Browser',
+          headers: {
+            'user-agent': 'Mozilla/5.0 Test Browser',
+            'accept-language': 'en-US',
+            referer: 'https://example.com',
+          },
         },
-        getRateLimitInfo: () => ({
-          limit: 60,
-          remaining: 59,
-          reset: new Date(1234567890 * 1000),
-        }),
-      },
-      timestamp: new Date(),
-      error: undefined,
-      isSuccess: true,
-    })),
+        responseInfo: {
+          statusCode: 200,
+          responseTime: 100,
+          size: 17,
+          headers: {
+            'content-type': 'application/json',
+            'cache-control': 'max-age=3600',
+            'x-ratelimit-limit': '60',
+            'x-ratelimit-remaining': '59',
+            'x-ratelimit-reset': '1234567890',
+          },
+          getRateLimitInfo: () => ({
+            limit: 60,
+            remaining: 59,
+            reset: new Date(1234567890 * 1000),
+          }),
+        },
+        timestamp: new Date(),
+        error: undefined,
+        isSuccess: true,
+      }),
+    ),
   },
 }));
 
@@ -132,7 +138,7 @@ describe('API Logging Middleware', () => {
       headers: {
         'user-agent': 'Mozilla/5.0 Test Browser',
         'accept-language': 'en-US',
-        'referer': 'https://example.com',
+        referer: 'https://example.com',
       },
       query: { filter: 'active' },
       body: null,
@@ -180,8 +186,11 @@ describe('API Logging Middleware', () => {
     it('should initialize request context', async () => {
       // Clear existing context
       delete (mockRequest as any).context;
-      
-      await apiLoggingMiddleware.onRequest(mockRequest as FastifyRequest, mockReply as FastifyReply);
+
+      await apiLoggingMiddleware.onRequest(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+      );
 
       expect(mockRequest.context).toBeDefined();
       expect(mockRequest.context!.startTime).toBeDefined();
@@ -195,7 +204,10 @@ describe('API Logging Middleware', () => {
       delete (mockRequest as any).context;
       mockRequest.user = undefined;
 
-      await apiLoggingMiddleware.onRequest(mockRequest as FastifyRequest, mockReply as FastifyReply);
+      await apiLoggingMiddleware.onRequest(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+      );
 
       expect(mockRequest.context).toBeDefined();
       expect(mockRequest.context!.userId).toBeUndefined();
@@ -207,18 +219,25 @@ describe('API Logging Middleware', () => {
     beforeEach(async () => {
       // Ensure context is initialized
       if (!mockRequest.context) {
-        await apiLoggingMiddleware.onRequest(mockRequest as FastifyRequest, mockReply as FastifyReply);
+        await apiLoggingMiddleware.onRequest(
+          mockRequest as FastifyRequest,
+          mockReply as FastifyReply,
+        );
       }
     });
 
     it('should log successful API requests', async () => {
       const payload = JSON.stringify({ data: 'test' });
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       const savedLog = mockApiLogService.saveLog.mock.calls[0][0];
-      
+
       expect(savedLog.userId?.value).toBe('test-user-id');
       expect(savedLog.endpoint.method).toBe('GET');
       expect(savedLog.endpoint.path.value).toBe('/api/data/test.json');
@@ -231,45 +250,53 @@ describe('API Logging Middleware', () => {
       const { APIPath } = await import('@/domain/api/value-objects/api-path');
       const { Endpoint } = await import('@/domain/api/value-objects/endpoint');
       const { APILogEntry } = await import('@/domain/log/entities/api-log-entry');
-      
+
       (APIPath.create as any).mockReturnValue(Result.ok({ value: '/api/data/test.json' }));
-      (Endpoint.create as any).mockReturnValue(Result.ok({
-        method: 'GET',
-        path: { value: '/api/data/test.json' },
-      }));
-      (APILogEntry.create as any).mockReturnValue(Result.ok({
-        id: { value: 'test-log-id' },
-        userId: { value: 'test-user-id' },
-        endpoint: {
+      (Endpoint.create as any).mockReturnValue(
+        Result.ok({
           method: 'GET',
           path: { value: '/api/data/test.json' },
-        },
-        requestInfo: {
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0 Test Browser',
-          headers: {},
-        },
-        responseInfo: {
-          statusCode: 404,
-          responseTime: 100,
-          size: 36,
-          headers: {},
-        },
-        timestamp: new Date(),
-        error: 'Not Found',
-        isSuccess: false,
-      }));
-      
-      const payload = JSON.stringify({ 
+        }),
+      );
+      (APILogEntry.create as any).mockReturnValue(
+        Result.ok({
+          id: { value: 'test-log-id' },
+          userId: { value: 'test-user-id' },
+          endpoint: {
+            method: 'GET',
+            path: { value: '/api/data/test.json' },
+          },
+          requestInfo: {
+            ipAddress: '192.168.1.1',
+            userAgent: 'Mozilla/5.0 Test Browser',
+            headers: {},
+          },
+          responseInfo: {
+            statusCode: 404,
+            responseTime: 100,
+            size: 36,
+            headers: {},
+          },
+          timestamp: new Date(),
+          error: 'Not Found',
+          isSuccess: false,
+        }),
+      );
+
+      const payload = JSON.stringify({
         error: 'Not Found',
         message: 'Resource not found',
       });
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       const savedLog = mockApiLogService.saveLog.mock.calls[0][0];
-      
+
       expect(savedLog.responseInfo.statusCode).toBe(404);
       expect(savedLog.error).toBe('Not Found');
     });
@@ -277,12 +304,16 @@ describe('API Logging Middleware', () => {
     it('should sanitize endpoint paths', async () => {
       mockRequest.url = '/api/data/12345/details?page=1';
       const { APIPath } = await import('@/domain/api/value-objects/api-path');
-      
+
       (APIPath.create as any).mockReturnValue(Result.ok({ value: '/api/data/{id}/details' }));
-      
+
       const payload = '{}';
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       expect(APIPath.create).toHaveBeenCalledWith('/api/data/{id}/details');
@@ -291,12 +322,16 @@ describe('API Logging Middleware', () => {
     it('should handle UUID patterns in paths', async () => {
       mockRequest.url = '/api/users/550e8400-e29b-41d4-a716-446655440000/profile';
       const { APIPath } = await import('@/domain/api/value-objects/api-path');
-      
+
       (APIPath.create as any).mockReturnValue(Result.ok({ value: '/api/users/{id}/profile' }));
-      
+
       const payload = '{}';
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       expect(APIPath.create).toHaveBeenCalledWith('/api/users/{id}/profile');
@@ -305,11 +340,15 @@ describe('API Logging Middleware', () => {
     it('should handle buffer payloads', async () => {
       const payload = Buffer.from('test data');
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       const savedLog = mockApiLogService.saveLog.mock.calls[0][0];
-      
+
       expect(savedLog.responseInfo.size).toBe(payload.length);
     });
 
@@ -317,7 +356,11 @@ describe('API Logging Middleware', () => {
       const { Readable } = await import('stream');
       const payload = new Readable();
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       // Stream size should be handled as -1 (unknown)
@@ -325,20 +368,24 @@ describe('API Logging Middleware', () => {
 
     it('should handle logging failures gracefully', async () => {
       const { APILogEntry } = await import('@/domain/log/entities/api-log-entry');
-      
+
       // Make the log entry creation fail
       (APILogEntry.create as any).mockReturnValue(Result.fail(new Error('Creation failed')));
-      
+
       const payload = '{}';
 
       // Should not throw
       await expect(
-        apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload)
+        apiLoggingMiddleware.onSend(
+          mockRequest as FastifyRequest,
+          mockReply as FastifyReply,
+          payload,
+        ),
       ).resolves.toBe(payload);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ error: expect.any(Error) }),
-        'Failed to create API log entry'
+        'Failed to create API log entry',
       );
     });
 
@@ -349,11 +396,15 @@ describe('API Logging Middleware', () => {
         cookie: 'session=secret',
         'x-api-key': 'secret-key',
       };
-      
+
       const { RequestInfo } = await import('@/domain/log/value-objects/request-info');
       const payload = '{}';
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       // Check that RequestInfo was called with sanitized headers
       expect(RequestInfo).toHaveBeenCalledWith(
@@ -363,18 +414,22 @@ describe('API Logging Middleware', () => {
             cookie: expect.any(String),
             'x-api-key': expect.any(String),
           }),
-        })
+        }),
       );
     });
 
     it('should capture rate limit information', async () => {
       const payload = '{}';
 
-      await apiLoggingMiddleware.onSend(mockRequest as FastifyRequest, mockReply as FastifyReply, payload);
+      await apiLoggingMiddleware.onSend(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply,
+        payload,
+      );
 
       expect(mockApiLogService.saveLog).toHaveBeenCalledTimes(1);
       const savedLog = mockApiLogService.saveLog.mock.calls[0][0];
-      
+
       const rateLimitInfo = savedLog.responseInfo.getRateLimitInfo();
       expect(rateLimitInfo.limit).toBe(60);
       expect(rateLimitInfo.remaining).toBe(59);

@@ -15,22 +15,22 @@ describe('Refresh Route', () => {
 
   beforeEach(async () => {
     setupTestDI();
-    
+
     // Mock AuthenticationUseCase
     mockAuthUseCase = {
       refreshToken: vi.fn(),
     };
-    
+
     container.register(DI_TOKENS.AuthenticationUseCase, {
       useValue: mockAuthUseCase,
     });
 
     app = fastify({ logger: false });
-    
+
     // Register error handler to properly format validation errors
     const errorHandler = (await import('../../../plugins/error-handler')).default;
     await app.register(errorHandler);
-    
+
     await app.register(refreshRoute);
   });
 
@@ -49,7 +49,7 @@ describe('Refresh Route', () => {
 
       vi.mocked(mockAuthUseCase.refreshToken).mockResolvedValue({
         success: true,
-        data: mockRefreshResult
+        data: mockRefreshResult,
       });
 
       const response = await app.inject({
@@ -62,7 +62,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toContain('application/json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toEqual({
         access_token: 'new-access-token',
@@ -83,7 +83,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(400);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/validation-error'),
@@ -106,7 +106,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(401);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/missing-refresh-token'),
@@ -120,12 +120,12 @@ describe('Refresh Route', () => {
       const error = new ApplicationError(
         'INVALID_REFRESH_TOKEN',
         'Invalid or expired refresh token',
-        'UNAUTHORIZED'
+        'UNAUTHORIZED',
       );
 
       vi.mocked(mockAuthUseCase.refreshToken).mockResolvedValue({
         success: false,
-        error
+        error,
       });
 
       const response = await app.inject({
@@ -138,7 +138,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(401);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/invalid-refresh-token'),
@@ -152,12 +152,12 @@ describe('Refresh Route', () => {
         'SUPABASE_ERROR',
         'External service unavailable',
         'EXTERNAL_SERVICE',
-        { service: 'supabase' }
+        { service: 'supabase' },
       );
 
       vi.mocked(mockAuthUseCase.refreshToken).mockResolvedValue({
         success: false,
-        error
+        error,
       });
 
       const response = await app.inject({
@@ -170,7 +170,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(503);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/supabase-error'),
@@ -180,9 +180,7 @@ describe('Refresh Route', () => {
     });
 
     it('should return 503 when unexpected error occurs', async () => {
-      vi.mocked(mockAuthUseCase.refreshToken).mockRejectedValue(
-        new Error('Unexpected error')
-      );
+      vi.mocked(mockAuthUseCase.refreshToken).mockRejectedValue(new Error('Unexpected error'));
 
       const response = await app.inject({
         method: 'POST',
@@ -194,7 +192,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(503);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/internal-error'),
@@ -214,7 +212,7 @@ describe('Refresh Route', () => {
 
       expect(response.statusCode).toBe(400);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/validation-error'),

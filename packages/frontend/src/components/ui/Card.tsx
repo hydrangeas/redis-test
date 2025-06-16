@@ -51,10 +51,7 @@ export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   return (
-    <div
-      className={cn("pb-4 border-b border-gray-200", className)}
-      {...props}
-    >
+    <div className={cn("pb-4 border-b border-gray-200", className)} {...props}>
       {children}
     </div>
   );
@@ -75,16 +72,11 @@ export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   );
 };
 
-export const CardDescription: React.FC<React.HTMLAttributes<HTMLParagraphElement>> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const CardDescription: React.FC<
+  React.HTMLAttributes<HTMLParagraphElement>
+> = ({ children, className, ...props }) => {
   return (
-    <p
-      className={cn("mt-1 text-sm text-gray-600", className)}
-      {...props}
-    >
+    <p className={cn("mt-1 text-sm text-gray-600", className)} {...props}>
       {children}
     </p>
   );
@@ -96,10 +88,7 @@ export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => {
   return (
-    <div
-      className={cn("pt-4", className)}
-      {...props}
-    >
+    <div className={cn("pt-4", className)} {...props}>
       {children}
     </div>
   );

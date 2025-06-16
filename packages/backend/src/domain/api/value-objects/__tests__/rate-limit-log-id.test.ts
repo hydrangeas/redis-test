@@ -15,7 +15,7 @@ describe('RateLimitLogId', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().value).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
       );
     });
 
@@ -40,7 +40,7 @@ describe('RateLimitLogId', () => {
 
       expect(rateLimitLogId).toBeDefined();
       expect(rateLimitLogId.value).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
       );
     });
 
@@ -104,7 +104,7 @@ describe('RateLimitLogId', () => {
 
       expect(typeof stringValue).toBe('string');
       expect(stringValue).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
       );
     });
   });

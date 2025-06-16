@@ -9,7 +9,7 @@ import { TierLevel } from './tier-level';
 export class AuthenticatedUser {
   constructor(
     public readonly userId: UserId,
-    public readonly tier: UserTier
+    public readonly tier: UserTier,
   ) {
     if (!userId) {
       throw new Error('UserId is required');
@@ -39,10 +39,7 @@ export class AuthenticatedUser {
 
   equals(other: AuthenticatedUser): boolean {
     if (!other) return false;
-    return (
-      this.userId.equals(other.userId) &&
-      this.tier.equals(other.tier)
-    );
+    return this.userId.equals(other.userId) && this.tier.equals(other.tier);
   }
 
   /**
@@ -88,29 +85,23 @@ export class AuthenticatedUser {
     if (idResult.isFailure) {
       throw new Error(idResult.getError().message);
     }
-    
-    return new AuthenticatedUser(
-      idResult.getValue(),
-      UserTier.fromJSON(json.tier)
-    );
+
+    return new AuthenticatedUser(idResult.getValue(), UserTier.fromJSON(json.tier));
   }
 
   /**
    * JWTペイロードからAuthenticatedUserを作成するファクトリメソッド
    * （AuthenticationServiceで使用）
    */
-  static fromTokenPayload(
-    userId: string,
-    tierString: string
-  ): AuthenticatedUser {
+  static fromTokenPayload(userId: string, tierString: string): AuthenticatedUser {
     const idResult = UserId.create(userId);
     if (idResult.isFailure) {
       throw new Error(idResult.getError().message);
     }
-    
+
     const tierLevel = this.parseTierLevel(tierString);
     const tier = UserTier.createDefault(tierLevel);
-    
+
     return new AuthenticatedUser(idResult.getValue(), tier);
   }
 

@@ -8,7 +8,7 @@ export class VercelAdapter {
     // Vercelのリクエストオブジェクトを変換
     const url = `https://${req.headers.host}${req.url}`;
     const headers: Record<string, string> = {};
-    
+
     for (const [key, value] of Object.entries(req.headers)) {
       if (typeof value === 'string') {
         headers[key] = value;
@@ -25,11 +25,11 @@ export class VercelAdapter {
 
     // レスポンスの返却
     res.status(response.statusCode);
-    
+
     for (const [key, value] of Object.entries(response.headers)) {
       res.setHeader(key, value as string);
     }
-    
+
     res.send(response.body);
   }
 

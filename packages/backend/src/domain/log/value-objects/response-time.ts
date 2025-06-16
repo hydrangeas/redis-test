@@ -67,12 +67,12 @@ export class ResponseTime {
     if (this._milliseconds < 1000) {
       return `${this._milliseconds}ms`;
     }
-    
+
     const seconds = this._milliseconds / 1000;
     if (seconds < 60) {
       return `${seconds.toFixed(1)}s`;
     }
-    
+
     const minutes = seconds / 60;
     return `${minutes.toFixed(1)}m`;
   }
@@ -118,9 +118,9 @@ export class ResponseTime {
  * パフォーマンスカテゴリ
  */
 export enum PerformanceCategory {
-  EXCELLENT = 'EXCELLENT',  // < 100ms
-  GOOD = 'GOOD',           // 100-299ms
-  FAIR = 'FAIR',           // 300-999ms
-  POOR = 'POOR',           // 1000-2999ms
-  CRITICAL = 'CRITICAL',   // >= 3000ms
+  EXCELLENT = 'EXCELLENT', // < 100ms
+  GOOD = 'GOOD', // 100-299ms
+  FAIR = 'FAIR', // 300-999ms
+  POOR = 'POOR', // 1000-2999ms
+  CRITICAL = 'CRITICAL', // >= 3000ms
 }

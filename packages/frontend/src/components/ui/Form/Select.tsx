@@ -7,7 +7,8 @@ const selectVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-gray-300 focus:border-purple-500 focus:ring-purple-500",
+        default:
+          "border-gray-300 focus:border-purple-500 focus:ring-purple-500",
         error: "border-red-500 focus:border-red-500 focus:ring-red-500",
         success: "border-green-500 focus:border-green-500 focus:ring-green-500",
       },
@@ -31,7 +32,7 @@ export interface SelectOption {
 }
 
 export interface SelectProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'>,
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size">,
     VariantProps<typeof selectVariants> {
   error?: boolean;
   helperText?: string;
@@ -59,7 +60,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ) => {
     const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
     const helperId = helperText ? `${selectId}-helper` : undefined;
-    
+
     const actualVariant = error ? "error" : variant;
 
     return (
@@ -73,12 +74,15 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             {required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        
+
         <div className="relative">
           <select
             id={selectId}
             ref={ref}
-            className={cn(selectVariants({ variant: actualVariant, size }), className)}
+            className={cn(
+              selectVariants({ variant: actualVariant, size }),
+              className
+            )}
             aria-invalid={error}
             aria-describedby={helperId}
             {...props}
@@ -98,7 +102,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          
+
           {/* カスタム矢印アイコン */}
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <svg
@@ -116,7 +120,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             </svg>
           </div>
         </div>
-        
+
         {helperText && (
           <p
             id={helperId}

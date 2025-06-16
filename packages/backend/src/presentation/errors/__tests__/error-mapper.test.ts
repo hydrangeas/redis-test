@@ -4,10 +4,10 @@ import { container } from 'tsyringe';
 import { DI_TOKENS } from '../../../infrastructure/di';
 import { toProblemDetails, mapValidationError } from '../error-mapper';
 import { DomainError, ErrorType } from '../../../domain/errors/domain-error';
-import { 
-  AuthenticationException, 
+import {
+  AuthenticationException,
   RateLimitException,
-  ValidationException 
+  ValidationException,
 } from '../../../domain/errors/exceptions';
 import type { EnvConfig } from '../../../infrastructure/config';
 
@@ -69,11 +69,10 @@ describe('Error Mapper', () => {
       });
 
       it('should map ValidationException with errors array', () => {
-        const error = new ValidationException(
-          'email',
-          'invalid@',
-          ['Must be valid email', 'Must contain domain']
-        );
+        const error = new ValidationException('email', 'invalid@', [
+          'Must be valid email',
+          'Must contain domain',
+        ]);
         const result = toProblemDetails(error, '/api/users');
 
         expect(result).toEqual({
@@ -82,21 +81,21 @@ describe('Error Mapper', () => {
           status: 400,
           detail: "Validation failed for field 'email'",
           instance: '/api/users',
-          errors: [{
-            field: 'email',
-            constraints: ['Must be valid email', 'Must contain domain'],
-          }],
+          errors: [
+            {
+              field: 'email',
+              constraints: ['Must be valid email', 'Must contain domain'],
+            },
+          ],
         });
       });
     });
 
     describe('DomainError handling', () => {
       it('should map validation error', () => {
-        const error = DomainError.validation(
-          'INVALID_INPUT',
-          'Invalid input provided',
-          { field: 'name' }
-        );
+        const error = DomainError.validation('INVALID_INPUT', 'Invalid input provided', {
+          field: 'name',
+        });
         const result = toProblemDetails(error, '/api/resource');
 
         expect(result).toEqual({
@@ -111,7 +110,7 @@ describe('Error Mapper', () => {
       it('should map business rule error', () => {
         const error = DomainError.businessRule(
           'INSUFFICIENT_FUNDS',
-          'Insufficient funds for transaction'
+          'Insufficient funds for transaction',
         );
         const result = toProblemDetails(error);
 

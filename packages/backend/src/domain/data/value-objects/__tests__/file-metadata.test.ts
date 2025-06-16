@@ -20,13 +20,7 @@ describe('FileMetadata', () => {
 
   describe('constructor', () => {
     it('should create valid file metadata', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate,
-        '"abc123"'
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate, '"abc123"');
 
       expect(metadata.path).toBe(validPath);
       expect(metadata.size).toBe(validSize);
@@ -37,120 +31,75 @@ describe('FileMetadata', () => {
     });
 
     it('should create metadata without etag', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate);
 
       expect(metadata.etag).toBeUndefined();
     });
 
     it('should reject null or undefined required fields', () => {
-      expect(() => new FileMetadata(
-        null as any,
-        validSize,
-        validMimeType,
-        validDate
-      )).toThrow('File path is required');
+      expect(() => new FileMetadata(null as any, validSize, validMimeType, validDate)).toThrow(
+        'File path is required',
+      );
 
-      expect(() => new FileMetadata(
-        validPath,
-        null as any,
-        validMimeType,
-        validDate
-      )).toThrow('File size is required');
+      expect(() => new FileMetadata(validPath, null as any, validMimeType, validDate)).toThrow(
+        'File size is required',
+      );
 
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        null as any,
-        validDate
-      )).toThrow('MIME type is required');
+      expect(() => new FileMetadata(validPath, validSize, null as any, validDate)).toThrow(
+        'MIME type is required',
+      );
 
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        null as any
-      )).toThrow('Last modified date is required');
+      expect(() => new FileMetadata(validPath, validSize, validMimeType, null as any)).toThrow(
+        'Last modified date is required',
+      );
     });
 
     it('should reject invalid date', () => {
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        new Date('invalid')
-      )).toThrow('Invalid last modified date');
+      expect(
+        () => new FileMetadata(validPath, validSize, validMimeType, new Date('invalid')),
+      ).toThrow('Invalid last modified date');
 
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        'not a date' as any
-      )).toThrow('Invalid last modified date');
+      expect(
+        () => new FileMetadata(validPath, validSize, validMimeType, 'not a date' as any),
+      ).toThrow('Invalid last modified date');
     });
 
     it('should validate etag when provided', () => {
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate,
-        ''
-      )).toThrow('ETag must be a non-empty string');
+      expect(() => new FileMetadata(validPath, validSize, validMimeType, validDate, '')).toThrow(
+        'ETag must be a non-empty string',
+      );
 
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate,
-        '   '
-      )).toThrow('ETag must be a non-empty string');
+      expect(() => new FileMetadata(validPath, validSize, validMimeType, validDate, '   ')).toThrow(
+        'ETag must be a non-empty string',
+      );
 
-      expect(() => new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate,
-        123 as any
-      )).toThrow('ETag must be a non-empty string');
+      expect(
+        () => new FileMetadata(validPath, validSize, validMimeType, validDate, 123 as any),
+      ).toThrow('ETag must be a non-empty string');
     });
   });
 
   describe('helper methods', () => {
     it('should get file name', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate);
       expect(metadata.getFileName()).toBe('profile.json');
     });
 
     it('should get extension', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate);
       expect(metadata.getExtension()).toBe('.json');
     });
   });
 
   describe('date comparison methods', () => {
     let metadata: FileMetadata;
-    
+
     beforeEach(() => {
       metadata = new FileMetadata(
         validPath,
         validSize,
         validMimeType,
-        new Date('2024-01-15T12:00:00Z')
+        new Date('2024-01-15T12:00:00Z'),
       );
     });
 
@@ -175,7 +124,7 @@ describe('FileMetadata', () => {
         validPath,
         new FileSize(1024 * 1024), // 1MB
         validMimeType,
-        validDate
+        validDate,
       );
 
       expect(metadata.isSizeWithinLimit(new FileSize(2 * 1024 * 1024))).toBe(true);
@@ -190,7 +139,7 @@ describe('FileMetadata', () => {
         validPath,
         validSize,
         new MimeType('text/plain'),
-        validDate
+        validDate,
       );
       expect(textMetadata.isText()).toBe(true);
 
@@ -198,7 +147,7 @@ describe('FileMetadata', () => {
         validPath,
         validSize,
         new MimeType('application/json'),
-        validDate
+        validDate,
       );
       expect(jsonMetadata.isText()).toBe(true);
 
@@ -206,7 +155,7 @@ describe('FileMetadata', () => {
         validPath,
         validSize,
         new MimeType('image/jpeg'),
-        validDate
+        validDate,
       );
       expect(imageMetadata.isText()).toBe(false);
     });
@@ -216,7 +165,7 @@ describe('FileMetadata', () => {
         validPath,
         validSize,
         new MimeType('image/png'),
-        validDate
+        validDate,
       );
       expect(imageMetadata.isImage()).toBe(true);
 
@@ -224,7 +173,7 @@ describe('FileMetadata', () => {
         validPath,
         validSize,
         new MimeType('text/plain'),
-        validDate
+        validDate,
       );
       expect(textMetadata.isImage()).toBe(false);
     });
@@ -237,21 +186,21 @@ describe('FileMetadata', () => {
         validSize,
         validMimeType,
         validDate,
-        '"abc123"'
+        '"abc123"',
       );
       const metadata2 = new FileMetadata(
         validPath,
         new FileSize(2048), // Different size
         new MimeType('text/plain'), // Different mime
         new Date('2024-02-01'), // Different date
-        '"abc123"' // Same etag
+        '"abc123"', // Same etag
       );
       const metadata3 = new FileMetadata(
         validPath,
         validSize,
         validMimeType,
         validDate,
-        '"def456"' // Different etag
+        '"def456"', // Different etag
       );
 
       expect(metadata1.equals(metadata2)).toBe(true); // Same path and etag
@@ -259,29 +208,24 @@ describe('FileMetadata', () => {
     });
 
     it('should compare by path, size and date when no etag', () => {
-      const metadata1 = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate
-      );
+      const metadata1 = new FileMetadata(validPath, validSize, validMimeType, validDate);
       const metadata2 = new FileMetadata(
         validPath,
         validSize,
         new MimeType('text/plain'), // Different mime type
-        validDate
+        validDate,
       );
       const metadata3 = new FileMetadata(
         validPath,
         new FileSize(2048), // Different size
         validMimeType,
-        validDate
+        validDate,
       );
       const metadata4 = new FileMetadata(
         validPath,
         validSize,
         validMimeType,
-        new Date('2024-02-01') // Different date
+        new Date('2024-02-01'), // Different date
       );
 
       expect(metadata1.equals(metadata2)).toBe(true); // Same path, size, date
@@ -295,14 +239,14 @@ describe('FileMetadata', () => {
         validSize,
         validMimeType,
         validDate,
-        '"abc123"'
+        '"abc123"',
       );
       const metadata2 = new FileMetadata(
         new FilePath('data/users/avatar.png'),
         validSize,
         validMimeType,
         validDate,
-        '"abc123"'
+        '"abc123"',
       );
 
       expect(metadata1.equals(metadata2)).toBe(false);
@@ -311,25 +255,14 @@ describe('FileMetadata', () => {
 
   describe('toString', () => {
     it('should return formatted string', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate);
       expect(metadata.toString()).toBe('profile.json (1.00 KB, application/json)');
     });
   });
 
   describe('JSON serialization', () => {
     it('should serialize to JSON', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate,
-        '"abc123"'
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate, '"abc123"');
 
       const json = metadata.toJSON();
       expect(json).toEqual({
@@ -337,30 +270,19 @@ describe('FileMetadata', () => {
         size: 1024,
         mimeType: 'application/json',
         lastModified: '2024-01-01T00:00:00.000Z',
-        etag: '"abc123"'
+        etag: '"abc123"',
       });
     });
 
     it('should serialize without etag', () => {
-      const metadata = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate
-      );
+      const metadata = new FileMetadata(validPath, validSize, validMimeType, validDate);
 
       const json = metadata.toJSON();
       expect(json.etag).toBeUndefined();
     });
 
     it('should deserialize from JSON', () => {
-      const original = new FileMetadata(
-        validPath,
-        validSize,
-        validMimeType,
-        validDate,
-        '"abc123"'
-      );
+      const original = new FileMetadata(validPath, validSize, validMimeType, validDate, '"abc123"');
 
       const json = original.toJSON();
       const restored = FileMetadata.fromJSON(json);

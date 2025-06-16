@@ -32,8 +32,8 @@ export class StatusCode extends ValueObject<StatusCodeProps> {
         new DomainError(
           'INVALID_STATUS_CODE',
           'Status code must be an integer',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -42,8 +42,8 @@ export class StatusCode extends ValueObject<StatusCodeProps> {
         new DomainError(
           'UNSUPPORTED_STATUS_CODE',
           `Status code ${code} is not supported`,
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 

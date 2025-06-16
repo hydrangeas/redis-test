@@ -1,26 +1,31 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { useState } from 'react';
-import Modal, { ModalHeader, ModalTitle, ModalBody, ModalFooter } from './Modal';
-import { Button } from '../Button';
-import { Input } from '../Input';
+import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
+import Modal, {
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "./Modal";
+import { Button } from "../Button";
+import { Input } from "../Input";
 
 const meta = {
-  title: 'UI/Modal',
+  title: "UI/Modal",
   component: Modal,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg', 'xl', 'full'],
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "full"],
     },
     closeOnOverlayClick: {
-      control: 'boolean',
+      control: "boolean",
     },
     closeOnEsc: {
-      control: 'boolean',
+      control: "boolean",
     },
   },
 } satisfies Meta<typeof Modal>;
@@ -57,7 +62,7 @@ const ModalDemo = (args: any) => {
 export const Default: Story = {
   render: (args) => <ModalDemo {...args} />,
   args: {
-    size: 'md',
+    size: "md",
   },
 };
 
@@ -78,7 +83,11 @@ export const Small: Story = {
             </p>
           </ModalBody>
           <ModalFooter>
-            <Button size="sm" variant="outline" onClick={() => setIsOpen(false)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+            >
               Cancel
             </Button>
             <Button size="sm" onClick={() => setIsOpen(false)}>
@@ -108,9 +117,9 @@ export const Large: Story = {
                 This is a large modal with more content space.
               </p>
               <p className="text-gray-600 dark:text-gray-400">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-                incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                exercitation ullamco laboris.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+                enim ad minim veniam, quis nostrud exercitation ullamco laboris.
               </p>
             </div>
           </ModalBody>
@@ -140,8 +149,18 @@ export const WithForm: Story = {
           <ModalBody>
             <form className="space-y-4">
               <Input label="Name" placeholder="Enter your name" required />
-              <Input label="Email" type="email" placeholder="email@example.com" required />
-              <Input label="Password" type="password" placeholder="••••••••" required />
+              <Input
+                label="Email"
+                type="email"
+                placeholder="email@example.com"
+                required
+              />
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                required
+              />
             </form>
           </ModalBody>
           <ModalFooter>
@@ -162,7 +181,9 @@ export const NoOverlayClose: Story = {
 
     return (
       <>
-        <Button onClick={() => setIsOpen(true)}>Open Modal (No Overlay Close)</Button>
+        <Button onClick={() => setIsOpen(true)}>
+          Open Modal (No Overlay Close)
+        </Button>
         <Modal
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
@@ -174,8 +195,8 @@ export const NoOverlayClose: Story = {
           </ModalHeader>
           <ModalBody>
             <p className="text-gray-600 dark:text-gray-400">
-              This modal cannot be closed by clicking the overlay or pressing Escape.
-              You must use the buttons to close it.
+              This modal cannot be closed by clicking the overlay or pressing
+              Escape. You must use the buttons to close it.
             </p>
           </ModalBody>
           <ModalFooter>
@@ -205,8 +226,18 @@ export const CustomContent: Story = {
               onClick={() => setIsOpen(false)}
               className="absolute top-4 right-4 text-white hover:text-gray-200"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
             <div className="absolute bottom-4 left-6">
@@ -217,24 +248,55 @@ export const CustomContent: Story = {
           <ModalBody>
             <div className="space-y-4">
               <p className="text-gray-600 dark:text-gray-400">
-                We're excited to have you here. Check out these resources to get started:
+                We're excited to have you here. Check out these resources to get
+                started:
               </p>
               <ul className="space-y-2">
                 <li className="flex items-center text-gray-700 dark:text-gray-300">
-                  <svg className="w-5 h-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 mr-2 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Complete your profile
                 </li>
                 <li className="flex items-center text-gray-700 dark:text-gray-300">
-                  <svg className="w-5 h-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 mr-2 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Read the documentation
                 </li>
                 <li className="flex items-center text-gray-700 dark:text-gray-300">
-                  <svg className="w-5 h-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 mr-2 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Join our Discord server
                 </li>

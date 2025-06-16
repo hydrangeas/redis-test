@@ -38,9 +38,9 @@ describe('JsonObject', () => {
           age: 30,
           address: {
             city: 'Tokyo',
-            country: 'Japan'
-          }
-        }
+            country: 'Japan',
+          },
+        },
       }).getValue();
 
       expect(json.get('user.name')).toBe('John');
@@ -50,7 +50,7 @@ describe('JsonObject', () => {
 
     it('should return undefined for non-existent path', () => {
       const json = JsonObject.create({ user: { name: 'John' } }).getValue();
-      
+
       expect(json.get('user.email')).toBeUndefined();
       expect(json.get('nonexistent')).toBeUndefined();
       expect(json.get('user.address.city')).toBeUndefined();
@@ -61,7 +61,7 @@ describe('JsonObject', () => {
         nullValue: null,
         zero: 0,
         empty: '',
-        falseValue: false
+        falseValue: false,
       }).getValue();
 
       expect(json.get('nullValue')).toBeNull();
@@ -74,12 +74,12 @@ describe('JsonObject', () => {
       // Keys with dots are treated as nested paths
       const json = JsonObject.create({
         'dot.key': 'value', // This won't be accessible via get('dot.key')
-        dot: { key: 'nested-value' } // This will be accessible
+        dot: { key: 'nested-value' }, // This will be accessible
       }).getValue();
 
       // get('dot.key') tries to access json.dot.key, not json['dot.key']
       expect(json.get('dot.key')).toBe('nested-value');
-      
+
       // To access 'dot.key' directly, need to use the value property
       expect(json.value['dot.key']).toBe('value');
     });
@@ -101,7 +101,7 @@ describe('JsonObject', () => {
   describe('has', () => {
     it('should check if path exists', () => {
       const json = JsonObject.create({
-        user: { name: 'John', age: null }
+        user: { name: 'John', age: null },
       }).getValue();
 
       expect(json.has('user.name')).toBe(true);
@@ -120,7 +120,7 @@ describe('JsonObject', () => {
       const updated = result.getValue();
       expect(updated.get('user.age')).toBe(30);
       expect(updated.get('user.name')).toBe('John');
-      
+
       // Original should be unchanged
       expect(original.get('user.age')).toBeUndefined();
     });
@@ -136,7 +136,7 @@ describe('JsonObject', () => {
 
     it('should overwrite existing values', () => {
       const original = JsonObject.create({
-        user: { name: 'John', age: 30 }
+        user: { name: 'John', age: 30 },
       }).getValue();
       const result = original.set('user.age', 31);
 
@@ -148,7 +148,7 @@ describe('JsonObject', () => {
   describe('remove', () => {
     it('should remove value at path', () => {
       const original = JsonObject.create({
-        user: { name: 'John', age: 30 }
+        user: { name: 'John', age: 30 },
       }).getValue();
       const result = original.remove('user.age');
 
@@ -171,17 +171,17 @@ describe('JsonObject', () => {
     it('should merge two JsonObjects', () => {
       const obj1 = JsonObject.create({
         user: { name: 'John', age: 30 },
-        settings: { theme: 'dark' }
+        settings: { theme: 'dark' },
       }).getValue();
 
       const obj2 = JsonObject.create({
         user: { email: 'john@example.com', age: 31 },
-        preferences: { lang: 'en' }
+        preferences: { lang: 'en' },
       }).getValue();
 
       const result = obj1.merge(obj2);
       expect(result.isSuccess).toBe(true);
-      
+
       const merged = result.getValue();
       expect(merged.get('user.name')).toBe('John');
       expect(merged.get('user.email')).toBe('john@example.com');
@@ -194,20 +194,20 @@ describe('JsonObject', () => {
       const obj1 = JsonObject.create({
         config: {
           database: { host: 'localhost', port: 5432 },
-          cache: { ttl: 3600 }
-        }
+          cache: { ttl: 3600 },
+        },
       }).getValue();
 
       const obj2 = JsonObject.create({
         config: {
           database: { username: 'admin' },
-          logging: { level: 'info' }
-        }
+          logging: { level: 'info' },
+        },
       }).getValue();
 
       const result = obj1.merge(obj2);
       const merged = result.getValue();
-      
+
       expect(merged.get('config.database.host')).toBe('localhost');
       expect(merged.get('config.database.port')).toBe(5432);
       expect(merged.get('config.database.username')).toBe('admin');
@@ -219,10 +219,10 @@ describe('JsonObject', () => {
   describe('toJsonString', () => {
     it('should convert to JSON string', () => {
       const json = JsonObject.create({ name: 'test', value: 123 }).getValue();
-      
+
       const compact = json.toJsonString();
       expect(compact).toBe('{"name":"test","value":123}');
-      
+
       const pretty = json.toJsonString(true);
       expect(pretty).toContain('\n');
       expect(pretty).toContain('  "name": "test"');
@@ -233,7 +233,7 @@ describe('JsonObject', () => {
     it('should create from valid JSON string', () => {
       const jsonString = '{"name":"test","value":123}';
       const result = JsonObject.fromJsonString(jsonString);
-      
+
       expect(result.isSuccess).toBe(true);
       const json = result.getValue();
       expect(json.get('name')).toBe('test');
@@ -252,7 +252,7 @@ describe('JsonObject', () => {
     const json = JsonObject.create({
       name: 'test',
       value: 123,
-      nested: { key: 'value' }
+      nested: { key: 'value' },
     }).getValue();
 
     it('should get keys', () => {
@@ -264,7 +264,7 @@ describe('JsonObject', () => {
       const values = json.values();
       expect(values).toContain('test');
       expect(values).toContain(123);
-      expect(values.find(v => v.key === 'value')).toBeTruthy();
+      expect(values.find((v) => v.key === 'value')).toBeTruthy();
     });
 
     it('should get entries', () => {
@@ -293,10 +293,10 @@ describe('JsonObject', () => {
     it('should return a copy of value', () => {
       const original = { name: 'test' };
       const json = JsonObject.create(original).getValue();
-      
+
       const value = json.value;
       value.name = 'changed';
-      
+
       expect(json.get('name')).toBe('test'); // Should not be affected
     });
   });

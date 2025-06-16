@@ -32,7 +32,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     @inject(DI_TOKENS.FileStorage)
     private readonly fileStorage: IFileStorage,
     @inject(DI_TOKENS.DataDirectory)
-    private readonly dataDirectory: string
+    private readonly dataDirectory: string,
   ) {}
 
   /**
@@ -41,17 +41,17 @@ export class OpenDataRepository implements IOpenDataRepository {
   async findByPath(dataPath: DataPath): Promise<Result<OpenDataResource, DomainError>> {
     try {
       const filePath = this.getFilePath(dataPath);
-      
+
       try {
         const stats = await fs.stat(filePath);
-        
+
         if (!stats.isFile()) {
           return Result.fail(
             new DomainError(
               'RESOURCE_NOT_FILE',
               `Resource at ${dataPath.value} is not a file`,
-              ErrorType.NOT_FOUND
-            )
+              ErrorType.NOT_FOUND,
+            ),
           );
         }
 
@@ -61,7 +61,7 @@ export class OpenDataRepository implements IOpenDataRepository {
         }
 
         const resourceId = this.generateResourceId(dataPath.value);
-        
+
         let fileSize: FileSize;
         try {
           fileSize = new FileSize(stats.size);
@@ -70,8 +70,8 @@ export class OpenDataRepository implements IOpenDataRepository {
             new DomainError(
               'INVALID_FILE_SIZE',
               error instanceof Error ? error.message : 'Invalid file size',
-              ErrorType.VALIDATION
-            )
+              ErrorType.VALIDATION,
+            ),
           );
         }
 
@@ -79,7 +79,7 @@ export class OpenDataRepository implements IOpenDataRepository {
           size: stats.size,
           lastModified: stats.mtime,
           etag: await this.generateETag(filePath),
-          contentType: mimeTypeResult.getValue().value
+          contentType: mimeTypeResult.getValue().value,
         });
 
         if (metadataResult.isFailure) {
@@ -91,13 +91,10 @@ export class OpenDataRepository implements IOpenDataRepository {
           dataPath,
           metadataResult.getValue(),
           stats.birthtime,
-          new Date()
+          new Date(),
         );
 
-        this.logger.info(
-          { path: dataPath.value, id: resourceId.value },
-          'Resource found by path'
-        );
+        this.logger.info({ path: dataPath.value, id: resourceId.value }, 'Resource found by path');
 
         return Result.ok(resource);
       } catch (error) {
@@ -106,25 +103,19 @@ export class OpenDataRepository implements IOpenDataRepository {
             new DomainError(
               'RESOURCE_NOT_FOUND',
               `Resource not found at path: ${dataPath.value}`,
-              ErrorType.NOT_FOUND
-            )
+              ErrorType.NOT_FOUND,
+            ),
           );
         }
         throw error;
       }
     } catch (error) {
-      this.logger.error(
-        { error, path: dataPath.value },
-        'Failed to find resource by path'
-      );
-      
+      this.logger.error({ error, path: dataPath.value }, 'Failed to find resource by path');
+
       return Result.fail(
-        new DomainError(
-          'REPOSITORY_ERROR',
-          'Failed to find resource',
-          ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('REPOSITORY_ERROR', 'Failed to find resource', ErrorType.INTERNAL, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -136,8 +127,8 @@ export class OpenDataRepository implements IOpenDataRepository {
     try {
       // IDからパスを逆引き（簡易実装）
       // 実際の実装では、IDとパスのマッピングを別途管理する必要がある
-      const cachedEntry = Array.from(this.cacheStore.values()).find(
-        entry => entry.resource.id.equals(id)
+      const cachedEntry = Array.from(this.cacheStore.values()).find((entry) =>
+        entry.resource.id.equals(id),
       );
 
       if (cachedEntry) {
@@ -148,22 +139,16 @@ export class OpenDataRepository implements IOpenDataRepository {
         new DomainError(
           'RESOURCE_NOT_FOUND',
           `Resource not found with id: ${id.value}`,
-          ErrorType.NOT_FOUND
-        )
+          ErrorType.NOT_FOUND,
+        ),
       );
     } catch (error) {
-      this.logger.error(
-        { error, id: id.value },
-        'Failed to find resource by id'
-      );
-      
+      this.logger.error({ error, id: id.value }, 'Failed to find resource by id');
+
       return Result.fail(
-        new DomainError(
-          'REPOSITORY_ERROR',
-          'Failed to find resource',
-          ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('REPOSITORY_ERROR', 'Failed to find resource', ErrorType.INTERNAL, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -174,19 +159,16 @@ export class OpenDataRepository implements IOpenDataRepository {
   async getContent(resource: OpenDataResource): Promise<Result<any, DomainError>> {
     try {
       const filePath = this.getFilePath(resource.path);
-      
+
       // キャッシュチェック
       const cachedContent = await this.getCachedContent(resource.path);
       if (cachedContent) {
-        this.logger.debug(
-          { path: resource.path.value },
-          'Returning cached content'
-        );
+        this.logger.debug({ path: resource.path.value }, 'Returning cached content');
         return Result.ok(cachedContent);
       }
 
       const content = await fs.readFile(filePath, 'utf-8');
-      
+
       // JSONファイルの場合はパース
       if (resource.metadata.contentType === 'application/json') {
         try {
@@ -199,8 +181,8 @@ export class OpenDataRepository implements IOpenDataRepository {
               'INVALID_JSON_CONTENT',
               'Failed to parse JSON content',
               ErrorType.VALIDATION,
-              { error: parseError instanceof Error ? parseError.message : 'Parse error' }
-            )
+              { error: parseError instanceof Error ? parseError.message : 'Parse error' },
+            ),
           );
         }
       }
@@ -208,18 +190,15 @@ export class OpenDataRepository implements IOpenDataRepository {
       await this.cache(resource, content);
       return Result.ok(content);
     } catch (error) {
-      this.logger.error(
-        { error, path: resource.path.value },
-        'Failed to get resource content'
-      );
-      
+      this.logger.error({ error, path: resource.path.value }, 'Failed to get resource content');
+
       return Result.fail(
         new DomainError(
           'CONTENT_READ_ERROR',
           'Failed to read resource content',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -231,18 +210,18 @@ export class OpenDataRepository implements IOpenDataRepository {
     try {
       const fullPath = path.join(this.dataDirectory, directoryPath);
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
-      
+
       const resources: OpenDataResource[] = [];
-      
+
       for (const entry of entries) {
         if (entry.isFile()) {
           const relativePath = path.join(directoryPath, entry.name);
           const dataPathResult = DataPath.create(relativePath);
-          
+
           if (dataPathResult.isFailure) {
             continue; // Skip invalid paths
           }
-          
+
           const resourceResult = await this.findByPath(dataPathResult.getValue());
           if (resourceResult.isSuccess) {
             resources.push(resourceResult.getValue());
@@ -252,7 +231,7 @@ export class OpenDataRepository implements IOpenDataRepository {
 
       this.logger.info(
         { directory: directoryPath, count: resources.length },
-        'Listed directory resources'
+        'Listed directory resources',
       );
 
       return Result.ok(resources);
@@ -262,23 +241,17 @@ export class OpenDataRepository implements IOpenDataRepository {
           new DomainError(
             'DIRECTORY_NOT_FOUND',
             `Directory not found: ${directoryPath}`,
-            ErrorType.NOT_FOUND
-          )
+            ErrorType.NOT_FOUND,
+          ),
         );
       }
 
-      this.logger.error(
-        { error, directory: directoryPath },
-        'Failed to list directory'
-      );
-      
+      this.logger.error({ error, directory: directoryPath }, 'Failed to list directory');
+
       return Result.fail(
-        new DomainError(
-          'DIRECTORY_LIST_ERROR',
-          'Failed to list directory',
-          ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('DIRECTORY_LIST_ERROR', 'Failed to list directory', ErrorType.INTERNAL, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -305,29 +278,20 @@ export class OpenDataRepository implements IOpenDataRepository {
       // この実装では、キャッシュの更新のみ行う
       const cacheKey = this.getCacheKey(resource.path);
       const cachedEntry = this.cacheStore.get(cacheKey);
-      
+
       if (cachedEntry) {
         cachedEntry.resource = resource;
-        this.logger.debug(
-          { path: resource.path.value },
-          'Updated cached resource metadata'
-        );
+        this.logger.debug({ path: resource.path.value }, 'Updated cached resource metadata');
       }
 
       return Result.ok();
     } catch (error) {
-      this.logger.error(
-        { error, path: resource.path.value },
-        'Failed to update metadata'
-      );
-      
+      this.logger.error({ error, path: resource.path.value }, 'Failed to update metadata');
+
       return Result.fail(
-        new DomainError(
-          'METADATA_UPDATE_ERROR',
-          'Failed to update metadata',
-          ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('METADATA_UPDATE_ERROR', 'Failed to update metadata', ErrorType.INTERNAL, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -338,7 +302,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   async getCached(dataPath: DataPath): Promise<OpenDataResource | null> {
     const cacheKey = this.getCacheKey(dataPath);
     const cached = this.cacheStore.get(cacheKey);
-    
+
     if (!cached) {
       return null;
     }
@@ -346,7 +310,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     // キャッシュ有効期限チェック
     const now = new Date();
     const expirationTime = new Date(cached.cachedAt.getTime() + this.cacheExpirationMs);
-    
+
     if (now > expirationTime) {
       this.cacheStore.delete(cacheKey);
       return null;
@@ -360,22 +324,20 @@ export class OpenDataRepository implements IOpenDataRepository {
    */
   async cache(resource: OpenDataResource, content: any): Promise<void> {
     const cacheKey = this.getCacheKey(resource.path);
-    
+
     this.cacheStore.set(cacheKey, {
       resource,
       content,
-      cachedAt: new Date()
+      cachedAt: new Date(),
     });
 
-    this.logger.debug(
-      { path: resource.path.value },
-      'Cached resource'
-    );
+    this.logger.debug({ path: resource.path.value }, 'Cached resource');
 
     // キャッシュサイズ制限（100エントリ）
     if (this.cacheStore.size > 100) {
-      const oldestKey = Array.from(this.cacheStore.entries())
-        .sort((a, b) => a[1].cachedAt.getTime() - b[1].cachedAt.getTime())[0][0];
+      const oldestKey = Array.from(this.cacheStore.entries()).sort(
+        (a, b) => a[1].cachedAt.getTime() - b[1].cachedAt.getTime(),
+      )[0][0];
       this.cacheStore.delete(oldestKey);
     }
   }
@@ -387,10 +349,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     if (dataPath) {
       const cacheKey = this.getCacheKey(dataPath);
       this.cacheStore.delete(cacheKey);
-      this.logger.debug(
-        { path: dataPath.value },
-        'Cleared cache for path'
-      );
+      this.logger.debug({ path: dataPath.value }, 'Cleared cache for path');
     } else {
       this.cacheStore.clear();
       this.logger.info('Cleared all cache');
@@ -411,7 +370,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   private async getCachedContent(dataPath: DataPath): Promise<any | null> {
     const cacheKey = this.getCacheKey(dataPath);
     const cached = this.cacheStore.get(cacheKey);
-    
+
     if (!cached) {
       return null;
     }
@@ -419,7 +378,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     // キャッシュ有効期限チェック
     const now = new Date();
     const expirationTime = new Date(cached.cachedAt.getTime() + this.cacheExpirationMs);
-    
+
     if (now > expirationTime) {
       this.cacheStore.delete(cacheKey);
       return null;
@@ -431,7 +390,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   private detectMimeType(filePath: string): Result<MimeType> {
     try {
       const extension = path.extname(filePath).toLowerCase();
-      
+
       const mimeMap: Record<string, string> = {
         '.json': 'application/json',
         '.xml': 'application/xml',
@@ -439,7 +398,7 @@ export class OpenDataRepository implements IOpenDataRepository {
         '.txt': 'text/plain',
         '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         '.xls': 'application/vnd.ms-excel',
-        '.pdf': 'application/pdf'
+        '.pdf': 'application/pdf',
       };
 
       const mimeTypeString = mimeMap[extension] || 'application/octet-stream';
@@ -447,12 +406,9 @@ export class OpenDataRepository implements IOpenDataRepository {
       return Result.ok(mimeType);
     } catch (error) {
       return Result.fail(
-        new DomainError(
-          'INVALID_MIME_TYPE',
-          'Failed to detect MIME type',
-          ErrorType.VALIDATION,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('INVALID_MIME_TYPE', 'Failed to detect MIME type', ErrorType.VALIDATION, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -465,9 +421,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   private async generateETag(filePath: string): Promise<string> {
     try {
       const stats = await fs.stat(filePath);
-      const hash = createHash('md5')
-        .update(`${stats.size}-${stats.mtime.getTime()}`)
-        .digest('hex');
+      const hash = createHash('md5').update(`${stats.size}-${stats.mtime.getTime()}`).digest('hex');
       return `"${hash}"`;
     } catch {
       return `"${Date.now()}"`;

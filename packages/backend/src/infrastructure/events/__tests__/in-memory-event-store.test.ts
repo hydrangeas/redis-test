@@ -5,7 +5,7 @@ import { DomainEvent } from '@/domain/shared/domain-event';
 class TestEvent extends DomainEvent {
   constructor(
     aggregateId: string,
-    public readonly data: string
+    public readonly data: string,
   ) {
     super(aggregateId);
   }
@@ -18,7 +18,7 @@ class TestEvent extends DomainEvent {
 class AnotherEvent extends DomainEvent {
   constructor(
     aggregateId: string,
-    public readonly value: number
+    public readonly value: number,
   ) {
     super(aggregateId);
   }
@@ -112,7 +112,7 @@ describe('InMemoryEventStore', () => {
 
     it('should maintain separate storage for dead letters', async () => {
       const event = new TestEvent('agg-1', 'event');
-      
+
       await eventStore.save(event);
       await eventStore.saveDeadLetter({
         event,
@@ -131,7 +131,7 @@ describe('InMemoryEventStore', () => {
   describe('clear', () => {
     it('should clear all events and dead letters', async () => {
       const event = new TestEvent('agg-1', 'test');
-      
+
       await eventStore.save(event);
       await eventStore.saveDeadLetter({
         event,

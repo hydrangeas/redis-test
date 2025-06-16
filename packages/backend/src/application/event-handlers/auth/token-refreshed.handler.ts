@@ -19,24 +19,30 @@ export class TokenRefreshedHandler implements IEventHandler<TokenRefreshed> {
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: TokenRefreshed): Promise<void> {
     try {
-      this.logger.info({
-        eventId: event.eventId,
-        userId: event.userId,
-        refreshCount: event.refreshCount,
-      }, 'Handling TokenRefreshed event');
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          userId: event.userId,
+          refreshCount: event.refreshCount,
+        },
+        'Handling TokenRefreshed event',
+      );
 
       // UserIdの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: userIdResult.error,
-        }, 'Invalid userId in TokenRefreshed event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: userIdResult.error,
+          },
+          'Invalid userId in TokenRefreshed event',
+        );
         return;
       }
 
@@ -56,34 +62,45 @@ export class TokenRefreshedHandler implements IEventHandler<TokenRefreshed> {
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: logEntryResult.error,
-        }, 'Failed to create AuthLogEntry for token refresh');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: logEntryResult.error,
+          },
+          'Failed to create AuthLogEntry for token refresh',
+        );
         return;
       }
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure()) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: saveResult.error,
-        }, 'Failed to save token refresh log');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: saveResult.error,
+          },
+          'Failed to save token refresh log',
+        );
         return;
       }
 
-      this.logger.info({
-        eventId: event.eventId,
-        logId: logEntryResult.getValue().id.value,
-      }, 'TokenRefreshed event handled successfully');
-
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          logId: logEntryResult.getValue().id.value,
+        },
+        'TokenRefreshed event handled successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        eventId: event.eventId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Error handling TokenRefreshed event');
+      this.logger.error(
+        {
+          eventId: event.eventId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Error handling TokenRefreshed event',
+      );
       throw error;
     }
   }

@@ -25,7 +25,9 @@ describe('AuthenticatedUser', () => {
 
     it('should throw error if tier is missing', () => {
       const userIdResult = UserId.create(validUuid);
-      expect(() => new AuthenticatedUser(userIdResult.getValue(), null as any)).toThrow('UserTier is required');
+      expect(() => new AuthenticatedUser(userIdResult.getValue(), null as any)).toThrow(
+        'UserTier is required',
+      );
     });
   });
 
@@ -154,9 +156,7 @@ describe('AuthenticatedUser', () => {
       const tier = UserTier.createDefault(TierLevel.TIER2);
       const user = new AuthenticatedUser(userIdResult.getValue(), tier);
 
-      expect(user.toString()).toBe(
-        `AuthenticatedUser(${validUuid}, TIER2 (120 requests/minute))`,
-      );
+      expect(user.toString()).toBe(`AuthenticatedUser(${validUuid}, TIER2 (120 requests/minute))`);
     });
   });
 

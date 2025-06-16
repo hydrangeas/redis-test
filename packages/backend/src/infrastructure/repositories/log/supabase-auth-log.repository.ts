@@ -39,7 +39,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
     @inject(DI_TOKENS.SupabaseClient)
     private readonly supabase: SupabaseClient,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   /**
@@ -61,9 +61,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         created_at: logEntry.timestamp.toISOString(),
       };
 
-      const { error } = await this.supabase
-        .from('auth_logs')
-        .insert(record);
+      const { error } = await this.supabase.from('auth_logs').insert(record);
 
       if (error) {
         this.logger.error({ error, logId: logEntry.id.value }, 'Failed to save auth log');
@@ -71,8 +69,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_SAVE_FAILED',
             'Failed to save authentication log',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -84,8 +82,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_SAVE_ERROR',
           'Unexpected error saving authentication log',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -101,14 +99,15 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         .eq('id', id.value)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows returned
         this.logger.error({ error, logId: id.value }, 'Failed to find auth log by ID');
         return Result.fail(
           new DomainError(
             'AUTH_LOG_FIND_FAILED',
             'Failed to find authentication log',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -124,8 +123,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_FIND_ERROR',
           'Unexpected error finding authentication log',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -136,7 +135,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   async findByUserId(
     userId: UserId,
     timeRange?: TimeRange,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<Result<AuthLogEntry[], DomainError>> {
     try {
       let query = this.supabase
@@ -160,8 +159,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_FIND_BY_USER_FAILED',
             'Failed to find authentication logs by user',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -173,8 +172,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_FIND_BY_USER_ERROR',
           'Unexpected error finding authentication logs by user',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -185,7 +184,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   async findByEventType(
     eventType: EventType,
     timeRange?: TimeRange,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<Result<AuthLogEntry[], DomainError>> {
     try {
       let query = this.supabase
@@ -209,8 +208,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_FIND_BY_EVENT_FAILED',
             'Failed to find authentication logs by event type',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -222,8 +221,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_FIND_BY_EVENT_ERROR',
           'Unexpected error finding authentication logs by event type',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -234,7 +233,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   async findByIPAddress(
     ipAddress: IPAddress,
     timeRange?: TimeRange,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<Result<AuthLogEntry[], DomainError>> {
     try {
       let query = this.supabase
@@ -258,8 +257,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_FIND_BY_IP_FAILED',
             'Failed to find authentication logs by IP address',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -271,8 +270,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_FIND_BY_IP_ERROR',
           'Unexpected error finding authentication logs by IP address',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -282,7 +281,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
    */
   async findFailures(
     timeRange?: TimeRange,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<Result<AuthLogEntry[], DomainError>> {
     try {
       let query = this.supabase
@@ -306,8 +305,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_FIND_FAILURES_FAILED',
             'Failed to find authentication failure logs',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -319,8 +318,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_FIND_FAILURES_ERROR',
           'Unexpected error finding authentication failure logs',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -330,7 +329,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
    */
   async findSuspiciousActivities(
     timeRange?: TimeRange,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<Result<AuthLogEntry[], DomainError>> {
     try {
       let query = this.supabase
@@ -354,8 +353,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_FIND_SUSPICIOUS_FAILED',
             'Failed to find suspicious activity logs',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -367,8 +366,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_FIND_SUSPICIOUS_ERROR',
           'Unexpected error finding suspicious activity logs',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -376,15 +375,20 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   /**
    * 統計情報を取得
    */
-  async getStatistics(timeRange: TimeRange): Promise<Result<{
-    totalAttempts: number;
-    successfulLogins: number;
-    failedLogins: number;
-    uniqueUsers: number;
-    suspiciousActivities: number;
-    loginsByProvider: Map<string, number>;
-    tokenRefreshCount: number;
-  }, DomainError>> {
+  async getStatistics(timeRange: TimeRange): Promise<
+    Result<
+      {
+        totalAttempts: number;
+        successfulLogins: number;
+        failedLogins: number;
+        uniqueUsers: number;
+        suspiciousActivities: number;
+        loginsByProvider: Map<string, number>;
+        tokenRefreshCount: number;
+      },
+      DomainError
+    >
+  > {
     try {
       const { data, error } = await this.supabase
         .from('auth_logs')
@@ -398,8 +402,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_STATS_FAILED',
             'Failed to get authentication statistics',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -415,7 +419,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
 
       for (const log of logs) {
         totalAttempts++;
-        
+
         if (log.user_id) {
           uniqueUserIds.add(log.user_id);
         }
@@ -455,8 +459,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_STATS_ERROR',
           'Unexpected error getting authentication statistics',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -478,8 +482,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_COUNT_FAILED',
             'Failed to count old authentication logs',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
@@ -495,15 +499,15 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           new DomainError(
             'AUTH_LOG_DELETE_FAILED',
             'Failed to delete old authentication logs',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
       const deletedCount = count || 0;
       this.logger.info(
         { deletedCount, beforeDate: beforeDate.toISOString() },
-        'Old auth logs deleted'
+        'Old auth logs deleted',
       );
 
       return Result.ok(deletedCount);
@@ -513,8 +517,8 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         new DomainError(
           'AUTH_LOG_DELETE_ERROR',
           'Unexpected error deleting old authentication logs',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -531,33 +535,34 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
       const logId = logIdResult.getValue();
       const event = new AuthEvent(record.event_type as EventType, record.metadata?.description);
       const provider = Provider.create(record.provider || 'unknown').getValue();
-      const ipAddress = record.ip_address 
-        ? IPAddress.create(record.ip_address).getValue() 
+      const ipAddress = record.ip_address
+        ? IPAddress.create(record.ip_address).getValue()
         : IPAddress.unknown();
-      const userAgent = record.user_agent 
+      const userAgent = record.user_agent
         ? UserAgent.create(record.user_agent).getValue()
         : UserAgent.unknown();
 
-      const userId = record.user_id 
-        ? UserId.create(record.user_id).getValue()
-        : undefined;
+      const userId = record.user_id ? UserId.create(record.user_id).getValue() : undefined;
 
-      const logEntryResult = AuthLogEntry.create({
-        userId,
-        event,
-        provider,
-        ipAddress,
-        userAgent,
-        timestamp: new Date(record.created_at),
-        result: record.result as AuthResult,
-        errorMessage: record.error_message || undefined,
-        metadata: record.metadata
-      }, logId);
+      const logEntryResult = AuthLogEntry.create(
+        {
+          userId,
+          event,
+          provider,
+          ipAddress,
+          userAgent,
+          timestamp: new Date(record.created_at),
+          result: record.result as AuthResult,
+          errorMessage: record.error_message || undefined,
+          metadata: record.metadata,
+        },
+        logId,
+      );
 
       if (logEntryResult.isFailure) {
         this.logger.error(
           { error: logEntryResult.getError(), recordId: record.id },
-          'Failed to create AuthLogEntry from record'
+          'Failed to create AuthLogEntry from record',
         );
         return null;
       }

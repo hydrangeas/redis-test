@@ -31,11 +31,9 @@ export const Table: React.FC<TableProps> = ({
   );
 };
 
-export const TableHeader: React.FC<React.HTMLAttributes<HTMLTableSectionElement>> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const TableHeader: React.FC<
+  React.HTMLAttributes<HTMLTableSectionElement>
+> = ({ children, className, ...props }) => {
   return (
     <thead className={cn("bg-gray-50", className)} {...props}>
       {children}
@@ -43,11 +41,9 @@ export const TableHeader: React.FC<React.HTMLAttributes<HTMLTableSectionElement>
   );
 };
 
-export const TableBody: React.FC<React.HTMLAttributes<HTMLTableSectionElement>> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const TableBody: React.FC<
+  React.HTMLAttributes<HTMLTableSectionElement>
+> = ({ children, className, ...props }) => {
   return (
     <tbody
       className={cn("bg-white divide-y divide-gray-200", className)}
@@ -73,11 +69,9 @@ export const TableRow: React.FC<React.HTMLAttributes<HTMLTableRowElement>> = ({
   );
 };
 
-export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement>> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const TableCell: React.FC<
+  React.TdHTMLAttributes<HTMLTableCellElement>
+> = ({ children, className, ...props }) => {
   return (
     <td
       className={cn("px-6 py-4 whitespace-nowrap text-sm", className)}
@@ -88,11 +82,9 @@ export const TableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement>> =
   );
 };
 
-export const TableHeaderCell: React.FC<React.ThHTMLAttributes<HTMLTableCellElement>> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const TableHeaderCell: React.FC<
+  React.ThHTMLAttributes<HTMLTableCellElement>
+> = ({ children, className, ...props }) => {
   return (
     <th
       className={cn(

@@ -80,7 +80,9 @@ export function createInjectionDecorator(token: symbol): () => ParameterDecorato
 /**
  * Batch registration decorator for multiple interfaces
  */
-export function RegisterInterfaces(interfaces: { token: symbol; useClass?: any; useValue?: any }[]) {
+export function RegisterInterfaces(
+  interfaces: { token: symbol; useClass?: any; useValue?: any }[],
+) {
   return (target: any) => {
     // This would be used with a custom container setup
     // For now, it serves as documentation
@@ -105,7 +107,7 @@ export class DIMetadata {
    */
   static hasInterface(target: any, token: symbol): boolean {
     const interfaces = this.getInterfaces(target);
-    return interfaces.some(i => i.token === token);
+    return interfaces.some((i) => i.token === token);
   }
 }
 
@@ -140,7 +142,7 @@ export async function executePostConstruct(instance: any): Promise<void> {
 export function LazyInject(token: symbol): PropertyDecorator {
   return (target: any, propertyKey: string | symbol) => {
     let instance: any;
-    
+
     const getter = () => {
       if (!instance) {
         // This would need access to the container

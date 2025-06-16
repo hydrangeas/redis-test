@@ -3,7 +3,10 @@ import { container } from 'tsyringe';
 import { beforeEach, afterEach, describe, it, expect, vi, Mock } from 'vitest';
 import rateLimitPlugin from '../rate-limit.plugin';
 import authPlugin from '../auth.plugin';
-import { IRateLimitService, RateLimitResult } from '@/domain/api/interfaces/rate-limit-service.interface';
+import {
+  IRateLimitService,
+  RateLimitResult,
+} from '@/domain/api/interfaces/rate-limit-service.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
@@ -39,7 +42,7 @@ describe('Rate Limit Plugin', () => {
 
   beforeEach(async () => {
     container.reset();
-    
+
     // Mock services
     mockRateLimitService = {
       checkLimit: vi.fn(),
@@ -86,17 +89,21 @@ describe('Rate Limit Plugin', () => {
     await fastify.register(rateLimitPlugin);
 
     // Test route with authenticate and rate limit as hooks
-    fastify.get('/api/test', {
-      preHandler: [fastify.authenticate, fastify.checkRateLimit],
-    }, async (request) => {
-      // Debug log to confirm user is set
-      if (request.user) {
-        console.log('Route handler - user is set:', request.user.userId.value);
-      } else {
-        console.log('Route handler - user is NOT set');
-      }
-      return { data: 'test' };
-    });
+    fastify.get(
+      '/api/test',
+      {
+        preHandler: [fastify.authenticate, fastify.checkRateLimit],
+      },
+      async (request) => {
+        // Debug log to confirm user is set
+        if (request.user) {
+          console.log('Route handler - user is set:', request.user.userId.value);
+        } else {
+          console.log('Route handler - user is NOT set');
+        }
+        return { data: 'test' };
+      },
+    );
 
     // Public route (no auth)
     fastify.get('/health', async () => ({ status: 'ok' }));
@@ -110,14 +117,14 @@ describe('Rate Limit Plugin', () => {
   describe('Rate limit checking', () => {
     it('should allow requests within rate limit', async () => {
       // Test will create user from JWT token
-      
+
       // Mock JWT validation
       mockJwtService.verifyAccessToken.mockResolvedValue(
         Result.ok({
           sub: '550e8400-e29b-41d4-a716-446655440000',
           tier: 'TIER1',
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock rate limit check
@@ -159,7 +166,7 @@ describe('Rate Limit Plugin', () => {
           sub: '550e8400-e29b-41d4-a716-446655440000',
           tier: 'TIER1',
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock rate limit exceeded
@@ -184,7 +191,7 @@ describe('Rate Limit Plugin', () => {
       expect(response.headers['retry-after']).toBe('60');
       expect(response.headers['x-ratelimit-limit']).toBe('60');
       expect(response.headers['x-ratelimit-remaining']).toBe('0');
-      
+
       const body = JSON.parse(response.body);
       expect(body.type).toContain('errors/rate-limit-exceeded');
       expect(body.status).toBe(429);
@@ -198,7 +205,7 @@ describe('Rate Limit Plugin', () => {
           sub: '550e8400-e29b-41d4-a716-446655440000',
           tier: 'TIER1',
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock high usage (80%)
@@ -243,7 +250,7 @@ describe('Rate Limit Plugin', () => {
           sub: '550e8400-e29b-41d4-a716-446655440000',
           tier: 'TIER1',
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock rate limit service error
@@ -270,7 +277,7 @@ describe('Rate Limit Plugin', () => {
           sub: '550e8400-e29b-41d4-a716-446655440000',
           tier: 'TIER1',
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock rate limit check
@@ -285,11 +292,15 @@ describe('Rate Limit Plugin', () => {
       mockRateLimitService.recordUsage.mockResolvedValue(undefined);
 
       // Add a route that returns an error
-      fastify.get('/api/error', {
-        preHandler: [fastify.authenticate, fastify.checkRateLimit],
-      }, async (request, reply) => {
-        return reply.code(400).send({ error: 'Bad request' });
-      });
+      fastify.get(
+        '/api/error',
+        {
+          preHandler: [fastify.authenticate, fastify.checkRateLimit],
+        },
+        async (request, reply) => {
+          return reply.code(400).send({ error: 'Bad request' });
+        },
+      );
 
       const response = await fastify.inject({
         method: 'GET',
@@ -309,7 +320,7 @@ describe('Rate Limit Plugin', () => {
     it('should respect custom exclude paths', async () => {
       // Create new instance with custom options
       const customFastify = Fastify({ logger: false });
-      
+
       await customFastify.register(authPlugin);
       await customFastify.register(rateLimitPlugin, {
         excludePaths: ['/api/public'],
@@ -331,7 +342,7 @@ describe('Rate Limit Plugin', () => {
     it('should respect custom exclude patterns', async () => {
       // Create new instance with custom options
       const customFastify = Fastify({ logger: false });
-      
+
       await customFastify.register(authPlugin);
       await customFastify.register(rateLimitPlugin, {
         excludePatterns: [/^\/api\/v\d+\/public\//],
@@ -353,15 +364,19 @@ describe('Rate Limit Plugin', () => {
     it('should allow disabling headers', async () => {
       // Create new instance with headers disabled
       const customFastify = Fastify({ logger: false });
-      
+
       await customFastify.register(authPlugin);
       await customFastify.register(rateLimitPlugin, {
         includeHeaders: false,
       });
 
-      customFastify.get('/api/test', {
-        preHandler: [customFastify.authenticate, customFastify.checkRateLimit],
-      }, async () => ({ data: 'test' }));
+      customFastify.get(
+        '/api/test',
+        {
+          preHandler: [customFastify.authenticate, customFastify.checkRateLimit],
+        },
+        async () => ({ data: 'test' }),
+      );
 
       // Mock JWT validation
       mockJwtService.verifyAccessToken.mockResolvedValue(
@@ -369,7 +384,7 @@ describe('Rate Limit Plugin', () => {
           sub: '550e8400-e29b-41d4-a716-446655440000',
           tier: 'TIER1',
           exp: Math.floor(Date.now() / 1000) + 3600,
-        })
+        }),
       );
 
       // Mock rate limit check

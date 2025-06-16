@@ -9,7 +9,7 @@ export class DataAccessRequested extends DomainEvent {
     public readonly resourceSize: number,
     public readonly mimeType: string,
     public readonly requestTime: Date,
-    eventVersion?: number
+    eventVersion?: number,
   ) {
     super(aggregateId, eventVersion);
   }

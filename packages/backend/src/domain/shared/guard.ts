@@ -17,10 +17,7 @@ export class Guard {
     return { succeeded: true, message: '' };
   }
 
-  public static againstNullOrUndefined(
-    argument: any,
-    argumentName: string
-  ): GuardResult {
+  public static againstNullOrUndefined(argument: any, argumentName: string): GuardResult {
     if (argument === null || argument === undefined) {
       return {
         succeeded: false,
@@ -31,14 +28,9 @@ export class Guard {
     }
   }
 
-  public static againstNullOrUndefinedBulk(
-    args: GuardArgument[]
-  ): GuardResult {
+  public static againstNullOrUndefinedBulk(args: GuardArgument[]): GuardResult {
     for (const arg of args) {
-      const result = this.againstNullOrUndefined(
-        arg.argument,
-        arg.argumentName
-      );
+      const result = this.againstNullOrUndefined(arg.argument, arg.argumentName);
       if (!result.succeeded) return result;
     }
 
@@ -48,7 +40,7 @@ export class Guard {
   public static againstAtLeast(
     numChars: number,
     argument: string,
-    argumentName: string
+    argumentName: string,
   ): GuardResult {
     if (argument.length < numChars) {
       return {
@@ -63,7 +55,7 @@ export class Guard {
   public static againstAtMost(
     numChars: number,
     argument: string,
-    argumentName: string
+    argumentName: string,
   ): GuardResult {
     if (argument.length > numChars) {
       return {

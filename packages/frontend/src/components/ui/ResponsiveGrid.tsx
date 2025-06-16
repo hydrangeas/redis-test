@@ -21,12 +21,12 @@ export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   className,
 }) => {
   const gridClasses = [];
-  
+
   // デフォルトのカラム数
   if (cols.default) {
     gridClasses.push(`grid-cols-${cols.default}`);
   }
-  
+
   // レスポンシブカラム数
   if (cols.sm) {
     gridClasses.push(`sm:grid-cols-${cols.sm}`);
@@ -40,13 +40,11 @@ export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   if (cols.xl) {
     gridClasses.push(`xl:grid-cols-${cols.xl}`);
   }
-  
+
   // ギャップ
   gridClasses.push(`gap-${gap}`);
 
   return (
-    <div className={cn("grid", ...gridClasses, className)}>
-      {children}
-    </div>
+    <div className={cn("grid", ...gridClasses, className)}>{children}</div>
   );
 };

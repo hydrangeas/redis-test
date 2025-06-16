@@ -22,29 +22,38 @@ export function createFastifyLoggerConfig(config: EnvConfig): FastifyServerOptio
 export function setupRequestLogging(server: any): void {
   // リクエスト開始時のログ
   server.addHook('onRequest', async (request: any) => {
-    request.log.info({
-      req: request,
-      event: 'request_start',
-    }, 'incoming request');
+    request.log.info(
+      {
+        req: request,
+        event: 'request_start',
+      },
+      'incoming request',
+    );
   });
 
   // レスポンス送信時のログ
   server.addHook('onResponse', async (request: any, reply: any) => {
-    request.log.info({
-      req: request,
-      res: reply,
-      event: 'request_complete',
-      responseTime: reply.getResponseTime(),
-    }, 'request completed');
+    request.log.info(
+      {
+        req: request,
+        res: reply,
+        event: 'request_complete',
+        responseTime: reply.getResponseTime(),
+      },
+      'request completed',
+    );
   });
 
   // エラー発生時のログ
   server.addHook('onError', async (request: any, reply: any, error: Error) => {
-    request.log.error({
-      req: request,
-      res: reply,
-      err: error,
-      event: 'request_error',
-    }, 'request error');
+    request.log.error(
+      {
+        req: request,
+        res: reply,
+        err: error,
+        event: 'request_error',
+      },
+      'request error',
+    );
   });
 }

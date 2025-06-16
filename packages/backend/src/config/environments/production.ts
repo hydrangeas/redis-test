@@ -5,16 +5,16 @@ export const productionConfig = {
     synchronize: false,
     ssl: true,
   },
-  
+
   cache: {
     ttl: 3600, // 1時間
     checkPeriod: 7200, // 2時間
   },
-  
+
   email: {
     transport: 'ses', // AWS SES
   },
-  
+
   storage: {
     driver: 's3',
     bucket: 'production-data-bucket',

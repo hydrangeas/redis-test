@@ -55,7 +55,7 @@ describe('AuthenticationUseCase', () => {
       mockJWTValidator,
       mockAuthService,
       mockEventBus,
-      mockLogger
+      mockLogger,
     );
   });
 
@@ -74,16 +74,14 @@ describe('AuthenticationUseCase', () => {
 
       const authenticatedUser = new AuthenticatedUser(
         UserId.fromString(validUuid),
-        UserTier.createDefault(TierLevel.TIER2)
+        UserTier.createDefault(TierLevel.TIER2),
       );
 
       vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
-        DomainResult.ok({ sub: validUuid })
+        DomainResult.ok({ sub: validUuid }),
       );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
-      vi.mocked(mockAuthService.validateToken).mockReturnValue(
-        DomainResult.ok(authenticatedUser)
-      );
+      vi.mocked(mockAuthService.validateToken).mockReturnValue(DomainResult.ok(authenticatedUser));
 
       const result = await useCase.validateToken(token);
 
@@ -99,7 +97,7 @@ describe('AuthenticationUseCase', () => {
 
     it('should fail for empty token', async () => {
       vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
-        DomainResult.fail(new Error('Invalid token format'))
+        DomainResult.fail(new Error('Invalid token format')),
       );
 
       const result = await useCase.validateToken('');
@@ -115,9 +113,7 @@ describe('AuthenticationUseCase', () => {
     it('should fail when token verification fails', async () => {
       const token = 'invalid.jwt.token';
 
-      vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
-        DomainResult.ok({ sub: 'test' })
-      );
+      vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(DomainResult.ok({ sub: 'test' }));
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(null);
 
       const result = await useCase.validateToken(token);
@@ -130,7 +126,7 @@ describe('AuthenticationUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           reason: 'JWT_VERIFICATION_FAILED',
-        })
+        }),
       );
     });
 
@@ -146,11 +142,11 @@ describe('AuthenticationUseCase', () => {
       };
 
       vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
-        DomainResult.ok({ sub: validUuid })
+        DomainResult.ok({ sub: validUuid }),
       );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
       vi.mocked(mockAuthService.validateToken).mockReturnValue(
-        DomainResult.fail(new Error('Token expired'))
+        DomainResult.fail(new Error('Token expired')),
       );
 
       const result = await useCase.validateToken(token);
@@ -165,7 +161,7 @@ describe('AuthenticationUseCase', () => {
           aggregateId: validUuid,
           provider: validUuid,
           reason: 'Token expired',
-        })
+        }),
       );
     });
   });
@@ -204,7 +200,7 @@ describe('AuthenticationUseCase', () => {
         expect.objectContaining({
           aggregateId: validUuid,
           userId: validUuid,
-        })
+        }),
       );
     });
 
@@ -273,7 +269,7 @@ describe('AuthenticationUseCase', () => {
           aggregateId: validUuid,
           userId: validUuid,
           reason: 'user_initiated',
-        })
+        }),
       );
     });
 
@@ -289,9 +285,7 @@ describe('AuthenticationUseCase', () => {
     });
 
     it('should handle sign out errors', async () => {
-      vi.mocked(mockAuthAdapter.signOut).mockRejectedValue(
-        new Error('Network error')
-      );
+      vi.mocked(mockAuthAdapter.signOut).mockRejectedValue(new Error('Network error'));
 
       const result = await useCase.signOut(validUuid);
 

@@ -6,12 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { 
-  setupTestEnvironment, 
-  teardownTestEnvironment, 
-  createTestUser,
-  delay 
-} from './setup';
+import { setupTestEnvironment, teardownTestEnvironment, createTestUser, delay } from './setup';
 
 describe('Authentication Endpoints E2E', () => {
   let app: FastifyInstance;
@@ -130,7 +125,7 @@ describe('Authentication Endpoints E2E', () => {
 
       expect(response.statusCode).toBe(401);
       expect(response.headers['www-authenticate']).toBeDefined();
-      
+
       const body = JSON.parse(response.body);
       expect(body.type).toBe('https://api.opendata.nara/errors/unauthorized');
       expect(body.title).toBe('Unauthorized');
@@ -268,7 +263,7 @@ describe('Authentication Endpoints E2E', () => {
         },
       });
       expect(refreshResponse.statusCode).toBe(200);
-      
+
       const refreshBody = JSON.parse(refreshResponse.body);
       const newToken = refreshBody.access_token;
 
@@ -302,8 +297,8 @@ describe('Authentication Endpoints E2E', () => {
 
       expect(logs).toBeDefined();
       expect(logs?.length).toBeGreaterThanOrEqual(2);
-      
-      const eventTypes = logs?.map(log => log.event_type) || [];
+
+      const eventTypes = logs?.map((log) => log.event_type) || [];
       expect(eventTypes).toContain('LOGIN_SUCCESS');
       expect(eventTypes).toContain('LOGOUT');
     });

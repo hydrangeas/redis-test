@@ -41,7 +41,7 @@ describe('RequestCount', () => {
     it('should handle zero limit correctly', () => {
       const count = new RequestCount(0);
       expect(count.exceeds(0)).toBe(true);
-      
+
       const count2 = new RequestCount(1);
       expect(count2.exceeds(0)).toBe(true);
     });

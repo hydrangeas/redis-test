@@ -5,14 +5,14 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { FastifyInstance } from 'fastify';
-import { 
-  setupTestEnvironment, 
-  teardownTestEnvironment, 
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
   createTestUser,
   createTestDataFile,
   removeTestDataFile,
   makeConcurrentRequests,
-  delay
+  delay,
 } from './setup';
 
 describe('Data API Endpoints E2E', () => {
@@ -59,7 +59,7 @@ describe('Data API Endpoints E2E', () => {
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toContain('application/json');
       expect(response.headers['cache-control']).toBeDefined();
-      
+
       const body = JSON.parse(response.body);
       expect(body).toEqual(testData);
     });
@@ -143,7 +143,7 @@ describe('Data API Endpoints E2E', () => {
 
       expect(response.statusCode).toBe(401);
       expect(response.headers['www-authenticate']).toBe('Bearer');
-      
+
       const body = JSON.parse(response.body);
       expect(body.type).toBe('https://api.opendata.nara/errors/unauthorized');
       expect(body.title).toBe('Unauthorized');
@@ -152,7 +152,8 @@ describe('Data API Endpoints E2E', () => {
 
     it('should reject expired token', async () => {
       // This would require mocking time or using a real expired token
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJleHAiOjEwMDAwMDAwMDB9.invalid';
+      const expiredToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJleHAiOjEwMDAwMDAwMDB9.invalid';
 
       const response = await app.inject({
         method: 'GET',
@@ -182,28 +183,28 @@ describe('Data API Endpoints E2E', () => {
           },
         }));
 
-        const successCount = responses.filter(r => r.statusCode === 200).length;
-        const rateLimitedCount = responses.filter(r => r.statusCode === 429).length;
+        const successCount = responses.filter((r) => r.statusCode === 200).length;
+        const rateLimitedCount = responses.filter((r) => r.statusCode === 429).length;
 
         expect(successCount).toBe(limit);
         expect(rateLimitedCount).toBe(5);
 
         // Check rate limit headers
-        const lastSuccessResponse = responses.find(r => r.statusCode === 200);
+        const lastSuccessResponse = responses.find((r) => r.statusCode === 200);
         expect(lastSuccessResponse?.headers['x-ratelimit-limit']).toBe('60');
         expect(lastSuccessResponse?.headers['x-ratelimit-remaining']).toBeDefined();
         expect(lastSuccessResponse?.headers['x-ratelimit-reset']).toBeDefined();
 
         // Check rate limited response
-        const rateLimitedResponse = responses.find(r => r.statusCode === 429);
+        const rateLimitedResponse = responses.find((r) => r.statusCode === 429);
         expect(rateLimitedResponse).toBeDefined();
-        
+
         const body = JSON.parse(rateLimitedResponse!.body);
         expect(body.type).toBe('https://api.opendata.nara/errors/rate-limit-exceeded');
         expect(body.title).toBe('Too Many Requests');
         expect(body.status).toBe(429);
         expect(body.detail).toContain('Rate limit exceeded');
-        
+
         expect(rateLimitedResponse!.headers['retry-after']).toBeDefined();
         expect(rateLimitedResponse!.headers['x-ratelimit-limit']).toBe('60');
         expect(rateLimitedResponse!.headers['x-ratelimit-remaining']).toBe('0');
@@ -343,7 +344,7 @@ describe('Data API Endpoints E2E', () => {
           method: 'OPTIONS',
           url: '/secure/test/data.json',
           headers: {
-            'Origin': 'https://example.com',
+            Origin: 'https://example.com',
             'Access-Control-Request-Method': 'GET',
             'Access-Control-Request-Headers': 'authorization,content-type',
           },

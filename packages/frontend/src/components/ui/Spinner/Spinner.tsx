@@ -1,26 +1,35 @@
-import React, { forwardRef } from 'react';
-import { cn } from '../../../lib/utils';
+import React, { forwardRef } from "react";
+import { cn } from "../../../lib/utils";
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  variant?: 'primary' | 'secondary' | 'white';
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  variant?: "primary" | "secondary" | "white";
   label?: string;
 }
 
 const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
-  ({ className, size = 'md', variant = 'primary', label = 'Loading...', ...props }, ref) => {
+  (
+    {
+      className,
+      size = "md",
+      variant = "primary",
+      label = "Loading...",
+      ...props
+    },
+    ref
+  ) => {
     const sizes = {
-      xs: 'w-3 h-3',
-      sm: 'w-4 h-4',
-      md: 'w-6 h-6',
-      lg: 'w-8 h-8',
-      xl: 'w-12 h-12',
+      xs: "w-3 h-3",
+      sm: "w-4 h-4",
+      md: "w-6 h-6",
+      lg: "w-8 h-8",
+      xl: "w-12 h-12",
     };
 
     const variants = {
-      primary: 'text-purple-600 dark:text-purple-400',
-      secondary: 'text-gray-600 dark:text-gray-400',
-      white: 'text-white',
+      primary: "text-purple-600 dark:text-purple-400",
+      secondary: "text-gray-600 dark:text-gray-400",
+      white: "text-white",
     };
 
     return (
@@ -28,11 +37,11 @@ const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
         ref={ref}
         role="status"
         aria-label={label}
-        className={cn('inline-flex items-center justify-center', className)}
+        className={cn("inline-flex items-center justify-center", className)}
         {...props}
       >
         <svg
-          className={cn('animate-spin', sizes[size], variants[variant])}
+          className={cn("animate-spin", sizes[size], variants[variant])}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -58,9 +67,10 @@ const Spinner = forwardRef<HTMLDivElement, SpinnerProps>(
   }
 );
 
-Spinner.displayName = 'Spinner';
+Spinner.displayName = "Spinner";
 
-export interface LoadingOverlayProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface LoadingOverlayProps
+  extends React.HTMLAttributes<HTMLDivElement> {
   show?: boolean;
   label?: string;
   fullScreen?: boolean;
@@ -68,17 +78,27 @@ export interface LoadingOverlayProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 export const LoadingOverlay = forwardRef<HTMLDivElement, LoadingOverlayProps>(
-  ({ className, show = true, label = 'Loading...', fullScreen = false, blur = true, ...props }, ref) => {
+  (
+    {
+      className,
+      show = true,
+      label = "Loading...",
+      fullScreen = false,
+      blur = true,
+      ...props
+    },
+    ref
+  ) => {
     if (!show) return null;
 
     return (
       <div
         ref={ref}
         className={cn(
-          'absolute inset-0 z-50 flex items-center justify-center',
-          blur && 'backdrop-blur-sm',
-          fullScreen && 'fixed',
-          'bg-white/80 dark:bg-gray-900/80',
+          "absolute inset-0 z-50 flex items-center justify-center",
+          blur && "backdrop-blur-sm",
+          fullScreen && "fixed",
+          "bg-white/80 dark:bg-gray-900/80",
           className
         )}
         {...props}
@@ -96,6 +116,6 @@ export const LoadingOverlay = forwardRef<HTMLDivElement, LoadingOverlayProps>(
   }
 );
 
-LoadingOverlay.displayName = 'LoadingOverlay';
+LoadingOverlay.displayName = "LoadingOverlay";
 
 export default Spinner;

@@ -18,17 +18,23 @@ describe('Server Configuration', () => {
   beforeAll(async () => {
     // Test DI設定
     setupTestDI();
-    
+
     // JwtServiceのモックを登録
     const mockJwtService: IJwtService = {
       generateAccessToken: vi.fn().mockResolvedValue(Result.ok('mock-access-token')),
       generateRefreshToken: vi.fn().mockResolvedValue(Result.ok('mock-refresh-token')),
-      verifyAccessToken: vi.fn().mockResolvedValue(Result.ok({ sub: '123e4567-e89b-12d3-a456-426614174000', tier: 'tier1' })),
-      verifyRefreshToken: vi.fn().mockResolvedValue(Result.ok({ sub: '123e4567-e89b-12d3-a456-426614174000' })),
+      verifyAccessToken: vi
+        .fn()
+        .mockResolvedValue(
+          Result.ok({ sub: '123e4567-e89b-12d3-a456-426614174000', tier: 'tier1' }),
+        ),
+      verifyRefreshToken: vi
+        .fn()
+        .mockResolvedValue(Result.ok({ sub: '123e4567-e89b-12d3-a456-426614174000' })),
       decodeToken: vi.fn().mockReturnValue({ sub: '123e4567-e89b-12d3-a456-426614174000' }),
     };
     container.register(DI_TOKENS.JwtService, { useValue: mockJwtService });
-    
+
     // UserRepositoryのモックを登録
     const mockUserRepository: IUserRepository = {
       findById: vi.fn().mockResolvedValue(Result.ok(null)),
@@ -38,7 +44,7 @@ describe('Server Configuration', () => {
       delete: vi.fn().mockResolvedValue(Result.ok()),
     };
     container.register(DI_TOKENS.UserRepository, { useValue: mockUserRepository });
-    
+
     // RateLimitLogRepositoryのモックを登録
     const mockRateLimitLogRepository: IRateLimitLogRepository = {
       save: vi.fn().mockResolvedValue(Result.ok()),
@@ -48,40 +54,46 @@ describe('Server Configuration', () => {
       deleteByUserId: vi.fn().mockResolvedValue(Result.ok()),
     };
     container.register(DI_TOKENS.RateLimitLogRepository, { useValue: mockRateLimitLogRepository });
-    
+
     // RateLimitUseCaseのモックを登録
     const mockRateLimitUseCase: IRateLimitUseCase = {
-      checkAndRecordAccess: vi.fn().mockResolvedValue(Result.ok({
-        allowed: true,
-        limit: 60,
-        remaining: 59,
-        resetAt: Math.floor(Date.now() / 1000) + 60,
-      })),
-      getUserUsageStatus: vi.fn().mockResolvedValue(Result.ok({
-        currentCount: 1,
-        limit: 60,
-        windowStart: new Date(),
-        windowEnd: new Date(Date.now() + 60000),
-      })),
+      checkAndRecordAccess: vi.fn().mockResolvedValue(
+        Result.ok({
+          allowed: true,
+          limit: 60,
+          remaining: 59,
+          resetAt: Math.floor(Date.now() / 1000) + 60,
+        }),
+      ),
+      getUserUsageStatus: vi.fn().mockResolvedValue(
+        Result.ok({
+          currentCount: 1,
+          limit: 60,
+          windowStart: new Date(),
+          windowEnd: new Date(Date.now() + 60000),
+        }),
+      ),
       resetUserLimit: vi.fn().mockResolvedValue(Result.ok()),
     };
     container.register(DI_TOKENS.RateLimitUseCase, { useValue: mockRateLimitUseCase });
-    
+
     // DataRetrievalUseCaseのモックを登録
     const mockDataRetrievalUseCase: IDataRetrievalUseCase = {
-      retrieveData: vi.fn().mockResolvedValue(Result.ok({
-        content: { test: 'data' },
-        checksum: 'abc123',
-        lastModified: new Date(),
-      })),
+      retrieveData: vi.fn().mockResolvedValue(
+        Result.ok({
+          content: { test: 'data' },
+          checksum: 'abc123',
+          lastModified: new Date(),
+        }),
+      ),
     };
     container.register(DI_TOKENS.DataRetrievalUseCase, { useValue: mockDataRetrievalUseCase });
-    
+
     // 環境変数の設定
     process.env.NODE_ENV = 'test';
     process.env.API_URL = 'http://localhost:8000';
     process.env.ALLOWED_ORIGINS = 'http://localhost:3000,http://localhost:5173';
-    
+
     // サーバー構築
     server = await buildServer();
   });

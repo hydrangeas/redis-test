@@ -1,17 +1,17 @@
-import React from 'react';
+import React from "react";
 
 interface AlertProps {
-  type: 'error' | 'warning' | 'info' | 'success';
+  type: "error" | "warning" | "info" | "success";
   children: React.ReactNode;
   onClose?: () => void;
 }
 
 export const Alert: React.FC<AlertProps> = ({ type, children, onClose }) => {
   const alertClasses = {
-    error: 'alert-error',
-    warning: 'alert-warning',
-    info: 'alert-info',
-    success: 'alert-success',
+    error: "alert-error",
+    warning: "alert-warning",
+    info: "alert-info",
+    success: "alert-success",
   };
 
   return (

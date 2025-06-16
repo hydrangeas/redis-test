@@ -39,21 +39,15 @@ export class Provider {
   static create(value: string): Result<Provider> {
     if (!value || value.trim().length === 0) {
       return Result.fail<Provider>(
-        DomainError.validation(
-          'EMPTY_PROVIDER_NAME',
-          'プロバイダー名は空にできません'
-        )
+        DomainError.validation('EMPTY_PROVIDER_NAME', 'プロバイダー名は空にできません'),
       );
     }
 
     const normalized = value.trim().toLowerCase();
-    
+
     if (!this.VALID_PROVIDERS.includes(normalized)) {
       return Result.fail<Provider>(
-        DomainError.validation(
-          'UNKNOWN_PROVIDER',
-          `Unknown provider: ${value}`
-        )
+        DomainError.validation('UNKNOWN_PROVIDER', `Unknown provider: ${value}`),
       );
     }
 

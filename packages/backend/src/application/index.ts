@@ -8,8 +8,8 @@ export type { Result, SuccessResult, ErrorResult } from './errors/result';
 export { AuthenticationUseCase } from './use-cases/authentication.use-case';
 
 // Interfaces
-export type { 
+export type {
   IAuthenticationUseCase,
   TokenRefreshResult,
-  TokenValidationResult 
+  TokenValidationResult,
 } from './interfaces/authentication-use-case.interface';

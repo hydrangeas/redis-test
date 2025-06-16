@@ -34,7 +34,7 @@ export async function setupTestEnvironment() {
         autoRefreshToken: false,
         persistSession: false,
       },
-    }
+    },
   );
 
   // Clean up test data before starting
@@ -64,7 +64,7 @@ export async function teardownTestEnvironment() {
     await app.close();
   }
   await cleanupTestData();
-  
+
   // Remove test data directory
   try {
     await fs.rm(process.env.DATA_DIRECTORY || 'test-data', { recursive: true, force: true });
@@ -82,8 +82,8 @@ async function cleanupTestData() {
     const { data: testUsers } = await supabase.auth.admin.listUsers();
     if (testUsers?.users) {
       const testUserIds = testUsers.users
-        .filter(user => user.email?.startsWith('test-'))
-        .map(user => user.id);
+        .filter((user) => user.email?.startsWith('test-'))
+        .map((user) => user.id);
 
       // Delete test user data from various tables
       if (testUserIds.length > 0) {
@@ -148,10 +148,10 @@ export async function createTestUser(tier: string = 'tier1') {
 export async function createTestDataFile(relativePath: string, data: any) {
   const fullPath = path.join(process.env.DATA_DIRECTORY || 'test-data', relativePath);
   const dir = path.dirname(fullPath);
-  
+
   await fs.mkdir(dir, { recursive: true });
   await fs.writeFile(fullPath, JSON.stringify(data, null, 2));
-  
+
   return fullPath;
 }
 
@@ -160,7 +160,7 @@ export async function createTestDataFile(relativePath: string, data: any) {
  */
 export async function removeTestDataFile(relativePath: string) {
   const fullPath = path.join(process.env.DATA_DIRECTORY || 'test-data', relativePath);
-  
+
   try {
     await fs.unlink(fullPath);
   } catch (error) {
@@ -172,7 +172,7 @@ export async function removeTestDataFile(relativePath: string) {
  * Wait for a specific amount of time (useful for rate limit tests)
  */
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -196,13 +196,13 @@ export async function makeConcurrentRequests(
     url: string;
     headers?: any;
     payload?: any;
-  }
+  },
 ) {
   const requests = [];
-  
+
   for (let i = 0; i < count; i++) {
     requests.push(app.inject(requestFactory(i)));
   }
-  
+
   return Promise.all(requests);
 }

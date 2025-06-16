@@ -7,7 +7,7 @@ describe('API Versioning Plugin', () => {
 
   beforeEach(async () => {
     app = Fastify();
-    
+
     await app.register(versioningPlugin, {
       defaultVersion: '2',
       supportedVersions: ['1', '2', '2.1'],

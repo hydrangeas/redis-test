@@ -5,6 +5,7 @@ This guide explains how to configure environment variables for the OpenData API 
 ## Overview
 
 Vercel provides three environment types:
+
 - **Development**: Used when running `vercel dev` locally
 - **Preview**: Used for preview deployments (pull requests)
 - **Production**: Used for production deployments
@@ -28,6 +29,7 @@ JWT_SECRET=your-jwt-secret-at-least-32-characters-long
 ```
 
 Generate a secure secret:
+
 ```bash
 openssl rand -base64 32
 ```
@@ -173,10 +175,12 @@ npm run build
 ### Common Issues
 
 1. **Missing environment variables**
+
    - Check the build logs in Vercel Dashboard
    - Ensure all required variables are set for the deployment environment
 
 2. **Invalid values**
+
    - Verify URL formats include protocol (https://)
    - Ensure numeric values are positive integers
    - Check JWT secret is at least 32 characters

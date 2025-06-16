@@ -7,7 +7,8 @@ const textareaVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-gray-300 focus:border-purple-500 focus:ring-purple-500",
+        default:
+          "border-gray-300 focus:border-purple-500 focus:ring-purple-500",
         error: "border-red-500 focus:border-red-500 focus:ring-red-500",
         success: "border-green-500 focus:border-green-500 focus:ring-green-500",
       },
@@ -49,9 +50,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     },
     ref
   ) => {
-    const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+    const textareaId =
+      id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
     const helperId = helperText ? `${textareaId}-helper` : undefined;
-    
+
     const actualVariant = error ? "error" : variant;
 
     return (
@@ -65,17 +67,20 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             {required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        
+
         <textarea
           id={textareaId}
           ref={ref}
           rows={rows}
-          className={cn(textareaVariants({ variant: actualVariant, size }), className)}
+          className={cn(
+            textareaVariants({ variant: actualVariant, size }),
+            className
+          )}
           aria-invalid={error}
           aria-describedby={helperId}
           {...props}
         />
-        
+
         {helperText && (
           <p
             id={helperId}

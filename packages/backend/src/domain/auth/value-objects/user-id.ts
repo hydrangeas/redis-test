@@ -18,7 +18,7 @@ export class UserId {
    * UUID v4形式の検証用正規表現
    * 8-4-4-4-12の16進数文字列
    */
-  private static readonly UUID_REGEX = 
+  private static readonly UUID_REGEX =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
   private readonly _value: UserIdValue;
@@ -37,21 +37,13 @@ export class UserId {
     const guardResult = Guard.againstNullOrUndefined(value, 'UserId');
     if (guardResult.isFailure || value === null || value === undefined) {
       return Result.fail(
-        DomainError.validation(
-          'INVALID_USER_ID',
-          'User ID cannot be null or undefined'
-        )
+        DomainError.validation('INVALID_USER_ID', 'User ID cannot be null or undefined'),
       );
     }
 
     const trimmedValue = value.trim();
     if (trimmedValue.length === 0) {
-      return Result.fail(
-        DomainError.validation(
-          'INVALID_USER_ID',
-          'User ID cannot be empty'
-        )
-      );
+      return Result.fail(DomainError.validation('INVALID_USER_ID', 'User ID cannot be empty'));
     }
 
     if (!this.UUID_REGEX.test(trimmedValue)) {
@@ -59,8 +51,8 @@ export class UserId {
         DomainError.validation(
           'INVALID_USER_ID_FORMAT',
           `User ID must be a valid UUID v4 format. Received: ${value}`,
-          { providedValue: value }
-        )
+          { providedValue: value },
+        ),
       );
     }
 
@@ -88,7 +80,7 @@ export class UserId {
    */
   static generate(): UserId {
     let uuid: string;
-    
+
     // ブラウザ環境
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
       uuid = crypto.randomUUID();
@@ -97,7 +89,7 @@ export class UserId {
       const { randomUUID } = require('crypto');
       uuid = randomUUID();
     }
-    
+
     // generateで作成されるUUIDは常に有効なので、fromStringを使用
     return UserId.fromString(uuid);
   }
@@ -137,7 +129,7 @@ export class UserId {
     let hash = 0;
     for (let i = 0; i < this._value.length; i++) {
       const char = this._value.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);

@@ -48,26 +48,24 @@ describe('APIAccessControlUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
       const method = 'GET';
 
       // Mock access control service
-      apiAccessControlService.canAccessEndpoint.mockReturnValue(
-        Result.ok(true)
-      );
+      apiAccessControlService.canAccessEndpoint.mockReturnValue(Result.ok(true));
 
       // Mock rate limit check - under limit
       rateLimitUseCase.checkAndRecordAccess.mockResolvedValue(
@@ -76,15 +74,12 @@ describe('APIAccessControlUseCase Integration', () => {
           limit: 60,
           remaining: 30,
           resetAt: Math.floor((Date.now() + 60000) / 1000),
-        })
+        }),
       );
 
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method,
-        { ipAddress: '192.168.1.100' }
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method, {
+        ipAddress: '192.168.1.100',
+      });
 
       expect(result.isSuccess).toBe(true);
       const decision = result.getValue();
@@ -96,12 +91,12 @@ describe('APIAccessControlUseCase Integration', () => {
       expect(rateLimitUseCase.checkAndRecordAccess).toHaveBeenCalledWith(
         authenticatedUser,
         endpoint,
-        method
+        method,
       );
 
       // Verify event was published
       expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(APIAccessRequested)
+        expect.any(APIAccessRequested),
       );
     });
 
@@ -109,26 +104,24 @@ describe('APIAccessControlUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440001'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
       const method = 'GET';
 
       // Mock access control service
-      apiAccessControlService.canAccessEndpoint.mockReturnValue(
-        Result.ok(true)
-      );
+      apiAccessControlService.canAccessEndpoint.mockReturnValue(Result.ok(true));
 
       // Mock rate limit check - at limit
       rateLimitUseCase.checkAndRecordAccess.mockResolvedValue(
@@ -138,15 +131,12 @@ describe('APIAccessControlUseCase Integration', () => {
           remaining: 0,
           resetAt: Math.floor((Date.now() + 45000) / 1000),
           retryAfter: 45,
-        })
+        }),
       );
 
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method,
-        { ipAddress: '192.168.1.100' }
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method, {
+        ipAddress: '192.168.1.100',
+      });
 
       expect(result.isSuccess).toBe(true);
       const decision = result.getValue();
@@ -159,7 +149,7 @@ describe('APIAccessControlUseCase Integration', () => {
 
       // Verify rate limit exceeded event
       expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(RateLimitExceeded)
+        expect.any(RateLimitExceeded),
       );
     });
 
@@ -167,23 +157,21 @@ describe('APIAccessControlUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock access control service
-      apiAccessControlService.canAccessEndpoint.mockReturnValue(
-        Result.ok(true)
-      );
+      apiAccessControlService.canAccessEndpoint.mockReturnValue(Result.ok(true));
 
       // Mock rate limit check failure
       rateLimitUseCase.checkAndRecordAccess.mockResolvedValue(
@@ -191,15 +179,15 @@ describe('APIAccessControlUseCase Integration', () => {
           new DomainError(
             'RATE_LIMIT_CHECK_FAILED',
             'Failed to check rate limit',
-            ErrorType.INTERNAL
-          )
-        )
+            ErrorType.INTERNAL,
+          ),
+        ),
       );
 
       const result = await useCase.checkAndRecordAccess(
         authenticatedUser,
         '/secure/data.json',
-        'GET'
+        'GET',
       );
 
       expect(result.isFailure).toBe(true);
@@ -228,26 +216,24 @@ describe('APIAccessControlUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440003'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER2');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/complex/data.json';
       const method = 'POST';
 
       // Mock access control service
-      apiAccessControlService.canAccessEndpoint.mockReturnValue(
-        Result.ok(true)
-      );
+      apiAccessControlService.canAccessEndpoint.mockReturnValue(Result.ok(true));
 
       // Mock successful rate limit check
       rateLimitUseCase.checkAndRecordAccess.mockResolvedValue(
@@ -256,19 +242,14 @@ describe('APIAccessControlUseCase Integration', () => {
           limit: 120, // tier2 limit
           remaining: 70,
           resetAt: Math.floor((Date.now() + 60000) / 1000),
-        })
+        }),
       );
 
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method,
-        {
-          ipAddress: '10.0.0.1',
-          correlationId: 'correlation-123',
-          requestId: 'request-123',
-        }
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method, {
+        ipAddress: '10.0.0.1',
+        correlationId: 'correlation-123',
+        requestId: 'request-123',
+      });
 
       expect(result.isSuccess).toBe(true);
       const decision = result.getValue();
@@ -284,25 +265,23 @@ describe('APIAccessControlUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440004'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       const endpoint = '/secure/data.json';
 
       // Mock access control service
-      apiAccessControlService.canAccessEndpoint.mockReturnValue(
-        Result.ok(true)
-      );
+      apiAccessControlService.canAccessEndpoint.mockReturnValue(Result.ok(true));
 
       // Setup rate limit responses for concurrent requests
       let requestCount = 58;
@@ -319,21 +298,20 @@ describe('APIAccessControlUseCase Integration', () => {
       });
 
       // Simulate 5 concurrent requests
-      const promises = Array(5).fill(null).map(() =>
-        useCase.checkAndRecordAccess(
-          authenticatedUser,
-          endpoint,
-          'GET',
-          { ipAddress: '192.168.1.100' }
-        )
-      );
+      const promises = Array(5)
+        .fill(null)
+        .map(() =>
+          useCase.checkAndRecordAccess(authenticatedUser, endpoint, 'GET', {
+            ipAddress: '192.168.1.100',
+          }),
+        );
 
       const results = await Promise.all(promises);
 
       // First 2 should succeed, rest should be rate limited
-      const allowedCount = results.filter(r => r.isSuccess && r.getValue().allowed).length;
-      const deniedCount = results.filter(r => r.isSuccess && !r.getValue().allowed).length;
-      
+      const allowedCount = results.filter((r) => r.isSuccess && r.getValue().allowed).length;
+      const deniedCount = results.filter((r) => r.isSuccess && !r.getValue().allowed).length;
+
       expect(allowedCount).toBe(2); // 58, 59
       expect(deniedCount).toBe(3); // 60, 61, 62
 

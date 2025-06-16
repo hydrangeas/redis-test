@@ -46,7 +46,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
     @inject(DI_TOKENS.SupabaseClient)
     private readonly supabase: SupabaseClient,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async save(aggregate: APIAggregate): Promise<Result<void, DomainError>> {
@@ -56,7 +56,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       if (txError) {
         this.logger.error({ error: txError }, 'Failed to begin transaction');
         return Result.fail(
-          DomainError.unexpected('TRANSACTION_FAILED', 'Failed to begin transaction')
+          DomainError.unexpected('TRANSACTION_FAILED', 'Failed to begin transaction'),
         );
       }
 
@@ -70,7 +70,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
         await this.supabase.rpc('rollback_transaction');
         this.logger.error({ error: deleteError }, 'Failed to delete existing endpoints');
         return Result.fail(
-          DomainError.unexpected('DELETE_FAILED', 'Failed to delete existing endpoints')
+          DomainError.unexpected('DELETE_FAILED', 'Failed to delete existing endpoints'),
         );
       }
 
@@ -106,9 +106,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
         if (insertError) {
           await this.supabase.rpc('rollback_transaction');
           this.logger.error({ error: insertError }, 'Failed to insert endpoints');
-          return Result.fail(
-            DomainError.unexpected('INSERT_FAILED', 'Failed to insert endpoints')
-          );
+          return Result.fail(DomainError.unexpected('INSERT_FAILED', 'Failed to insert endpoints'));
         }
       }
 
@@ -133,9 +131,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       if (deleteRateLimitError) {
         await this.supabase.rpc('rollback_transaction');
         this.logger.error({ error: deleteRateLimitError }, 'Failed to delete rate limits');
-        return Result.fail(
-          DomainError.unexpected('DELETE_FAILED', 'Failed to delete rate limits')
-        );
+        return Result.fail(DomainError.unexpected('DELETE_FAILED', 'Failed to delete rate limits'));
       }
 
       if (rateLimitRecords.length > 0) {
@@ -147,7 +143,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           await this.supabase.rpc('rollback_transaction');
           this.logger.error({ error: insertRateLimitError }, 'Failed to insert rate limits');
           return Result.fail(
-            DomainError.unexpected('INSERT_FAILED', 'Failed to insert rate limits')
+            DomainError.unexpected('INSERT_FAILED', 'Failed to insert rate limits'),
           );
         }
       }
@@ -157,14 +153,12 @@ export class SupabaseAPIRepository implements IAPIRepository {
       if (commitError) {
         await this.supabase.rpc('rollback_transaction');
         this.logger.error({ error: commitError }, 'Failed to commit transaction');
-        return Result.fail(
-          DomainError.unexpected('COMMIT_FAILED', 'Failed to commit transaction')
-        );
+        return Result.fail(DomainError.unexpected('COMMIT_FAILED', 'Failed to commit transaction'));
       }
 
       this.logger.info(
         { endpointCount: endpointRecords.length },
-        'API aggregate saved successfully'
+        'API aggregate saved successfully',
       );
 
       return Result.ok();
@@ -174,8 +168,8 @@ export class SupabaseAPIRepository implements IAPIRepository {
         DomainError.unexpected(
           'SAVE_FAILED',
           'Failed to save API aggregate',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -189,17 +183,12 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
       if (rateLimitError) {
         this.logger.error({ error: rateLimitError }, 'Failed to fetch rate limits');
-        return Result.fail(
-          DomainError.unexpected('FETCH_FAILED', 'Failed to fetch rate limits')
-        );
+        return Result.fail(DomainError.unexpected('FETCH_FAILED', 'Failed to fetch rate limits'));
       }
 
       const defaultRateLimits = new Map<string, RateLimit>();
       for (const record of rateLimits || []) {
-        const rateLimitResult = RateLimit.create(
-          record.max_requests,
-          record.window_seconds
-        );
+        const rateLimitResult = RateLimit.create(record.max_requests, record.window_seconds);
         if (rateLimitResult.isSuccess) {
           defaultRateLimits.set(record.tier_level, rateLimitResult.getValue()!);
         }
@@ -221,9 +210,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
       if (endpointError) {
         this.logger.error({ error: endpointError }, 'Failed to fetch endpoints');
-        return Result.fail(
-          DomainError.unexpected('FETCH_FAILED', 'Failed to fetch endpoints')
-        );
+        return Result.fail(DomainError.unexpected('FETCH_FAILED', 'Failed to fetch endpoints'));
       }
 
       // エンドポイントを集約に追加
@@ -236,7 +223,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           if (record.rate_limit_override) {
             const overrideResult = RateLimit.create(
               record.rate_limit_override.max_requests,
-              record.rate_limit_override.window_seconds
+              record.rate_limit_override.window_seconds,
             );
             if (overrideResult.isSuccess) {
               rateLimitOverride = overrideResult.getValue();
@@ -265,14 +252,14 @@ export class SupabaseAPIRepository implements IAPIRepository {
         DomainError.unexpected(
           'FETCH_FAILED',
           'Failed to fetch API aggregate',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
 
   async findByEndpointId(
-    endpointId: EndpointId
+    endpointId: EndpointId,
   ): Promise<Result<APIAggregate | null, DomainError>> {
     try {
       const { data, error } = await this.supabase
@@ -287,9 +274,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           return Result.ok(null);
         }
         this.logger.error({ error }, 'Failed to find endpoint');
-        return Result.fail(
-          DomainError.unexpected('FIND_FAILED', 'Failed to find endpoint')
-        );
+        return Result.fail(DomainError.unexpected('FIND_FAILED', 'Failed to find endpoint'));
       }
 
       if (!data) {
@@ -304,15 +289,15 @@ export class SupabaseAPIRepository implements IAPIRepository {
         DomainError.unexpected(
           'FIND_FAILED',
           'Failed to find endpoint',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
 
   async findByPathAndMethod(
     path: EndpointPath,
-    method: HttpMethod
+    method: HttpMethod,
   ): Promise<Result<APIAggregate | null, DomainError>> {
     try {
       const { data, error } = await this.supabase
@@ -328,9 +313,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           return Result.ok(null);
         }
         this.logger.error({ error }, 'Failed to find endpoint by path and method');
-        return Result.fail(
-          DomainError.unexpected('FIND_FAILED', 'Failed to find endpoint')
-        );
+        return Result.fail(DomainError.unexpected('FIND_FAILED', 'Failed to find endpoint'));
       }
 
       if (!data) {
@@ -345,8 +328,8 @@ export class SupabaseAPIRepository implements IAPIRepository {
         DomainError.unexpected(
           'FIND_FAILED',
           'Failed to find endpoint',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -359,9 +342,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
       if (error) {
         this.logger.error({ error }, 'Failed to check if aggregate exists');
-        return Result.fail(
-          DomainError.unexpected('CHECK_FAILED', 'Failed to check existence')
-        );
+        return Result.fail(DomainError.unexpected('CHECK_FAILED', 'Failed to check existence'));
       }
 
       return Result.ok((count ?? 0) > 0);
@@ -371,8 +352,8 @@ export class SupabaseAPIRepository implements IAPIRepository {
         DomainError.unexpected(
           'CHECK_FAILED',
           'Failed to check existence',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }

@@ -1,5 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { IRateLimitService, RateLimitResult } from '@/domain/api/interfaces/rate-limit-service.interface';
+import {
+  IRateLimitService,
+  RateLimitResult,
+} from '@/domain/api/interfaces/rate-limit-service.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
@@ -18,7 +21,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
 
   constructor(
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {
     // 定期的なクリーンアップ（メモリリーク防止）
     this.cleanupInterval = setInterval(() => {
@@ -26,10 +29,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     }, 60000); // 1分ごと
   }
 
-  async checkLimit(
-    user: AuthenticatedUser,
-    endpoint: APIEndpoint
-  ): Promise<RateLimitResult> {
+  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitResult> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000; // ミリ秒に変換
@@ -39,9 +39,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     let entries = this.windows.get(key) || [];
 
     // 古いエントリを削除（スライディングウィンドウ）
-    entries = entries.filter(entry => 
-      now - entry.timestamp < windowSize
-    );
+    entries = entries.filter((entry) => now - entry.timestamp < windowSize);
 
     // 現在のカウント
     const currentCount = entries.reduce((sum, entry) => sum + entry.count, 0);
@@ -81,15 +79,18 @@ export class InMemoryRateLimitService implements IRateLimitService {
       });
     }
 
-    this.logger.debug({
-      userId: user.userId.value,
-      tier: user.tier.level,
-      endpoint: endpoint.toString(),
-      currentCount,
-      limit,
-      remaining,
-      allowed,
-    }, 'Rate limit check');
+    this.logger.debug(
+      {
+        userId: user.userId.value,
+        tier: user.tier.level,
+        endpoint: endpoint.toString(),
+        currentCount,
+        limit,
+        remaining,
+        allowed,
+      },
+      'Rate limit check',
+    );
 
     return {
       allowed,
@@ -100,10 +101,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     };
   }
 
-  async recordUsage(
-    user: AuthenticatedUser,
-    endpoint: APIEndpoint
-  ): Promise<void> {
+  async recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
@@ -111,9 +109,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     let entries = this.windows.get(key) || [];
 
     // 古いエントリを削除
-    entries = entries.filter(entry => 
-      now - entry.timestamp < windowSize
-    );
+    entries = entries.filter((entry) => now - entry.timestamp < windowSize);
 
     // 新しいエントリを追加
     entries.push({
@@ -123,16 +119,19 @@ export class InMemoryRateLimitService implements IRateLimitService {
 
     this.windows.set(key, entries);
 
-    this.logger.debug({
-      userId: user.userId.value,
-      endpoint: endpoint.toString(),
-      entryCount: entries.length,
-    }, 'Rate limit usage recorded');
+    this.logger.debug(
+      {
+        userId: user.userId.value,
+        endpoint: endpoint.toString(),
+        entryCount: entries.length,
+      },
+      'Rate limit usage recorded',
+    );
   }
 
   async getUsageStatus(
     user: AuthenticatedUser,
-    endpoint: APIEndpoint
+    endpoint: APIEndpoint,
   ): Promise<{
     currentCount: number;
     limit: number;
@@ -145,9 +144,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     const limit = user.tier.rateLimit.maxRequests;
 
     let entries = this.windows.get(key) || [];
-    entries = entries.filter(entry => 
-      now - entry.timestamp < windowSize
-    );
+    entries = entries.filter((entry) => now - entry.timestamp < windowSize);
 
     const currentCount = entries.reduce((sum, entry) => sum + entry.count, 0);
     const windowStart = new Date(now - windowSize);
@@ -161,10 +158,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     };
   }
 
-  async resetLimit(
-    user: AuthenticatedUser,
-    endpoint?: APIEndpoint
-  ): Promise<void> {
+  async resetLimit(user: AuthenticatedUser, endpoint?: APIEndpoint): Promise<void> {
     if (endpoint) {
       const key = this.generateKey(user, endpoint);
       this.windows.delete(key);
@@ -178,16 +172,16 @@ export class InMemoryRateLimitService implements IRateLimitService {
       }
     }
 
-    this.logger.info({
-      userId: user.userId.value,
-      endpoint: endpoint?.toString(),
-    }, 'Rate limit reset');
+    this.logger.info(
+      {
+        userId: user.userId.value,
+        endpoint: endpoint?.toString(),
+      },
+      'Rate limit reset',
+    );
   }
 
-  private generateKey(
-    user: AuthenticatedUser,
-    endpoint: APIEndpoint
-  ): string {
+  private generateKey(user: AuthenticatedUser, endpoint: APIEndpoint): string {
     // ユーザーIDとエンドポイントパスでキーを生成
     // 将来的にはIPアドレスなども含められる
     return `${user.userId.value}:${endpoint.path.value}`;
@@ -200,9 +194,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     // 期限切れのウィンドウを削除
     for (const [key, entries] of this.windows.entries()) {
       // すべてのエントリが1時間以上古い場合は削除
-      const allOld = entries.every(entry => 
-        now - entry.timestamp > 3600000
-      );
+      const allOld = entries.every((entry) => now - entry.timestamp > 3600000);
 
       if (allOld || entries.length === 0) {
         this.windows.delete(key);
@@ -211,10 +203,13 @@ export class InMemoryRateLimitService implements IRateLimitService {
     }
 
     if (cleanedCount > 0) {
-      this.logger.debug({
-        cleanedCount,
-        remainingWindows: this.windows.size,
-      }, 'Rate limit windows cleaned up');
+      this.logger.debug(
+        {
+          cleanedCount,
+          remainingWindows: this.windows.size,
+        },
+        'Rate limit windows cleaned up',
+      );
     }
   }
 

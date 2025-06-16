@@ -35,7 +35,7 @@ export function registerEventHandlers(container: DependencyContainer): void {
 
   // Universal Event Logger - すべてのイベントをログに記録
   const eventLogger = container.resolve(EventLogger);
-  
+
   // Auth Event Handlers
   const userAuthenticatedHandler = container.resolve(UserAuthenticatedHandler);
   eventBus.subscribe('UserAuthenticated', userAuthenticatedHandler);

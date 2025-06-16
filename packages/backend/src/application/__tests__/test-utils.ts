@@ -96,22 +96,22 @@ export function createMockUser(tier: string) {
   const emailResult = Email.create('test@example.com');
   const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000'); // Valid UUID v4
   const userTierResult = UserTier.create(tier.toUpperCase());
-  
+
   if (emailResult.isFailure || userIdResult.isFailure || userTierResult.isFailure) {
     throw new Error('Failed to create mock user components');
   }
-  
+
   const userResult = User.create({
     id: userIdResult.getValue(),
     email: emailResult.getValue(),
     tier: userTierResult.getValue(),
     lastActivityAt: new Date(),
   });
-  
+
   if (userResult.isFailure) {
     throw new Error('Failed to create mock user');
   }
-  
+
   return userResult.getValue();
 }
 

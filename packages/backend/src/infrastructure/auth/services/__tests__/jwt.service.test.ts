@@ -89,7 +89,7 @@ describe('JWTService', () => {
           expiresIn: '1h',
           issuer: mockConfig.API_BASE_URL,
           audience: mockConfig.API_BASE_URL,
-        }
+        },
       );
       expect(mockLogger.debug).toHaveBeenCalledWith({ userId, tier }, 'Access token generated');
     });
@@ -109,7 +109,7 @@ describe('JWTService', () => {
       expect(result.getError()).toBe('Failed to generate access token');
       expect(mockLogger.error).toHaveBeenCalledWith(
         { error, userId },
-        'Failed to generate access token'
+        'Failed to generate access token',
       );
     });
   });
@@ -135,7 +135,7 @@ describe('JWTService', () => {
           expiresIn: '30d',
           issuer: mockConfig.API_BASE_URL,
           audience: mockConfig.API_BASE_URL,
-        }
+        },
       );
       expect(mockLogger.debug).toHaveBeenCalledWith({ userId }, 'Refresh token generated');
     });
@@ -154,7 +154,7 @@ describe('JWTService', () => {
       expect(result.getError()).toBe('Failed to generate refresh token');
       expect(mockLogger.error).toHaveBeenCalledWith(
         { error, userId },
-        'Failed to generate refresh token'
+        'Failed to generate refresh token',
       );
     });
   });
@@ -176,18 +176,11 @@ describe('JWTService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual(payload);
-      expect(jwt.verify).toHaveBeenCalledWith(
-        token,
-        mockConfig.JWT_SECRET,
-        {
-          issuer: mockConfig.API_BASE_URL,
-          audience: mockConfig.API_BASE_URL,
-        }
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        { sub: payload.sub },
-        'Access token verified'
-      );
+      expect(jwt.verify).toHaveBeenCalledWith(token, mockConfig.JWT_SECRET, {
+        issuer: mockConfig.API_BASE_URL,
+        audience: mockConfig.API_BASE_URL,
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith({ sub: payload.sub }, 'Access token verified');
     });
 
     it('should reject non-access tokens', async () => {
@@ -234,7 +227,7 @@ describe('JWTService', () => {
       expect(result.getError()).toBe('Invalid token');
       expect(mockLogger.debug).toHaveBeenCalledWith(
         { error: 'invalid signature' },
-        'Invalid token'
+        'Invalid token',
       );
     });
 
@@ -250,10 +243,7 @@ describe('JWTService', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.getError()).toBe('Failed to verify token');
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        { error },
-        'Failed to verify access token'
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith({ error }, 'Failed to verify access token');
     });
   });
 
@@ -273,10 +263,7 @@ describe('JWTService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual(payload);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        { sub: payload.sub },
-        'Refresh token verified'
-      );
+      expect(mockLogger.debug).toHaveBeenCalledWith({ sub: payload.sub }, 'Refresh token verified');
     });
 
     it('should reject non-refresh tokens', async () => {
@@ -322,10 +309,7 @@ describe('JWTService', () => {
       const result = jwtService.decodeToken(token);
 
       expect(result).toBeNull();
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        { error },
-        'Failed to decode token'
-      );
+      expect(mockLogger.error).toHaveBeenCalledWith({ error }, 'Failed to decode token');
     });
   });
 });

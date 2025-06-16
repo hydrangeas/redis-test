@@ -1,4 +1,4 @@
-export type ApplicationErrorType = 
+export type ApplicationErrorType =
   | 'VALIDATION'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
@@ -13,7 +13,7 @@ export class ApplicationError extends Error {
     public readonly code: string,
     public readonly message: string,
     public readonly type: ApplicationErrorType,
-    public readonly metadata?: Record<string, any>
+    public readonly metadata?: Record<string, any>,
   ) {
     super(message);
     this.name = 'ApplicationError';

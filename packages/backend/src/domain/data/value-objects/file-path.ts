@@ -9,7 +9,7 @@ export class FilePath {
    * パストラバーサル攻撃パターンの検出用正規表現
    */
   private static readonly DANGEROUS_PATTERNS = /(\.\.[\/\\]|\.\.%2[fF]|\.\.%5[cC])/;
-  
+
   /**
    * 許可される文字のパターン
    * 英数字、ハイフン、アンダースコア、スラッシュ、ドット
@@ -26,18 +26,18 @@ export class FilePath {
 
     // パスの正規化
     let normalizedPath = value.trim();
-    
+
     // バックスラッシュをスラッシュに変換（Windows対応）
     normalizedPath = normalizedPath.replace(/\\/g, '/');
-    
+
     // 連続するスラッシュを単一に正規化
     normalizedPath = normalizedPath.replace(/\/+/g, '/');
-    
+
     // 先頭のスラッシュを削除（相対パスに統一）
     if (normalizedPath.startsWith('/')) {
       normalizedPath = normalizedPath.substring(1);
     }
-    
+
     // 末尾のスラッシュを削除
     if (normalizedPath.endsWith('/') && normalizedPath.length > 1) {
       normalizedPath = normalizedPath.slice(0, -1);
@@ -67,7 +67,7 @@ export class FilePath {
         actualLength: normalizedPath.length,
       });
     }
-    
+
     this.value = normalizedPath;
     Object.freeze(this);
   }

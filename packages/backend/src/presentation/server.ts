@@ -16,15 +16,17 @@ import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 export async function buildServer(): Promise<FastifyInstance> {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
-  
+
   const server = Fastify({
     logger,
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
     genReqId: (req) => {
-      return req.headers['x-request-id'] as string || 
-             req.headers['x-correlation-id'] as string || 
-             uuidv4();
+      return (
+        (req.headers['x-request-id'] as string) ||
+        (req.headers['x-correlation-id'] as string) ||
+        uuidv4()
+      );
     },
   }).withTypeProvider<TypeBoxTypeProvider>();
 
@@ -49,7 +51,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(fastifyCors, {
     origin: (origin, cb) => {
       const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
-      
+
       if (!origin || allowedOrigins.includes(origin)) {
         cb(null, true);
       } else {
@@ -120,54 +122,62 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(apiDocsRoute);
 
   // ヘルスチェック
-  server.get('/health', {
-    schema: {
-      description: 'Health check endpoint',
-      tags: ['Health'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' },
-            timestamp: { type: 'string' },
-            uptime: { type: 'number' },
-            environment: { type: 'string' },
+  server.get(
+    '/health',
+    {
+      schema: {
+        description: 'Health check endpoint',
+        tags: ['Health'],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+              timestamp: { type: 'string' },
+              uptime: { type: 'number' },
+              environment: { type: 'string' },
+            },
           },
         },
       },
     },
-  }, async (request, reply) => {
-    return {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-    };
-  });
+    async (request, reply) => {
+      return {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+      };
+    },
+  );
 
   // ルートエンドポイント
-  server.get('/', {
-    schema: {
-      description: 'API root endpoint',
-      tags: ['Health'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            name: { type: 'string' },
-            version: { type: 'string' },
-            documentation: { type: 'string' },
+  server.get(
+    '/',
+    {
+      schema: {
+        description: 'API root endpoint',
+        tags: ['Health'],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              version: { type: 'string' },
+              documentation: { type: 'string' },
+            },
           },
         },
       },
     },
-  }, async (request, reply) => {
-    return {
-      name: 'Open Data API',
-      version: process.env.API_VERSION || '1.0.0',
-      documentation: '/api-docs',
-    };
-  });
+    async (request, reply) => {
+      return {
+        name: 'Open Data API',
+        version: process.env.API_VERSION || '1.0.0',
+        documentation: '/api-docs',
+      };
+    },
+  );
 
   // 404ハンドラーはerror-handlerプラグインで設定されるためここでは設定しない
 

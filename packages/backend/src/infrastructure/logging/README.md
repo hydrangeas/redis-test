@@ -13,21 +13,25 @@
 ## 主要コンポーネント
 
 ### 1. logger.ts
+
 - Pinoロガーの設定と初期化
 - 環境に応じた設定（開発環境ではpretty-print）
 - センシティブデータのredact設定
 
 ### 2. fastify-logger.ts
+
 - Fastifyサーバー用のロガー設定
 - リクエスト/レスポンスの自動ログ
 - エラーハンドリング
 
 ### 3. metrics.ts
+
 - パフォーマンス計測ユーティリティ
 - 非同期/同期操作の実行時間測定
 - 成功/失敗の自動記録
 
 ### 4. event-logger.ts
+
 - ドメインイベントの自動ログ記録
 - センシティブデータのサニタイズ
 - EventBusとの統合
@@ -48,11 +52,14 @@ logger.info('Operation completed');
 logger.error({ err: error }, 'Operation failed');
 
 // 構造化ログ
-logger.info({
-  userId: 'user-123',
-  action: 'data_access',
-  resource: '/api/data/test.json',
-}, 'User accessed data');
+logger.info(
+  {
+    userId: 'user-123',
+    action: 'data_access',
+    resource: '/api/data/test.json',
+  },
+  'User accessed data',
+);
 ```
 
 ### パフォーマンス計測
@@ -67,16 +74,13 @@ const result = await measurePerformance(
   async () => {
     return await db.query('SELECT * FROM users');
   },
-  { queryType: 'select', table: 'users' }
+  { queryType: 'select', table: 'users' },
 );
 
 // 同期操作の計測
-const data = measureSyncPerformance(
-  logger,
-  'data_transformation',
-  () => transformData(input),
-  { dataSize: input.length }
-);
+const data = measureSyncPerformance(logger, 'data_transformation', () => transformData(input), {
+  dataSize: input.length,
+});
 ```
 
 ### ドメインイベントロギング
@@ -85,12 +89,7 @@ const data = measureSyncPerformance(
 
 ```typescript
 // イベントを発行すると自動的にログに記録される
-await eventBus.publish(new UserAuthenticated(
-  userId,
-  provider,
-  tier,
-  ipAddress
-));
+await eventBus.publish(new UserAuthenticated(userId, provider, tier, ipAddress));
 
 // ログ出力例：
 // {
@@ -134,7 +133,7 @@ await eventBus.publish(new UserAuthenticated(
 ## ベストプラクティス
 
 1. **構造化ログを使用する**: 文字列の連結ではなく、オブジェクトでデータを渡す
-2. **適切なログレベルを使用する**: 
+2. **適切なログレベルを使用する**:
    - `error`: エラーとスタックトレース
    - `warn`: 警告や潜在的な問題
    - `info`: 重要なビジネスイベント

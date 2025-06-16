@@ -8,7 +8,7 @@ export class PerformanceIssueDetectedEvent extends DomainEvent {
     public readonly endpoint: string,
     public readonly responseTime: number,
     public readonly issueType: string,
-    public readonly occurredAt: Date
+    public readonly occurredAt: Date,
   ) {
     super();
   }

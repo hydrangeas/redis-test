@@ -27,28 +27,20 @@ export interface IRateLimitService {
    * @param user 認証済みユーザー
    * @param endpoint APIエンドポイント
    */
-  checkLimit(
-    user: AuthenticatedUser,
-    endpoint: APIEndpoint
-  ): Promise<RateLimitCheckResult>;
+  checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult>;
 
   /**
    * APIアクセスを記録
    * @param user 認証済みユーザー
    * @param endpoint APIエンドポイント
    */
-  recordUsage(
-    user: AuthenticatedUser,
-    endpoint: APIEndpoint
-  ): Promise<void>;
+  recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void>;
 
   /**
    * ユーザーの現在の使用状況を取得
    * @param user 認証済みユーザー
    */
-  getUsageStatus(
-    user: AuthenticatedUser
-  ): Promise<{
+  getUsageStatus(user: AuthenticatedUser): Promise<{
     currentCount: number;
     limit: number;
     windowStart: Date;

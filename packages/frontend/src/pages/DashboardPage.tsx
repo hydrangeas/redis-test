@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ResponsiveHeader } from '@/components/Header';
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import './DashboardPage.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { ResponsiveHeader } from "@/components/Header";
+import { ResponsiveTable } from "@/components/ui/ResponsiveTable";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import "./DashboardPage.css";
 
 interface UserInfo {
   id: string;
@@ -33,21 +33,23 @@ export const DashboardPage: React.FC = () => {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
-    document.title = 'ダッシュボード - オープンデータ提供API';
+    document.title = "ダッシュボード - オープンデータ提供API";
     checkUser();
   }, []);
 
   const checkUser = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/login');
+        navigate("/login");
         return;
       }
       await fetchUserData(user);
     } catch (error) {
-      console.error('Error fetching user:', error);
-      navigate('/login');
+      console.error("Error fetching user:", error);
+      navigate("/login");
     }
   };
 
@@ -58,24 +60,25 @@ export const DashboardPage: React.FC = () => {
       // Simulate fetching user info and usage stats
       const mockUserInfo: UserInfo = {
         id: currentUser.id,
-        email: currentUser.email || 'unknown',
-        tier: currentUser.app_metadata?.tier || 'tier1',
-        apiKey: 'sk_test_' + btoa(currentUser.id).replace(/=/g, '').substring(0, 32),
+        email: currentUser.email || "unknown",
+        tier: currentUser.app_metadata?.tier || "tier1",
+        apiKey:
+          "sk_test_" + btoa(currentUser.id).replace(/=/g, "").substring(0, 32),
       };
-      
+
       const mockUsageStats: UsageStats[] = [
         {
-          endpoint: '/api/data/**',
+          endpoint: "/api/data/**",
           count: 45,
           limit: 60,
           resetAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
         },
       ];
-      
+
       setUserInfo(mockUserInfo);
       setUsageStats(mockUsageStats);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
     }
@@ -86,42 +89,42 @@ export const DashboardPage: React.FC = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error signing out:', error);
-        alert('ログアウトに失敗しました。もう一度お試しください。');
+        console.error("Error signing out:", error);
+        alert("ログアウトに失敗しました。もう一度お試しください。");
         setLoggingOut(false);
         return;
       }
       // ログアウト成功後、トップページにリダイレクト
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error signing out:', error);
-      alert('予期せぬエラーが発生しました。');
+      console.error("Error signing out:", error);
+      alert("予期せぬエラーが発生しました。");
       setLoggingOut(false);
     }
   };
 
   const copyApiKey = async () => {
     if (!userInfo?.apiKey) return;
-    
+
     try {
       await navigator.clipboard.writeText(userInfo.apiKey);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      console.error('Failed to copy API key:', error);
+      console.error("Failed to copy API key:", error);
     }
   };
 
   const maskApiKey = (key: string) => {
-    if (!key) return '';
-    return key.substring(0, 8) + '...' + key.substring(key.length - 4);
+    if (!key) return "";
+    return key.substring(0, 8) + "..." + key.substring(key.length - 4);
   };
 
   const getTierDisplayName = (tier: string) => {
     const tierNames: Record<string, string> = {
-      tier1: 'Tier 1 (無料)',
-      tier2: 'Tier 2',
-      tier3: 'Tier 3',
+      tier1: "Tier 1 (無料)",
+      tier2: "Tier 2",
+      tier3: "Tier 3",
     };
     return tierNames[tier] || tier;
   };
@@ -146,18 +149,18 @@ export const DashboardPage: React.FC = () => {
 
   const usageColumns = [
     {
-      key: 'endpoint' as keyof UsageStats,
-      header: 'エンドポイント',
+      key: "endpoint" as keyof UsageStats,
+      header: "エンドポイント",
     },
     {
-      key: 'count' as keyof UsageStats,
-      header: '使用回数',
+      key: "count" as keyof UsageStats,
+      header: "使用回数",
       render: (value: any, item: UsageStats) => `${item.count} / ${item.limit}`,
     },
     {
-      key: 'resetAt' as keyof UsageStats,
-      header: 'リセット時刻',
-      render: (value: any) => new Date(value).toLocaleTimeString('ja-JP'),
+      key: "resetAt" as keyof UsageStats,
+      header: "リセット時刻",
+      render: (value: any) => new Date(value).toLocaleTimeString("ja-JP"),
       hideOnMobile: true,
     },
   ];
@@ -165,14 +168,17 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <ResponsiveHeader />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
           ダッシュボード
         </h1>
-        
+
         {/* User Information Section */}
-        <section className="bg-white rounded-lg shadow p-4 md:p-6 mb-6" aria-label="ユーザー情報">
+        <section
+          className="bg-white rounded-lg shadow p-4 md:p-6 mb-6"
+          aria-label="ユーザー情報"
+        >
           <h2 className="text-xl font-semibold mb-4">ユーザー情報</h2>
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:justify-between">
@@ -181,33 +187,38 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between">
               <span className="text-gray-600">ユーザーID:</span>
-              <span className="font-medium text-sm break-all">{userInfo?.id}</span>
+              <span className="font-medium text-sm break-all">
+                {userInfo?.id}
+              </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between">
               <span className="text-gray-600">プラン:</span>
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                {getTierDisplayName(userInfo?.tier || '')}
+                {getTierDisplayName(userInfo?.tier || "")}
               </span>
             </div>
           </div>
         </section>
 
         {/* API Key Section */}
-        <section className="bg-white rounded-lg shadow p-4 md:p-6 mb-6" aria-label="APIキー管理">
+        <section
+          className="bg-white rounded-lg shadow p-4 md:p-6 mb-6"
+          aria-label="APIキー管理"
+        >
           <h2 className="text-xl font-semibold mb-4">APIキー</h2>
           <div className="space-y-4">
             <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
               <code className="flex-1 text-sm font-mono break-all">
-                {apiKeyVisible 
-                  ? userInfo?.apiKey 
-                  : maskApiKey(userInfo?.apiKey || '')}
+                {apiKeyVisible
+                  ? userInfo?.apiKey
+                  : maskApiKey(userInfo?.apiKey || "")}
               </code>
               <button
                 className="p-2 hover:bg-gray-200 rounded transition"
                 onClick={() => setApiKeyVisible(!apiKeyVisible)}
-                aria-label={apiKeyVisible ? 'APIキーを隠す' : 'APIキーを表示'}
+                aria-label={apiKeyVisible ? "APIキーを隠す" : "APIキーを表示"}
               >
-                {apiKeyVisible ? '🙈' : '👁️'}
+                {apiKeyVisible ? "🙈" : "👁️"}
               </button>
               <button
                 className="p-2 hover:bg-gray-200 rounded transition"
@@ -228,28 +239,37 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* Usage Statistics Section */}
-        <section className="bg-white rounded-lg shadow p-4 md:p-6 mb-6" aria-label="使用状況">
+        <section
+          className="bg-white rounded-lg shadow p-4 md:p-6 mb-6"
+          aria-label="使用状況"
+        >
           <h2 className="text-xl font-semibold mb-4">API使用状況</h2>
           {isMobile ? (
             <div className="space-y-4">
               {usageStats.map((stat, index) => {
                 const percentage = getUsagePercentage(stat.count, stat.limit);
                 const isNearLimit = percentage >= 80;
-                
+
                 return (
                   <div key={index} className="p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-medium mb-2">{stat.endpoint}</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>{stat.count} / {stat.limit} リクエスト</span>
-                        <span className={isNearLimit ? 'text-red-600' : 'text-gray-600'}>
+                        <span>
+                          {stat.count} / {stat.limit} リクエスト
+                        </span>
+                        <span
+                          className={
+                            isNearLimit ? "text-red-600" : "text-gray-600"
+                          }
+                        >
                           {percentage}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all ${
-                            isNearLimit ? 'bg-red-500' : 'bg-purple-600'
+                            isNearLimit ? "bg-red-500" : "bg-purple-600"
                           }`}
                           style={{ width: `${percentage}%` }}
                           role="progressbar"
@@ -259,7 +279,7 @@ export const DashboardPage: React.FC = () => {
                         />
                       </div>
                       <p className="text-xs text-gray-500">
-                        リセット: {stat.resetAt.toLocaleTimeString('ja-JP')}
+                        リセット: {stat.resetAt.toLocaleTimeString("ja-JP")}
                       </p>
                     </div>
                   </div>
@@ -276,19 +296,22 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* Actions Section */}
-        <section className="space-y-4 md:space-y-0 md:flex md:gap-4" aria-label="アクション">
-          <button 
+        <section
+          className="space-y-4 md:space-y-0 md:flex md:gap-4"
+          aria-label="アクション"
+        >
+          <button
             className="w-full md:w-auto px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition"
-            onClick={() => navigate('/api-docs')}
+            onClick={() => navigate("/api-docs")}
           >
             APIドキュメントを見る
           </button>
-          <button 
+          <button
             className="w-full md:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
             onClick={handleSignOut}
             disabled={loggingOut}
           >
-            {loggingOut ? 'ログアウト中...' : 'ログアウト'}
+            {loggingOut ? "ログアウト中..." : "ログアウト"}
           </button>
         </section>
       </div>

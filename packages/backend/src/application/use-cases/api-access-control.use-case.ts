@@ -1,8 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { 
-  IAPIAccessControlUseCase, 
-  APIAccessDecision, 
-  APIAccessMetadata 
+import {
+  IAPIAccessControlUseCase,
+  APIAccessDecision,
+  APIAccessMetadata,
 } from '@/application/interfaces/api-access-control-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
 import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
@@ -35,7 +35,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   /**
@@ -45,7 +45,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     user: AuthenticatedUser,
     endpoint: string,
     method: string,
-    metadata?: APIAccessMetadata
+    metadata?: APIAccessMetadata,
   ): Promise<Result<APIAccessDecision, DomainError>> {
     const startTime = Date.now();
 
@@ -57,7 +57,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
         return Result.ok({
           allowed: false,
           reason: 'endpoint_not_found',
-          message: 'Invalid endpoint path'
+          message: 'Invalid endpoint path',
         });
       }
 
@@ -68,7 +68,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       const accessCheckResult = this.accessControlService.canAccessEndpoint(
         user,
         endpointPathResult.getValue(),
-        endpointType
+        endpointType,
       );
 
       if (accessCheckResult.isFailure || !accessCheckResult.getValue()) {
@@ -76,7 +76,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
         return Result.ok({
           allowed: false,
           reason: 'unauthorized',
-          message: 'Access to this endpoint is not allowed for your tier'
+          message: 'Access to this endpoint is not allowed for your tier',
         });
       }
 
@@ -84,7 +84,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       const rateLimitResult = await this.rateLimitUseCase.checkAndRecordAccess(
         user,
         endpoint,
-        method
+        method,
       );
 
       if (rateLimitResult.isFailure) {
@@ -100,7 +100,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
         method,
         rateLimitStatus.allowed ? 200 : 429,
         startTime,
-        metadata
+        metadata,
       );
 
       // 4. ドメインイベントの発行
@@ -110,8 +110,8 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
           endpoint,
           method,
           new Date(),
-          rateLimitStatus.allowed
-        )
+          rateLimitStatus.allowed,
+        ),
       );
 
       // レート制限に引っかかった場合
@@ -122,15 +122,15 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
             endpoint,
             method,
             'rate_limit_exceeded',
-            new Date()
-          )
+            new Date(),
+          ),
         );
 
         return Result.ok({
           allowed: false,
           reason: 'rate_limit_exceeded',
           rateLimitStatus,
-          message: `Rate limit exceeded. Try again in ${rateLimitStatus.retryAfter} seconds`
+          message: `Rate limit exceeded. Try again in ${rateLimitStatus.retryAfter} seconds`,
         });
       }
 
@@ -138,23 +138,25 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       return Result.ok({
         allowed: true,
         reason: 'authenticated',
-        rateLimitStatus
+        rateLimitStatus,
       });
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.userId.toString(),
-        endpoint,
-        method
-      }, 'Error in API access control');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: user.userId.toString(),
+          endpoint,
+          method,
+        },
+        'Error in API access control',
+      );
 
       return Result.fail(
         DomainError.internal(
           'API_ACCESS_CHECK_ERROR',
           'Failed to check API access',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -165,35 +167,31 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   async recordPublicAccess(
     endpoint: string,
     method: string,
-    metadata?: APIAccessMetadata
+    metadata?: APIAccessMetadata,
   ): Promise<Result<void, DomainError>> {
     const startTime = Date.now();
 
     try {
       // 公開エンドポイントへのアクセスログを記録
-      await this.recordAPIAccess(
-        undefined,
-        endpoint,
-        method,
-        200,
-        startTime,
-        metadata
-      );
+      await this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
 
       return Result.ok(undefined as any);
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        endpoint,
-        method
-      }, 'Error recording public access');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          endpoint,
+          method,
+        },
+        'Error recording public access',
+      );
 
       return Result.fail(
         DomainError.internal(
           'PUBLIC_ACCESS_RECORD_ERROR',
           'Failed to record public access',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -207,20 +205,23 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     method: string,
     statusCode: number,
     startTime: number,
-    metadata?: APIAccessMetadata
+    metadata?: APIAccessMetadata,
   ): Promise<void> {
     const responseTime = Date.now() - startTime;
 
     // 簡略化: 現時点ではログ記録の詳細実装を省略
     // TODO: APILogEntryの正しい作成方法を実装する
-    this.logger.info({
-      userId: userId?.toString(),
-      endpoint,
-      method,
-      statusCode,
-      responseTime,
-      metadata
-    }, 'API access logged');
+    this.logger.info(
+      {
+        userId: userId?.toString(),
+        endpoint,
+        method,
+        statusCode,
+        responseTime,
+        metadata,
+      },
+      'API access logged',
+    );
   }
 
   /**
@@ -231,18 +232,12 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     endpoint: string,
     method: string,
     startTime: number,
-    metadata?: APIAccessMetadata
+    metadata?: APIAccessMetadata,
   ): Promise<void> {
     await this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
-    
+
     await this.eventBus.publish(
-      new InvalidAPIAccess(
-        userId.toString(),
-        endpoint,
-        method,
-        'unauthorized',
-        new Date()
-      )
+      new InvalidAPIAccess(userId.toString(), endpoint, method, 'unauthorized', new Date()),
     );
   }
 
@@ -252,9 +247,11 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   private determineEndpointType(endpoint: string): EndpointType {
     // 公開エンドポイントのパターン
     const publicPatterns = ['/health', '/api-docs', '/openapi.json'];
-    const isPublic = publicPatterns.some(pattern => endpoint.startsWith(pattern));
-    
+    const isPublic = publicPatterns.some((pattern) => endpoint.startsWith(pattern));
+
     const typeResult = EndpointType.create(isPublic ? 'public' : 'protected');
-    return typeResult.isSuccess ? typeResult.getValue() : EndpointType.create('protected').getValue();
+    return typeResult.isSuccess
+      ? typeResult.getValue()
+      : EndpointType.create('protected').getValue();
   }
 }

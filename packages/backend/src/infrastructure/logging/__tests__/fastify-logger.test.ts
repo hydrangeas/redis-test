@@ -35,7 +35,7 @@ describe('Fastify Logger', () => {
     it('should generate request id from header if present', () => {
       const loggerConfig = createFastifyLoggerConfig(mockConfig);
       const mockReq = { headers: { 'x-request-id': 'existing-id' } };
-      
+
       const reqId = loggerConfig.genReqId!(mockReq);
       expect(reqId).toBe('existing-id');
     });
@@ -43,7 +43,7 @@ describe('Fastify Logger', () => {
     it('should generate new request id if header not present', () => {
       const loggerConfig = createFastifyLoggerConfig(mockConfig);
       const mockReq = { headers: {} };
-      
+
       const reqId = loggerConfig.genReqId!(mockReq);
       expect(reqId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     });
@@ -75,10 +75,10 @@ describe('Fastify Logger', () => {
       const mockReply = {};
 
       setupRequestLogging(mockServer);
-      
+
       // Get the onRequest hook function
       const onRequestHook = mockServer.addHook.mock.calls.find(
-        call => call[0] === 'onRequest'
+        (call) => call[0] === 'onRequest',
       )[1];
 
       await onRequestHook(mockRequest);
@@ -88,7 +88,7 @@ describe('Fastify Logger', () => {
           req: mockRequest,
           event: 'request_start',
         },
-        'incoming request'
+        'incoming request',
       );
     });
 
@@ -106,10 +106,10 @@ describe('Fastify Logger', () => {
       };
 
       setupRequestLogging(mockServer);
-      
+
       // Get the onResponse hook function
       const onResponseHook = mockServer.addHook.mock.calls.find(
-        call => call[0] === 'onResponse'
+        (call) => call[0] === 'onResponse',
       )[1];
 
       await onResponseHook(mockRequest, mockReply);
@@ -121,7 +121,7 @@ describe('Fastify Logger', () => {
           event: 'request_complete',
           responseTime: 123.45,
         },
-        'request completed'
+        'request completed',
       );
     });
 
@@ -138,11 +138,9 @@ describe('Fastify Logger', () => {
       const mockError = new Error('Test error');
 
       setupRequestLogging(mockServer);
-      
+
       // Get the onError hook function
-      const onErrorHook = mockServer.addHook.mock.calls.find(
-        call => call[0] === 'onError'
-      )[1];
+      const onErrorHook = mockServer.addHook.mock.calls.find((call) => call[0] === 'onError')[1];
 
       await onErrorHook(mockRequest, mockReply, mockError);
 
@@ -153,7 +151,7 @@ describe('Fastify Logger', () => {
           err: mockError,
           event: 'request_error',
         },
-        'request error'
+        'request error',
       );
     });
   });

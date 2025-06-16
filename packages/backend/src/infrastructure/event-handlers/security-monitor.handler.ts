@@ -12,9 +12,9 @@ import { IPAddress } from '@/domain/log/value-objects/ip-address';
 import type { Logger } from 'pino';
 
 @injectable()
-export class SecurityMonitorHandler 
-  implements IEventHandler<TokenRefreshed | AuthenticationFailed> {
-  
+export class SecurityMonitorHandler
+  implements IEventHandler<TokenRefreshed | AuthenticationFailed>
+{
   private readonly REFRESH_THRESHOLD = 10; // 10回/時間
   private readonly FAILED_AUTH_THRESHOLD = 5; // 5回/15分
 
@@ -24,7 +24,7 @@ export class SecurityMonitorHandler
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: TokenRefreshed | AuthenticationFailed): Promise<void> {
@@ -40,7 +40,7 @@ export class SecurityMonitorHandler
       // 異常なリフレッシュ頻度の検出
       const recentRefreshes = await this.countRecentRefreshes(
         event.userId,
-        60 // 過去60分
+        60, // 過去60分
       );
 
       if (recentRefreshes > this.REFRESH_THRESHOLD) {
@@ -56,16 +56,22 @@ export class SecurityMonitorHandler
           message: `User ${event.userId} has refreshed token ${recentRefreshes} times in the last hour`,
         });
 
-        this.logger.warn({
-          userId: event.userId,
-          refreshCount: recentRefreshes,
-        }, 'Suspicious token refresh pattern detected');
+        this.logger.warn(
+          {
+            userId: event.userId,
+            refreshCount: recentRefreshes,
+          },
+          'Suspicious token refresh pattern detected',
+        );
       }
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        event: event.getMetadata(),
-      }, 'Failed to monitor token refresh');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          event: event.getMetadata(),
+        },
+        'Failed to monitor token refresh',
+      );
     }
   }
 
@@ -74,7 +80,7 @@ export class SecurityMonitorHandler
       // 同一IPからの連続失敗の検出
       const recentFailures = await this.countRecentFailures(
         event.ipAddress,
-        15 // 過去15分
+        15, // 過去15分
       );
 
       if (recentFailures >= this.FAILED_AUTH_THRESHOLD) {
@@ -94,21 +100,18 @@ export class SecurityMonitorHandler
         await this.recommendIPBlock(event.ipAddress);
       }
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        event: event.getMetadata(),
-      }, 'Failed to monitor authentication failure');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          event: event.getMetadata(),
+        },
+        'Failed to monitor authentication failure',
+      );
     }
   }
 
-  private async countRecentRefreshes(
-    userId: string,
-    minutes: number
-  ): Promise<number> {
-    const timeRange = new TimeRange(
-      new Date(Date.now() - minutes * 60 * 1000),
-      new Date()
-    );
+  private async countRecentRefreshes(userId: string, minutes: number): Promise<number> {
+    const timeRange = new TimeRange(new Date(Date.now() - minutes * 60 * 1000), new Date());
 
     const userIdResult = UserId.create(userId);
     if (userIdResult.isFailure) {
@@ -117,7 +120,7 @@ export class SecurityMonitorHandler
 
     const logsResult = await this.authLogRepository.findByUserId(
       userIdResult.getValue(),
-      timeRange
+      timeRange,
     );
 
     if (logsResult.isFailure) {
@@ -125,19 +128,11 @@ export class SecurityMonitorHandler
     }
 
     const logs = logsResult.getValue();
-    return logs.filter(log => 
-      log.event.type === EventType.TOKEN_REFRESH
-    ).length;
+    return logs.filter((log) => log.event.type === EventType.TOKEN_REFRESH).length;
   }
 
-  private async countRecentFailures(
-    ipAddress: string,
-    minutes: number
-  ): Promise<number> {
-    const timeRange = new TimeRange(
-      new Date(Date.now() - minutes * 60 * 1000),
-      new Date()
-    );
+  private async countRecentFailures(ipAddress: string, minutes: number): Promise<number> {
+    const timeRange = new TimeRange(new Date(Date.now() - minutes * 60 * 1000), new Date());
 
     const ipAddressResult = IPAddress.create(ipAddress);
     if (ipAddressResult.isFailure) {
@@ -146,7 +141,7 @@ export class SecurityMonitorHandler
 
     const logsResult = await this.authLogRepository.findByIPAddress(
       ipAddressResult.getValue(),
-      timeRange
+      timeRange,
     );
 
     if (logsResult.isFailure) {
@@ -154,16 +149,17 @@ export class SecurityMonitorHandler
     }
 
     const logs = logsResult.getValue();
-    return logs.filter(log => 
-      log.event.type === EventType.LOGIN_FAILED
-    ).length;
+    return logs.filter((log) => log.event.type === EventType.LOGIN_FAILED).length;
   }
 
   private async recommendIPBlock(ipAddress: string): Promise<void> {
     // 実装: IPブロックリストへの追加推奨
-    this.logger.warn({
-      ipAddress,
-      action: 'RECOMMEND_IP_BLOCK',
-    }, 'Recommending IP block due to suspicious activity');
+    this.logger.warn(
+      {
+        ipAddress,
+        action: 'RECOMMEND_IP_BLOCK',
+      },
+      'Recommending IP block due to suspicious activity',
+    );
   }
 }

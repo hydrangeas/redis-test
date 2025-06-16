@@ -128,7 +128,7 @@ export class ResponseInfo {
       cacheControl: this.getHeader('cache-control'),
       etag: this.getHeader('etag'),
       lastModified: this.getHeader('last-modified'),
-      expires: this.getHeader('expires')
+      expires: this.getHeader('expires'),
     };
   }
 
@@ -147,7 +147,7 @@ export class ResponseInfo {
     return {
       limit: limit ? parseInt(limit) : undefined,
       remaining: remaining ? parseInt(remaining) : undefined,
-      reset: reset ? new Date(parseInt(reset) * 1000) : undefined
+      reset: reset ? new Date(parseInt(reset) * 1000) : undefined,
     };
   }
 
@@ -163,7 +163,7 @@ export class ResponseInfo {
       size: this._size,
       sizeHuman: this.getHumanReadableSize(),
       hasCache: !!this.getHeader('cache-control'),
-      hasRateLimit: !!this.getHeader('x-ratelimit-limit')
+      hasRateLimit: !!this.getHeader('x-ratelimit-limit'),
     };
   }
 }

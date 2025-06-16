@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
   // OpenAPI仕様書の読み込み
   let openapiSpec: any;
-  
+
   try {
     const openapiPath = join(__dirname, '../openapi/openapi.yaml');
     const openapiContent = readFileSync(openapiPath, 'utf8');
@@ -24,7 +24,7 @@ export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
       info: {
         title: 'Open Data API',
         version: '1.0.0',
-        description: 'API documentation is temporarily unavailable'
+        description: 'API documentation is temporarily unavailable',
       },
       paths: {},
     };

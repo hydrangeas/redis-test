@@ -42,7 +42,7 @@ describe('FileStorageService', () => {
 
   beforeEach(() => {
     container.clearInstances();
-    
+
     mockLogger = {
       debug: vi.fn(),
       info: vi.fn(),
@@ -94,17 +94,14 @@ describe('FileStorageService', () => {
 
       // First read
       await service.readFile(filePath);
-      
+
       // Second read should use cache
       const result = await service.readFile(filePath);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual(testData);
       expect(fs.readFile).toHaveBeenCalledTimes(1); // Only called once
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        { path: filePath },
-        'File served from cache'
-      );
+      expect(mockLogger.debug).toHaveBeenCalledWith({ path: filePath }, 'File served from cache');
     });
 
     it('should fail for empty path', async () => {
@@ -117,7 +114,7 @@ describe('FileStorageService', () => {
 
     it('should prevent path traversal attacks', async () => {
       const maliciousPath = '../../../etc/passwd';
-      
+
       const result = await service.readFile(maliciousPath);
 
       expect(result.isFailure).toBe(true);
@@ -146,7 +143,7 @@ describe('FileStorageService', () => {
       const filePath = 'missing.json';
 
       vi.mocked(fs.readFile).mockRejectedValueOnce(
-        Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
+        Object.assign(new Error('ENOENT'), { code: 'ENOENT' }),
       );
 
       const result = await service.readFile(filePath);
@@ -205,14 +202,11 @@ describe('FileStorageService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(mockStream);
-      expect(createReadStream).toHaveBeenCalledWith(
-        path.join(testDataDir, filePath),
-        {
-          start: undefined,
-          end: undefined,
-          highWaterMark: 64 * 1024,
-        }
-      );
+      expect(createReadStream).toHaveBeenCalledWith(path.join(testDataDir, filePath), {
+        start: undefined,
+        end: undefined,
+        highWaterMark: 64 * 1024,
+      });
     });
 
     it('should support byte range', async () => {
@@ -225,14 +219,11 @@ describe('FileStorageService', () => {
       const result = await service.streamFile(filePath, { start: 100, end: 200 });
 
       expect(result.isSuccess).toBe(true);
-      expect(createReadStream).toHaveBeenCalledWith(
-        path.join(testDataDir, filePath),
-        {
-          start: 100,
-          end: 200,
-          highWaterMark: 64 * 1024,
-        }
-      );
+      expect(createReadStream).toHaveBeenCalledWith(path.join(testDataDir, filePath), {
+        start: 100,
+        end: 200,
+        highWaterMark: 64 * 1024,
+      });
     });
   });
 

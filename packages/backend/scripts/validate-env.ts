@@ -12,7 +12,7 @@ console.log('🔍 Validating environment variables...\n');
 try {
   // Validate environment
   const config = validateEnv(process.env);
-  
+
   console.log('✅ Environment validation successful!\n');
   console.log('📋 Loaded configuration:');
   console.log(`   NODE_ENV: ${config.NODE_ENV}`);
@@ -22,9 +22,11 @@ try {
   console.log(`   Supabase URL: ${config.PUBLIC_SUPABASE_URL || config.SUPABASE_URL}`);
   console.log(`   API Base URL: ${config.API_BASE_URL}`);
   console.log(`   Frontend URL: ${config.FRONTEND_URL}`);
-  console.log(`   Rate Limits: Tier1=${config.RATE_LIMIT_TIER1}, Tier2=${config.RATE_LIMIT_TIER2}, Tier3=${config.RATE_LIMIT_TIER3}`);
+  console.log(
+    `   Rate Limits: Tier1=${config.RATE_LIMIT_TIER1}, Tier2=${config.RATE_LIMIT_TIER2}, Tier3=${config.RATE_LIMIT_TIER3}`,
+  );
   console.log(`   Data Directory: ${config.DATA_DIRECTORY}`);
-  
+
   // Check for warnings
   console.log('\n⚠️  Warnings:');
   if (config.SUPABASE_URL && !config.PUBLIC_SUPABASE_URL) {
@@ -36,7 +38,7 @@ try {
   if (config.JWT_SECRET.length === 32) {
     console.log('   - JWT secret is at minimum length. Consider using a longer secret');
   }
-  
+
   console.log('\n✨ Environment is ready for use!');
   process.exit(0);
 } catch (error) {

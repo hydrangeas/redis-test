@@ -49,7 +49,7 @@ describe('AuthLogHandler', () => {
       'tier2',
       'session-456',
       '192.168.1.1',
-      'Mozilla/5.0...'
+      'Mozilla/5.0...',
     );
 
     (mockAuthLogRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
@@ -60,14 +60,14 @@ describe('AuthLogHandler', () => {
     // Assert
     expect(mockAuthLogRepository.save).toHaveBeenCalledOnce();
     const savedLog = (mockAuthLogRepository.save as MockedFunction<any>).mock.calls[0][0];
-    
+
     expect(savedLog).toBeDefined();
     expect(savedLog.userId?.value).toBe(userId);
     expect(savedLog.provider.value).toBe('google');
     expect(savedLog.result).toBe(AuthResult.SUCCESS);
     expect(savedLog.metadata?.tier).toBe('tier2');
     expect(savedLog.metadata?.sessionId).toBe('session-456');
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith(
       expect.objectContaining({
         event: expect.objectContaining({
@@ -75,20 +75,14 @@ describe('AuthLogHandler', () => {
           aggregateId: userId,
         }),
       }),
-      'Authentication event logged successfully'
+      'Authentication event logged successfully',
     );
   });
 
   it('should handle event without optional fields', async () => {
     // Arrange
     const userId = '550e8400-e29b-41d4-a716-446655440001'; // Valid UUID v4
-    const event = new UserAuthenticated(
-      userId,
-      1,
-      userId,
-      'github',
-      'tier1'
-    );
+    const event = new UserAuthenticated(userId, 1, userId, 'github', 'tier1');
 
     (mockAuthLogRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
 
@@ -98,7 +92,7 @@ describe('AuthLogHandler', () => {
     // Assert
     expect(mockAuthLogRepository.save).toHaveBeenCalledOnce();
     const savedLog = (mockAuthLogRepository.save as MockedFunction<any>).mock.calls[0][0];
-    
+
     expect(savedLog).toBeDefined();
     expect(savedLog.userId?.value).toBe(userId);
     expect(savedLog.provider.value).toBe('github');
@@ -109,22 +103,10 @@ describe('AuthLogHandler', () => {
   it('should handle repository save failure', async () => {
     // Arrange
     const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
-    const event = new UserAuthenticated(
-      userId,
-      1,
-      userId,
-      'google',
-      'tier2'
-    );
+    const event = new UserAuthenticated(userId, 1, userId, 'google', 'tier2');
 
-    const error = new DomainError(
-      'REPOSITORY_ERROR',
-      'Database connection failed',
-      'INTERNAL'
-    );
-    (mockAuthLogRepository.save as MockedFunction<any>).mockResolvedValue(
-      Result.fail(error)
-    );
+    const error = new DomainError('REPOSITORY_ERROR', 'Database connection failed', 'INTERNAL');
+    (mockAuthLogRepository.save as MockedFunction<any>).mockResolvedValue(Result.fail(error));
 
     // Act
     await handler.handle(event);
@@ -138,7 +120,7 @@ describe('AuthLogHandler', () => {
           eventName: 'UserAuthenticated',
         }),
       }),
-      'Failed to save authentication log'
+      'Failed to save authentication log',
     );
   });
 
@@ -149,7 +131,7 @@ describe('AuthLogHandler', () => {
       1,
       'invalid-user-id', // Invalid user ID format
       'google',
-      'tier2'
+      'tier2',
     );
 
     // Act
@@ -163,7 +145,7 @@ describe('AuthLogHandler', () => {
           eventName: 'UserAuthenticated',
         }),
       }),
-      'Failed to create user id'
+      'Failed to create user id',
     );
   });
 
@@ -175,7 +157,7 @@ describe('AuthLogHandler', () => {
       1,
       userId,
       '', // Invalid empty provider
-      'tier2'
+      'tier2',
     );
 
     // Act
@@ -189,27 +171,21 @@ describe('AuthLogHandler', () => {
           eventName: 'UserAuthenticated',
         }),
       }),
-      'Failed to create provider'
+      'Failed to create provider',
     );
   });
 
   it('should not throw error on unexpected exception', async () => {
     // Arrange
     const userId = '550e8400-e29b-41d4-a716-446655440004'; // Valid UUID v4
-    const event = new UserAuthenticated(
-      userId,
-      1,
-      userId,
-      'google',
-      'tier2'
-    );
+    const event = new UserAuthenticated(userId, 1, userId, 'google', 'tier2');
 
     const unexpectedError = new Error('Unexpected error');
     (mockAuthLogRepository.save as MockedFunction<any>).mockRejectedValue(unexpectedError);
 
     // Act & Assert
     await expect(handler.handle(event)).resolves.not.toThrow();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         error: 'Unexpected error',
@@ -217,21 +193,14 @@ describe('AuthLogHandler', () => {
           eventName: 'UserAuthenticated',
         }),
       }),
-      'Failed to log authentication event'
+      'Failed to log authentication event',
     );
   });
 
   it('should include event metadata in log entry', async () => {
     // Arrange
     const userId = '550e8400-e29b-41d4-a716-446655440005'; // Valid UUID v4
-    const event = new UserAuthenticated(
-      userId,
-      1,
-      userId,
-      'google',
-      'tier3',
-      'session-789'
-    );
+    const event = new UserAuthenticated(userId, 1, userId, 'google', 'tier3', 'session-789');
 
     (mockAuthLogRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
 

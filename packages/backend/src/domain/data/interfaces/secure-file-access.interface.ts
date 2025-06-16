@@ -14,16 +14,13 @@ export interface ISecureFileAccess {
    */
   validateAndSanitizePath(
     requestedPath: string,
-    context: SecurityContext
+    context: SecurityContext,
   ): Promise<Result<string, DomainError>>;
 
   /**
    * Checks if the user has access to the file
    */
-  checkAccess(
-    filePath: string,
-    context: SecurityContext
-  ): Promise<Result<void, DomainError>>;
+  checkAccess(filePath: string, context: SecurityContext): Promise<Result<void, DomainError>>;
 }
 
 export interface ISecurityAuditService {

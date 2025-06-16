@@ -5,7 +5,7 @@ import { Email } from '../value-objects/email';
 
 /**
  * ユーザーリポジトリインターフェース
- * 
+ *
  * ユーザー情報の永続化と取得を担当する
  */
 export interface IUserRepository {

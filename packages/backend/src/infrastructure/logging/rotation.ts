@@ -28,7 +28,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
   } = options;
 
   // Ensure log directory exists
-  import('fs').then(fs => {
+  import('fs').then((fs) => {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
@@ -93,7 +93,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         hostname: process.env.HOSTNAME || 'unknown',
       },
     },
-    pinoMultiStream.multistream(streams)
+    pinoMultiStream.multistream(streams),
   );
 }
 
@@ -177,7 +177,7 @@ export const logSerializers = {
 export function createContextLogger(
   logger: pino.Logger,
   context: string,
-  additionalContext?: Record<string, any>
+  additionalContext?: Record<string, any>,
 ): pino.Logger {
   return logger.child({
     context,

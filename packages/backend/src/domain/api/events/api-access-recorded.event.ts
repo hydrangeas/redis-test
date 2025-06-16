@@ -10,7 +10,7 @@ export class APIAccessRecorded extends DomainEvent {
     version: number,
     public readonly endpoint: string,
     public readonly method: string,
-    occurredAt?: Date
+    occurredAt?: Date,
   ) {
     super(aggregateId, version, occurredAt);
   }
@@ -22,7 +22,7 @@ export class APIAccessRecorded extends DomainEvent {
   getEventData(): Record<string, any> {
     return {
       endpoint: this.endpoint,
-      method: this.method
+      method: this.method,
     };
   }
 }

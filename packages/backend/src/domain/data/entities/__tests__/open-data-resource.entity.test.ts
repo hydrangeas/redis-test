@@ -22,14 +22,14 @@ describe('OpenDataResource', () => {
       size: 1024 * 10, // 10KB
       lastModified: new Date('2025-01-23T10:00:00Z'),
       etag: '"abc123"',
-      contentType: 'application/json'
+      contentType: 'application/json',
     });
 
     resource = new OpenDataResource(
       resourceId,
       dataPath,
       metadata,
-      new Date('2025-01-23T09:00:00Z')
+      new Date('2025-01-23T09:00:00Z'),
     );
   });
 
@@ -48,7 +48,7 @@ describe('OpenDataResource', () => {
         resourceId,
         dataPath,
         metadata,
-        new Date('2025-01-23T09:00:00Z')
+        new Date('2025-01-23T09:00:00Z'),
       );
       expect(newResource.accessedAt).toEqual(newResource.createdAt);
     });
@@ -60,7 +60,7 @@ describe('OpenDataResource', () => {
         dataPath,
         metadata,
         new Date('2025-01-23T09:00:00Z'),
-        accessedAt
+        accessedAt,
       );
       expect(newResource.accessedAt).toEqual(accessedAt);
     });
@@ -70,9 +70,9 @@ describe('OpenDataResource', () => {
     it('should update accessedAt timestamp', () => {
       const beforeAccess = resource.accessedAt;
       const now = new Date();
-      
+
       resource.recordAccess();
-      
+
       expect(resource.accessedAt.getTime()).toBeGreaterThanOrEqual(now.getTime());
       expect(resource.accessedAt).not.toEqual(beforeAccess);
     });
@@ -88,15 +88,15 @@ describe('OpenDataResource', () => {
       const metadataWithQuotes = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(),
-        etag: '"xyz789"'
+        etag: '"xyz789"',
       });
       const resourceWithQuotes = new OpenDataResource(
         resourceId,
         dataPath,
         metadataWithQuotes,
-        new Date()
+        new Date(),
       );
-      
+
       const cacheKey = resourceWithQuotes.getCacheKey();
       expect(cacheKey).toBe('secure/319985/r5.json:xyz789');
     });
@@ -106,21 +106,21 @@ describe('OpenDataResource', () => {
     it('should return true if cache is within duration', () => {
       const now = new Date('2025-01-23T10:05:00Z');
       const cacheDurationSeconds = 600; // 10 minutes
-      
+
       expect(resource.isCacheValid(now, cacheDurationSeconds)).toBe(true);
     });
 
     it('should return false if cache is expired', () => {
       const now = new Date('2025-01-23T10:11:00Z');
       const cacheDurationSeconds = 600; // 10 minutes
-      
+
       expect(resource.isCacheValid(now, cacheDurationSeconds)).toBe(false);
     });
 
     it('should handle exact expiration boundary', () => {
       const now = new Date('2025-01-23T10:10:00Z');
       const cacheDurationSeconds = 600; // 10 minutes
-      
+
       expect(resource.isCacheValid(now, cacheDurationSeconds)).toBe(false);
     });
   });
@@ -171,7 +171,7 @@ describe('OpenDataResource', () => {
         resourceId,
         dataPath,
         new ResourceMetadata({ size: 512, lastModified: new Date(), etag: '"test"' }),
-        new Date()
+        new Date(),
       );
       expect(smallResource.getHumanReadableSize()).toBe('512.00 B');
     });
@@ -185,7 +185,7 @@ describe('OpenDataResource', () => {
         resourceId,
         dataPath,
         new ResourceMetadata({ size: 1024 * 1024 * 5.5, lastModified: new Date(), etag: '"test"' }),
-        new Date()
+        new Date(),
       );
       expect(largeResource.getHumanReadableSize()).toBe('5.50 MB');
     });
@@ -194,8 +194,12 @@ describe('OpenDataResource', () => {
       const hugeResource = new OpenDataResource(
         resourceId,
         dataPath,
-        new ResourceMetadata({ size: 1024 * 1024 * 1024 * 2.3, lastModified: new Date(), etag: '"test"' }),
-        new Date()
+        new ResourceMetadata({
+          size: 1024 * 1024 * 1024 * 2.3,
+          lastModified: new Date(),
+          etag: '"test"',
+        }),
+        new Date(),
       );
       expect(hugeResource.getHumanReadableSize()).toBe('2.30 GB');
     });
@@ -207,7 +211,7 @@ describe('OpenDataResource', () => {
         size: 2048,
         lastModified: new Date('2025-01-23T12:00:00Z'),
         etag: '"def456"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       });
 
       resource.updateMetadata(newMetadata);
@@ -222,12 +226,12 @@ describe('OpenDataResource', () => {
     it('should be an entity with proper id', () => {
       expect(resource.id).toBe(resourceId);
       expect(resource.equals(resource)).toBe(true);
-      
+
       const anotherResource = new OpenDataResource(
         ResourceId.generate(),
         dataPath,
         metadata,
-        new Date()
+        new Date(),
       );
       expect(resource.equals(anotherResource)).toBe(false);
     });

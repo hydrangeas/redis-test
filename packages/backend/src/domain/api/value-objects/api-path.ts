@@ -9,7 +9,7 @@ export class ApiPath {
    * パストラバーサル攻撃パターンの検出用正規表現
    */
   private static readonly DANGEROUS_PATTERNS = /(\.\.[\/\\]|\.\.%2[fF]|\.\.%5[cC])/;
-  
+
   /**
    * 許可される文字のパターン
    * 英数字、ハイフン、アンダースコア、スラッシュ、ドット
@@ -26,15 +26,15 @@ export class ApiPath {
 
     // パスの正規化
     let normalizedPath = value.trim();
-    
+
     // 連続するスラッシュを単一に正規化（最初に実行）
     normalizedPath = normalizedPath.replace(/\/+/g, '/');
-    
+
     // スラッシュで始まらない場合は追加
     if (!normalizedPath.startsWith('/')) {
       normalizedPath = '/' + normalizedPath;
     }
-    
+
     // 末尾のスラッシュを削除（ルートパス以外）
     if (normalizedPath.length > 1 && normalizedPath.endsWith('/')) {
       normalizedPath = normalizedPath.slice(0, -1);
@@ -64,7 +64,7 @@ export class ApiPath {
         actualLength: normalizedPath.length,
       });
     }
-    
+
     this.value = normalizedPath;
     Object.freeze(this);
   }
@@ -73,7 +73,7 @@ export class ApiPath {
    * パスセグメントを取得
    */
   getSegments(): string[] {
-    return this.value.split('/').filter(segment => segment.length > 0);
+    return this.value.split('/').filter((segment) => segment.length > 0);
   }
 
   /**
@@ -84,9 +84,9 @@ export class ApiPath {
     // パターンを正規表現に変換
     const regexPattern = pattern
       .split('*')
-      .map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')) // 各部分の特殊文字をエスケープ
+      .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')) // 各部分の特殊文字をエスケープ
       .join('[^/]+'); // * を単一セグメントマッチに置換
-    
+
     const regex = new RegExp(`^${regexPattern}$`);
     return regex.test(this.value);
   }

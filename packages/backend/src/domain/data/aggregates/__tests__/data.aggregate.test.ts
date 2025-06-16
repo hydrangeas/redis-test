@@ -31,7 +31,7 @@ describe('DataAggregate', () => {
       ResourceId.generate(),
       createDataPath('/test/data.json'),
       metadata,
-      new Date()
+      new Date(),
     );
   });
 
@@ -87,7 +87,7 @@ describe('DataAggregate', () => {
         ResourceId.generate(),
         createDataPath('/test/data.json'),
         testResource.metadata,
-        new Date()
+        new Date(),
       );
 
       const result = aggregate.addResource(duplicateResource);
@@ -109,30 +109,30 @@ describe('DataAggregate', () => {
         ResourceId.generate(),
         createDataPath('/test/data1.json'),
         testResource.metadata,
-        new Date('2025-01-01')
+        new Date('2025-01-01'),
       );
 
       const resource2 = new OpenDataResource(
         ResourceId.generate(),
         createDataPath('/test/data2.json'),
         testResource.metadata,
-        new Date('2025-01-02')
+        new Date('2025-01-02'),
       );
 
       const resource3 = new OpenDataResource(
         ResourceId.generate(),
         createDataPath('/test/data3.json'),
         testResource.metadata,
-        new Date('2025-01-03')
+        new Date('2025-01-03'),
       );
 
       smallCacheAggregate.addResource(resource1);
       smallCacheAggregate.addResource(resource2);
-      
+
       expect(smallCacheAggregate.resources.size).toBe(2);
-      
+
       smallCacheAggregate.addResource(resource3);
-      
+
       expect(smallCacheAggregate.resources.size).toBe(2);
       expect(smallCacheAggregate.resources.has(resource1.id.value)).toBe(false);
       expect(smallCacheAggregate.resources.has(resource3.id.value)).toBe(true);
@@ -201,7 +201,7 @@ describe('DataAggregate', () => {
       const result = await aggregate.processDataAccess(
         'user-123',
         createDataPath('/test/data.json'),
-        'TIER1'
+        'TIER1',
       );
 
       expect(result.isSuccess).toBe(true);
@@ -218,7 +218,7 @@ describe('DataAggregate', () => {
       const result = await aggregate.processDataAccess(
         'user-123',
         createDataPath('/nonexistent/data.json'),
-        'TIER1'
+        'TIER1',
       );
 
       expect(result.isFailure).toBe(true);
@@ -231,14 +231,10 @@ describe('DataAggregate', () => {
 
     it('should record access on resource', async () => {
       const beforeAccess = testResource.accessedAt;
-      
-      await new Promise(resolve => setTimeout(resolve, 10)); // Small delay
-      
-      await aggregate.processDataAccess(
-        'user-123',
-        createDataPath('/test/data.json'),
-        'TIER1'
-      );
+
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Small delay
+
+      await aggregate.processDataAccess('user-123', createDataPath('/test/data.json'), 'TIER1');
 
       expect(testResource.accessedAt.getTime()).toBeGreaterThan(beforeAccess.getTime());
     });
@@ -252,7 +248,7 @@ describe('DataAggregate', () => {
     it('should return false for matching etag', () => {
       const result = aggregate.processConditionalRequest(
         createDataPath('/test/data.json'),
-        '"abc123"'
+        '"abc123"',
       );
 
       expect(result.isSuccess).toBe(true);
@@ -262,7 +258,7 @@ describe('DataAggregate', () => {
     it('should return true for non-matching etag', () => {
       const result = aggregate.processConditionalRequest(
         createDataPath('/test/data.json'),
-        '"different-etag"'
+        '"different-etag"',
       );
 
       expect(result.isSuccess).toBe(true);
@@ -273,7 +269,7 @@ describe('DataAggregate', () => {
       const result = aggregate.processConditionalRequest(
         createDataPath('/test/data.json'),
         undefined,
-        new Date('2025-01-02')
+        new Date('2025-01-02'),
       );
 
       expect(result.isSuccess).toBe(true);
@@ -284,7 +280,7 @@ describe('DataAggregate', () => {
       const result = aggregate.processConditionalRequest(
         createDataPath('/test/data.json'),
         undefined,
-        new Date('2024-12-31')
+        new Date('2024-12-31'),
       );
 
       expect(result.isSuccess).toBe(true);
@@ -298,14 +294,14 @@ describe('DataAggregate', () => {
         ResourceId.generate(),
         createDataPath('/old/data.json'),
         testResource.metadata,
-        new Date('2025-01-01')
+        new Date('2025-01-01'),
       );
 
       const newResource = new OpenDataResource(
         ResourceId.generate(),
         createDataPath('/new/data.json'),
         testResource.metadata,
-        new Date()
+        new Date(),
       );
 
       aggregate.addResource(oldResource);
@@ -334,7 +330,7 @@ describe('DataAggregate', () => {
           etag: '"etag1"',
           lastModified: new Date(),
         }),
-        new Date()
+        new Date(),
       );
 
       const resource2 = new OpenDataResource(
@@ -346,7 +342,7 @@ describe('DataAggregate', () => {
           etag: '"etag2"',
           lastModified: new Date(),
         }),
-        new Date()
+        new Date(),
       );
 
       aggregate.addResource(resource1);
@@ -373,7 +369,7 @@ describe('DataAggregate', () => {
   describe('updateResourceMetadata', () => {
     it('should update resource metadata', () => {
       aggregate.addResource(testResource);
-      
+
       const newMetadata = new ResourceMetadata({
         size: 2048,
         contentType: 'application/json',
@@ -405,18 +401,13 @@ describe('DataAggregate', () => {
 
   describe('reconstitute', () => {
     it('should reconstitute aggregate from existing data', () => {
-      const resources = new Map([
-        [testResource.id.value, testResource],
-      ]);
+      const resources = new Map([[testResource.id.value, testResource]]);
       const cacheSettings = {
         defaultCacheDurationSeconds: 7200,
         maxCachedResources: 500,
       };
 
-      const aggregate = DataAggregate.reconstitute(
-        { resources, cacheSettings },
-        'aggregate-id'
-      );
+      const aggregate = DataAggregate.reconstitute({ resources, cacheSettings }, 'aggregate-id');
 
       expect(aggregate.resources).toBe(resources);
       expect(aggregate.cacheSettings).toBe(cacheSettings);

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fastify, { FastifyInstance } from 'fastify';
 import { setupTestDI } from '../../../infrastructure/di';
 import errorHandlerPlugin from '../error-handler';
-import { 
+import {
   AuthenticationException,
   ValidationException,
   ResourceNotFoundException,
@@ -35,7 +35,7 @@ describe('Error Handler Plugin', () => {
 
       expect(response.statusCode).toBe(401);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/auth-failed'),
@@ -58,10 +58,12 @@ describe('Error Handler Plugin', () => {
 
       expect(response.statusCode).toBe(400);
       const body = JSON.parse(response.body);
-      expect(body.errors).toEqual([{
-        field: 'email',
-        constraints: ['Invalid format'],
-      }]);
+      expect(body.errors).toEqual([
+        {
+          field: 'email',
+          constraints: ['Invalid format'],
+        },
+      ]);
     });
   });
 
@@ -89,7 +91,7 @@ describe('Error Handler Plugin', () => {
 
       expect(response.statusCode).toBe(400);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/validation-error'),
@@ -111,7 +113,7 @@ describe('Error Handler Plugin', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/not-found'),
@@ -136,7 +138,7 @@ describe('Error Handler Plugin', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/internal-server-error'),
@@ -152,10 +154,10 @@ describe('Error Handler Plugin', () => {
       const mockLogger = {
         error: vi.fn(),
       };
-      
+
       app.decorateRequest('log', mockLogger);
       app.decorateRequest('id', 'req-123');
-      
+
       app.get('/test', async () => {
         throw new ResourceNotFoundException('User', 'user-123');
       });
@@ -175,7 +177,7 @@ describe('Error Handler Plugin', () => {
           method: 'GET',
           url: '/test',
         }),
-        'Request error occurred'
+        'Request error occurred',
       );
     });
   });

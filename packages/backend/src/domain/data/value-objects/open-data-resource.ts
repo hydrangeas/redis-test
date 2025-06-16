@@ -17,7 +17,6 @@ export interface OpenDataResourceProps {
  * イミュータブルで、状態変更時は新しいインスタンスを返す
  */
 export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
-  
   get path(): DataPath {
     return this.props.path;
   }
@@ -101,7 +100,7 @@ export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
   withAccessRecorded(accessedAt: Date = new Date()): OpenDataResource {
     return new OpenDataResource({
       ...this.props,
-      accessedAt
+      accessedAt,
     });
   }
 
@@ -111,7 +110,7 @@ export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
   withUpdatedMetadata(metadata: ResourceMetadata): OpenDataResource {
     return new OpenDataResource({
       ...this.props,
-      metadata
+      metadata,
     });
   }
 
@@ -122,16 +121,16 @@ export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
     path: DataPath,
     metadata: ResourceMetadata,
     createdAt: Date = new Date(),
-    accessedAt?: Date
+    accessedAt?: Date,
   ): Result<OpenDataResource> {
     if (!path) {
       return Result.fail(new ValidationError('Path is required'));
     }
-    
+
     if (!metadata) {
       return Result.fail(new ValidationError('Metadata is required'));
     }
-    
+
     if (!createdAt) {
       return Result.fail(new ValidationError('CreatedAt is required'));
     }
@@ -140,19 +139,16 @@ export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
       path,
       metadata,
       createdAt,
-      accessedAt: accessedAt || createdAt
+      accessedAt: accessedAt || createdAt,
     };
-    
+
     return Result.ok(new OpenDataResource(props));
   }
 
   /**
    * 新規作成用のファクトリメソッド
    */
-  static createNew(
-    path: DataPath,
-    metadata: ResourceMetadata
-  ): Result<OpenDataResource> {
+  static createNew(path: DataPath, metadata: ResourceMetadata): Result<OpenDataResource> {
     const now = new Date();
     return OpenDataResource.create(path, metadata, now, now);
   }

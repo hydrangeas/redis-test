@@ -16,24 +16,19 @@ export interface ApiUsageStats {
 
 export interface IApiLogService {
   saveLog(entry: APILogEntry): Promise<Result<void, DomainError>>;
-  
+
   getUsageStats(
     userId: UserId,
-    timeRange: { start: Date; end: Date }
+    timeRange: { start: Date; end: Date },
   ): Promise<Result<ApiUsageStats, DomainError>>;
-  
-  getErrorLogs(
-    options?: {
-      userId?: UserId;
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<Result<APILogEntry[], DomainError>>;
-  
-  getSlowRequests(
-    thresholdMs: number,
-    limit?: number
-  ): Promise<Result<APILogEntry[], DomainError>>;
-  
+
+  getErrorLogs(options?: {
+    userId?: UserId;
+    limit?: number;
+    offset?: number;
+  }): Promise<Result<APILogEntry[], DomainError>>;
+
+  getSlowRequests(thresholdMs: number, limit?: number): Promise<Result<APILogEntry[], DomainError>>;
+
   cleanup(): Promise<void>;
 }

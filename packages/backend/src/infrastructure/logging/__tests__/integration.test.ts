@@ -20,7 +20,7 @@ describe('Logging Infrastructure Integration', () => {
 
   beforeEach(() => {
     setupTestDI();
-    
+
     // モックロガーを作成
     mockLogger = {
       info: vi.fn(),
@@ -29,16 +29,16 @@ describe('Logging Infrastructure Integration', () => {
       debug: vi.fn(),
       child: vi.fn().mockReturnThis(),
     } as unknown as Logger;
-    
+
     // モックロガーでDIコンテナを上書き
     container.register<Logger>(DI_TOKENS.Logger, {
       useValue: mockLogger,
     });
-    
+
     // EventBusとEventLoggerを取得
     eventBus = container.resolve<EventBus>(DI_TOKENS.EventBus);
     eventLogger = container.resolve(EventLogger);
-    
+
     // EventLoggerをEventBusに登録
     eventBus.subscribe('UserAuthenticated', eventLogger);
     eventBus.subscribe('APIAccessRequested', eventLogger);
@@ -55,37 +55,37 @@ describe('Logging Infrastructure Integration', () => {
         throw new Error('Failed to create user ID');
       }
       const userId = userIdResult.getValue();
-      
+
       const event = new UserAuthenticated(
-        userId.value,  // aggregateId
-        1,  // eventVersion
-        userId.value,  // userId
-        'google',  // provider
-        'tier1',  // tier
-        'session-123',  // sessionId
-        '127.0.0.1',  // ipAddress
-        'Mozilla/5.0'  // userAgent
+        userId.value, // aggregateId
+        1, // eventVersion
+        userId.value, // userId
+        'google', // provider
+        'tier1', // tier
+        'session-123', // sessionId
+        '127.0.0.1', // ipAddress
+        'Mozilla/5.0', // userAgent
       );
 
       await eventBus.publish(event);
 
       // 少し待機（非同期処理のため）
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Verify the event was logged
       expect(mockLogger.info).toHaveBeenCalled();
-      
+
       // Get the first call to info
-      const firstCall = (mockLogger.info as any).mock.calls.find((call: any[]) => 
-        call[1] === 'Domain event: UserAuthenticated'
+      const firstCall = (mockLogger.info as any).mock.calls.find(
+        (call: any[]) => call[1] === 'Domain event: UserAuthenticated',
       );
-      
+
       if (firstCall) {
         const loggedData = firstCall[0];
         expect(loggedData.context).toBe('domain_event');
         expect(loggedData.event.name).toBe('UserAuthenticated');
         expect(loggedData.event.eventId).toBe(event.eventId);
-        
+
         // The sanitized data includes the properties from the event
         expect(loggedData.event.data.userId).toBe(userId.value);
         expect(loggedData.event.data.provider).toBe('google');
@@ -105,27 +105,27 @@ describe('Logging Infrastructure Integration', () => {
         type: EndpointType.PROTECTED,
         isActive: true,
       });
-      
+
       if (endpointResult.isFailure) {
         throw new Error('Failed to create endpoint');
       }
-      
+
       const endpoint = endpointResult.getValue();
       const event = new APIAccessRequested(
-        endpoint.id.value,  // aggregateId
-        'user-123',  // userId
-        endpoint.id.value,  // endpointId
-        endpoint.path.value,  // path
-        HttpMethod.GET,  // method
-        EndpointType.PROTECTED,  // endpointType
-        new Date(),  // requestTime
-        1  // eventVersion
+        endpoint.id.value, // aggregateId
+        'user-123', // userId
+        endpoint.id.value, // endpointId
+        endpoint.path.value, // path
+        HttpMethod.GET, // method
+        EndpointType.PROTECTED, // endpointType
+        new Date(), // requestTime
+        1, // eventVersion
       );
 
       await eventBus.publish(event);
 
       // 少し待機（非同期処理のため）
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const logCall = (mockLogger.info as any).mock.calls[0];
       const loggedData = logCall[0].event.data;
@@ -140,14 +140,11 @@ describe('Logging Infrastructure Integration', () => {
   describe('Performance Metrics Logging', () => {
     it('should measure and log async operation performance', async () => {
       const { measurePerformance } = await import('../metrics');
-      
+
       const mockOperation = vi.fn().mockResolvedValue('result');
-      const result = await measurePerformance(
-        mockLogger,
-        'test-async-operation',
-        mockOperation,
-        { requestId: 'req-123' }
-      );
+      const result = await measurePerformance(mockLogger, 'test-async-operation', mockOperation, {
+        requestId: 'req-123',
+      });
 
       expect(result).toBe('result');
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -160,7 +157,7 @@ describe('Logging Infrastructure Integration', () => {
           }),
           context: 'performance_metric',
         }),
-        expect.stringContaining('Performance: test-async-operation completed in')
+        expect.stringContaining('Performance: test-async-operation completed in'),
       );
     });
   });

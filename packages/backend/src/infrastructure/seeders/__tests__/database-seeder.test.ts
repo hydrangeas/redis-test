@@ -48,7 +48,7 @@ describe('DatabaseSeeder', () => {
 
     seeder = new DatabaseSeeder(
       mockSupabase as unknown as SupabaseClient,
-      mockLogger as unknown as Logger
+      mockLogger as unknown as Logger,
     );
   });
 
@@ -137,7 +137,7 @@ describe('DatabaseSeeder', () => {
           email: 'tier1@example.com',
           password: 'password123',
           app_metadata: { tier: 'tier1' },
-        })
+        }),
       );
 
       expect(mockSupabase.auth.admin.createUser).toHaveBeenCalledWith(
@@ -145,7 +145,7 @@ describe('DatabaseSeeder', () => {
           email: 'tier2@example.com',
           password: 'password123',
           app_metadata: { tier: 'tier2' },
-        })
+        }),
       );
 
       expect(mockSupabase.auth.admin.createUser).toHaveBeenCalledWith(
@@ -153,7 +153,7 @@ describe('DatabaseSeeder', () => {
           email: 'tier3@example.com',
           password: 'password123',
           app_metadata: { tier: 'tier3' },
-        })
+        }),
       );
     });
 
@@ -167,7 +167,7 @@ describe('DatabaseSeeder', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({ email: 'tier1@example.com' }),
-        'User already exists, skipping'
+        'User already exists, skipping',
       );
     });
   });
@@ -186,7 +186,7 @@ describe('DatabaseSeeder', () => {
         expect.objectContaining({
           user_id: 'user1',
           key_prefix: expect.stringMatching(/^nara_/),
-        })
+        }),
       );
     });
 
@@ -201,7 +201,7 @@ describe('DatabaseSeeder', () => {
       expect(mockSupabase.insert).not.toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'user1' }),
-        'API key already exists'
+        'API key already exists',
       );
     });
   });

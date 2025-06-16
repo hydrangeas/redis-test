@@ -16,17 +16,14 @@ export class APIEndpointFactory {
    * @returns 作成されたAPIエンドポイント
    * @throws エンドポイントの作成に失敗した場合
    */
-  static createDataEndpoint(
-    path: string,
-    method: HttpMethod = HttpMethod.GET
-  ): APIEndpoint {
+  static createDataEndpoint(path: string, method: HttpMethod = HttpMethod.GET): APIEndpoint {
     const pathResult = EndpointPath.create(path);
     const typeResult = EndpointType.create('protected');
-    
+
     if (pathResult.isFailure || typeResult.isFailure) {
       throw new Error('Failed to create data endpoint');
     }
-    
+
     const result = APIEndpoint.create({
       path: pathResult.getValue(),
       method,
@@ -34,11 +31,11 @@ export class APIEndpointFactory {
       description: `Data endpoint: ${path}`,
       isActive: true,
     });
-    
+
     if (result.isFailure) {
       throw new Error('Failed to create API endpoint');
     }
-    
+
     return result.getValue();
   }
 
@@ -50,11 +47,11 @@ export class APIEndpointFactory {
   static createHealthCheckEndpoint(): APIEndpoint {
     const pathResult = EndpointPath.create('/health');
     const typeResult = EndpointType.create('public');
-    
+
     if (pathResult.isFailure || typeResult.isFailure) {
       throw new Error('Failed to create health check endpoint');
     }
-    
+
     const result = APIEndpoint.create({
       path: pathResult.getValue(),
       method: HttpMethod.GET,
@@ -62,11 +59,11 @@ export class APIEndpointFactory {
       description: 'Health check endpoint',
       isActive: true,
     });
-    
+
     if (result.isFailure) {
       throw new Error('Failed to create health check endpoint');
     }
-    
+
     return result.getValue();
   }
 
@@ -78,11 +75,11 @@ export class APIEndpointFactory {
   static createDocumentationEndpoint(): APIEndpoint {
     const pathResult = EndpointPath.create('/api-docs');
     const typeResult = EndpointType.create('public');
-    
+
     if (pathResult.isFailure || typeResult.isFailure) {
       throw new Error('Failed to create documentation endpoint');
     }
-    
+
     const result = APIEndpoint.create({
       path: pathResult.getValue(),
       method: HttpMethod.GET,
@@ -90,11 +87,11 @@ export class APIEndpointFactory {
       description: 'API documentation endpoint',
       isActive: true,
     });
-    
+
     if (result.isFailure) {
       throw new Error('Failed to create documentation endpoint');
     }
-    
+
     return result.getValue();
   }
 
@@ -105,21 +102,18 @@ export class APIEndpointFactory {
    * @returns 作成されたAPIエンドポイント
    * @throws エンドポイントの作成に失敗した場合
    */
-  static createAuthEndpoint(
-    subpath: string,
-    method: HttpMethod = HttpMethod.POST
-  ): APIEndpoint {
+  static createAuthEndpoint(subpath: string, method: HttpMethod = HttpMethod.POST): APIEndpoint {
     if (!subpath) {
       throw new Error('Failed to create auth endpoint');
     }
     const fullPath = `/auth${subpath.startsWith('/') ? subpath : '/' + subpath}`;
     const pathResult = EndpointPath.create(fullPath);
     const typeResult = EndpointType.create('public');
-    
+
     if (pathResult.isFailure || typeResult.isFailure) {
       throw new Error('Failed to create auth endpoint');
     }
-    
+
     const result = APIEndpoint.create({
       path: pathResult.getValue(),
       method,
@@ -127,11 +121,11 @@ export class APIEndpointFactory {
       description: `Authentication endpoint: ${fullPath}`,
       isActive: true,
     });
-    
+
     if (result.isFailure) {
       throw new Error('Failed to create auth endpoint');
     }
-    
+
     return result.getValue();
   }
 
@@ -142,17 +136,14 @@ export class APIEndpointFactory {
    * @returns 作成されたAPIエンドポイント
    * @throws エンドポイントの作成に失敗した場合
    */
-  static createAdminEndpoint(
-    path: string,
-    method: HttpMethod = HttpMethod.GET
-  ): APIEndpoint {
+  static createAdminEndpoint(path: string, method: HttpMethod = HttpMethod.GET): APIEndpoint {
     const pathResult = EndpointPath.create(path);
     const typeResult = EndpointType.create('admin');
-    
+
     if (pathResult.isFailure || typeResult.isFailure) {
       throw new Error('Failed to create admin endpoint');
     }
-    
+
     const result = APIEndpoint.create({
       path: pathResult.getValue(),
       method,
@@ -160,11 +151,11 @@ export class APIEndpointFactory {
       description: `Admin endpoint: ${path}`,
       isActive: true,
     });
-    
+
     if (result.isFailure) {
       throw new Error('Failed to create admin endpoint');
     }
-    
+
     return result.getValue();
   }
 
@@ -179,15 +170,15 @@ export class APIEndpointFactory {
   static createPatternEndpoint(
     pathPattern: string,
     method: HttpMethod = HttpMethod.GET,
-    type: 'public' | 'protected' | 'admin' = 'protected'
+    type: 'public' | 'protected' | 'admin' = 'protected',
   ): APIEndpoint {
     const pathResult = EndpointPath.create(pathPattern);
     const typeResult = EndpointType.create(type);
-    
+
     if (pathResult.isFailure || typeResult.isFailure) {
       throw new Error('Failed to create pattern endpoint');
     }
-    
+
     const result = APIEndpoint.create({
       path: pathResult.getValue(),
       method,
@@ -195,11 +186,11 @@ export class APIEndpointFactory {
       description: `Pattern endpoint: ${pathPattern}`,
       isActive: true,
     });
-    
+
     if (result.isFailure) {
       throw new Error('Failed to create pattern endpoint');
     }
-    
+
     return result.getValue();
   }
 }

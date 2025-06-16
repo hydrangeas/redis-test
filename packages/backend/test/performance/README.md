@@ -5,6 +5,7 @@ This directory contains performance tests for the rate limiting functionality of
 ## Overview
 
 The performance tests verify that the rate limiting system:
+
 - Handles high load (1000+ requests/second) accurately
 - Maintains correct counting under extreme concurrency
 - Has acceptable response times (P99 < 100ms)
@@ -23,16 +24,19 @@ The performance tests verify that the rate limiting system:
 ### Test Scenarios
 
 1. **High Load Test**
+
    - 100 concurrent users × 100 requests each = 10,000 total requests
    - Verifies rate limiting accuracy under high load
    - Measures response time percentiles
 
 2. **Tier Scaling Test**
+
    - Tests different tier levels (TIER1, TIER2, TIER3)
    - Verifies each tier's rate limits are correctly enforced
    - Ensures performance is consistent across tiers
 
 3. **Extreme Concurrency Test**
+
    - 1000 concurrent users making requests
    - Tests race condition handling
    - Verifies independent user counting
@@ -45,11 +49,13 @@ The performance tests verify that the rate limiting system:
 ## Running the Tests
 
 ### Quick Run
+
 ```bash
 npm run test:performance
 ```
 
 ### With Custom Parameters
+
 ```bash
 # Run specific test file
 npx vitest run test/performance/rate-limit-load.test.ts
@@ -75,12 +81,12 @@ The tests collect the following metrics:
 
 ## Performance Targets
 
-| Metric | Target | Description |
-|--------|--------|-------------|
-| P99 Response Time | < 100ms | 99% of requests complete within 100ms |
-| Average Response Time | < 50ms | Average request processing time |
-| Memory Growth | < 50% | Memory increase over sustained load |
-| Accuracy | 100% | Rate limits are exactly enforced |
+| Metric                | Target  | Description                           |
+| --------------------- | ------- | ------------------------------------- |
+| P99 Response Time     | < 100ms | 99% of requests complete within 100ms |
+| Average Response Time | < 50ms  | Average request processing time       |
+| Memory Growth         | < 50%   | Memory increase over sustained load   |
+| Accuracy              | 100%    | Rate limits are exactly enforced      |
 
 ## Reports
 
@@ -121,6 +127,7 @@ return { isGranted: true };
 ### Concurrency Handling
 
 The implementation uses:
+
 - Atomic operations for request counting
 - User-isolated rate limit buckets
 - No shared mutable state between users
@@ -132,6 +139,7 @@ The implementation uses:
 If tests fail with memory errors:
 
 1. Increase Node.js heap size:
+
    ```bash
    NODE_OPTIONS="--max-old-space-size=4096" npm run test:performance
    ```

@@ -67,16 +67,20 @@
 Authentication > Settings で以下を設定：
 
 ### JWT Settings
+
 - JWT Expiry: `3600` (1時間)
 - Enable refresh token rotation: ON
 - Refresh token reuse interval: `10`
 
 ### Email Auth
+
 - Enable Email Confirmations: OFF（開発環境）
 - Enable Email Change Confirmations: ON
 
 ### Allowed URLs
+
 Site URLとAdditional Redirect URLsに以下を追加：
+
 - `http://localhost:5173`
 - `http://localhost:3000`
 - `https://your-production-domain.com` (本番環境用)
@@ -114,13 +118,16 @@ supabase start
 ## トラブルシューティング
 
 ### Google OAuthが動作しない場合
+
 - Authorized redirect URIsが正しく設定されているか確認
 - Google Cloud Consoleでアプリケーションが「Testing」ステータスの場合、テストユーザーを追加
 
 ### GitHub OAuthが動作しない場合
+
 - Authorization callback URLが正確に一致しているか確認（末尾のスラッシュに注意）
 
 ### JWTトークンが無効な場合
+
 - Supabase DashboardのProject Settings > APIでJWT Secretを確認
 - 環境変数が正しく設定されているか確認
 
@@ -166,6 +173,7 @@ supabase db push --db-url "postgresql://postgres:password@db.xxxxxxxxxxxxxxxxxxx
 ## 次のステップ
 
 Supabaseの設定が完了したら、以下のタスクに進みます：
+
 1. 環境変数の設定（Task 0005）
 2. 認証エンドポイントの実装（Task 0036）
 3. データAPIエンドポイントの実装（Task 0037）

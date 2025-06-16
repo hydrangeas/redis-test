@@ -20,7 +20,7 @@ export class OpenDataResource extends Entity<OpenDataResourceProps> {
     path: DataPath,
     metadata: ResourceMetadata,
     createdAt: Date,
-    accessedAt?: Date
+    accessedAt?: Date,
   ) {
     const props: OpenDataResourceProps = {
       path,

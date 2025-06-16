@@ -110,10 +110,12 @@ vercel --prod
 ### キャッシュ戦略
 
 1. **静的データ（/secure/\*.json）**
+
    - Cache-Control: `public, max-age=300, s-maxage=3600`
    - CDN-Cache-Control: `max-age=3600`
 
 2. **認証エンドポイント（/auth/\*）**
+
    - Cache-Control: `private, no-cache, no-store`
 
 3. **その他のAPI**
@@ -124,6 +126,7 @@ vercel --prod
 ### Vercel Analytics
 
 自動的に以下のメトリクスを収集：
+
 - レスポンスタイム
 - エラー率
 - トラフィック統計
@@ -137,10 +140,12 @@ vercel --prod
 ### よくある問題
 
 1. **ビルドエラー**
+
    - Node.jsバージョンを確認（18以上）
    - pnpmバージョンを確認（8以上）
 
 2. **関数タイムアウト**
+
    - Edge Functionsの最大実行時間は10秒
    - 長時間処理は非同期で実行
 
@@ -164,10 +169,12 @@ vercel env pull
 ## セキュリティ
 
 1. **環境変数**
+
    - サービスロールキーは本番環境のみ
    - シークレットはVercel環境変数で管理
 
 2. **CORS設定**
+
    - 許可するオリジンを明示的に設定
    - 開発環境と本番環境で異なる設定
 
@@ -178,6 +185,7 @@ vercel env pull
 ## デプロイメントフック
 
 `scripts/vercel-deploy-hook.ts`を使用して：
+
 - デプロイ成功/失敗の通知
 - Lighthouseテストの自動実行
 - Slackへの通知
@@ -185,10 +193,12 @@ vercel env pull
 ## ベストプラクティス
 
 1. **ゼロダウンタイムデプロイ**
+
    - 段階的ロールアウト
    - ヘルスチェックの活用
 
 2. **プレビューデプロイ**
+
    - すべてのPRで自動プレビュー
    - 本番前の検証
 

@@ -30,7 +30,7 @@ export interface IAPIRepository {
    */
   findByPathAndMethod(
     path: EndpointPath,
-    method: HttpMethod
+    method: HttpMethod,
   ): Promise<Result<APIAggregate | null, DomainError>>;
 
   /**

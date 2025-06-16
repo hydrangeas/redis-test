@@ -61,13 +61,13 @@ describe('ApiKeyFactory', () => {
       const keys = ApiKeyFactory.createMany(userId, 3);
 
       expect(keys).toHaveLength(3);
-      keys.forEach(key => {
+      keys.forEach((key) => {
         expect(key.user_id).toBe(userId);
         expect(key.raw_key).toBeDefined();
       });
 
       // 各キーが異なることを確認
-      const rawKeys = new Set(keys.map(k => k.raw_key));
+      const rawKeys = new Set(keys.map((k) => k.raw_key));
       expect(rawKeys.size).toBe(3);
     });
   });
@@ -82,7 +82,7 @@ describe('ApiKeyFactory', () => {
       const now = new Date();
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
+
       // past({ years: 2 }) means "within the past 2 years", not "2 years ago"
       expect(apiKey.last_used_at!.getTime()).toBeLessThan(now.getTime());
       expect(apiKey.last_used_at!.getTime()).toBeGreaterThan(oneYearAgo.getFullYear() - 2);

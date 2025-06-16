@@ -87,11 +87,9 @@ export class TestContainerFactory {
             sub: 'test-user',
             tier: 'tier1',
             exp: Math.floor(Date.now() / 1000) + 3600,
-          })
+          }),
         ),
-        verifyRefreshToken: vi.fn().mockResolvedValue(
-          Result.ok({ sub: 'test-user' })
-        ),
+        verifyRefreshToken: vi.fn().mockResolvedValue(Result.ok({ sub: 'test-user' })),
         decodeToken: vi.fn().mockReturnValue({ sub: 'test-user' }),
       },
     });
@@ -160,7 +158,7 @@ export class TestContainerFactory {
             suspiciousActivities: 0,
             loginsByProvider: new Map(),
             tokenRefreshCount: 0,
-          })
+          }),
         ),
         deleteOldLogs: vi.fn().mockResolvedValue(Result.ok(0)),
       },
@@ -182,7 +180,7 @@ export class TestContainerFactory {
             averageResponseTime: 0,
             requestsByEndpoint: new Map(),
             requestsByStatus: new Map(),
-          })
+          }),
         ),
         deleteOldLogs: vi.fn().mockResolvedValue(Result.ok(0)),
       },
@@ -225,7 +223,7 @@ export class TestContainerFactory {
  */
 export function createTestContainer(
   customMocks?: Record<string | symbol, any>,
-  envOverrides?: Partial<EnvConfig>
+  envOverrides?: Partial<EnvConfig>,
 ): DependencyContainer {
   const testContainer = TestContainerFactory.create(envOverrides);
 
@@ -236,7 +234,7 @@ export function createTestContainer(
         useValue: customMocks[token],
       });
     });
-    
+
     Object.keys(customMocks).forEach((key) => {
       const token = Symbol.for(key);
       testContainer.register(token, {

@@ -13,7 +13,7 @@ import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
  * Supabaseユーザーリポジトリ実装
- * 
+ *
  * Supabase Authと連携してユーザー情報を管理する
  */
 @injectable()
@@ -22,7 +22,7 @@ export class SupabaseUserRepository implements IUserRepository {
     @inject(DI_TOKENS.AuthAdapter)
     private readonly authAdapter: IAuthAdapter,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   /**
@@ -34,7 +34,7 @@ export class SupabaseUserRepository implements IUserRepository {
 
       // Supabase Authからユーザー情報を取得
       const supabaseUser = await this.authAdapter.getUserById(id.value);
-      
+
       if (!supabaseUser) {
         this.logger.debug({ userId: id.value }, 'User not found');
         return Result.ok(null);
@@ -42,32 +42,30 @@ export class SupabaseUserRepository implements IUserRepository {
 
       // Supabaseユーザーからドメインモデルへ変換
       const user = await this.mapToDomainUser(supabaseUser);
-      
+
       if (!user) {
         return Result.fail(
           new DomainError(
             'USER_MAPPING_ERROR',
             'Failed to map user data to domain model',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
-      
+
       this.logger.debug({ userId: id.value }, 'User found successfully');
       return Result.ok(user);
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: id.value,
-      }, 'Error finding user by ID');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: id.value,
+        },
+        'Error finding user by ID',
+      );
 
       return Result.fail(
-        new DomainError(
-          'USER_REPOSITORY_ERROR',
-          'Failed to find user by ID',
-          ErrorType.INTERNAL
-        )
+        new DomainError('USER_REPOSITORY_ERROR', 'Failed to find user by ID', ErrorType.INTERNAL),
       );
     }
   }
@@ -81,7 +79,7 @@ export class SupabaseUserRepository implements IUserRepository {
 
       // Supabase Authからユーザー情報を取得
       const supabaseUser = await this.authAdapter.getUserByEmail(email.value);
-      
+
       if (!supabaseUser) {
         this.logger.debug({ email: email.value }, 'User not found');
         return Result.ok(null);
@@ -89,32 +87,34 @@ export class SupabaseUserRepository implements IUserRepository {
 
       // Supabaseユーザーからドメインモデルへ変換
       const user = await this.mapToDomainUser(supabaseUser);
-      
+
       if (!user) {
         return Result.fail(
           new DomainError(
             'USER_MAPPING_ERROR',
             'Failed to map user data to domain model',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
-      
+
       this.logger.debug({ email: email.value }, 'User found successfully');
       return Result.ok(user);
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email: email.value,
-      }, 'Error finding user by email');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          email: email.value,
+        },
+        'Error finding user by email',
+      );
 
       return Result.fail(
         new DomainError(
           'USER_REPOSITORY_ERROR',
           'Failed to find user by email',
-          ErrorType.INTERNAL
-        )
+          ErrorType.INTERNAL,
+        ),
       );
     }
   }
@@ -142,26 +142,24 @@ export class SupabaseUserRepository implements IUserRepository {
           new DomainError(
             'USER_CREATION_FAILED',
             'Failed to create user in Supabase',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
       this.logger.info({ userId: user.id.value }, 'User saved successfully');
       return Result.ok();
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.id.value,
-      }, 'Error saving user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: user.id.value,
+        },
+        'Error saving user',
+      );
 
       return Result.fail(
-        new DomainError(
-          'USER_REPOSITORY_ERROR',
-          'Failed to save user',
-          ErrorType.INTERNAL
-        )
+        new DomainError('USER_REPOSITORY_ERROR', 'Failed to save user', ErrorType.INTERNAL),
       );
     }
   }
@@ -188,26 +186,24 @@ export class SupabaseUserRepository implements IUserRepository {
           new DomainError(
             'USER_UPDATE_FAILED',
             'Failed to update user in Supabase',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
       this.logger.info({ userId: user.id.value }, 'User updated successfully');
       return Result.ok();
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.id.value,
-      }, 'Error updating user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: user.id.value,
+        },
+        'Error updating user',
+      );
 
       return Result.fail(
-        new DomainError(
-          'USER_REPOSITORY_ERROR',
-          'Failed to update user',
-          ErrorType.INTERNAL
-        )
+        new DomainError('USER_REPOSITORY_ERROR', 'Failed to update user', ErrorType.INTERNAL),
       );
     }
   }
@@ -227,26 +223,24 @@ export class SupabaseUserRepository implements IUserRepository {
           new DomainError(
             'USER_DELETION_FAILED',
             'Failed to delete user from Supabase',
-            ErrorType.INTERNAL
-          )
+            ErrorType.INTERNAL,
+          ),
         );
       }
 
       this.logger.info({ userId: id.value }, 'User deleted successfully');
       return Result.ok();
-
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: id.value,
-      }, 'Error deleting user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: id.value,
+        },
+        'Error deleting user',
+      );
 
       return Result.fail(
-        new DomainError(
-          'USER_REPOSITORY_ERROR',
-          'Failed to delete user',
-          ErrorType.INTERNAL
-        )
+        new DomainError('USER_REPOSITORY_ERROR', 'Failed to delete user', ErrorType.INTERNAL),
       );
     }
   }
@@ -256,17 +250,23 @@ export class SupabaseUserRepository implements IUserRepository {
    */
   private async mapToDomainUser(supabaseUser: any): Promise<User | null> {
     try {
-      this.logger.debug({
-        supabaseUser,
-      }, 'Mapping Supabase user to domain model');
+      this.logger.debug(
+        {
+          supabaseUser,
+        },
+        'Mapping Supabase user to domain model',
+      );
 
       // UserIdの作成
       const userIdResult = UserId.create(supabaseUser.id);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          userId: supabaseUser.id,
-          error: userIdResult.getError().message,
-        }, 'Invalid user ID format');
+        this.logger.error(
+          {
+            userId: supabaseUser.id,
+            error: userIdResult.getError().message,
+          },
+          'Invalid user ID format',
+        );
         return null;
       }
       const userId = userIdResult.getValue();
@@ -274,10 +274,13 @@ export class SupabaseUserRepository implements IUserRepository {
       // Emailの作成
       const emailResult = Email.create(supabaseUser.email || '');
       if (emailResult.isFailure) {
-        this.logger.error({
-          email: supabaseUser.email,
-          error: emailResult.getError().message,
-        }, 'Invalid email format');
+        this.logger.error(
+          {
+            email: supabaseUser.email,
+            error: emailResult.getError().message,
+          },
+          'Invalid email format',
+        );
         return null;
       }
       const email = emailResult.getValue();
@@ -288,11 +291,14 @@ export class SupabaseUserRepository implements IUserRepository {
       const tierLevel = rawTier.toUpperCase() as TierLevel;
       const tierResult = UserTier.create(tierLevel);
       if (tierResult.isFailure) {
-        this.logger.error({
-          tier: tierLevel,
-          rawTier: rawTier,
-          error: tierResult.getError().message,
-        }, 'Invalid tier level');
+        this.logger.error(
+          {
+            tier: tierLevel,
+            rawTier: rawTier,
+            error: tierResult.getError().message,
+          },
+          'Invalid tier level',
+        );
         return null;
       }
       const tier = tierResult.getValue();
@@ -304,7 +310,7 @@ export class SupabaseUserRepository implements IUserRepository {
         tier: tier,
         createdAt: new Date(supabaseUser.created_at),
         updatedAt: new Date(supabaseUser.updated_at || supabaseUser.created_at),
-        lastAuthenticatedAt: supabaseUser.last_sign_in_at 
+        lastAuthenticatedAt: supabaseUser.last_sign_in_at
           ? new Date(supabaseUser.last_sign_in_at)
           : undefined,
         emailVerified: supabaseUser.email_confirmed_at !== null,
@@ -313,10 +319,13 @@ export class SupabaseUserRepository implements IUserRepository {
 
       return User.reconstruct(userProps);
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: supabaseUser?.id,
-      }, 'Failed to map Supabase user to domain model');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: supabaseUser?.id,
+        },
+        'Failed to map Supabase user to domain model',
+      );
       return null;
     }
   }

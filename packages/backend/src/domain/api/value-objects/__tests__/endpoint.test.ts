@@ -14,13 +14,13 @@ describe('Endpoint', () => {
     });
 
     it('should reject missing method', () => {
-      expect(() => new Endpoint(null as any, new ApiPath('/api/users')))
-        .toThrow('HTTP method is required');
+      expect(() => new Endpoint(null as any, new ApiPath('/api/users'))).toThrow(
+        'HTTP method is required',
+      );
     });
 
     it('should reject missing path', () => {
-      expect(() => new Endpoint(HttpMethod.GET, null as any))
-        .toThrow('API path is required');
+      expect(() => new Endpoint(HttpMethod.GET, null as any)).toThrow('API path is required');
     });
   });
 
@@ -55,8 +55,9 @@ describe('Endpoint', () => {
     });
 
     it('should reject invalid path', () => {
-      expect(() => Endpoint.fromString('GET /api/../etc/passwd'))
-        .toThrow('API path contains dangerous patterns');
+      expect(() => Endpoint.fromString('GET /api/../etc/passwd')).toThrow(
+        'API path contains dangerous patterns',
+      );
     });
   });
 
@@ -140,7 +141,7 @@ describe('Endpoint', () => {
     it('should serialize to JSON', () => {
       const endpoint = new Endpoint(HttpMethod.GET, new ApiPath('/api/users'));
       const json = endpoint.toJSON();
-      
+
       expect(json).toEqual({
         method: 'GET',
         path: '/api/users',
@@ -151,7 +152,7 @@ describe('Endpoint', () => {
       const original = new Endpoint(HttpMethod.POST, new ApiPath('/api/users/123'));
       const json = original.toJSON();
       const restored = Endpoint.fromJSON(json);
-      
+
       expect(restored.equals(original)).toBe(true);
       expect(restored.method).toBe(original.method);
       expect(restored.path.value).toBe(original.path.value);

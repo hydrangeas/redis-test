@@ -71,7 +71,7 @@ describe('APIEndpoint', () => {
     it('should reconstruct from existing data', () => {
       const pathResult = EndpointPath.create('/api/users/:id');
       expect(pathResult.isSuccess).toBe(true);
-      
+
       const props = {
         id: 'existing-id',
         path: pathResult.getValue(),
@@ -96,7 +96,7 @@ describe('APIEndpoint', () => {
     it('should reconstruct from existing data without failing on valid empty id', () => {
       const pathResult = EndpointPath.create('/api/users/:id');
       expect(pathResult.isSuccess).toBe(true);
-      
+
       const props = {
         id: '550e8400-e29b-41d4-a716-446655440000',
         path: pathResult.getValue(),
@@ -147,11 +147,11 @@ describe('APIEndpoint', () => {
       const endpointResult = APIEndpoint.create(validProps);
       expect(endpointResult.isSuccess).toBe(true);
       endpoint = endpointResult.getValue();
-      
+
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       userId = userIdResult.getValue();
-      
+
       const rateLimitResult = RateLimit.create(60, 60);
       expect(rateLimitResult.isSuccess).toBe(true);
       rateLimit = rateLimitResult.getValue();
@@ -198,11 +198,11 @@ describe('APIEndpoint', () => {
     it('should calculate correct retry after seconds', () => {
       const now = new Date('2024-01-01T00:01:00Z');
       const oldestTime = new Date('2024-01-01T00:00:30Z'); // 30 seconds ago
-      
+
       // Add old request
       const res1 = endpoint.recordAccess(userId, 'req-1', oldestTime);
       expect(res1.isSuccess).toBe(true);
-      
+
       // Add requests to exceed limit
       for (let i = 0; i < 60; i++) {
         const recordResult = endpoint.recordAccess(userId, `req-${i + 2}`, now);
@@ -226,13 +226,13 @@ describe('APIEndpoint', () => {
 
     it('should only count requests within window', () => {
       const now = new Date('2024-01-01T00:02:00Z');
-      
+
       // Add old requests (outside window)
       const res1 = endpoint.recordAccess(userId, 'req-1', new Date('2024-01-01T00:00:30Z')); // 90 seconds ago
       expect(res1.isSuccess).toBe(true);
       const res2 = endpoint.recordAccess(userId, 'req-2', new Date('2024-01-01T00:00:45Z')); // 75 seconds ago
       expect(res2.isSuccess).toBe(true);
-      
+
       // Add recent requests (inside window)
       const res3 = endpoint.recordAccess(userId, 'req-3', new Date('2024-01-01T00:01:15Z')); // 45 seconds ago
       expect(res3.isSuccess).toBe(true);
@@ -254,7 +254,7 @@ describe('APIEndpoint', () => {
       const endpointResult = APIEndpoint.create(validProps);
       expect(endpointResult.isSuccess).toBe(true);
       endpoint = endpointResult.getValue();
-      
+
       const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
       expect(userIdResult.isSuccess).toBe(true);
       userId = userIdResult.getValue();
@@ -310,11 +310,11 @@ describe('APIEndpoint', () => {
       const endpointResult = APIEndpoint.create(validProps);
       expect(endpointResult.isSuccess).toBe(true);
       endpoint = endpointResult.getValue();
-      
+
       const userId1Result = UserId.create('550e8400-e29b-41d4-a716-446655440001');
       expect(userId1Result.isSuccess).toBe(true);
       userId1 = userId1Result.getValue();
-      
+
       const userId2Result = UserId.create('550e8400-e29b-41d4-a716-446655440002');
       expect(userId2Result.isSuccess).toBe(true);
       userId2 = userId2Result.getValue();
@@ -322,13 +322,13 @@ describe('APIEndpoint', () => {
 
     it('should remove logs older than max age', () => {
       const now = new Date('2024-01-01T00:05:00Z');
-      
+
       // Add old and new logs for user1
       const res1 = endpoint.recordAccess(userId1, 'req-1', new Date('2024-01-01T00:00:00Z')); // 5 minutes ago
       expect(res1.isSuccess).toBe(true);
       const res2 = endpoint.recordAccess(userId1, 'req-2', new Date('2024-01-01T00:04:00Z')); // 1 minute ago
       expect(res2.isSuccess).toBe(true);
-      
+
       // Add logs for user2
       const res3 = endpoint.recordAccess(userId2, 'req-3', new Date('2024-01-01T00:02:00Z')); // 3 minutes ago
       expect(res3.isSuccess).toBe(true);
@@ -341,7 +341,7 @@ describe('APIEndpoint', () => {
 
     it('should remove user entry if all logs are cleaned up', () => {
       const now = new Date('2024-01-01T00:05:00Z');
-      
+
       // Add only old logs
       const res1 = endpoint.recordAccess(userId1, 'req-1', new Date('2024-01-01T00:00:00Z'));
       expect(res1.isSuccess).toBe(true);
@@ -364,21 +364,21 @@ describe('APIEndpoint', () => {
   describe('activate/deactivate', () => {
     it('should activate endpoint', () => {
       const endpoint = APIEndpoint.create({ ...validProps, isActive: false }).getValue();
-      
+
       expect(endpoint.isActive).toBe(false);
-      
+
       endpoint.activate();
-      
+
       expect(endpoint.isActive).toBe(true);
     });
 
     it('should deactivate endpoint', () => {
       const endpoint = APIEndpoint.create({ ...validProps, isActive: true }).getValue();
-      
+
       expect(endpoint.isActive).toBe(true);
-      
+
       endpoint.deactivate();
-      
+
       expect(endpoint.isActive).toBe(false);
     });
   });
@@ -392,11 +392,11 @@ describe('APIEndpoint', () => {
       const endpointResult = APIEndpoint.create(validProps);
       expect(endpointResult.isSuccess).toBe(true);
       endpoint = endpointResult.getValue();
-      
+
       const userId1Result = UserId.create('550e8400-e29b-41d4-a716-446655440001');
       expect(userId1Result.isSuccess).toBe(true);
       userId1 = userId1Result.getValue();
-      
+
       const userId2Result = UserId.create('550e8400-e29b-41d4-a716-446655440002');
       expect(userId2Result.isSuccess).toBe(true);
       userId2 = userId2Result.getValue();
@@ -415,7 +415,7 @@ describe('APIEndpoint', () => {
       const userId3Result = UserId.create('550e8400-e29b-41d4-a716-446655440003');
       expect(userId3Result.isSuccess).toBe(true);
       const userId3 = userId3Result.getValue();
-      
+
       expect(endpoint.getUserLogCount(userId3)).toBe(0);
     });
 

@@ -26,10 +26,10 @@ describe('AuthenticationUseCase Integration', () => {
   describe('validateToken', () => {
     it('should validate token and return user information', async () => {
       const mockToken = 'valid-jwt-token';
-      
+
       // Mock JWT validation
       mockDependencies.mockJWTValidator.validateToken.mockResolvedValue(
-        Result.ok({ valid: true, claims: { sub: 'user-123' } })
+        Result.ok({ valid: true, claims: { sub: 'user-123' } }),
       );
 
       // Mock auth adapter verification
@@ -46,7 +46,7 @@ describe('AuthenticationUseCase Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         console.error('UserId creation failed:', userIdResult.getError());
         throw new Error('Failed to create UserId');
@@ -55,14 +55,14 @@ describe('AuthenticationUseCase Integration', () => {
         console.error('UserTier creation failed:', userTierResult.getError());
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
-      
+
       mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
-        Result.ok(authenticatedUser)
+        Result.ok(authenticatedUser),
       );
 
       const result = await useCase.validateToken(mockToken);
@@ -83,7 +83,7 @@ describe('AuthenticationUseCase Integration', () => {
       const mockToken = 'invalid-token';
 
       mockDependencies.mockJWTValidator.validateToken.mockResolvedValue(
-        Result.fail({ message: 'Invalid JWT format' })
+        Result.fail({ message: 'Invalid JWT format' }),
       );
 
       const result = await useCase.validateToken(mockToken);
@@ -97,7 +97,7 @@ describe('AuthenticationUseCase Integration', () => {
       const mockToken = 'expired-token';
 
       mockDependencies.mockJWTValidator.validateToken.mockResolvedValue(
-        Result.ok({ valid: true, claims: { sub: 'user-123' } })
+        Result.ok({ valid: true, claims: { sub: 'user-123' } }),
       );
 
       mockDependencies.mockAuthAdapter.verifyToken.mockResolvedValue(null);
@@ -109,13 +109,13 @@ describe('AuthenticationUseCase Integration', () => {
 
       // Verify authentication failed event was published
       expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(AuthenticationFailed)
+        expect.any(AuthenticationFailed),
       );
     });
 
     it('should handle token validation failure', async () => {
       mockDependencies.mockJWTValidator.validateToken.mockResolvedValue(
-        Result.ok({ valid: true, claims: { sub: 'user-123' } })
+        Result.ok({ valid: true, claims: { sub: 'user-123' } }),
       );
 
       mockDependencies.mockAuthAdapter.verifyToken.mockResolvedValue({
@@ -126,7 +126,7 @@ describe('AuthenticationUseCase Integration', () => {
       });
 
       mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
-        Result.fail({ message: 'User not found' })
+        Result.fail({ message: 'User not found' }),
       );
 
       const result = await useCase.validateToken('token');
@@ -170,7 +170,7 @@ describe('AuthenticationUseCase Integration', () => {
 
       // Verify token refreshed event was published
       expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(TokenRefreshed)
+        expect.any(TokenRefreshed),
       );
     });
 
@@ -198,17 +198,13 @@ describe('AuthenticationUseCase Integration', () => {
       expect(result.data).toBeUndefined();
 
       // Verify logout event was published
-      expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(UserLoggedOut)
-      );
+      expect(mockDependencies.mockEventBus.publish).toHaveBeenCalledWith(expect.any(UserLoggedOut));
     });
 
     it('should handle sign out failure', async () => {
       const userId = 'user-123';
 
-      mockDependencies.mockAuthAdapter.signOut.mockRejectedValue(
-        new Error('Sign out failed')
-      );
+      mockDependencies.mockAuthAdapter.signOut.mockRejectedValue(new Error('Sign out failed'));
 
       const result = await useCase.signOut(userId);
 
@@ -221,10 +217,10 @@ describe('AuthenticationUseCase Integration', () => {
     it('should coordinate between auth adapter, domain service, and events', async () => {
       const mockToken = 'valid-jwt-token';
       const userId = '550e8400-e29b-41d4-a716-446655440006'; // Valid UUID v4
-      
+
       // Setup complex scenario
       mockDependencies.mockJWTValidator.validateToken.mockResolvedValue(
-        Result.ok({ valid: true, claims: { sub: userId } })
+        Result.ok({ valid: true, claims: { sub: userId } }),
       );
 
       mockDependencies.mockAuthAdapter.verifyToken.mockResolvedValue({
@@ -237,27 +233,27 @@ describe('AuthenticationUseCase Integration', () => {
 
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
-        Result.ok(authenticatedUser)
+        Result.ok(authenticatedUser),
       );
 
       const result = await useCase.validateToken(mockToken);
 
       expect(result.success).toBe(true);
-      
+
       // Verify all layers were involved
       expect(mockDependencies.mockJWTValidator.validateToken).toHaveBeenCalled();
       expect(mockDependencies.mockAuthAdapter.verifyToken).toHaveBeenCalled();
@@ -267,21 +263,19 @@ describe('AuthenticationUseCase Integration', () => {
     it('should handle errors gracefully at any layer', async () => {
       const mockToken = 'valid-jwt-token';
       const userId = '550e8400-e29b-41d4-a716-446655440007'; // Valid UUID v4
-      
+
       mockDependencies.mockJWTValidator.validateToken.mockResolvedValue(
-        Result.ok({ valid: true, claims: { sub: userId } })
+        Result.ok({ valid: true, claims: { sub: userId } }),
       );
 
       // Auth adapter throws unexpected error
-      mockDependencies.mockAuthAdapter.verifyToken.mockRejectedValue(
-        new Error('Network error')
-      );
+      mockDependencies.mockAuthAdapter.verifyToken.mockRejectedValue(new Error('Network error'));
 
       const result = await useCase.validateToken(mockToken);
 
       expect(result.success).toBe(false);
       expect(result.error.code).toBe('INTERNAL_ERROR');
-      
+
       // Verify no data was processed further
       expect(mockDependencies.mockAuthenticationService.validateToken).not.toHaveBeenCalled();
     });

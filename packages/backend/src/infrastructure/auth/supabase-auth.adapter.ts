@@ -10,33 +10,25 @@ import { Logger } from 'pino';
 export class SupabaseAuthAdapter implements IAuthAdapter {
   private readonly supabaseClient: SupabaseClient;
   private readonly adminClient: SupabaseClient;
-  
+
   constructor(private readonly logger: Logger) {
     const env = getEnvConfig();
-    
+
     // 通常のクライアント（anonキー使用）
-    this.supabaseClient = createClient(
-      env.PUBLIC_SUPABASE_URL,
-      env.PUBLIC_SUPABASE_ANON_KEY,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    this.supabaseClient = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
     // 管理者クライアント（サービスロールキー使用）
-    this.adminClient = createClient(
-      env.PUBLIC_SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    this.adminClient = createClient(env.PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
   }
 
   /**
@@ -48,16 +40,19 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
       const { data: user, error } = await this.adminClient.auth.getUser(token);
 
       if (error || !user) {
-        this.logger.warn({
-          error: error?.message,
-          token: token.substring(0, 10) + '...',
-        }, 'Token verification failed');
+        this.logger.warn(
+          {
+            error: error?.message,
+            token: token.substring(0, 10) + '...',
+          },
+          'Token verification failed',
+        );
         return null;
       }
 
       // トークンをデコードしてペイロードを取得
       const decoded = jwtDecode<TokenPayload>(token);
-      
+
       // Supabaseのユーザー情報とマージ
       return {
         ...decoded,
@@ -67,9 +62,12 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         user_metadata: user.user.user_metadata || {},
       };
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }, 'Failed to verify token');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to verify token',
+      );
       return null;
     }
   }
@@ -84,9 +82,12 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
       });
 
       if (error || !data.session) {
-        this.logger.warn({
-          error: error?.message,
-        }, 'Token refresh failed');
+        this.logger.warn(
+          {
+            error: error?.message,
+          },
+          'Token refresh failed',
+        );
         return null;
       }
 
@@ -105,9 +106,12 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         },
       };
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }, 'Failed to refresh access token');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to refresh access token',
+      );
       return null;
     }
   }
@@ -121,21 +125,30 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
       const { error } = await this.adminClient.auth.admin.signOut(userId);
 
       if (error) {
-        this.logger.error({
-          error: error.message,
-          userId,
-        }, 'Failed to sign out user');
+        this.logger.error(
+          {
+            error: error.message,
+            userId,
+          },
+          'Failed to sign out user',
+        );
         throw new Error(`Sign out failed: ${error.message}`);
       }
 
-      this.logger.info({
-        userId,
-      }, 'User signed out successfully');
+      this.logger.info(
+        {
+          userId,
+        },
+        'User signed out successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId,
-      }, 'Failed to sign out user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId,
+        },
+        'Failed to sign out user',
+      );
       throw error;
     }
   }
@@ -146,18 +159,21 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   async getUserById(id: string): Promise<any | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.getUserById(id);
-      
+
       if (error || !data.user) {
         this.logger.debug({ userId: id }, 'User not found');
         return null;
       }
-      
+
       return data.user;
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: id,
-      }, 'Failed to get user by ID');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: id,
+        },
+        'Failed to get user by ID',
+      );
       return null;
     }
   }
@@ -168,19 +184,22 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   async getUserByEmail(email: string): Promise<any | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.listUsers();
-      
+
       if (error) {
         this.logger.error({ error: error.message }, 'Failed to list users');
         return null;
       }
-      
-      const user = data.users.find(u => u.email === email);
+
+      const user = data.users.find((u) => u.email === email);
       return user || null;
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email,
-      }, 'Failed to get user by email');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          email,
+        },
+        'Failed to get user by email',
+      );
       return null;
     }
   }
@@ -196,17 +215,20 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         app_metadata: userData.app_metadata,
         user_metadata: userData.user_metadata,
       });
-      
+
       if (error || !data.user) {
         this.logger.error({ error: error?.message }, 'Failed to create user');
         return null;
       }
-      
+
       return data.user;
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }, 'Failed to create user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to create user',
+      );
       return null;
     }
   }
@@ -222,18 +244,21 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         app_metadata: updates.app_metadata,
         user_metadata: updates.user_metadata,
       });
-      
+
       if (error || !data.user) {
         this.logger.error({ error: error?.message }, 'Failed to update user');
         return null;
       }
-      
+
       return data.user;
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: id,
-      }, 'Failed to update user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: id,
+        },
+        'Failed to update user',
+      );
       return null;
     }
   }
@@ -244,18 +269,21 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   async deleteUser(id: string): Promise<boolean> {
     try {
       const { error } = await this.adminClient.auth.admin.deleteUser(id);
-      
+
       if (error) {
         this.logger.error({ error: error.message }, 'Failed to delete user');
         return false;
       }
-      
+
       return true;
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: id,
-      }, 'Failed to delete user');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: id,
+        },
+        'Failed to delete user',
+      );
       return false;
     }
   }
@@ -274,10 +302,10 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
       if (data?.session) {
         const decoded = jwtDecode<any>(data.session.access_token);
         const hasTierClaim = decoded.app_metadata?.tier !== undefined;
-        
+
         // クリーンアップ
         await this.supabaseClient.auth.signOut();
-        
+
         return hasTierClaim;
       }
 

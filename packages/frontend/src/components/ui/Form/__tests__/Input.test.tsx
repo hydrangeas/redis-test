@@ -48,7 +48,7 @@ describe("Input", () => {
     render(<Input error helperText="Error message" />);
     const input = screen.getByRole("textbox");
     const helperText = screen.getByText("Error message");
-    
+
     expect(input).toHaveClass("border-red-500");
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(helperText).toHaveClass("text-red-600");
@@ -68,7 +68,7 @@ describe("Input", () => {
     const handleChange = vi.fn();
     const handleFocus = vi.fn();
     const handleBlur = vi.fn();
-    
+
     render(
       <Input
         onChange={handleChange}
@@ -76,15 +76,15 @@ describe("Input", () => {
         onBlur={handleBlur}
       />
     );
-    
+
     const input = screen.getByRole("textbox");
-    
+
     fireEvent.change(input, { target: { value: "test" } });
     expect(handleChange).toHaveBeenCalled();
-    
+
     fireEvent.focus(input);
     expect(handleFocus).toHaveBeenCalled();
-    
+
     fireEvent.blur(input);
     expect(handleBlur).toHaveBeenCalled();
   });
@@ -97,7 +97,7 @@ describe("Input", () => {
   it("forwards ref", () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<Input ref={ref} />);
-    
+
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
 
@@ -108,10 +108,10 @@ describe("Input", () => {
         <Input label="Input 2" helperText="Helper 2" />
       </>
     );
-    
+
     const input1 = screen.getByLabelText("Input 1");
     const input2 = screen.getByLabelText("Input 2");
-    
+
     expect(input1.id).toBeTruthy();
     expect(input2.id).toBeTruthy();
     expect(input1.id).not.toBe(input2.id);

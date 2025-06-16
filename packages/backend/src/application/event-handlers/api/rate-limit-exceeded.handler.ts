@@ -22,57 +22,72 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: RateLimitExceeded): Promise<void> {
     try {
-      this.logger.warn({
-        eventId: event.eventId,
-        userId: event.userId,
-        endpointId: event.endpointId,
-        requestCount: event.requestCount,
-        rateLimit: event.rateLimit,
-      }, 'Handling RateLimitExceeded event');
+      this.logger.warn(
+        {
+          eventId: event.eventId,
+          userId: event.userId,
+          endpointId: event.endpointId,
+          requestCount: event.requestCount,
+          rateLimit: event.rateLimit,
+        },
+        'Handling RateLimitExceeded event',
+      );
 
       // UserIdの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: userIdResult.error,
-        }, 'Invalid userId in RateLimitExceeded event');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: userIdResult.error,
+          },
+          'Invalid userId in RateLimitExceeded event',
+        );
         return;
       }
 
       // AuthEvent作成
       const authEvent = new AuthEvent(EventType.RATE_LIMIT_CHECK);
-      
+
       // Provider, IPAddress, UserAgentを作成（メタデータから取得、または適切なデフォルト値を使用）
       const providerResult = Provider.create('api_key'); // API経由のアクセスはapi_keyプロバイダーとして記録
       if (providerResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: providerResult.error,
-        }, 'Failed to create Provider');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: providerResult.error,
+          },
+          'Failed to create Provider',
+        );
         return;
       }
-      
+
       const ipAddressResult = IPAddress.create('0.0.0.0'); // デフォルトIP（実際の実装では適切な値を使用）
       if (ipAddressResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: ipAddressResult.error,
-        }, 'Failed to create IPAddress');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: ipAddressResult.error,
+          },
+          'Failed to create IPAddress',
+        );
         return;
       }
-      
+
       const userAgentResult = UserAgent.create('API Rate Limiter'); // デフォルトUA
       if (userAgentResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: userAgentResult.error,
-        }, 'Failed to create UserAgent');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: userAgentResult.error,
+          },
+          'Failed to create UserAgent',
+        );
         return;
       }
 
@@ -97,20 +112,26 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: logEntryResult.error,
-        }, 'Failed to create AuthLogEntry for rate limit exceeded');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: logEntryResult.error,
+          },
+          'Failed to create AuthLogEntry for rate limit exceeded',
+        );
         return;
       }
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure) {
-        this.logger.error({
-          eventId: event.eventId,
-          error: saveResult.getError(),
-        }, 'Failed to save rate limit exceeded log');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: saveResult.getError(),
+          },
+          'Failed to save rate limit exceeded log',
+        );
         return;
       }
 
@@ -123,24 +144,32 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
       });
 
       if (recentBlocksResult.isSuccess && recentBlocksResult.getValue().length >= 5) {
-        this.logger.error({
-          eventId: event.eventId,
-          userId: event.userId,
-          blockCount: recentBlocksResult.getValue().length,
-        }, 'Multiple rate limit violations detected for user');
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            userId: event.userId,
+            blockCount: recentBlocksResult.getValue().length,
+          },
+          'Multiple rate limit violations detected for user',
+        );
       }
 
-      this.logger.info({
-        eventId: event.eventId,
-        logId: logEntryResult.getValue().id.value,
-      }, 'RateLimitExceeded event handled successfully');
-
+      this.logger.info(
+        {
+          eventId: event.eventId,
+          logId: logEntryResult.getValue().id.value,
+        },
+        'RateLimitExceeded event handled successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        eventId: event.eventId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      }, 'Error handling RateLimitExceeded event');
+      this.logger.error(
+        {
+          eventId: event.eventId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        'Error handling RateLimitExceeded event',
+      );
       throw error;
     }
   }

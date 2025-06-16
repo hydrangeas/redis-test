@@ -2,25 +2,16 @@ import React from "react";
 import { cn } from "@/utils/cn";
 
 export interface CheckboxProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
   error?: boolean;
   helperText?: string;
 }
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  (
-    {
-      className,
-      label,
-      error,
-      helperText,
-      id,
-      ...props
-    },
-    ref
-  ) => {
-    const checkboxId = id || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
+  ({ className, label, error, helperText, id, ...props }, ref) => {
+    const checkboxId =
+      id || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
     const helperId = helperText ? `${checkboxId}-helper` : undefined;
 
     return (
@@ -56,7 +47,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             </div>
           )}
         </div>
-        
+
         {helperText && (
           <p
             id={helperId}

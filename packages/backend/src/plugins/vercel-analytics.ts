@@ -15,13 +15,13 @@ export default fp(async function vercelAnalytics(fastify: FastifyInstance) {
 
   fastify.addHook('onResponse', async (request, reply) => {
     const duration = Date.now() - request.startTime;
-    
+
     // Vercel Analyticsに送信
     if (process.env.VERCEL_ANALYTICS_ID) {
       // Web Vitalsの記録
       reply.header('Server-Timing', `total;dur=${duration}`);
     }
-    
+
     // カスタムメトリクスの記録
     fastify.log.info({
       method: request.method,

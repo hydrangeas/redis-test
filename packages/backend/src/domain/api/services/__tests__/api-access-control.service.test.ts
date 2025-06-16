@@ -23,10 +23,7 @@ describe('APIAccessControlService', () => {
       throw new Error('Failed to create test data');
     }
 
-    authenticatedUser = new AuthenticatedUser(
-      userIdResult.getValue(),
-      tierResult.getValue()
-    );
+    authenticatedUser = new AuthenticatedUser(userIdResult.getValue(), tierResult.getValue());
   });
 
   describe('checkRateLimit', () => {
@@ -44,17 +41,13 @@ describe('APIAccessControlService', () => {
       }
       const requestCount = requestCountResult.getValue(); // tier1のデフォルトは60/分
 
-      const result = service.checkRateLimit(
-        authenticatedUser,
-        requestCount,
-        rateLimitWindow
-      );
+      const result = service.checkRateLimit(authenticatedUser, requestCount, rateLimitWindow);
 
       if (result.isFailure) {
         console.log('Error:', result.getError());
       }
       expect(result.isSuccess).toBe(true);
-      
+
       const status = result.getValue();
       expect(status.allowed).toBe(true);
       expect(status.currentCount).toBe(30);
@@ -70,11 +63,7 @@ describe('APIAccessControlService', () => {
       }
       const requestCount = requestCountResult.getValue(); // 制限を超える
 
-      const result = service.checkRateLimit(
-        authenticatedUser,
-        requestCount,
-        rateLimitWindow
-      );
+      const result = service.checkRateLimit(authenticatedUser, requestCount, rateLimitWindow);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError()).toBeInstanceOf(RateLimitException);
@@ -87,11 +76,7 @@ describe('APIAccessControlService', () => {
       }
       const requestCount = requestCountResult.getValue(); // ちょうど制限値
 
-      const result = service.checkRateLimit(
-        authenticatedUser,
-        requestCount,
-        rateLimitWindow
-      );
+      const result = service.checkRateLimit(authenticatedUser, requestCount, rateLimitWindow);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError()).toBeInstanceOf(RateLimitException);
@@ -104,10 +89,7 @@ describe('APIAccessControlService', () => {
         throw new Error('Failed to create tier2');
       }
 
-      const tier2User = new AuthenticatedUser(
-        authenticatedUser.userId,
-        tier2Result.getValue()
-      );
+      const tier2User = new AuthenticatedUser(authenticatedUser.userId, tier2Result.getValue());
 
       const requestCountResult = RequestCount.create(100);
       if (requestCountResult.isFailure) {
@@ -115,14 +97,10 @@ describe('APIAccessControlService', () => {
       }
       const requestCount = requestCountResult.getValue(); // tier2のデフォルトは120/分
 
-      const result = service.checkRateLimit(
-        tier2User,
-        requestCount,
-        rateLimitWindow
-      );
+      const result = service.checkRateLimit(tier2User, requestCount, rateLimitWindow);
 
       expect(result.isSuccess).toBe(true);
-      
+
       const status = result.getValue();
       expect(status.allowed).toBe(true);
       expect(status.limit).toBe(120);
@@ -136,22 +114,14 @@ describe('APIAccessControlService', () => {
       }
       const requestCount = requestCountResult.getValue();
 
-      const result = service.checkRateLimit(
-        null as any,
-        requestCount,
-        rateLimitWindow
-      );
+      const result = service.checkRateLimit(null as any, requestCount, rateLimitWindow);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError()?.message).toBe('User is required');
     });
 
     it('リクエストカウントがnullの場合エラーを返す', () => {
-      const result = service.checkRateLimit(
-        authenticatedUser,
-        null as any,
-        rateLimitWindow
-      );
+      const result = service.checkRateLimit(authenticatedUser, null as any, rateLimitWindow);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError()?.message).toBe('Current request count is required');
@@ -164,11 +134,7 @@ describe('APIAccessControlService', () => {
       }
       const requestCount = requestCountResult.getValue();
 
-      const result = service.checkRateLimit(
-        authenticatedUser,
-        requestCount,
-        null as any
-      );
+      const result = service.checkRateLimit(authenticatedUser, requestCount, null as any);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError()?.message).toBe('Rate limit window is required');

@@ -83,17 +83,17 @@ export class EndpointType {
     if (this.isPublic()) {
       return true;
     }
-    
+
     // For protected endpoints, any authenticated user can access
     if (this.isProtected()) {
       return true;
     }
-    
+
     // For internal or admin endpoints, only tier3 can access
     if ((this.isInternal() || this.isAdmin()) && userTier.level === 'TIER3') {
       return true;
     }
-    
+
     return false;
   }
 

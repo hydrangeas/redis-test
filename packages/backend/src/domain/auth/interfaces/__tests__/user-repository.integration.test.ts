@@ -11,15 +11,15 @@ describe('UserRepository Integration Tests', () => {
 
   beforeEach(() => {
     repository = new MockUserRepository();
-    
+
     const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
     const emailResult = Email.create('test@example.com');
     const tierResult = UserTier.create(TierLevel.TIER1);
-    
+
     if (userIdResult.isFailure || emailResult.isFailure || tierResult.isFailure) {
       throw new Error('Failed to create test data');
     }
-    
+
     testUser = User.create({
       id: userIdResult.getValue(),
       email: emailResult.getValue(),
@@ -44,11 +44,11 @@ describe('UserRepository Integration Tests', () => {
       const user2Id = UserId.fromString('650e8400-e29b-41d4-a716-446655440000');
       const user2Email = Email.create('user2@example.com');
       const user2Tier = UserTier.create(TierLevel.TIER2);
-      
+
       if (user2Email.isFailure || user2Tier.isFailure) {
         throw new Error('Failed to create test data');
       }
-      
+
       const user2 = User.create({
         id: user2Id,
         email: user2Email.getValue(),
@@ -75,7 +75,7 @@ describe('UserRepository Integration Tests', () => {
 
     it('存在しないIDの場合nullを返す', async () => {
       const nonExistentId = UserId.fromString('999e8400-e29b-41d4-a716-446655440000');
-      
+
       const result = await repository.findById(nonExistentId);
 
       expect(result.isSuccess).toBe(true);
@@ -100,7 +100,7 @@ describe('UserRepository Integration Tests', () => {
         throw new Error('Failed to create email');
       }
       const nonExistentEmail = nonExistentEmailResult.getValue();
-      
+
       const result = await repository.findByEmail(nonExistentEmail);
 
       expect(result.isSuccess).toBe(true);
@@ -149,7 +149,7 @@ describe('UserRepository Integration Tests', () => {
 
     it('存在しないユーザーの削除は失敗する', async () => {
       const nonExistentId = UserId.fromString('999e8400-e29b-41d4-a716-446655440000');
-      
+
       const result = await repository.delete(nonExistentId);
 
       expect(result.isFailure).toBe(true);
@@ -194,13 +194,14 @@ describe('UserRepository Integration Tests', () => {
       const users = Array.from({ length: 5 }, (_, i) => {
         const userId = UserId.fromString(`${i}50e8400-e29b-41d4-a716-446655440000`);
         const emailResult = Email.create(`user${i}@example.com`);
-        const tierLevel = i % 3 === 0 ? TierLevel.TIER1 : i % 3 === 1 ? TierLevel.TIER2 : TierLevel.TIER3;
+        const tierLevel =
+          i % 3 === 0 ? TierLevel.TIER1 : i % 3 === 1 ? TierLevel.TIER2 : TierLevel.TIER3;
         const tierResult = UserTier.create(tierLevel);
-        
+
         if (emailResult.isFailure || tierResult.isFailure) {
           throw new Error('Failed to create test data');
         }
-        
+
         return User.create({
           id: userId,
           email: emailResult.getValue(),

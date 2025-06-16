@@ -27,10 +27,10 @@ describe('Data Access Integration with FileStorageService', () => {
 
   beforeEach(() => {
     container.clearInstances();
-    
+
     // Use the actual data directory
     dataDir = path.join(process.cwd(), 'data');
-    
+
     mockLogger = {
       debug: () => {},
       info: () => {},
@@ -49,7 +49,7 @@ describe('Data Access Integration with FileStorageService', () => {
 
     expect(result.isSuccess).toBe(true);
     const data = result.getValue();
-    
+
     expect(data).toHaveProperty('year', '2024');
     expect(data).toHaveProperty('prefecture', '奈良県');
     expect(data).toHaveProperty('totalPopulation', 1324473);
@@ -62,7 +62,7 @@ describe('Data Access Integration with FileStorageService', () => {
 
     expect(result.isSuccess).toBe(true);
     const data = result.getValue();
-    
+
     expect(data).toHaveProperty('fiscalYear', '2024');
     expect(data).toHaveProperty('totalBudget', 548932000000);
     expect(data).toHaveProperty('majorCategories');
@@ -74,7 +74,7 @@ describe('Data Access Integration with FileStorageService', () => {
 
     expect(result.isSuccess).toBe(true);
     const files = result.getValue();
-    
+
     expect(files).toContain('secure/population/2024.json');
     expect(files).toContain('secure/population/2023.json');
     expect(files).toContain('secure/population/metadata.json');
@@ -85,7 +85,7 @@ describe('Data Access Integration with FileStorageService', () => {
 
     expect(result.isSuccess).toBe(true);
     const metadata = result.getValue();
-    
+
     expect(metadata).toHaveProperty('path', 'secure/statistics/education.json');
     expect(metadata).toHaveProperty('size');
     expect(metadata).toHaveProperty('mtime');
@@ -112,7 +112,7 @@ describe('Data Access Integration with FileStorageService', () => {
 
     expect(result.isSuccess).toBe(true);
     const index = result.getValue();
-    
+
     expect(index).toHaveProperty('version', '1.0.0');
     expect(index.categories).toHaveProperty('population');
     expect(index.categories.population).toHaveProperty('requiresAuth', true);

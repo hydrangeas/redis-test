@@ -12,7 +12,7 @@ describe('TransactionManager', () => {
 
   beforeEach(() => {
     mockSupabase = {} as SupabaseClient;
-    
+
     mockEventBus = {
       publish: vi.fn(),
       publishAll: vi.fn(),
@@ -21,7 +21,7 @@ describe('TransactionManager', () => {
       dispatchPendingEvents: vi.fn(),
       clearPendingEvents: vi.fn(),
     };
-    
+
     mockLogger = {
       info: vi.fn(),
       warn: vi.fn(),
@@ -29,19 +29,15 @@ describe('TransactionManager', () => {
       debug: vi.fn(),
     } as any;
 
-    transactionManager = new TransactionManager(
-      mockSupabase,
-      mockEventBus,
-      mockLogger
-    );
+    transactionManager = new TransactionManager(mockSupabase, mockEventBus, mockLogger);
   });
 
   describe('executeInTransaction', () => {
     it('should execute work and dispatch events on success', async () => {
       const mockWork = vi.fn().mockResolvedValue('success');
-      
+
       const result = await transactionManager.executeInTransaction(mockWork);
-      
+
       expect(result).toBe('success');
       expect(mockWork).toHaveBeenCalled();
       expect(mockEventBus.dispatchPendingEvents).toHaveBeenCalled();
@@ -51,10 +47,11 @@ describe('TransactionManager', () => {
     it('should clear pending events on work failure', async () => {
       const error = new Error('Work failed');
       const mockWork = vi.fn().mockRejectedValue(error);
-      
-      await expect(transactionManager.executeInTransaction(mockWork))
-        .rejects.toThrow('Work failed');
-      
+
+      await expect(transactionManager.executeInTransaction(mockWork)).rejects.toThrow(
+        'Work failed',
+      );
+
       expect(mockWork).toHaveBeenCalled();
       expect(mockEventBus.clearPendingEvents).toHaveBeenCalled();
       expect(mockEventBus.dispatchPendingEvents).not.toHaveBeenCalled();
@@ -62,34 +59,32 @@ describe('TransactionManager', () => {
         expect.objectContaining({
           error: 'Work failed',
         }),
-        'Transaction failed, clearing pending events'
+        'Transaction failed, clearing pending events',
       );
     });
 
     it('should propagate non-Error exceptions', async () => {
       const mockWork = vi.fn().mockRejectedValue('string error');
-      
-      await expect(transactionManager.executeInTransaction(mockWork))
-        .rejects.toBe('string error');
-      
+
+      await expect(transactionManager.executeInTransaction(mockWork)).rejects.toBe('string error');
+
       expect(mockEventBus.clearPendingEvents).toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Unknown error',
         }),
-        'Transaction failed, clearing pending events'
+        'Transaction failed, clearing pending events',
       );
     });
 
     it('should clear events even if dispatch fails', async () => {
       const mockWork = vi.fn().mockResolvedValue('success');
-      vi.mocked(mockEventBus.dispatchPendingEvents).mockRejectedValue(
-        new Error('Dispatch failed')
+      vi.mocked(mockEventBus.dispatchPendingEvents).mockRejectedValue(new Error('Dispatch failed'));
+
+      await expect(transactionManager.executeInTransaction(mockWork)).rejects.toThrow(
+        'Dispatch failed',
       );
-      
-      await expect(transactionManager.executeInTransaction(mockWork))
-        .rejects.toThrow('Dispatch failed');
-      
+
       expect(mockEventBus.clearPendingEvents).toHaveBeenCalled();
     });
   });
@@ -97,9 +92,9 @@ describe('TransactionManager', () => {
   describe('executeWithEventDispatch', () => {
     it('should execute work and dispatch events without transaction', async () => {
       const mockWork = vi.fn().mockResolvedValue('result');
-      
+
       const result = await transactionManager.executeWithEventDispatch(mockWork);
-      
+
       expect(result).toBe('result');
       expect(mockWork).toHaveBeenCalled();
       expect(mockEventBus.dispatchPendingEvents).toHaveBeenCalled();
@@ -107,10 +102,9 @@ describe('TransactionManager', () => {
 
     it('should not clear events on failure', async () => {
       const mockWork = vi.fn().mockRejectedValue(new Error('Failed'));
-      
-      await expect(transactionManager.executeWithEventDispatch(mockWork))
-        .rejects.toThrow('Failed');
-      
+
+      await expect(transactionManager.executeWithEventDispatch(mockWork)).rejects.toThrow('Failed');
+
       expect(mockEventBus.clearPendingEvents).not.toHaveBeenCalled();
     });
   });

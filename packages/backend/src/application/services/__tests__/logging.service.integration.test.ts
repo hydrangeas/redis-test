@@ -45,7 +45,7 @@ describe('LoggingService Integration', () => {
           event: eventType,
           timestamp: expect.any(Date),
           metadata,
-        })
+        }),
       );
     });
 
@@ -70,9 +70,7 @@ describe('LoggingService Integration', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
       const eventType = AuthEvent.LOGIN_SUCCESS;
 
-      mockDependencies.mockRepositories.authLog.save.mockRejectedValue(
-        new Error('Database error')
-      );
+      mockDependencies.mockRepositories.authLog.save.mockRejectedValue(new Error('Database error'));
 
       const result = await service.logAuthEvent(userId, eventType, {});
 
@@ -101,9 +99,13 @@ describe('LoggingService Integration', () => {
       const durationResult = RequestDuration.create(duration);
       const requestId = RequestId.generate();
 
-      if (userIdResult.isFailure || endpointResult.isFailure || 
-          methodResult.isFailure || statusCodeResult.isFailure || 
-          durationResult.isFailure) {
+      if (
+        userIdResult.isFailure ||
+        endpointResult.isFailure ||
+        methodResult.isFailure ||
+        statusCodeResult.isFailure ||
+        durationResult.isFailure
+      ) {
         throw new Error('Failed to create value objects');
       }
 
@@ -122,9 +124,7 @@ describe('LoggingService Integration', () => {
         throw new Error('Failed to create APILog');
       }
 
-      mockDependencies.mockRepositories.apiLog.save.mockResolvedValue(
-        Result.ok(undefined)
-      );
+      mockDependencies.mockRepositories.apiLog.save.mockResolvedValue(Result.ok(undefined));
 
       const result = await service.logAPIAccess({
         userId,
@@ -146,9 +146,7 @@ describe('LoggingService Integration', () => {
       const statusCode = 200;
       const duration = 50;
 
-      mockDependencies.mockRepositories.apiLog.save.mockResolvedValue(
-        Result.ok(undefined)
-      );
+      mockDependencies.mockRepositories.apiLog.save.mockResolvedValue(Result.ok(undefined));
 
       const result = await service.logAPIAccess({
         userId: null,
@@ -198,7 +196,7 @@ describe('LoggingService Integration', () => {
       expect(result.getValue()).toEqual(mockLogs);
       expect(mockDependencies.mockRepositories.authLog.findByUserId).toHaveBeenCalledWith(
         expect.objectContaining({ value: userId }),
-        limit
+        limit,
       );
     });
 
@@ -216,9 +214,7 @@ describe('LoggingService Integration', () => {
       const limit = 20;
 
       const mockLogs = [];
-      mockDependencies.mockRepositories.apiLog.findByUserId.mockResolvedValue(
-        Result.ok(mockLogs)
-      );
+      mockDependencies.mockRepositories.apiLog.findByUserId.mockResolvedValue(Result.ok(mockLogs));
 
       const result = await service.getAPILogs({ userId, limit });
 
@@ -232,7 +228,7 @@ describe('LoggingService Integration', () => {
 
       const mockLogs = [];
       mockDependencies.mockRepositories.apiLog.findByEndpoint.mockResolvedValue(
-        Result.ok(mockLogs)
+        Result.ok(mockLogs),
       );
 
       const result = await service.getAPILogs({ endpoint, limit });
@@ -247,7 +243,7 @@ describe('LoggingService Integration', () => {
 
       const mockLogs = [];
       mockDependencies.mockRepositories.apiLog.findByDateRange.mockResolvedValue(
-        Result.ok(mockLogs)
+        Result.ok(mockLogs),
       );
 
       const result = await service.getAPILogs({ startDate, endDate });
@@ -257,7 +253,7 @@ describe('LoggingService Integration', () => {
         expect.objectContaining({
           startDate,
           endDate,
-        })
+        }),
       );
     });
   });
@@ -275,7 +271,7 @@ describe('LoggingService Integration', () => {
       ]);
 
       mockDependencies.mockRepositories.apiLog.countByStatusCode.mockResolvedValue(
-        Result.ok(mockStats)
+        Result.ok(mockStats),
       );
 
       const result = await service.getAPIStatistics(startDate, endDate);
@@ -297,7 +293,7 @@ describe('LoggingService Integration', () => {
         Result.fail({
           code: 'DATABASE_ERROR',
           message: 'Failed to retrieve statistics',
-        })
+        }),
       );
 
       const result = await service.getAPIStatistics(startDate, endDate);

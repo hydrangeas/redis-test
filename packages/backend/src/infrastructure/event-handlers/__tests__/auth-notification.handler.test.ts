@@ -39,7 +39,7 @@ describe('AuthNotificationHandler', () => {
       'tier2',
       'session-456',
       '192.168.1.1',
-      'Mozilla/5.0...'
+      'Mozilla/5.0...',
     );
 
     // Act
@@ -61,13 +61,11 @@ describe('AuthNotificationHandler', () => {
       'tier2',
       'session-456',
       '192.168.1.1',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
     );
 
     // Mock isNewDevice to return true
-    const isNewDeviceSpy = vi
-      .spyOn(handler as any, 'isNewDevice')
-      .mockResolvedValue(true);
+    const isNewDeviceSpy = vi.spyOn(handler as any, 'isNewDevice').mockResolvedValue(true);
 
     // Act
     await handler.handle(event);
@@ -85,7 +83,7 @@ describe('AuthNotificationHandler', () => {
         userId: 'user-123',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       },
-      'New device login alert sent'
+      'New device login alert sent',
     );
 
     isNewDeviceSpy.mockRestore();
@@ -101,7 +99,7 @@ describe('AuthNotificationHandler', () => {
       'tier1',
       'session-789',
       '1.2.3.4',
-      'curl/7.68.0'
+      'curl/7.68.0',
     );
 
     // Mock isSuspiciousLogin to return true
@@ -124,7 +122,7 @@ describe('AuthNotificationHandler', () => {
         userId: 'user-456',
         eventData: event.getData(),
       },
-      'Suspicious login alert sent'
+      'Suspicious login alert sent',
     );
 
     isSuspiciousLoginSpy.mockRestore();
@@ -132,18 +130,10 @@ describe('AuthNotificationHandler', () => {
 
   it('should handle events without optional fields', async () => {
     // Arrange
-    const event = new UserAuthenticated(
-      'user-789',
-      1,
-      'user-789',
-      'google',
-      'tier3'
-    );
+    const event = new UserAuthenticated('user-789', 1, 'user-789', 'google', 'tier3');
 
     // Mock isNewDevice to return true
-    const isNewDeviceSpy = vi
-      .spyOn(handler as any, 'isNewDevice')
-      .mockResolvedValue(true);
+    const isNewDeviceSpy = vi.spyOn(handler as any, 'isNewDevice').mockResolvedValue(true);
 
     // Act
     await handler.handle(event);
@@ -161,23 +151,14 @@ describe('AuthNotificationHandler', () => {
 
   it('should not throw error when notification service fails', async () => {
     // Arrange
-    const event = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'google',
-      'tier2'
-    );
+    const event = new UserAuthenticated('user-123', 1, 'user-123', 'google', 'tier2');
 
     // Mock isNewDevice to return true
-    const isNewDeviceSpy = vi
-      .spyOn(handler as any, 'isNewDevice')
-      .mockResolvedValue(true);
+    const isNewDeviceSpy = vi.spyOn(handler as any, 'isNewDevice').mockResolvedValue(true);
 
     // Mock notification service to throw error
     const error = new Error('Network error');
-    (mockNotificationService.sendNewDeviceAlert as MockedFunction<any>)
-      .mockRejectedValue(error);
+    (mockNotificationService.sendNewDeviceAlert as MockedFunction<any>).mockRejectedValue(error);
 
     // Act & Assert
     await expect(handler.handle(event)).resolves.not.toThrow();
@@ -187,7 +168,7 @@ describe('AuthNotificationHandler', () => {
         error: 'Network error',
         event: event.getMetadata(),
       },
-      'Failed to send authentication notification'
+      'Failed to send authentication notification',
     );
 
     isNewDeviceSpy.mockRestore();
@@ -203,13 +184,11 @@ describe('AuthNotificationHandler', () => {
       'tier2',
       'session-456',
       '192.168.1.1',
-      'bot/1.0'
+      'bot/1.0',
     );
 
     // Mock both methods to return true
-    const isNewDeviceSpy = vi
-      .spyOn(handler as any, 'isNewDevice')
-      .mockResolvedValue(true);
+    const isNewDeviceSpy = vi.spyOn(handler as any, 'isNewDevice').mockResolvedValue(true);
     const isSuspiciousLoginSpy = vi
       .spyOn(handler as any, 'isSuspiciousLogin')
       .mockResolvedValue(true);
@@ -229,22 +208,15 @@ describe('AuthNotificationHandler', () => {
 
   it('should handle unknown error types gracefully', async () => {
     // Arrange
-    const event = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'google',
-      'tier2'
-    );
+    const event = new UserAuthenticated('user-123', 1, 'user-123', 'google', 'tier2');
 
     // Mock isNewDevice to return true
-    const isNewDeviceSpy = vi
-      .spyOn(handler as any, 'isNewDevice')
-      .mockResolvedValue(true);
+    const isNewDeviceSpy = vi.spyOn(handler as any, 'isNewDevice').mockResolvedValue(true);
 
     // Mock notification service to throw non-Error object
-    (mockNotificationService.sendNewDeviceAlert as MockedFunction<any>)
-      .mockRejectedValue('Unknown error');
+    (mockNotificationService.sendNewDeviceAlert as MockedFunction<any>).mockRejectedValue(
+      'Unknown error',
+    );
 
     // Act & Assert
     await expect(handler.handle(event)).resolves.not.toThrow();
@@ -254,7 +226,7 @@ describe('AuthNotificationHandler', () => {
         error: 'Unknown error',
         event: event.getMetadata(),
       },
-      'Failed to send authentication notification'
+      'Failed to send authentication notification',
     );
 
     isNewDeviceSpy.mockRestore();

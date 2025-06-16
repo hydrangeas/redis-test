@@ -9,13 +9,7 @@ describe('UserAuthenticated', () => {
     const provider = 'google';
     const tier = 'tier2';
 
-    const event = new UserAuthenticated(
-      aggregateId,
-      eventVersion,
-      userId,
-      provider,
-      tier
-    );
+    const event = new UserAuthenticated(aggregateId, eventVersion, userId, provider, tier);
 
     expect(event.aggregateId).toBe(aggregateId);
     expect(event.eventVersion).toBe(eventVersion);
@@ -45,7 +39,7 @@ describe('UserAuthenticated', () => {
       tier,
       sessionId,
       ipAddress,
-      userAgent
+      userAgent,
     );
 
     expect(event.userId).toBe(userId);
@@ -57,25 +51,13 @@ describe('UserAuthenticated', () => {
   });
 
   it('should have correct event name', () => {
-    const event = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'github',
-      'tier1'
-    );
+    const event = new UserAuthenticated('user-123', 1, 'user-123', 'github', 'tier1');
 
     expect(event.getEventName()).toBe('UserAuthenticated');
   });
 
   it('should be immutable', () => {
-    const event = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'google',
-      'tier2'
-    );
+    const event = new UserAuthenticated('user-123', 1, 'user-123', 'google', 'tier2');
 
     // 不変性のテスト
     expect(() => {
@@ -94,16 +76,10 @@ describe('UserAuthenticated', () => {
   it('should include metadata', () => {
     const aggregateId = 'user-123';
     const eventVersion = 1;
-    const event = new UserAuthenticated(
-      aggregateId,
-      eventVersion,
-      'user-123',
-      'github',
-      'tier1'
-    );
+    const event = new UserAuthenticated(aggregateId, eventVersion, 'user-123', 'github', 'tier1');
 
     const metadata = event.getMetadata();
-    
+
     expect(metadata.eventName).toBe('UserAuthenticated');
     expect(metadata.aggregateId).toBe(aggregateId);
     expect(metadata.eventVersion).toBe(eventVersion);
@@ -112,35 +88,17 @@ describe('UserAuthenticated', () => {
   });
 
   it('should have unique event IDs', () => {
-    const event1 = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'google',
-      'tier1'
-    );
+    const event1 = new UserAuthenticated('user-123', 1, 'user-123', 'google', 'tier1');
 
-    const event2 = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'google',
-      'tier1'
-    );
+    const event2 = new UserAuthenticated('user-123', 1, 'user-123', 'google', 'tier1');
 
     expect(event1.eventId).not.toBe(event2.eventId);
   });
 
   it('should have occurred timestamp', () => {
     const beforeCreation = new Date();
-    
-    const event = new UserAuthenticated(
-      'user-123',
-      1,
-      'user-123',
-      'google',
-      'tier1'
-    );
+
+    const event = new UserAuthenticated('user-123', 1, 'user-123', 'google', 'tier1');
 
     const afterCreation = new Date();
 
@@ -164,7 +122,7 @@ describe('UserAuthenticated', () => {
       tier,
       sessionId,
       ipAddress,
-      userAgent
+      userAgent,
     );
 
     const data = event.getData();
@@ -184,13 +142,7 @@ describe('UserAuthenticated', () => {
     const provider = 'google';
     const tier = 'tier1';
 
-    const event = new UserAuthenticated(
-      'user-123',
-      1,
-      userId,
-      provider,
-      tier
-    );
+    const event = new UserAuthenticated('user-123', 1, userId, provider, tier);
 
     const data = event.getData();
 

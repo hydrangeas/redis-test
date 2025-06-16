@@ -7,7 +7,7 @@ describe('APIEndpointFactory', () => {
   describe('createDataEndpoint', () => {
     it('should create a protected data endpoint with default GET method', () => {
       const endpoint = APIEndpointFactory.createDataEndpoint('/api/data/test.json');
-      
+
       expect(endpoint.path.value).toBe('/api/data/test.json');
       expect(endpoint.method).toBe(HttpMethod.GET);
       expect(endpoint.type.value).toBe('protected');
@@ -17,7 +17,7 @@ describe('APIEndpointFactory', () => {
 
     it('should create a data endpoint with custom HTTP method', () => {
       const endpoint = APIEndpointFactory.createDataEndpoint('/api/data/update', HttpMethod.POST);
-      
+
       expect(endpoint.path.value).toBe('/api/data/update');
       expect(endpoint.method).toBe(HttpMethod.POST);
       expect(endpoint.type.value).toBe('protected');
@@ -25,7 +25,7 @@ describe('APIEndpointFactory', () => {
 
     it('should create a data endpoint with wildcard path', () => {
       const endpoint = APIEndpointFactory.createDataEndpoint('/secure/*/data/*');
-      
+
       expect(endpoint.path.value).toBe('/secure/*/data/*');
       expect(endpoint.matchesPath).toBeDefined();
     });
@@ -34,7 +34,7 @@ describe('APIEndpointFactory', () => {
   describe('createHealthCheckEndpoint', () => {
     it('should create a public health check endpoint', () => {
       const endpoint = APIEndpointFactory.createHealthCheckEndpoint();
-      
+
       expect(endpoint.path.value).toBe('/health');
       expect(endpoint.method).toBe(HttpMethod.GET);
       expect(endpoint.type.value).toBe('public');
@@ -46,7 +46,7 @@ describe('APIEndpointFactory', () => {
   describe('createDocumentationEndpoint', () => {
     it('should create a public API documentation endpoint', () => {
       const endpoint = APIEndpointFactory.createDocumentationEndpoint();
-      
+
       expect(endpoint.path.value).toBe('/api-docs');
       expect(endpoint.method).toBe(HttpMethod.GET);
       expect(endpoint.type.value).toBe('public');
@@ -58,7 +58,7 @@ describe('APIEndpointFactory', () => {
   describe('createAuthEndpoint', () => {
     it('should create a public auth endpoint with default POST method', () => {
       const endpoint = APIEndpointFactory.createAuthEndpoint('login');
-      
+
       expect(endpoint.path.value).toBe('/auth/login');
       expect(endpoint.method).toBe(HttpMethod.POST);
       expect(endpoint.type.value).toBe('public');
@@ -67,13 +67,13 @@ describe('APIEndpointFactory', () => {
 
     it('should handle subpath with leading slash', () => {
       const endpoint = APIEndpointFactory.createAuthEndpoint('/refresh');
-      
+
       expect(endpoint.path.value).toBe('/auth/refresh');
     });
 
     it('should create auth endpoint with custom method', () => {
       const endpoint = APIEndpointFactory.createAuthEndpoint('logout', HttpMethod.DELETE);
-      
+
       expect(endpoint.path.value).toBe('/auth/logout');
       expect(endpoint.method).toBe(HttpMethod.DELETE);
     });
@@ -82,7 +82,7 @@ describe('APIEndpointFactory', () => {
   describe('createAdminEndpoint', () => {
     it('should create an admin endpoint with default GET method', () => {
       const endpoint = APIEndpointFactory.createAdminEndpoint('/admin/users');
-      
+
       expect(endpoint.path.value).toBe('/admin/users');
       expect(endpoint.method).toBe(HttpMethod.GET);
       expect(endpoint.type.value).toBe('admin');
@@ -92,7 +92,7 @@ describe('APIEndpointFactory', () => {
 
     it('should create admin endpoint with custom method', () => {
       const endpoint = APIEndpointFactory.createAdminEndpoint('/admin/config', HttpMethod.PUT);
-      
+
       expect(endpoint.path.value).toBe('/admin/config');
       expect(endpoint.method).toBe(HttpMethod.PUT);
       expect(endpoint.type.value).toBe('admin');
@@ -102,7 +102,7 @@ describe('APIEndpointFactory', () => {
   describe('createPatternEndpoint', () => {
     it('should create a pattern endpoint with default protected type', () => {
       const endpoint = APIEndpointFactory.createPatternEndpoint('/api/v*/users/*');
-      
+
       expect(endpoint.path.value).toBe('/api/v*/users/*');
       expect(endpoint.method).toBe(HttpMethod.GET);
       expect(endpoint.type.value).toBe('protected');
@@ -113,9 +113,9 @@ describe('APIEndpointFactory', () => {
       const endpoint = APIEndpointFactory.createPatternEndpoint(
         '/public/data/*',
         HttpMethod.GET,
-        'public'
+        'public',
       );
-      
+
       expect(endpoint.path.value).toBe('/public/data/*');
       expect(endpoint.method).toBe(HttpMethod.GET);
       expect(endpoint.type.value).toBe('public');
@@ -126,9 +126,9 @@ describe('APIEndpointFactory', () => {
       const endpoint = APIEndpointFactory.createPatternEndpoint(
         '/admin/*/reports',
         HttpMethod.POST,
-        'admin'
+        'admin',
       );
-      
+
       expect(endpoint.path.value).toBe('/admin/*/reports');
       expect(endpoint.method).toBe(HttpMethod.POST);
       expect(endpoint.type.value).toBe('admin');
@@ -173,19 +173,19 @@ describe('APIEndpointFactory', () => {
         APIEndpointFactory.createAdminEndpoint('/admin/users', HttpMethod.GET),
         APIEndpointFactory.createAdminEndpoint('/admin/logs', HttpMethod.GET),
       ];
-      
+
       expect(endpoints).toHaveLength(8);
-      
+
       // Verify public endpoints
-      const publicEndpoints = endpoints.filter(e => e.isPublic);
+      const publicEndpoints = endpoints.filter((e) => e.isPublic);
       expect(publicEndpoints).toHaveLength(5); // health, docs, and 3 auth endpoints
-      
+
       // Verify protected endpoints
-      const protectedEndpoints = endpoints.filter(e => e.type.value === 'protected');
+      const protectedEndpoints = endpoints.filter((e) => e.type.value === 'protected');
       expect(protectedEndpoints).toHaveLength(1);
-      
+
       // Verify admin endpoints
-      const adminEndpoints = endpoints.filter(e => e.type.value === 'admin');
+      const adminEndpoints = endpoints.filter((e) => e.type.value === 'admin');
       expect(adminEndpoints).toHaveLength(2);
     });
 
@@ -194,19 +194,19 @@ describe('APIEndpointFactory', () => {
       const dataEndpoint = APIEndpointFactory.createPatternEndpoint('/secure/*/*.json');
       const healthEndpoint = APIEndpointFactory.createHealthCheckEndpoint();
       const docsEndpoint = APIEndpointFactory.createDocumentationEndpoint();
-      
+
       // データエンドポイントのマッチングテスト
       const testPath1 = EndpointPath.create('/secure/319985/r5.json');
       const testPath2 = EndpointPath.create('/secure/test/data.json');
-      
+
       expect(testPath1.isSuccess).toBe(true);
       expect(testPath2.isSuccess).toBe(true);
-      
+
       if (testPath1.isSuccess && testPath2.isSuccess) {
         expect(dataEndpoint.matchesPath(testPath1.getValue())).toBe(true);
         expect(dataEndpoint.matchesPath(testPath2.getValue())).toBe(true);
       }
-      
+
       // ヘルスチェックとドキュメントは公開
       expect(healthEndpoint.isPublic).toBe(true);
       expect(docsEndpoint.isPublic).toBe(true);

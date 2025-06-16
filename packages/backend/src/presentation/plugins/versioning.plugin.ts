@@ -15,10 +15,7 @@ export interface VersioningOptions {
   enableFallback?: boolean;
 }
 
-const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (
-  fastify,
-  options
-) => {
+const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, options) => {
   const {
     defaultVersion,
     supportedVersions,
@@ -37,8 +34,7 @@ const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (
     }
 
     // 2. ヘッダーからバージョンを抽出
-    const acceptVersion = request.headers['accept-version'] || 
-                         request.headers['x-api-version'];
+    const acceptVersion = request.headers['accept-version'] || request.headers['x-api-version'];
     if (acceptVersion) {
       return acceptVersion as string;
     }
@@ -93,11 +89,11 @@ const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (
   // リクエストフックでバージョンを設定
   fastify.addHook('preHandler', async (request, reply) => {
     const extractedVersion = versionExtractor(request) || defaultVersion;
-    
+
     // バージョンの検証
     if (!validateVersion(extractedVersion)) {
       const fallbackVersion = findClosestVersion(extractedVersion);
-      
+
       if (!fallbackVersion) {
         return reply.code(400).send({
           type: `${process.env.API_URL}/errors/unsupported_version`,
@@ -113,54 +109,57 @@ const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (
       request.apiVersion = fallbackVersion;
       reply.header('X-API-Version-Requested', extractedVersion);
       reply.header('X-API-Version-Served', fallbackVersion);
-      
+
       // 非推奨バージョンの警告（フォールバックバージョンが非推奨の場合）
       if (deprecatedVersions.includes(fallbackVersion)) {
         reply.header(
           'X-API-Deprecation-Warning',
-          `Version ${fallbackVersion} is deprecated and will be removed in future releases`
+          `Version ${fallbackVersion} is deprecated and will be removed in future releases`,
         );
         reply.header('X-API-Deprecation-Date', '2025-12-31');
         reply.header('X-API-Deprecation-Info', 'https://api.example.com/deprecation');
       }
-      
-      request.log.info({
-        requested: extractedVersion,
-        served: fallbackVersion,
-      }, 'API version fallback');
+
+      request.log.info(
+        {
+          requested: extractedVersion,
+          served: fallbackVersion,
+        },
+        'API version fallback',
+      );
     } else {
       request.apiVersion = extractedVersion;
       reply.header('X-API-Version', extractedVersion);
-      
+
       // 非推奨バージョンの警告
       if (deprecatedVersions.includes(extractedVersion)) {
         reply.header(
           'X-API-Deprecation-Warning',
-          `Version ${extractedVersion} is deprecated and will be removed in future releases`
+          `Version ${extractedVersion} is deprecated and will be removed in future releases`,
         );
         reply.header('X-API-Deprecation-Date', '2025-12-31');
         reply.header('X-API-Deprecation-Info', 'https://api.example.com/deprecation');
-        
-        request.log.warn({
-          version: extractedVersion,
-          userId: request.user?.userId?.value,
-        }, 'Deprecated API version used');
+
+        request.log.warn(
+          {
+            version: extractedVersion,
+            userId: request.user?.userId?.value,
+          },
+          'Deprecated API version used',
+        );
       }
     }
   });
 
   // バージョン別ルート登録ヘルパー
-  fastify.decorate('routeVersion', function(
-    version: string | string[],
-    handler: any
-  ) {
-    return async function(request: FastifyRequest, reply: any) {
+  fastify.decorate('routeVersion', function (version: string | string[], handler: any) {
+    return async function (request: FastifyRequest, reply: any) {
       const versions = Array.isArray(version) ? version : [version];
-      
+
       if (versions.includes(request.apiVersion!)) {
         return handler(request, reply);
       }
-      
+
       // バージョンが一致しない場合
       return reply.code(404).send({
         type: `${process.env.API_URL}/errors/not_found`,
@@ -189,12 +188,9 @@ declare module 'fastify' {
   interface FastifyRequest {
     apiVersion?: string;
   }
-  
+
   interface FastifyInstance {
-    routeVersion: (
-      version: string | string[],
-      handler: any
-    ) => any;
+    routeVersion: (version: string | string[], handler: any) => any;
   }
 }
 

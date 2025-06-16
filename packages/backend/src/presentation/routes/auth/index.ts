@@ -8,10 +8,10 @@ import logoutRoute from './logout.route';
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // トークンリフレッシュエンドポイント
   await fastify.register(refreshRoute);
-  
+
   // ログアウトエンドポイント
   await fastify.register(logoutRoute);
-  
+
   // TODO: 後続タスクで以下のルートを追加
   // - その他の認証関連エンドポイント
 };

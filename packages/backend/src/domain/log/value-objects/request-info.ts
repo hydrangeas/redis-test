@@ -78,7 +78,7 @@ export class RequestInfo {
   } {
     // 簡易的なUserAgent解析
     const ua = this._userAgent.toLowerCase();
-    
+
     let name = 'Unknown';
     let version: string | undefined;
     let platform: string | undefined;
@@ -123,26 +123,26 @@ export class RequestInfo {
    */
   isInternalIP(): boolean {
     const ip = this._ipAddress;
-    
+
     // ローカルホスト
     if (ip === '127.0.0.1' || ip === '::1') return true;
-    
+
     // プライベートIPアドレス範囲
     const parts = ip.split('.');
     if (parts.length === 4) {
       const first = parseInt(parts[0]);
       const second = parseInt(parts[1]);
-      
+
       // 10.0.0.0/8
       if (first === 10) return true;
-      
+
       // 172.16.0.0/12
       if (first === 172 && second >= 16 && second <= 31) return true;
-      
+
       // 192.168.0.0/16
       if (first === 192 && second === 168) return true;
     }
-    
+
     return false;
   }
 
@@ -151,23 +151,23 @@ export class RequestInfo {
    */
   toSafeObject(): Record<string, any> {
     const safeHeaders = { ...this._headers };
-    
+
     // 認証情報をマスク
     if (safeHeaders.authorization) {
       safeHeaders.authorization = 'Bearer ***';
     }
-    
+
     // APIキーをマスク
     if (safeHeaders['x-api-key']) {
       safeHeaders['x-api-key'] = '***';
     }
-    
+
     return {
       ipAddress: this._ipAddress,
       userAgent: this._userAgent,
       headers: safeHeaders,
       browserInfo: this.getBrowserInfo(),
-      isInternal: this.isInternalIP()
+      isInternal: this.isInternalIP(),
     };
   }
 }

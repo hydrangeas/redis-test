@@ -22,16 +22,12 @@ export class HttpMethod {
 
   public static create(value: string): Result<HttpMethod> {
     if (!value || value.trim().length === 0) {
-      return Result.fail(
-        new ValidationError('HTTP method cannot be empty', { value })
-      );
+      return Result.fail(new ValidationError('HTTP method cannot be empty', { value }));
     }
 
     const upperValue = value.toUpperCase();
     if (!Object.values(HttpMethodType).includes(upperValue as HttpMethodType)) {
-      return Result.fail(
-        new ValidationError(`Invalid HTTP method: ${value}`, { value })
-      );
+      return Result.fail(new ValidationError(`Invalid HTTP method: ${value}`, { value }));
     }
 
     return Result.ok(new HttpMethod(upperValue as HttpMethodType));

@@ -36,13 +36,13 @@ describe('UserFactory', () => {
       const users = UserFactory.createMany(5);
 
       expect(users).toHaveLength(5);
-      users.forEach(user => {
+      users.forEach((user) => {
         expect(user).toHaveProperty('id');
         expect(user).toHaveProperty('email');
       });
 
       // 各ユーザーが異なるIDを持つことを確認
-      const ids = new Set(users.map(u => u.id));
+      const ids = new Set(users.map((u) => u.id));
       expect(ids.size).toBe(5);
     });
   });

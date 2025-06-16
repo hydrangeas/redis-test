@@ -18,32 +18,27 @@ export class AuthenticationService {
    * アクセストークンを検証し、認証済みユーザーを取得する
    * 実際のトークン検証はインフラ層に委譲される
    */
-  async validateAccessToken(
-    tokenPayload: TokenPayload | null
-  ): Promise<Result<AuthenticatedUser>> {
+  async validateAccessToken(tokenPayload: TokenPayload | null): Promise<Result<AuthenticatedUser>> {
     if (!tokenPayload) {
       return Result.fail(
         new DomainError(
           'INVALID_TOKEN',
           'Token payload is null or undefined',
-          ErrorType.UNAUTHORIZED
-        )
+          ErrorType.UNAUTHORIZED,
+        ),
       );
     }
 
     // トークンの有効期限チェック
     if (this.isTokenExpired(tokenPayload)) {
-      const expiredAt = tokenPayload.exp 
+      const expiredAt = tokenPayload.exp
         ? new Date(tokenPayload.exp * 1000).toISOString()
         : 'unknown';
-      
+
       return Result.fail(
-        new DomainError(
-          'TOKEN_EXPIRED',
-          'Access token has expired',
-          ErrorType.UNAUTHORIZED,
-          { expiredAt }
-        )
+        new DomainError('TOKEN_EXPIRED', 'Access token has expired', ErrorType.UNAUTHORIZED, {
+          expiredAt,
+        }),
       );
     }
 
@@ -56,8 +51,8 @@ export class AuthenticationService {
         new DomainError(
           'TOKEN_EXTRACTION_FAILED',
           error instanceof Error ? error.message : 'Failed to extract user from token',
-          ErrorType.UNAUTHORIZED
-        )
+          ErrorType.UNAUTHORIZED,
+        ),
       );
     }
   }
@@ -71,27 +66,24 @@ export class AuthenticationService {
     if (userIdResult.isFailure) {
       throw new AuthenticationException(
         'JWT',
-        `Invalid user ID in token: ${userIdResult.getError().message}`
+        `Invalid user ID in token: ${userIdResult.getError().message}`,
       );
     }
 
     // ティア情報の取得
     const tierString = this.extractTierFromPayload(tokenPayload);
     const tierLevel = this.parseTierLevel(tierString);
-    
+
     // UserTierの作成
     const userTierResult = UserTier.create(tierLevel);
     if (userTierResult.isFailure) {
       throw new AuthenticationException(
         'JWT',
-        `Invalid user tier: ${userTierResult.getError().message}`
+        `Invalid user tier: ${userTierResult.getError().message}`,
       );
     }
 
-    return new AuthenticatedUser(
-      userIdResult.getValue(),
-      userTierResult.getValue()
-    );
+    return new AuthenticatedUser(userIdResult.getValue(), userTierResult.getValue());
   }
 
   /**
@@ -100,7 +92,7 @@ export class AuthenticationService {
   private extractTierFromPayload(payload: TokenPayload): string {
     // app_metadataからティア情報を取得
     const tier = payload.app_metadata?.tier;
-    
+
     if (!tier) {
       // ティア情報がない場合はデフォルトでTIER1
       return 'tier1';
@@ -114,7 +106,7 @@ export class AuthenticationService {
    */
   private parseTierLevel(tierString: string): TierLevel {
     const normalizedTier = tierString.toUpperCase().replace('TIER', 'TIER');
-    
+
     switch (normalizedTier) {
       case 'TIER1':
         return TierLevel.TIER1;

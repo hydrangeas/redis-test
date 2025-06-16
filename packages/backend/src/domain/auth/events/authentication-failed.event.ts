@@ -8,7 +8,7 @@ export class AuthenticationFailed extends DomainEvent {
     public readonly reason: string,
     public readonly ipAddress: string,
     public readonly userAgent?: string,
-    public readonly attemptedUserId?: string
+    public readonly attemptedUserId?: string,
   ) {
     super(aggregateId, eventVersion);
     Object.freeze(this);

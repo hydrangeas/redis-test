@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
-import { ResponsiveHeader } from '@/components/Header';
-import { ResponsiveGrid } from '@/components/ui/ResponsiveGrid';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
+import { ResponsiveHeader } from "@/components/Header";
+import { ResponsiveGrid } from "@/components/ui/ResponsiveGrid";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export const LandingPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -14,10 +14,12 @@ export const LandingPage: React.FC = () => {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         setUser(user);
       } catch (error) {
-        console.error('Error checking auth status:', error);
+        console.error("Error checking auth status:", error);
       } finally {
         setLoading(false);
       }
@@ -25,9 +27,11 @@ export const LandingPage: React.FC = () => {
 
     checkUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -52,7 +56,8 @@ export const LandingPage: React.FC = () => {
         <section className="hero py-12 md:py-20 px-responsive">
           <div className="container mx-auto max-w-6xl">
             <h2 className="heading-responsive font-bold text-gray-900 text-center mb-6">
-              奈良県の公開データを<br className="md:hidden" />
+              奈良県の公開データを
+              <br className="md:hidden" />
               APIで簡単に取得
             </h2>
             <p className="text-responsive text-gray-600 text-center max-w-3xl mx-auto mb-8 px-4">
@@ -63,14 +68,14 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {user ? (
                 <>
-                  <Link 
-                    to="/dashboard" 
+                  <Link
+                    to="/dashboard"
                     className="w-full sm:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-center"
                   >
                     ダッシュボードへ
                   </Link>
-                  <a 
-                    href="/api-docs" 
+                  <a
+                    href="/api-docs"
                     className="w-full sm:w-auto px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition text-center"
                   >
                     APIドキュメントを見る
@@ -78,14 +83,14 @@ export const LandingPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="w-full sm:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-center"
                   >
                     今すぐ始める
                   </Link>
-                  <a 
-                    href="/api-docs" 
+                  <a
+                    href="/api-docs"
                     className="w-full sm:w-auto px-6 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition text-center"
                   >
                     APIドキュメントを見る
@@ -104,7 +109,9 @@ export const LandingPage: React.FC = () => {
             <ResponsiveGrid cols={{ default: 1, md: 2, lg: 4 }} gap={6}>
               <div className="feature-card p-6 bg-gray-50 rounded-lg">
                 <div className="text-4xl mb-4">📊</div>
-                <h4 className="text-lg font-semibold mb-2">豊富なデータセット</h4>
+                <h4 className="text-lg font-semibold mb-2">
+                  豊富なデータセット
+                </h4>
                 <p className="text-sm text-gray-600">
                   人口統計、予算データ、教育・健康統計など、
                   奈良県の様々な公開データにアクセス可能
@@ -122,16 +129,14 @@ export const LandingPage: React.FC = () => {
                 <div className="text-4xl mb-4">⚡</div>
                 <h4 className="text-lg font-semibold mb-2">高速なレスポンス</h4>
                 <p className="text-sm text-gray-600">
-                  最適化されたAPIエンドポイントと
-                  効率的なキャッシング機能
+                  最適化されたAPIエンドポイントと 効率的なキャッシング機能
                 </p>
               </div>
               <div className="feature-card p-6 bg-gray-50 rounded-lg">
                 <div className="text-4xl mb-4">📈</div>
                 <h4 className="text-lg font-semibold mb-2">柔軟な利用プラン</h4>
                 <p className="text-sm text-gray-600">
-                  Tier1からTier3まで、利用頻度に応じた
-                  レート制限プランを提供
+                  Tier1からTier3まで、利用頻度に応じた レート制限プランを提供
                 </p>
               </div>
             </ResponsiveGrid>
@@ -150,7 +155,9 @@ export const LandingPage: React.FC = () => {
                 </span>
                 <div className="flex-1">
                   <h4 className="text-lg font-semibold mb-1">アカウント登録</h4>
-                  <p className="text-gray-600">GoogleまたはGitHubアカウントでログイン</p>
+                  <p className="text-gray-600">
+                    GoogleまたはGitHubアカウントでログイン
+                  </p>
                 </div>
               </li>
               <li className="flex gap-4 items-start">
@@ -159,7 +166,9 @@ export const LandingPage: React.FC = () => {
                 </span>
                 <div className="flex-1">
                   <h4 className="text-lg font-semibold mb-1">APIキーの取得</h4>
-                  <p className="text-gray-600">ダッシュボードからAPIアクセストークンを確認</p>
+                  <p className="text-gray-600">
+                    ダッシュボードからAPIアクセストークンを確認
+                  </p>
                 </div>
               </li>
               <li className="flex gap-4 items-start">
@@ -168,7 +177,9 @@ export const LandingPage: React.FC = () => {
                 </span>
                 <div className="flex-1">
                   <h4 className="text-lg font-semibold mb-1">APIの利用開始</h4>
-                  <p className="text-gray-600">ドキュメントを参考にAPIリクエストを送信</p>
+                  <p className="text-gray-600">
+                    ドキュメントを参考にAPIリクエストを送信
+                  </p>
                 </div>
               </li>
             </ol>
@@ -183,8 +194,8 @@ export const LandingPage: React.FC = () => {
             <p className="text-gray-600 mb-8">
               詳細なAPIリファレンスとサンプルコードをご用意しています
             </p>
-            <a 
-              href="/api-docs" 
+            <a
+              href="/api-docs"
               className="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium"
             >
               APIドキュメントを見る →
@@ -200,13 +211,16 @@ export const LandingPage: React.FC = () => {
               © 2025 奈良県オープンデータ提供API. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
-              <a href="/api-docs" className="text-gray-400 hover:text-white transition">
+              <a
+                href="/api-docs"
+                className="text-gray-400 hover:text-white transition"
+              >
                 APIドキュメント
               </a>
-              <a 
-                href="https://github.com/hydrangeas/redis-test" 
-                className="text-gray-400 hover:text-white transition" 
-                target="_blank" 
+              <a
+                href="https://github.com/hydrangeas/redis-test"
+                className="text-gray-400 hover:text-white transition"
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 GitHub
@@ -219,8 +233,8 @@ export const LandingPage: React.FC = () => {
       {/* モバイル用の固定CTAボタン */}
       {isMobile && !user && (
         <div className="mobile-sticky-footer">
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             className="block w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-center"
           >
             今すぐ始める

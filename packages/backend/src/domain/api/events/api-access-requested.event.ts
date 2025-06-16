@@ -9,7 +9,7 @@ export class APIAccessRequested extends DomainEvent {
     public readonly method: string,
     public readonly endpointType: string,
     public readonly requestTime: Date,
-    eventVersion?: number
+    eventVersion?: number,
   ) {
     super(aggregateId, eventVersion);
   }

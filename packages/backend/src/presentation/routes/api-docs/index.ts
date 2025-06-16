@@ -8,24 +8,32 @@ import * as yaml from 'yaml';
  */
 const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
   // OpenAPI仕様書を取得するエンドポイント
-  fastify.get('/openapi.json', {
-    schema: {
-      hide: true, // Scalar UIから隠す
+  fastify.get(
+    '/openapi.json',
+    {
+      schema: {
+        hide: true, // Scalar UIから隠す
+      },
     },
-  }, async (request, reply) => {
-    return fastify.swagger();
-  });
+    async (request, reply) => {
+      return fastify.swagger();
+    },
+  );
 
   // OpenAPI仕様書をYAML形式で取得するエンドポイント
-  fastify.get('/openapi.yaml', {
-    schema: {
-      hide: true, // Scalar UIから隠す
+  fastify.get(
+    '/openapi.yaml',
+    {
+      schema: {
+        hide: true, // Scalar UIから隠す
+      },
     },
-  }, async (request, reply) => {
-    reply.type('text/yaml');
-    const spec = fastify.swagger();
-    return yaml.stringify(spec);
-  });
+    async (request, reply) => {
+      reply.type('text/yaml');
+      const spec = fastify.swagger();
+      return yaml.stringify(spec);
+    },
+  );
 
   // Scalar APIドキュメントUI
   await fastify.register(scalarPlugin, {
@@ -63,37 +71,41 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
   });
 
   // APIドキュメントのルートパス
-  fastify.get('/', {
-    schema: {
-      description: 'API documentation root',
-      tags: ['Documentation'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' },
-            ui: { type: 'string' },
-            spec: { 
-              type: 'object',
-              properties: {
-                json: { type: 'string' },
-                yaml: { type: 'string' },
+  fastify.get(
+    '/',
+    {
+      schema: {
+        description: 'API documentation root',
+        tags: ['Documentation'],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              ui: { type: 'string' },
+              spec: {
+                type: 'object',
+                properties: {
+                  json: { type: 'string' },
+                  yaml: { type: 'string' },
+                },
               },
             },
           },
         },
       },
     },
-  }, async (request, reply) => {
-    return {
-      message: 'API Documentation',
-      ui: '/api/api-docs',
-      spec: {
-        json: '/api/openapi.json',
-        yaml: '/api/openapi.yaml',
-      },
-    };
-  });
+    async (request, reply) => {
+      return {
+        message: 'API Documentation',
+        ui: '/api/api-docs',
+        spec: {
+          json: '/api/openapi.json',
+          yaml: '/api/openapi.yaml',
+        },
+      };
+    },
+  );
 };
 
 export default apiDocsRoute;

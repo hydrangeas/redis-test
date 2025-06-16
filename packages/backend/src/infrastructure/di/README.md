@@ -24,9 +24,7 @@ import { Logger } from 'pino';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectLogger() private readonly logger: Logger
-  ) {}
+  constructor(@InjectLogger() private readonly logger: Logger) {}
 
   async getUser(id: string) {
     this.logger.info({ id }, 'Getting user');
@@ -63,7 +61,7 @@ import { Injectable, Inject, DI_TOKENS } from '@/infrastructure/di';
 export class OrderService {
   constructor(
     @Inject(DI_TOKENS.UserRepository) private userRepo: IUserRepository,
-    @Inject(DI_TOKENS.EventBus) private eventBus: IEventBus
+    @Inject(DI_TOKENS.EventBus) private eventBus: IEventBus,
   ) {}
 }
 ```
@@ -73,21 +71,25 @@ export class OrderService {
 The following tokens are available for injection:
 
 ### Configuration
+
 - `DI_TOKENS.EnvConfig` - Environment configuration
 - `DI_TOKENS.DataDirectory` - Data directory path
 
 ### Infrastructure Services
+
 - `DI_TOKENS.Logger` - Pino logger instance
 - `DI_TOKENS.EventBus` - Event bus for domain events
 - `DI_TOKENS.SupabaseService` - Supabase client service
 
 ### Repositories
+
 - `DI_TOKENS.UserRepository` - User data access
 - `DI_TOKENS.AuthLogRepository` - Authentication logs
 - `DI_TOKENS.APILogRepository` - API access logs
 - `DI_TOKENS.RateLimitRepository` - Rate limit data
 
 ### Domain Services
+
 - `DI_TOKENS.AuthenticationService` - Authentication logic
 - `DI_TOKENS.RateLimitService` - Rate limiting logic
 - `DI_TOKENS.DataAccessService` - Data access control
@@ -102,14 +104,14 @@ import { createTestContainer, MockFactory } from '@/infrastructure/di';
 describe('MyService', () => {
   it('should work with mocked dependencies', async () => {
     const container = createTestContainer();
-    
+
     // Register your service
     container.register(MyService, { useClass: MyService });
-    
+
     // Resolve and test
     const service = container.resolve(MyService);
     const result = await service.doWork();
-    
+
     expect(result).toBeDefined();
   });
 });
@@ -127,7 +129,7 @@ const mockRepo = MockFactory.createMockRepository();
 
 ```typescript
 const customMock = {
-  myMethod: vi.fn().mockResolvedValue('mocked result')
+  myMethod: vi.fn().mockResolvedValue('mocked result'),
 };
 
 const container = createTestContainer();
@@ -170,11 +172,11 @@ export class DatabaseService {
 ```typescript
 if (config.NODE_ENV === 'production') {
   container.register(DI_TOKENS.EmailService, {
-    useClass: RealEmailService
+    useClass: RealEmailService,
   });
 } else {
   container.register(DI_TOKENS.EmailService, {
-    useClass: MockEmailService
+    useClass: MockEmailService,
   });
 }
 ```
@@ -186,7 +188,7 @@ container.register(DI_TOKENS.ServiceFactory, {
   useFactory: (dependencyContainer) => {
     const config = dependencyContainer.resolve(DI_TOKENS.EnvConfig);
     return new ServiceFactory(config);
-  }
+  },
 });
 ```
 
@@ -195,9 +197,11 @@ container.register(DI_TOKENS.ServiceFactory, {
 ### Common Issues
 
 1. **"Cannot find module 'reflect-metadata'"**
+
    - Ensure `reflect-metadata` is imported at the application entry point
 
 2. **"Attempted to resolve unregistered dependency"**
+
    - Check that the service is registered in the container
    - Verify the token is correct
 
@@ -223,6 +227,7 @@ container.afterResolution((token, result) => {
 ### From Manual Instantiation
 
 Before:
+
 ```typescript
 const logger = createLogger();
 const repo = new UserRepository(db);
@@ -230,6 +235,7 @@ const service = new UserService(logger, repo);
 ```
 
 After:
+
 ```typescript
 const service = container.resolve(UserService);
 ```
@@ -237,6 +243,7 @@ const service = container.resolve(UserService);
 ### From Other DI Libraries
 
 The API is similar to other popular DI libraries. Key differences:
+
 - Use `@Injectable()` instead of `@Component()`
 - Use `@Inject(token)` for explicit injection
 - Tokens are symbols, not strings

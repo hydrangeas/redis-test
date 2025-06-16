@@ -31,7 +31,7 @@ export interface IAPILogRepository {
   findByUserId(
     userId: UserId,
     timeRange?: TimeRange,
-    limit?: number
+    limit?: number,
   ): Promise<Result<APILogEntry[], DomainError>>;
 
   /**
@@ -41,7 +41,7 @@ export interface IAPILogRepository {
    */
   findByTimeRange(
     timeRange: TimeRange,
-    limit?: number
+    limit?: number,
   ): Promise<Result<APILogEntry[], DomainError>>;
 
   /**
@@ -49,23 +49,25 @@ export interface IAPILogRepository {
    * @param timeRange 時間範囲
    * @param limit 取得件数上限
    */
-  findErrors(
-    timeRange?: TimeRange,
-    limit?: number
-  ): Promise<Result<APILogEntry[], DomainError>>;
+  findErrors(timeRange?: TimeRange, limit?: number): Promise<Result<APILogEntry[], DomainError>>;
 
   /**
    * 統計情報を取得
    * @param timeRange 時間範囲
    */
-  getStatistics(timeRange: TimeRange): Promise<Result<{
-    totalRequests: number;
-    uniqueUsers: number;
-    errorCount: number;
-    averageResponseTime: number;
-    requestsByEndpoint: Map<string, number>;
-    requestsByStatus: Map<number, number>;
-  }, DomainError>>;
+  getStatistics(timeRange: TimeRange): Promise<
+    Result<
+      {
+        totalRequests: number;
+        uniqueUsers: number;
+        errorCount: number;
+        averageResponseTime: number;
+        requestsByEndpoint: Map<string, number>;
+        requestsByStatus: Map<number, number>;
+      },
+      DomainError
+    >
+  >;
 
   /**
    * 古いログエントリを削除
@@ -86,18 +88,16 @@ export interface IAPILogRepository {
    */
   findSlowRequests(
     thresholdMs: number,
-    limit?: number
+    limit?: number,
   ): Promise<Result<APILogEntry[], DomainError>>;
 
   /**
    * エラーログを検索（オプション付き）
    * @param options 検索オプション
    */
-  findErrors(
-    options?: {
-      userId?: UserId;
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<Result<APILogEntry[], DomainError>>;
+  findErrors(options?: {
+    userId?: UserId;
+    limit?: number;
+    offset?: number;
+  }): Promise<Result<APILogEntry[], DomainError>>;
 }

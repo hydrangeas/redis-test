@@ -51,7 +51,7 @@ export const ResponsiveHeader: React.FC = () => {
             >
               APIドキュメント
             </Link>
-            
+
             {user ? (
               <>
                 <Link to="/dashboard">
@@ -97,7 +97,7 @@ export const ResponsiveHeader: React.FC = () => {
       </div>
 
       {/* モバイルメニュー */}
-      <MobileMenu 
+      <MobileMenu
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         user={user}

@@ -12,7 +12,7 @@ export class AuthEventLoggedEvent extends DomainEvent {
     public readonly provider: string,
     public readonly result: string,
     public readonly ipAddress: string,
-    public readonly occurredAt: Date
+    public readonly occurredAt: Date,
   ) {
     super();
   }

@@ -13,21 +13,22 @@
 ## 主要コンポーネント
 
 ### 1. DomainError
+
 ビジネスロジック層で発生するエラーを表現する値オブジェクト。
 
 ```typescript
 // エラーの作成
-const error = DomainError.validation(
-  'INVALID_EMAIL',
-  'Email format is invalid',
-  { field: 'email', value: 'invalid@' }
-);
+const error = DomainError.validation('INVALID_EMAIL', 'Email format is invalid', {
+  field: 'email',
+  value: 'invalid@',
+});
 
 // Result型と組み合わせて使用
 return Result.fail(error);
 ```
 
 ### 2. DomainException
+
 スロー可能なドメイン例外クラス。特定のエラータイプに対応した具体的な例外クラスを提供。
 
 ```typescript
@@ -45,6 +46,7 @@ throw new PathTraversalException(attemptedPath, sanitizedPath);
 ```
 
 ### 3. Result型パターン
+
 例外を投げずにエラーを扱うための関数型アプローチ。
 
 ```typescript
@@ -58,10 +60,10 @@ function divide(a: number, b: number): Result<number> {
 
 // チェーン操作
 const result = divide(10, 2)
-  .map(x => x * 2)
-  .flatMap(x => divide(x, 5))
-  .tap(x => console.log(`Result: ${x}`))
-  .tapError(err => console.error(`Error: ${err.message}`));
+  .map((x) => x * 2)
+  .flatMap((x) => divide(x, 5))
+  .tap((x) => console.log(`Result: ${x}`))
+  .tapError((err) => console.error(`Error: ${err.message}`));
 
 // デフォルト値
 const value = result.getValueOrDefault(0);
@@ -77,20 +79,22 @@ const asyncResult = await Result.tryAsync(async () => {
 ```
 
 ### 4. ProblemDetails
+
 RFC 7807準拠のエラーレスポンス形式。
 
 ```typescript
 interface ProblemDetails {
-  type: string;     // エラータイプのURI
-  title: string;    // 人間が読めるエラータイトル
-  status: number;   // HTTPステータスコード
-  detail?: string;  // 詳細な説明
+  type: string; // エラータイプのURI
+  title: string; // 人間が読めるエラータイトル
+  status: number; // HTTPステータスコード
+  detail?: string; // 詳細な説明
   instance?: string; // エラーが発生したリソースのURI
   [key: string]: any; // 拡張プロパティ
 }
 ```
 
 ### 5. PathValidator
+
 パストラバーサル攻撃を防ぐためのパス検証ユーティリティ。
 
 ```typescript
@@ -106,6 +110,7 @@ if (PathValidator.isValidJsonPath(filePath)) {
 ## エラーレスポンスの例
 
 ### バリデーションエラー
+
 ```json
 {
   "type": "https://api.example.com/errors/validation-error",
@@ -124,6 +129,7 @@ if (PathValidator.isValidJsonPath(filePath)) {
 ```
 
 ### レート制限エラー
+
 ```json
 {
   "type": "https://api.example.com/errors/rate-limit-exceeded",
@@ -138,6 +144,7 @@ if (PathValidator.isValidJsonPath(filePath)) {
 ```
 
 ### 認証エラー
+
 ```json
 {
   "type": "https://api.example.com/errors/auth-failed",
@@ -153,11 +160,13 @@ if (PathValidator.isValidJsonPath(filePath)) {
 ### 1. エラーハンドリングの選択
 
 **Result型を使用する場合:**
+
 - 予期されるエラー（バリデーション、ビジネスルール違反）
 - 複数のエラーを収集する必要がある場合
 - 関数型プログラミングスタイルを採用している場合
 
 **例外を使用する場合:**
+
 - 予期しないエラー（システムエラー、プログラミングエラー）
 - 即座に処理を中断する必要がある場合
 - 既存のフレームワークとの統合

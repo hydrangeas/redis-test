@@ -33,7 +33,7 @@ export interface IAuthLogRepository {
   findByUserId(
     userId: UserId,
     timeRange?: TimeRange,
-    limit?: number
+    limit?: number,
   ): Promise<Result<AuthLogEntry[], DomainError>>;
 
   /**
@@ -45,7 +45,7 @@ export interface IAuthLogRepository {
   findByEventType(
     eventType: EventType,
     timeRange?: TimeRange,
-    limit?: number
+    limit?: number,
   ): Promise<Result<AuthLogEntry[], DomainError>>;
 
   /**
@@ -57,7 +57,7 @@ export interface IAuthLogRepository {
   findByIPAddress(
     ipAddress: IPAddress,
     timeRange?: TimeRange,
-    limit?: number
+    limit?: number,
   ): Promise<Result<AuthLogEntry[], DomainError>>;
 
   /**
@@ -65,10 +65,7 @@ export interface IAuthLogRepository {
    * @param timeRange 時間範囲
    * @param limit 取得件数上限
    */
-  findFailures(
-    timeRange?: TimeRange,
-    limit?: number
-  ): Promise<Result<AuthLogEntry[], DomainError>>;
+  findFailures(timeRange?: TimeRange, limit?: number): Promise<Result<AuthLogEntry[], DomainError>>;
 
   /**
    * 疑わしい活動のログを検索
@@ -77,22 +74,27 @@ export interface IAuthLogRepository {
    */
   findSuspiciousActivities(
     timeRange?: TimeRange,
-    limit?: number
+    limit?: number,
   ): Promise<Result<AuthLogEntry[], DomainError>>;
 
   /**
    * 統計情報を取得
    * @param timeRange 時間範囲
    */
-  getStatistics(timeRange: TimeRange): Promise<Result<{
-    totalAttempts: number;
-    successfulLogins: number;
-    failedLogins: number;
-    uniqueUsers: number;
-    suspiciousActivities: number;
-    loginsByProvider: Map<string, number>;
-    tokenRefreshCount: number;
-  }, DomainError>>;
+  getStatistics(timeRange: TimeRange): Promise<
+    Result<
+      {
+        totalAttempts: number;
+        successfulLogins: number;
+        failedLogins: number;
+        uniqueUsers: number;
+        suspiciousActivities: number;
+        loginsByProvider: Map<string, number>;
+        tokenRefreshCount: number;
+      },
+      DomainError
+    >
+  >;
 
   /**
    * 古いログエントリを削除

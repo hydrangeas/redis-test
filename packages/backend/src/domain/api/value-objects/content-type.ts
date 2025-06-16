@@ -9,7 +9,7 @@ export class ContentType {
    * MIMEタイプの検証用正規表現
    * type/subtype形式（オプションでパラメータ付き）
    */
-  private static readonly MIME_TYPE_PATTERN = 
+  private static readonly MIME_TYPE_PATTERN =
     /^[a-zA-Z0-9][a-zA-Z0-9!#$&^_+-.]*(\/[a-zA-Z0-9][a-zA-Z0-9!#$&^_+-.]*)?(\s*;\s*[a-zA-Z0-9_-]+=[a-zA-Z0-9_.-]+)*$/;
 
   private readonly _value: string;
@@ -26,10 +26,10 @@ export class ContentType {
     }
 
     const trimmedValue = value.trim().toLowerCase();
-    
+
     // MIMEタイプとパラメータを分離
-    const [mimeType, ...paramParts] = trimmedValue.split(';').map(s => s.trim());
-    
+    const [mimeType, ...paramParts] = trimmedValue.split(';').map((s) => s.trim());
+
     // スラッシュが含まれているかチェック
     if (!mimeType.includes('/')) {
       throw new ValidationError('Invalid content type format', {
@@ -67,7 +67,7 @@ export class ContentType {
 
     // パラメータの解析
     for (const paramPart of paramParts) {
-      const [key, val] = paramPart.split('=').map(s => s.trim());
+      const [key, val] = paramPart.split('=').map((s) => s.trim());
       if (key && val) {
         this._parameters.set(key, val);
       }
@@ -123,9 +123,11 @@ export class ContentType {
    * JSONタイプかどうかを判定
    */
   isJson(): boolean {
-    return this._subtype === 'json' || 
-           this._subtype.endsWith('+json') ||
-           (this._type === 'application' && this._subtype === 'json');
+    return (
+      this._subtype === 'json' ||
+      this._subtype.endsWith('+json') ||
+      (this._type === 'application' && this._subtype === 'json')
+    );
   }
 
   /**
@@ -175,11 +177,11 @@ export class ContentType {
    */
   toString(): string {
     let result = `${this._type}/${this._subtype}`;
-    
+
     for (const [key, value] of this._parameters) {
       result += `; ${key}=${value}`;
     }
-    
+
     return result;
   }
 

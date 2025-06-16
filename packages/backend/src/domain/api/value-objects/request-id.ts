@@ -19,11 +19,7 @@ export class RequestId extends ValueObject<RequestIdProps> {
   public static create(id: string): Result<RequestId> {
     if (!id || id.trim().length === 0) {
       return Result.fail(
-        new DomainError(
-          'INVALID_REQUEST_ID',
-          'Request ID cannot be empty',
-          ErrorType.VALIDATION
-        )
+        new DomainError('INVALID_REQUEST_ID', 'Request ID cannot be empty', ErrorType.VALIDATION),
       );
     }
 
@@ -32,8 +28,8 @@ export class RequestId extends ValueObject<RequestIdProps> {
         new DomainError(
           'REQUEST_ID_TOO_LONG',
           'Request ID exceeds maximum length',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 

@@ -7,7 +7,7 @@ export const useAuthError = () => {
 
   useEffect(() => {
     const errorParam = searchParams.get("error");
-    
+
     if (errorParam) {
       switch (errorParam) {
         case "auth_failed":

@@ -10,7 +10,7 @@ describe('UserId', () => {
   describe('create (Result pattern)', () => {
     it('should create valid UserId with Result.ok', () => {
       const result = UserId.create(validUuid);
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.isFailure).toBe(false);
       expect(result.getValue().value).toBe(validUuid);
@@ -18,14 +18,14 @@ describe('UserId', () => {
 
     it('should normalize UUID to lowercase', () => {
       const result = UserId.create(validUuidUpperCase);
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().value).toBe(validUuid);
     });
 
     it('should trim whitespace', () => {
       const result = UserId.create(`  ${validUuid}  `);
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().value).toBe(validUuid);
     });
@@ -33,10 +33,10 @@ describe('UserId', () => {
     it('should return Result.fail for null or undefined', () => {
       const resultNull = UserId.create(null as any);
       const resultUndefined = UserId.create(undefined as any);
-      
+
       expect(resultNull.isFailure).toBe(true);
       expect(resultUndefined.isFailure).toBe(true);
-      
+
       expect(resultNull.getError().code).toBe('INVALID_USER_ID');
       expect(resultUndefined.getError().code).toBe('INVALID_USER_ID');
     });
@@ -44,10 +44,10 @@ describe('UserId', () => {
     it('should return Result.fail for empty string', () => {
       const result1 = UserId.create('');
       const result2 = UserId.create('   ');
-      
+
       expect(result1.isFailure).toBe(true);
       expect(result2.isFailure).toBe(true);
-      
+
       expect(result1.getError().code).toBe('INVALID_USER_ID');
       expect(result1.getError().message).toBe('User ID cannot be empty');
     });
@@ -64,7 +64,7 @@ describe('UserId', () => {
 
       for (const invalidUuid of invalidUuids) {
         const result = UserId.create(invalidUuid);
-        
+
         expect(result.isFailure).toBe(true);
         expect(result.getError().code).toBe('INVALID_USER_ID_FORMAT');
         expect(result.getError().details?.providedValue).toBe(invalidUuid);
@@ -103,15 +103,17 @@ describe('UserId', () => {
   describe('generate', () => {
     it('should generate valid UserId', () => {
       const userId = UserId.generate();
-      
+
       expect(userId).toBeDefined();
-      expect(userId.value).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(userId.value).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
     });
 
     it('should generate unique UserIds', () => {
       const userId1 = UserId.generate();
       const userId2 = UserId.generate();
-      
+
       expect(userId1.value).not.toBe(userId2.value);
     });
   });
@@ -133,27 +135,27 @@ describe('UserId', () => {
     it('should return true for equal UserIds', () => {
       const userId1 = UserId.fromString(validUuid);
       const userId2 = UserId.fromString(validUuid);
-      
+
       expect(userId1.equals(userId2)).toBe(true);
     });
 
     it('should return true for UserIds with different case', () => {
       const userId1 = UserId.fromString(validUuid);
       const userId2 = UserId.fromString(validUuidUpperCase);
-      
+
       expect(userId1.equals(userId2)).toBe(true);
     });
 
     it('should return false for different UserIds', () => {
       const userId1 = UserId.fromString(validUuid);
       const userId2 = UserId.generate();
-      
+
       expect(userId1.equals(userId2)).toBe(false);
     });
 
     it('should return false for null or undefined', () => {
       const userId = UserId.fromString(validUuid);
-      
+
       expect(userId.equals(null as any)).toBe(false);
       expect(userId.equals(undefined as any)).toBe(false);
     });
@@ -163,20 +165,20 @@ describe('UserId', () => {
     it('should return consistent hash for same value', () => {
       const userId1 = UserId.fromString(validUuid);
       const userId2 = UserId.fromString(validUuid);
-      
+
       expect(userId1.hashCode()).toBe(userId2.hashCode());
     });
 
     it('should return different hash for different values', () => {
       const userId1 = UserId.fromString(validUuid);
       const userId2 = UserId.generate();
-      
+
       expect(userId1.hashCode()).not.toBe(userId2.hashCode());
     });
 
     it('should return positive hash values', () => {
       const userId = UserId.fromString(validUuid);
-      
+
       expect(userId.hashCode()).toBeGreaterThanOrEqual(0);
     });
   });
@@ -184,7 +186,7 @@ describe('UserId', () => {
   describe('toString', () => {
     it('should return string representation', () => {
       const userId = UserId.fromString(validUuid);
-      
+
       expect(userId.toString()).toBe(validUuid);
     });
   });
@@ -192,7 +194,7 @@ describe('UserId', () => {
   describe('toJSON', () => {
     it('should return JSON representation', () => {
       const userId = UserId.fromString(validUuid);
-      
+
       expect(userId.toJSON()).toBe(validUuid);
     });
   });
@@ -200,7 +202,7 @@ describe('UserId', () => {
   describe('fromJSON', () => {
     it('should create UserId from JSON', () => {
       const userId = UserId.fromJSON(validUuid);
-      
+
       expect(userId.value).toBe(validUuid);
     });
 
@@ -213,11 +215,11 @@ describe('UserId', () => {
     it('should prevent primitive type confusion at compile time', () => {
       const userIdResult = UserId.create(validUuid);
       const userId = userIdResult.getValue();
-      
+
       // The following would cause TypeScript compile errors:
       // const wrongUsage: string = userId; // Error: Type 'UserId' is not assignable to type 'string'
       // const wrongComparison = userId === validUuid; // Error: Operator '===' cannot be applied
-      
+
       // Correct usage:
       const idString: string = userId.value;
       expect(idString).toBe(validUuid);
@@ -227,11 +229,11 @@ describe('UserId', () => {
   describe('immutability', () => {
     it('should be immutable', () => {
       const userId = UserId.fromString(validUuid);
-      
+
       expect(() => {
         (userId as any)._value = 'new-value';
       }).toThrow();
-      
+
       expect(() => {
         (userId as any).value = 'new-value';
       }).toThrow();

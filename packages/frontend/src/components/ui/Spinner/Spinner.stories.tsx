@@ -1,23 +1,23 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import Spinner, { LoadingOverlay } from './Spinner';
-import { Button } from '../Button';
-import { Card, CardContent } from '../Card';
+import type { Meta, StoryObj } from "@storybook/react";
+import Spinner, { LoadingOverlay } from "./Spinner";
+import { Button } from "../Button";
+import { Card, CardContent } from "../Card";
 
 const meta = {
-  title: 'UI/Spinner',
+  title: "UI/Spinner",
   component: Spinner,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     size: {
-      control: 'select',
-      options: ['xs', 'sm', 'md', 'lg', 'xl'],
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
     },
     variant: {
-      control: 'select',
-      options: ['primary', 'secondary', 'white'],
+      control: "select",
+      options: ["primary", "secondary", "white"],
     },
   },
 } satisfies Meta<typeof Spinner>;
@@ -27,8 +27,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    size: 'md',
-    variant: 'primary',
+    size: "md",
+    variant: "primary",
   },
 };
 
@@ -102,17 +102,25 @@ export const WithText: Story = {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Spinner size="sm" />
-        <span className="text-sm text-gray-600 dark:text-gray-400">Loading data...</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          Loading data...
+        </span>
       </div>
       <div className="flex items-center gap-3">
         <Spinner />
-        <span className="text-gray-700 dark:text-gray-300">Saving changes...</span>
+        <span className="text-gray-700 dark:text-gray-300">
+          Saving changes...
+        </span>
       </div>
       <div className="flex items-center gap-4">
         <Spinner size="lg" />
         <div>
-          <p className="font-medium text-gray-900 dark:text-gray-100">Uploading files</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">This may take a few moments</p>
+          <p className="font-medium text-gray-900 dark:text-gray-100">
+            Uploading files
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            This may take a few moments
+          </p>
         </div>
       </div>
     </div>
@@ -126,7 +134,9 @@ export const LoadingCard: Story = {
         <div className="flex flex-col items-center justify-center space-y-4">
           <Spinner size="lg" />
           <div className="text-center">
-            <p className="font-medium text-gray-900 dark:text-gray-100">Loading your dashboard</p>
+            <p className="font-medium text-gray-900 dark:text-gray-100">
+              Loading your dashboard
+            </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Fetching your latest data...
             </p>
@@ -175,10 +185,10 @@ export const FullScreenOverlay: Story = {
     return (
       <div>
         <Button onClick={handleLoad}>Show Full Screen Loading</Button>
-        <LoadingOverlay 
-          show={isLoading} 
-          fullScreen 
-          label="Loading application..." 
+        <LoadingOverlay
+          show={isLoading}
+          fullScreen
+          label="Loading application..."
         />
       </div>
     );
@@ -187,7 +197,7 @@ export const FullScreenOverlay: Story = {
 
 export const CustomLabel: Story = {
   args: {
-    label: 'Fetching user data...',
+    label: "Fetching user data...",
   },
 };
 

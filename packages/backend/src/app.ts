@@ -49,8 +49,8 @@ export default async function buildApp(opts: FastifyServerOptions = {}) {
   await server.register(import('./presentation/routes'), { prefix: '/api/v1' });
 
   server.get('/health', async () => {
-    return { 
-      status: 'ok', 
+    return {
+      status: 'ok',
       timestamp: new Date().toISOString(),
       environment: config.NODE_ENV,
       region: process.env.VERCEL_REGION || 'local',

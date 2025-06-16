@@ -7,24 +7,24 @@ const baseConfigSchema = z.object({
     version: z.string().default('1.0.0'),
     env: z.enum(['development', 'staging', 'production']),
   }),
-  
+
   server: z.object({
     port: z.number().int().positive().default(3000),
     host: z.string().default('0.0.0.0'),
     baseUrl: z.string().url(),
   }),
-  
+
   supabase: z.object({
     url: z.string().url(),
     anonKey: z.string().min(1),
     serviceRoleKey: z.string().min(1),
   }),
-  
+
   logging: z.object({
     level: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']),
     pretty: z.boolean().default(false),
   }),
-  
+
   security: z.object({
     cors: z.object({
       origins: z.array(z.string()).default(['*']),
@@ -33,7 +33,7 @@ const baseConfigSchema = z.object({
     jwtSecret: z.string().min(32),
     encryptionKey: z.string().min(32),
   }),
-  
+
   rateLimit: z.object({
     enabled: z.boolean().default(true),
     tiers: z.object({
@@ -51,7 +51,7 @@ const baseConfigSchema = z.object({
       }),
     }),
   }),
-  
+
   features: z.object({
     apiDocs: z.boolean().default(true),
     healthCheck: z.boolean().default(true),

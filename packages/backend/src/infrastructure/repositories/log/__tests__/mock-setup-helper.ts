@@ -17,14 +17,14 @@ export function createSupabaseMock() {
 
   // Create a chainable mock
   const chainableObject = Object.create(null);
-  
+
   // Add all methods to the chainable object
-  Object.keys(methods).forEach(key => {
+  Object.keys(methods).forEach((key) => {
     chainableObject[key] = methods[key];
     // Make each method return the chainable object by default
     methods[key].mockReturnValue(chainableObject);
   });
-  
+
   // Special handling for select with options
   methods.select.mockImplementation((fields?: string, options?: any) => {
     // Still return the chainable object

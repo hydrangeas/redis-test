@@ -26,6 +26,7 @@ npx supabase start
 ```
 
 This will start the following services:
+
 - **Database**: PostgreSQL on port 54322
 - **Auth**: Authentication service on port 54321
 - **Studio**: Database management UI on port 54323
@@ -59,6 +60,7 @@ Update the values with your local Supabase credentials (shown after running `sup
 
 1. Go to Authentication → Providers in your Supabase dashboard
 2. Enable Google:
+
    - Click on Google
    - Toggle "Enable Google provider"
    - Add your Google OAuth credentials
@@ -101,7 +103,7 @@ The database schema will be automatically created by the application when it sta
 3. Enable Google+ API
 4. Create OAuth 2.0 credentials:
    - Application type: Web application
-   - Authorized redirect URIs: 
+   - Authorized redirect URIs:
      - `https://YOUR-PROJECT.supabase.co/auth/v1/callback`
      - `http://localhost:54321/auth/v1/callback` (for local development)
 5. Copy Client ID and Client Secret to environment variables
@@ -113,7 +115,7 @@ The database schema will be automatically created by the application when it sta
 3. Fill in the details:
    - Application name: "OpenData API"
    - Homepage URL: Your app URL
-   - Authorization callback URL: 
+   - Authorization callback URL:
      - `https://YOUR-PROJECT.supabase.co/auth/v1/callback`
      - `http://localhost:54321/auth/v1/callback` (for local development)
 4. Copy Client ID and Client Secret to environment variables
@@ -133,28 +135,28 @@ BEGIN
   IF event->>'user_id' IS NOT NULL THEN
     -- Get or create user tier
     IF NOT EXISTS (
-      SELECT 1 FROM auth.users 
-      WHERE id = (event->>'user_id')::uuid 
+      SELECT 1 FROM auth.users
+      WHERE id = (event->>'user_id')::uuid
       AND raw_app_meta_data->>'tier' IS NOT NULL
     ) THEN
       -- Set default tier for new users
-      UPDATE auth.users 
-      SET raw_app_meta_data = 
+      UPDATE auth.users
+      SET raw_app_meta_data =
         COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"tier": "tier1"}'::jsonb
       WHERE id = (event->>'user_id')::uuid;
     END IF;
-    
+
     -- Add tier to claims
-    event = jsonb_set(event, '{claims,tier}', 
+    event = jsonb_set(event, '{claims,tier}',
       COALESCE(
-        (SELECT raw_app_meta_data->>'tier' 
-         FROM auth.users 
+        (SELECT raw_app_meta_data->>'tier'
+         FROM auth.users
          WHERE id = (event->>'user_id')::uuid)::jsonb,
         '"tier1"'::jsonb
       )
     );
   END IF;
-  
+
   RETURN event;
 END;
 $$;
@@ -170,11 +172,13 @@ GRANT EXECUTE ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin
 ### Common Issues
 
 1. **Local Supabase won't start**
+
    - Make sure Docker is running
    - Check if ports are already in use
    - Try `npx supabase stop` then `npx supabase start`
 
 2. **Authentication errors**
+
    - Verify environment variables are correctly set
    - Check redirect URLs match exactly
    - Ensure OAuth apps are properly configured
@@ -222,6 +226,7 @@ npx supabase gen types typescript --local > packages/shared/supabase-types.ts
 ### Quick Start
 
 1. **Clone and install dependencies**:
+
    ```bash
    git clone <repository-url>
    cd opendata-api
@@ -229,12 +234,14 @@ npx supabase gen types typescript --local > packages/shared/supabase-types.ts
    ```
 
 2. **Setup environment variables**:
+
    ```bash
    cp .env.local.example .env.local
    # Edit .env.local with your Supabase credentials
    ```
 
 3. **Start local Supabase (optional)**:
+
    ```bash
    npx supabase start
    ```
@@ -249,11 +256,13 @@ npx supabase gen types typescript --local > packages/shared/supabase-types.ts
 To verify your Supabase setup is working correctly:
 
 1. **Check Supabase connection**:
+
    ```bash
    npm run test:supabase
    ```
 
 2. **Test authentication flow**:
+
    - Navigate to http://localhost:5173
    - Click on "Sign in with Google" or "Sign in with GitHub"
    - You should be redirected to the OAuth provider

@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "./Card";
 import { Button } from "./Button";
 
 const meta = {
@@ -32,7 +39,9 @@ export const Basic: Story = {
     children: (
       <div>
         <h3 className="text-lg font-semibold mb-2">Basic Card</h3>
-        <p className="text-gray-600">This is a basic card with default styling.</p>
+        <p className="text-gray-600">
+          This is a basic card with default styling.
+        </p>
       </div>
     ),
   },
@@ -66,8 +75,12 @@ export const WithFooter: Story = {
           <p>Main content goes here.</p>
         </CardContent>
         <CardFooter>
-          <Button variant="outline" size="sm">Cancel</Button>
-          <Button size="sm" className="ml-auto">Save</Button>
+          <Button variant="outline" size="sm">
+            Cancel
+          </Button>
+          <Button size="sm" className="ml-auto">
+            Save
+          </Button>
         </CardFooter>
       </>
     ),
@@ -95,14 +108,16 @@ export const NoPadding: Story = {
     padding: "none",
     children: (
       <div>
-        <img 
-          src="https://via.placeholder.com/400x200" 
-          alt="Placeholder" 
+        <img
+          src="https://via.placeholder.com/400x200"
+          alt="Placeholder"
           className="w-full h-48 object-cover rounded-t-lg"
         />
         <div className="p-4">
           <h3 className="text-lg font-semibold">Image Card</h3>
-          <p className="text-gray-600 mt-2">Card with no padding for image content.</p>
+          <p className="text-gray-600 mt-2">
+            Card with no padding for image content.
+          </p>
         </div>
       </div>
     ),
@@ -145,7 +160,9 @@ export const ComplexCard: Story = {
       <>
         <CardHeader>
           <CardTitle>Project Status</CardTitle>
-          <CardDescription>Overview of current project progress</CardDescription>
+          <CardDescription>
+            Overview of current project progress
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -155,7 +172,10 @@ export const ComplexCard: Story = {
                 <span className="text-gray-600">75%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full" style={{ width: "75%" }}></div>
+                <div
+                  className="bg-purple-600 h-2 rounded-full"
+                  style={{ width: "75%" }}
+                ></div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -171,7 +191,9 @@ export const ComplexCard: Story = {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="ghost" size="sm">View Details</Button>
+          <Button variant="ghost" size="sm">
+            View Details
+          </Button>
           <Button size="sm">Update Status</Button>
         </CardFooter>
       </>

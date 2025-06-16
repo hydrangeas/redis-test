@@ -18,7 +18,7 @@ describe('TokenRefreshed Event', () => {
         oldTokenId,
         newTokenId,
         refreshCount,
-        sessionId
+        sessionId,
       );
 
       expect(event.aggregateId).toBe(aggregateId);
@@ -37,11 +37,7 @@ describe('TokenRefreshed Event', () => {
       const eventVersion = 1;
       const userId = '550e8400-e29b-41d4-a716-446655440002';
 
-      const event = new TokenRefreshed(
-        aggregateId,
-        eventVersion,
-        userId
-      );
+      const event = new TokenRefreshed(aggregateId, eventVersion, userId);
 
       expect(event.userId).toBe(userId);
       expect(event.oldTokenId).toBeUndefined();
@@ -51,11 +47,7 @@ describe('TokenRefreshed Event', () => {
     });
 
     it('should be immutable', () => {
-      const event = new TokenRefreshed(
-        'aggregate-id',
-        1,
-        'user-id'
-      );
+      const event = new TokenRefreshed('aggregate-id', 1, 'user-id');
 
       expect(() => {
         (event as any).userId = 'new-user-id';
@@ -65,11 +57,7 @@ describe('TokenRefreshed Event', () => {
 
   describe('getEventName', () => {
     it('should return the correct event name', () => {
-      const event = new TokenRefreshed(
-        'aggregate-id',
-        1,
-        'user-id'
-      );
+      const event = new TokenRefreshed('aggregate-id', 1, 'user-id');
 
       expect(event.getEventName()).toBe('TokenRefreshed');
     });
@@ -84,7 +72,7 @@ describe('TokenRefreshed Event', () => {
         'old-token',
         'new-token',
         5,
-        'session-id'
+        'session-id',
       );
 
       const data = event.getData();
@@ -99,11 +87,7 @@ describe('TokenRefreshed Event', () => {
     });
 
     it('should return data with undefined optional fields', () => {
-      const event = new TokenRefreshed(
-        'aggregate-id',
-        1,
-        'user-id'
-      );
+      const event = new TokenRefreshed('aggregate-id', 1, 'user-id');
 
       const data = event.getData();
 
@@ -119,11 +103,7 @@ describe('TokenRefreshed Event', () => {
 
   describe('getMetadata', () => {
     it('should return event metadata', () => {
-      const event = new TokenRefreshed(
-        'aggregate-id',
-        2,
-        'user-id'
-      );
+      const event = new TokenRefreshed('aggregate-id', 2, 'user-id');
 
       const metadata = event.getMetadata();
 

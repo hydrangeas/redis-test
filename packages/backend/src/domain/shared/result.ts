@@ -103,9 +103,7 @@ export class Result<T> {
    * Converts the result to a promise
    */
   public toPromise(): Promise<T> {
-    return this.isSuccess 
-      ? Promise.resolve(this.getValue())
-      : Promise.reject(this.getError());
+    return this.isSuccess ? Promise.resolve(this.getValue()) : Promise.reject(this.getError());
   }
 
   public static ok<U>(value?: U): Result<U> {

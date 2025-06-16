@@ -231,11 +231,7 @@ open-data-api/
 {
   "name": "open-data-api",
   "private": true,
-  "workspaces": [
-    "api",
-    "web",
-    "core"
-  ],
+  "workspaces": ["api", "web", "core"],
   "scripts": {
     "dev": "npm run dev --workspaces",
     "build": "npm run build --workspaces",
@@ -259,6 +255,7 @@ open-data-api/
 ### 2. 境界づけられたコンテキスト
 
 各コンテキスト（auth、api、data、log）は独立したディレクトリ構造を持ち：
+
 - 高凝集・疎結合を実現
 - 独立した開発・テストが可能
 - 将来的なマイクロサービス化への移行パスを確保
@@ -276,6 +273,7 @@ presentation → application → domain ← infrastructure
 ### 4. 共有カーネル
 
 `domain/shared/`には、複数のコンテキストで共有される：
+
 - 基本的な値オブジェクト（Result、DomainError）
 - ドメインイベントの基底クラス
 - 共通の例外クラス
@@ -283,6 +281,7 @@ presentation → application → domain ← infrastructure
 ### 5. フロントエンドの分離
 
 Webフロントエンドは独立したパッケージとして管理：
+
 - APIとは独立したビルド・デプロイが可能
 - TypeScriptによる型安全性を共有
 - Vercelの静的サイトホスティングを活用
@@ -322,26 +321,30 @@ TypeScriptのパスエイリアスを使用：
 ```
 
 使用例：
+
 ```typescript
-import { AuthenticatedUser } from '@core/domain/auth/value-objects/AuthenticatedUser'
-import { AuthenticationUseCase } from '@core/application/auth/AuthenticationUseCase'
+import { AuthenticatedUser } from '@core/domain/auth/value-objects/AuthenticatedUser';
+import { AuthenticationUseCase } from '@core/application/auth/AuthenticationUseCase';
 ```
 
 ## 開発フロー
 
 1. **ローカル開発**
+
    ```bash
    npm install          # 全パッケージの依存関係インストール
    npm run dev          # 全サービス起動
    ```
 
 2. **APIドキュメント生成**
+
    ```bash
    npm run generate:openapi  # OpenAPI仕様生成
    npm run build:docs        # 静的ドキュメント生成
    ```
 
 3. **ビルド**
+
    ```bash
    npm run build        # 全パッケージビルド
    ```

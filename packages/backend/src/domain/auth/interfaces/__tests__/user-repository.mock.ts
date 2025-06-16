@@ -11,7 +11,7 @@ import { vi } from 'vitest';
  */
 export class MockUserRepository implements IUserRepository {
   private users: Map<string, User> = new Map();
-  
+
   // モック用のスパイ関数
   public saveSpy = vi.fn();
   public updateSpy = vi.fn();
@@ -27,9 +27,7 @@ export class MockUserRepository implements IUserRepository {
 
   async findByEmail(email: Email): Promise<Result<User | null>> {
     this.findByEmailSpy(email);
-    const user = Array.from(this.users.values()).find(
-      u => u.email.equals(email)
-    );
+    const user = Array.from(this.users.values()).find((u) => u.email.equals(email));
     return Result.ok(user || null);
   }
 

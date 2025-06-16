@@ -47,7 +47,7 @@ describe('UserAuthenticatedHandler', () => {
         'tier1',
         'session-123',
         '192.168.1.1',
-        'Mozilla/5.0'
+        'Mozilla/5.0',
       );
 
       const mockLogId = LogId.create().value!;
@@ -77,7 +77,7 @@ describe('UserAuthenticatedHandler', () => {
           provider: 'google',
           tier: 'tier1',
         }),
-        'Handling UserAuthenticated event'
+        'Handling UserAuthenticated event',
       );
     });
 
@@ -88,7 +88,7 @@ describe('UserAuthenticatedHandler', () => {
         1,
         '', // Invalid empty userId
         'google',
-        'tier1'
+        'tier1',
       );
 
       // Act
@@ -100,7 +100,7 @@ describe('UserAuthenticatedHandler', () => {
         expect.objectContaining({
           eventId: event.eventId,
         }),
-        'Invalid userId in UserAuthenticated event'
+        'Invalid userId in UserAuthenticated event',
       );
     });
 
@@ -111,7 +111,7 @@ describe('UserAuthenticatedHandler', () => {
         1,
         '550e8400-e29b-41d4-a716-446655440000',
         'invalid_provider', // Invalid provider
-        'tier1'
+        'tier1',
       );
 
       // Act
@@ -123,7 +123,7 @@ describe('UserAuthenticatedHandler', () => {
         expect.objectContaining({
           eventId: event.eventId,
         }),
-        'Invalid provider in UserAuthenticated event'
+        'Invalid provider in UserAuthenticated event',
       );
     });
 
@@ -137,7 +137,7 @@ describe('UserAuthenticatedHandler', () => {
         'tier1',
         'session-123',
         'invalid.ip', // Invalid IP
-        '' // Invalid empty user agent
+        '', // Invalid empty user agent
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -153,7 +153,7 @@ describe('UserAuthenticatedHandler', () => {
           eventId: event.eventId,
           ipAddress: 'invalid.ip',
         }),
-        'Invalid IP address in UserAuthenticated event'
+        'Invalid IP address in UserAuthenticated event',
       );
     });
 
@@ -164,12 +164,10 @@ describe('UserAuthenticatedHandler', () => {
         1,
         '550e8400-e29b-41d4-a716-446655440000',
         'google',
-        'tier1'
+        'tier1',
       );
 
-      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(
-        Result.fail('Database error')
-      );
+      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.fail('Database error'));
 
       // Act
       await handler.handle(event);
@@ -180,7 +178,7 @@ describe('UserAuthenticatedHandler', () => {
           eventId: event.eventId,
           error: 'Database error',
         }),
-        'Failed to save auth log'
+        'Failed to save auth log',
       );
     });
 
@@ -191,7 +189,7 @@ describe('UserAuthenticatedHandler', () => {
         1,
         '550e8400-e29b-41d4-a716-446655440000',
         'google',
-        'tier1'
+        'tier1',
       );
 
       const error = new Error('Unexpected error');
@@ -199,14 +197,14 @@ describe('UserAuthenticatedHandler', () => {
 
       // Act & Assert
       await expect(handler.handle(event)).rejects.toThrow('Unexpected error');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: event.eventId,
           error: 'Unexpected error',
           stack: expect.any(String),
         }),
-        'Error handling UserAuthenticated event'
+        'Error handling UserAuthenticated event',
       );
     });
   });

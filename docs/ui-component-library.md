@@ -141,17 +141,17 @@ import { Textarea } from "@/components/ui/Form/Textarea";
 #### Select
 
 ```tsx
-import { Select } from "@/components/ui/Form/Select";
+import { Select } from '@/components/ui/Form/Select';
 
 <Select
   label="国を選択"
   options={[
-    { value: "jp", label: "日本" },
-    { value: "us", label: "アメリカ" },
-    { value: "uk", label: "イギリス" },
+    { value: 'jp', label: '日本' },
+    { value: 'us', label: 'アメリカ' },
+    { value: 'uk', label: 'イギリス' },
   ]}
   placeholder="選択してください"
-/>
+/>;
 ```
 
 #### Checkbox
@@ -166,19 +166,19 @@ import { Checkbox } from "@/components/ui/Form/Checkbox";
 #### Radio
 
 ```tsx
-import { RadioGroup } from "@/components/ui/Form/Radio";
+import { RadioGroup } from '@/components/ui/Form/Radio';
 
 <RadioGroup
   name="plan"
   label="プランを選択"
   options={[
-    { value: "free", label: "無料プラン" },
-    { value: "pro", label: "プロプラン" },
-    { value: "enterprise", label: "エンタープライズ" },
+    { value: 'free', label: '無料プラン' },
+    { value: 'pro', label: 'プロプラン' },
+    { value: 'enterprise', label: 'エンタープライズ' },
   ]}
   value={selectedPlan}
   onChange={setSelectedPlan}
-/>
+/>;
 ```
 
 ### テーブル (Table)

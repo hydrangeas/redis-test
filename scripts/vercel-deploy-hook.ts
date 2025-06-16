@@ -18,29 +18,33 @@ export async function handleDeploymentHook(event: DeploymentEvent) {
     case 'deployment-ready':
       // デプロイ成功時の処理
       console.log(`Deployment ready: ${event.payload.url}`);
-      
+
       // Lighthouseテストの実行
       if (process.env.RUN_LIGHTHOUSE === 'true') {
-        execSync(`lighthouse ${event.payload.url} --output=json --output-path=./lighthouse-report.json`);
+        execSync(
+          `lighthouse ${event.payload.url} --output=json --output-path=./lighthouse-report.json`,
+        );
       }
-      
+
       // Slackへの通知
       if (process.env.SLACK_WEBHOOK_URL) {
         await notifySlack({
           text: `🚀 Deployment successful!`,
-          attachments: [{
-            color: 'good',
-            fields: [
-              { title: 'URL', value: event.payload.url },
-              { title: 'Commit', value: event.payload.meta.githubCommitSha.slice(0, 7) },
-              { title: 'Message', value: event.payload.meta.githubCommitMessage },
-              { title: 'Author', value: event.payload.meta.githubCommitAuthorName },
-            ],
-          }],
+          attachments: [
+            {
+              color: 'good',
+              fields: [
+                { title: 'URL', value: event.payload.url },
+                { title: 'Commit', value: event.payload.meta.githubCommitSha.slice(0, 7) },
+                { title: 'Message', value: event.payload.meta.githubCommitMessage },
+                { title: 'Author', value: event.payload.meta.githubCommitAuthorName },
+              ],
+            },
+          ],
         });
       }
       break;
-      
+
     case 'deployment-error':
       // デプロイエラー時の処理
       console.error(`Deployment failed: ${event.payload.name}`);

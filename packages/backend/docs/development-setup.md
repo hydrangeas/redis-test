@@ -31,6 +31,7 @@ supabase start
 ```
 
 起動後、表示される認証情報を`.env`ファイルに設定してください：
+
 - `PUBLIC_SUPABASE_URL`
 - `PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -50,6 +51,7 @@ npm run db:seed
 ```
 
 これにより、以下のテストデータが作成されます：
+
 - テストユーザー（各ティア）
 - APIキー
 - サンプルログデータ
@@ -58,9 +60,9 @@ npm run db:seed
 
 以下のテストユーザーが作成されます：
 
-| Email | Password | Tier | Rate Limit |
-|-------|----------|------|------------|
-| tier1@example.com | password123 | tier1 | 60 req/min |
+| Email             | Password    | Tier  | Rate Limit  |
+| ----------------- | ----------- | ----- | ----------- |
+| tier1@example.com | password123 | tier1 | 60 req/min  |
 | tier2@example.com | password123 | tier2 | 120 req/min |
 | tier3@example.com | password123 | tier3 | 300 req/min |
 
@@ -119,6 +121,7 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 ### ログの確認
 
 シードデータには以下のログが含まれます：
+
 - **認証ログ**: 過去30日間のログイン/ログアウト履歴
 - **APIログ**: 過去7日間のAPIアクセス履歴
 - **レート制限ログ**: 過去1時間のレート制限カウント
@@ -128,11 +131,13 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 ### シードデータ投入エラー
 
 1. Supabaseが起動していることを確認
+
    ```bash
    supabase status
    ```
 
 2. 環境変数が正しく設定されていることを確認
+
    ```bash
    npm run validate:env
    ```

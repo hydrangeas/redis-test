@@ -74,11 +74,14 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const { refresh_token } = request.body;
-      
-      request.log.info({
-        hasRefreshToken: !!refresh_token,
-        tokenLength: refresh_token?.length,
-      }, 'Token refresh request received');
+
+      request.log.info(
+        {
+          hasRefreshToken: !!refresh_token,
+          tokenLength: refresh_token?.length,
+        },
+        'Token refresh request received',
+      );
 
       try {
         // リフレッシュトークンの基本検証
@@ -89,9 +92,9 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
               message: 'Refresh token is required',
               type: 'UNAUTHORIZED',
             },
-            request.url
+            request.url,
           );
-          
+
           return reply
             .code(401)
             .header('content-type', 'application/problem+json')
@@ -102,28 +105,31 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
         const result = await authUseCase.refreshToken(refresh_token);
 
         if (!result.success) {
-          const problemDetails = toProblemDetails(
-            result.error,
-            request.url
+          const problemDetails = toProblemDetails(result.error, request.url);
+
+          request.log.warn(
+            {
+              error: result.error?.code,
+              message: result.error?.message,
+            },
+            'Token refresh failed',
           );
-          
-          request.log.warn({
-            error: result.error?.code,
-            message: result.error?.message,
-          }, 'Token refresh failed');
 
           // エラーの種類によってステータスコードを決定
           const statusCode = result.error?.type === 'EXTERNAL_SERVICE' ? 503 : 401;
-          
+
           return reply
             .code(statusCode)
             .header('content-type', 'application/problem+json')
             .send(problemDetails);
         }
 
-        request.log.info({
-          expiresIn: result.data.expiresIn,
-        }, 'Token refreshed successfully');
+        request.log.info(
+          {
+            expiresIn: result.data.expiresIn,
+          },
+          'Token refreshed successfully',
+        );
 
         // 成功レスポンス
         const response: RefreshTokenResponseType = {
@@ -135,10 +141,13 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
 
         return reply.send(response);
       } catch (error) {
-        request.log.error({
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-        }, 'Unexpected error during token refresh');
+        request.log.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+          'Unexpected error during token refresh',
+        );
 
         const problemDetails = toProblemDetails(
           {
@@ -146,7 +155,7 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
             message: 'An unexpected error occurred',
             type: 'EXTERNAL_SERVICE',
           },
-          request.url
+          request.url,
         );
 
         return reply
@@ -154,7 +163,7 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
           .header('content-type', 'application/problem+json')
           .send(problemDetails);
       }
-    }
+    },
   );
 };
 

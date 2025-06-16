@@ -85,7 +85,11 @@ export const FullWidth: Story = {
   args: {
     size: "full",
     title: "Full Width Modal",
-    children: <p>This modal takes up the full width of the viewport with some margin.</p>,
+    children: (
+      <p>
+        This modal takes up the full width of the viewport with some margin.
+      </p>
+    ),
   },
 };
 
@@ -156,27 +160,27 @@ export const LongContent: Story = {
     children: (
       <div className="prose prose-sm max-w-none">
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-          incididunt ut labore et dolore magna aliqua.
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua.
         </p>
         <h4 className="font-semibold mt-4 mb-2">1. Agreement to Terms</h4>
         <p>
-          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat.
+          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+          nisi ut aliquip ex ea commodo consequat.
         </p>
         <h4 className="font-semibold mt-4 mb-2">2. Use License</h4>
         <p>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore
-          eu fugiat nulla pariatur.
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+          dolore eu fugiat nulla pariatur.
         </p>
         <h4 className="font-semibold mt-4 mb-2">3. Disclaimer</h4>
         <p>
-          Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia
-          deserunt mollit anim id est laborum.
+          Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
+          officia deserunt mollit anim id est laborum.
         </p>
         <p>
-          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
-          doloremque laudantium.
+          Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+          accusantium doloremque laudantium.
         </p>
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline">Decline</Button>

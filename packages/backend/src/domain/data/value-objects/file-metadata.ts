@@ -104,15 +104,16 @@ export class FileMetadata {
     if (!this.path.equals(other.path)) {
       return false;
     }
-    
+
     // ETagがある場合はETagで比較
     if (this.etag && other.etag) {
       return this.etag === other.etag;
     }
-    
+
     // ETagがない場合はサイズと更新日時で比較
-    return this.size.equals(other.size) &&
-           this.lastModified.getTime() === other.lastModified.getTime();
+    return (
+      this.size.equals(other.size) && this.lastModified.getTime() === other.lastModified.getTime()
+    );
   }
 
   /**

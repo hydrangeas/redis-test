@@ -38,7 +38,7 @@ describe('Monitoring Plugin', () => {
 
     // Create Fastify instance
     fastify = Fastify({ logger: false });
-    
+
     // Register the monitoring plugin
     await fastify.register(monitoringPlugin);
   });
@@ -180,7 +180,7 @@ describe('Monitoring Plugin', () => {
             statusCode: 200,
             duration: expect.any(Number),
           }),
-        })
+        }),
       );
     });
 
@@ -205,7 +205,7 @@ describe('Monitoring Plugin', () => {
             id: 'test-user-id',
             tier: 'tier2',
           },
-        })
+        }),
       );
     });
 
@@ -231,7 +231,7 @@ describe('Monitoring Plugin', () => {
           response: expect.objectContaining({
             statusCode: 429,
           }),
-        })
+        }),
       );
     });
 
@@ -249,9 +249,9 @@ describe('Monitoring Plugin', () => {
 
       // Find the log entry with type 'http_request'
       const httpRequestCall = mockLogger.info.mock.calls.find(
-        call => call[0]?.type === 'http_request'
+        (call) => call[0]?.type === 'http_request',
       );
-      
+
       expect(httpRequestCall).toBeDefined();
       expect(httpRequestCall[0]).toMatchObject({
         type: 'http_request',
@@ -301,7 +301,7 @@ describe('Monitoring Plugin', () => {
             code: 'TEST_ERROR',
             statusCode: 500,
           }),
-        })
+        }),
       );
     });
 
@@ -335,7 +335,7 @@ describe('Monitoring Plugin', () => {
       // Health check should still return a response
       expect(response.statusCode).toBeGreaterThanOrEqual(200);
       expect(response.statusCode).toBeLessThan(600);
-      
+
       const health = response.json();
       expect(health).toHaveProperty('status');
       expect(health).toHaveProperty('checks');

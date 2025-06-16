@@ -6,7 +6,7 @@ import { Result } from '@/domain/errors';
 export class TimeRange {
   private constructor(
     private readonly _start: Date,
-    private readonly _end: Date
+    private readonly _end: Date,
   ) {
     Object.freeze(this);
   }
@@ -85,8 +85,12 @@ export class TimeRange {
    */
   static today(): TimeRange {
     const now = new Date();
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const start = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0),
+    );
+    const end = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999),
+    );
     const result = TimeRange.create(start, end);
     if (result.isFailure) {
       throw new Error(result.error);
@@ -159,8 +163,10 @@ export class TimeRange {
    */
   equals(other: TimeRange): boolean {
     if (!other) return false;
-    return this._start.getTime() === other._start.getTime() &&
-           this._end.getTime() === other._end.getTime();
+    return (
+      this._start.getTime() === other._start.getTime() &&
+      this._end.getTime() === other._end.getTime()
+    );
   }
 
   /**

@@ -4,16 +4,16 @@ export const developmentConfig = {
     logging: true,
     synchronize: true,
   },
-  
+
   cache: {
     ttl: 60, // 1分
     checkPeriod: 120, // 2分
   },
-  
+
   email: {
     transport: 'console', // コンソールに出力
   },
-  
+
   storage: {
     driver: 'local',
     path: './data',

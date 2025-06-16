@@ -7,7 +7,7 @@ export class UserLoggedOut extends DomainEvent {
     public readonly userId: string,
     public readonly reason: string,
     public readonly sessionId?: string,
-    public readonly allSessions: boolean = false
+    public readonly allSessions: boolean = false,
   ) {
     super(aggregateId, eventVersion);
     Object.freeze(this);

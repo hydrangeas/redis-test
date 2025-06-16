@@ -71,11 +71,14 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
       const dataPath = request.params['*'];
       const user = request.user!;
 
-      request.log.info({
-        userId: user.userId.value,
-        tier: user.tier.level,
-        path: dataPath,
-      }, 'Data access request received');
+      request.log.info(
+        {
+          userId: user.userId.value,
+          tier: user.tier.level,
+          path: dataPath,
+        },
+        'Data access request received',
+      );
 
       try {
         // ETag処理
@@ -93,7 +96,7 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
         if (!result.success) {
           const error = result.error!;
           const problemDetails = toProblemDetails(error, request.url);
-          
+
           // エラータイプに応じたステータスコード
           let statusCode = 500;
           if (error.type === 'NOT_FOUND') {
@@ -114,11 +117,14 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
             }
           }
 
-          request.log.warn({
-            error: error.code,
-            message: error.message,
-            statusCode,
-          }, 'Data access failed');
+          request.log.warn(
+            {
+              error: error.code,
+              message: error.message,
+              statusCode,
+            },
+            'Data access failed',
+          );
 
           return reply
             .code(statusCode)
@@ -155,21 +161,26 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
         reply.header('Last-Modified', data.lastModified.toUTCString());
         reply.header('Cache-Control', 'public, max-age=3600'); // 1時間キャッシュ
 
-        request.log.info({
-          userId: user.userId.value,
-          path: dataPath,
-          size: data.size,
-        }, 'Data access successful');
+        request.log.info(
+          {
+            userId: user.userId.value,
+            path: dataPath,
+            size: data.size,
+          },
+          'Data access successful',
+        );
 
         return reply.send(response);
-        
       } catch (error) {
-        request.log.error({
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          userId: user.userId.value,
-          path: dataPath,
-        }, 'Unexpected error during data access');
+        request.log.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+            userId: user.userId.value,
+            path: dataPath,
+          },
+          'Unexpected error during data access',
+        );
 
         const problemDetails = toProblemDetails(
           {
@@ -177,7 +188,7 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
             message: 'An unexpected error occurred while accessing data',
             type: 'INTERNAL',
           },
-          request.url
+          request.url,
         );
 
         return reply
@@ -185,7 +196,7 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
           .header('content-type', 'application/problem+json')
           .send(problemDetails);
       }
-    }
+    },
   );
 };
 

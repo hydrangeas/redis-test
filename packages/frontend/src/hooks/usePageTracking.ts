@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -13,18 +13,18 @@ export const usePageTracking = () => {
   useEffect(() => {
     // Google Analytics
     if (
-      import.meta.env.VITE_ENABLE_ANALYTICS === 'true' &&
-      typeof window.gtag === 'function' &&
+      import.meta.env.VITE_ENABLE_ANALYTICS === "true" &&
+      typeof window.gtag === "function" &&
       import.meta.env.VITE_GA_TRACKING_ID
     ) {
-      window.gtag('config', import.meta.env.VITE_GA_TRACKING_ID, {
+      window.gtag("config", import.meta.env.VITE_GA_TRACKING_ID, {
         page_path: location.pathname + location.search,
       });
     }
 
     // カスタムイベント
     window.dispatchEvent(
-      new CustomEvent('pageview', {
+      new CustomEvent("pageview", {
         detail: {
           path: location.pathname,
           search: location.search,

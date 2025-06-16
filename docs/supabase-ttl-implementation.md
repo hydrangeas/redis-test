@@ -5,9 +5,11 @@ Supabase でデータの有効期限（TTL）を実装する方法について�
 ## 1. pg_cron 拡張機能の利用
 
 ### 利用可能性
+
 Supabase の Hosted Platform は `pg_cron` 拡張機能をサポートしています。これは PostgreSQL 内で動作する cron ベースのジョブスケジューラで、定期的なメンテナンスタスクに最適です。
 
 ### 有効化方法
+
 ```sql
 -- ダッシュボードの Database ページで Extensions を選択し、pg_cron を有効化
 -- または SQL で直接有効化
@@ -17,6 +19,7 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 ### 実装例
 
 #### 基本的な定期削除
+
 ```sql
 -- 毎週土曜日の午前3:30（GMT）に1週間以上前のイベントを削除
 SELECT cron.schedule (
@@ -41,6 +44,7 @@ SELECT cron.schedule(
 ```
 
 #### ジョブの管理
+
 ```sql
 -- 登録されているジョブを確認
 SELECT * FROM cron.job;
@@ -50,6 +54,7 @@ SELECT cron.unschedule('daily-log-cleanup');
 ```
 
 ### pg_net との組み合わせ
+
 `pg_net` 拡張機能を使用すると、HTTP レスポンスのデータに TTL を設定できます：
 
 ```sql
@@ -62,6 +67,7 @@ ALTER DATABASE postgres SET pg_net.ttl = '24 hours';
 ### 基本的な実装
 
 #### 有効期限付きテーブルの作成
+
 ```sql
 -- 有効期限を持つコンテンツテーブル
 CREATE TABLE time_limited_content (
@@ -81,12 +87,13 @@ ON time_limited_content
 FOR SELECT
 TO authenticated
 USING (
-    user_id = auth.uid() 
+    user_id = auth.uid()
     AND expires_at > NOW()
 );
 ```
 
 #### サブスクリプションベースのアクセス制御
+
 ```sql
 -- プレミアムコンテンツテーブル
 CREATE TABLE premium_content (
@@ -106,15 +113,15 @@ CREATE TABLE subscriptions (
 ALTER TABLE premium_content ENABLE ROW LEVEL SECURITY;
 
 -- 有効なサブスクリプションを持つユーザーのみアクセス可能
-CREATE POLICY "access_during_valid_subscription" 
-ON premium_content 
-FOR SELECT 
-TO authenticated 
+CREATE POLICY "access_during_valid_subscription"
+ON premium_content
+FOR SELECT
+TO authenticated
 USING (
     EXISTS (
-        SELECT 1 
-        FROM subscriptions 
-        WHERE subscriptions.user_id = auth.uid() 
+        SELECT 1
+        FROM subscriptions
+        WHERE subscriptions.user_id = auth.uid()
         AND subscriptions.expires_at > NOW()
     )
 );
@@ -133,7 +140,7 @@ ON time_limited_content
 FOR SELECT
 TO authenticated
 USING (
-    user_id = auth.uid() 
+    user_id = auth.uid()
     AND expires_at > (SELECT NOW())
 );
 ```
@@ -144,29 +151,29 @@ USING (
 
 ```sql
 -- 古いレコードを削除するトリガー関数
-CREATE OR REPLACE FUNCTION delete_old_rows() 
-RETURNS TRIGGER 
-LANGUAGE plpgsql 
-AS $$ 
-DECLARE 
-    row_count INT; 
-BEGIN 
+CREATE OR REPLACE FUNCTION delete_old_rows()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    row_count INT;
+BEGIN
     -- 2日以上前のレコードを削除
-    DELETE FROM rate_limiter 
-    WHERE timestamp < CURRENT_TIMESTAMP - INTERVAL '2 days'; 
-    
-    IF found THEN 
-        GET DIAGNOSTICS row_count = ROW_COUNT; 
-        RAISE NOTICE 'Deleted % row(s) from rate_limiter', row_count; 
-    END IF; 
-    
-    RETURN NULL; 
-END; 
+    DELETE FROM rate_limiter
+    WHERE timestamp < CURRENT_TIMESTAMP - INTERVAL '2 days';
+
+    IF found THEN
+        GET DIAGNOSTICS row_count = ROW_COUNT;
+        RAISE NOTICE 'Deleted % row(s) from rate_limiter', row_count;
+    END IF;
+
+    RETURN NULL;
+END;
 $$;
 
 -- INSERT 時にトリガーを実行
-CREATE TRIGGER delete_old_rows_trigger 
-AFTER INSERT ON rate_limiter 
+CREATE TRIGGER delete_old_rows_trigger
+AFTER INSERT ON rate_limiter
 EXECUTE FUNCTION delete_old_rows();
 ```
 
@@ -181,10 +188,10 @@ CREATE TABLE logs (
 ) PARTITION BY RANGE (created_at);
 
 -- 月次パーティションの作成
-CREATE TABLE logs_2024_01 PARTITION OF logs 
+CREATE TABLE logs_2024_01 PARTITION OF logs
     FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
-    
-CREATE TABLE logs_2024_02 PARTITION OF logs 
+
+CREATE TABLE logs_2024_02 PARTITION OF logs
     FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
 
 -- 古いパーティションの削除（pg_cron で自動化可能）
@@ -197,10 +204,10 @@ SELECT cron.schedule(
         partition_name TEXT;
     BEGIN
         -- 3ヶ月以上前のパーティションを削除
-        FOR partition_name IN 
-            SELECT tablename 
-            FROM pg_tables 
-            WHERE tablename LIKE 'logs_%' 
+        FOR partition_name IN
+            SELECT tablename
+            FROM pg_tables
+            WHERE tablename LIKE 'logs_%'
             AND tablename < 'logs_' || TO_CHAR(NOW() - INTERVAL '3 months', 'YYYY_MM')
         LOOP
             EXECUTE format('DROP TABLE IF EXISTS %I', partition_name);
@@ -217,8 +224,8 @@ SELECT cron.schedule(
 
 ```typescript
 // functions/data-cleanup/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 serve(async (req) => {
   try {
@@ -229,77 +236,70 @@ serve(async (req) => {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
         },
-      }
-    )
+      },
+    );
 
     // 30日以上前のログを削除
     const { data: deletedLogs, error: logsError } = await supabaseClient
       .from('logs')
       .delete()
       .lt('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .select()
+      .select();
 
     // 期限切れセッションを削除
     const { data: deletedSessions, error: sessionsError } = await supabaseClient
       .from('user_sessions')
       .delete()
       .lt('expires_at', new Date().toISOString())
-      .select()
+      .select();
 
     // 一時ファイルをクリーンアップ
-    const { data: deletedFiles, error: filesError } = await supabaseClient
-      .storage
+    const { data: deletedFiles, error: filesError } = await supabaseClient.storage
       .from('temp-files')
       .list()
       .then(async ({ data: files }) => {
-        const oldFiles = files?.filter(file => {
-          const uploadTime = new Date(file.created_at)
-          return uploadTime < new Date(Date.now() - 24 * 60 * 60 * 1000)
-        }) || []
-        
+        const oldFiles =
+          files?.filter((file) => {
+            const uploadTime = new Date(file.created_at);
+            return uploadTime < new Date(Date.now() - 24 * 60 * 60 * 1000);
+          }) || [];
+
         if (oldFiles.length > 0) {
-          const filePaths = oldFiles.map(f => f.name)
-          return await supabaseClient.storage
-            .from('temp-files')
-            .remove(filePaths)
+          const filePaths = oldFiles.map((f) => f.name);
+          return await supabaseClient.storage.from('temp-files').remove(filePaths);
         }
-        return { data: [] }
-      })
+        return { data: [] };
+      });
 
     // 統計情報を記録
     const stats = {
       logs_deleted: deletedLogs?.length || 0,
       sessions_deleted: deletedSessions?.length || 0,
       files_deleted: deletedFiles?.data?.length || 0,
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    };
 
-    await supabaseClient
-      .from('cleanup_history')
-      .insert(stats)
+    await supabaseClient.from('cleanup_history').insert(stats);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         stats,
-        message: 'Data cleanup completed successfully'
+        message: 'Data cleanup completed successfully',
       }),
-      { 
+      {
         headers: { 'Content-Type': 'application/json' },
-        status: 200
-      }
-    )
+        status: 200,
+      },
+    );
   } catch (error) {
-    console.error('Cleanup error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        headers: { 'Content-Type': 'application/json' },
-        status: 500
-      }
-    )
+    console.error('Cleanup error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 500,
+    });
   }
-})
+});
 ```
 
 ### Edge Function のスケジューリング
@@ -337,49 +337,49 @@ SELECT cron.schedule(
 
 ```typescript
 // Edge Function でのレート制限実装
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { Redis } from 'https://deno.land/x/upstash_redis@v1.22.1/mod.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { Redis } from 'https://deno.land/x/upstash_redis@v1.22.1/mod.ts';
 
 const redis = new Redis({
   url: Deno.env.get('UPSTASH_REDIS_REST_URL')!,
   token: Deno.env.get('UPSTASH_REDIS_REST_TOKEN')!,
-})
+});
 
 serve(async (req) => {
-  const userId = req.headers.get('x-user-id')
+  const userId = req.headers.get('x-user-id');
   if (!userId) {
-    return new Response('User ID required', { status: 400 })
+    return new Response('User ID required', { status: 400 });
   }
 
-  const key = `rate_limit:${userId}:${Math.floor(Date.now() / 60000)}`
-  const current = await redis.incr(key)
-  
+  const key = `rate_limit:${userId}:${Math.floor(Date.now() / 60000)}`;
+  const current = await redis.incr(key);
+
   // TTL を設定（1分）
   if (current === 1) {
-    await redis.expire(key, 60)
+    await redis.expire(key, 60);
   }
 
-  const limit = 60 // 1分あたり60リクエスト
-  
+  const limit = 60; // 1分あたり60リクエスト
+
   if (current > limit) {
-    return new Response('Rate limit exceeded', { 
+    return new Response('Rate limit exceeded', {
       status: 429,
       headers: {
         'X-RateLimit-Limit': limit.toString(),
         'X-RateLimit-Remaining': '0',
-        'X-RateLimit-Reset': new Date(Math.ceil(Date.now() / 60000) * 60000).toISOString()
-      }
-    })
+        'X-RateLimit-Reset': new Date(Math.ceil(Date.now() / 60000) * 60000).toISOString(),
+      },
+    });
   }
 
   // 通常の処理を続行
   return new Response('OK', {
     headers: {
       'X-RateLimit-Limit': limit.toString(),
-      'X-RateLimit-Remaining': (limit - current).toString()
-    }
-  })
-})
+      'X-RateLimit-Remaining': (limit - current).toString(),
+    },
+  });
+});
 ```
 
 ### PostgreSQL ベースのレート制限
@@ -409,18 +409,18 @@ DECLARE
     v_count INT;
 BEGIN
     v_window_start := DATE_TRUNC('minute', NOW());
-    
+
     -- 現在のウィンドウでのリクエスト数を取得または作成
     INSERT INTO rate_limits (user_id, window_start, request_count)
     VALUES (p_user_id, v_window_start, 1)
     ON CONFLICT (user_id, window_start)
     DO UPDATE SET request_count = rate_limits.request_count + 1
     RETURNING request_count INTO v_count;
-    
+
     -- 古いエントリを削除（非同期で実行されるよう pg_cron でスケジュール）
-    DELETE FROM rate_limits 
+    DELETE FROM rate_limits
     WHERE window_start < NOW() - INTERVAL '1 hour';
-    
+
     RETURN v_count <= p_limit;
 END;
 $$ LANGUAGE plpgsql;

@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 describe('InMemoryRateLimitLogRepository', () => {
   let repository: InMemoryRateLimitLogRepository;
-  
+
   // Test用の固定UUID
   const testUserIds = {
     user1: '550e8400-e29b-41d4-a716-446655440001',
@@ -23,18 +23,18 @@ describe('InMemoryRateLimitLogRepository', () => {
     userId?: string,
     endpointId: string = 'endpoint-456',
     requestCount: number = 1,
-    requestedAt: Date = new Date()
+    requestedAt: Date = new Date(),
   ): RateLimitLog => {
     const userIdResult = UserId.create(userId || uuidv4());
     if (userIdResult.isFailure) {
       throw new Error(`Failed to create UserId: ${userIdResult.error?.message}`);
     }
-    
+
     const endpointIdResult = EndpointId.create(endpointId);
     if (endpointIdResult.isFailure) {
       throw new Error(`Failed to create EndpointId: ${endpointIdResult.error?.message}`);
     }
-    
+
     const requestCountResult = RequestCount.create(requestCount);
     if (requestCountResult.isFailure) {
       throw new Error(`Failed to create RequestCount: ${requestCountResult.error?.message}`);
@@ -46,7 +46,7 @@ describe('InMemoryRateLimitLogRepository', () => {
       requestCount: requestCountResult.getValue()!,
       requestedAt,
     });
-    
+
     if (logResult.isFailure) {
       throw new Error(`Failed to create RateLimitLog: ${logResult.error?.message}`);
     }
@@ -113,7 +113,7 @@ describe('InMemoryRateLimitLogRepository', () => {
         testUserIds.user123,
         'endpoint-456',
         2,
-        new Date(Date.now() - 30 * 1000)
+        new Date(Date.now() - 30 * 1000),
       );
       await repository.save(recentLog);
 
@@ -122,7 +122,7 @@ describe('InMemoryRateLimitLogRepository', () => {
         testUserIds.user123,
         'endpoint-456',
         3,
-        new Date(Date.now() - 90 * 1000)
+        new Date(Date.now() - 90 * 1000),
       );
       await repository.save(oldLog);
 
@@ -135,9 +135,9 @@ describe('InMemoryRateLimitLogRepository', () => {
       expect(result.isSuccess).toBe(true);
       const logs = result.getValue()!;
       expect(logs).toHaveLength(2); // ウィンドウ内の2つのログのみ
-      expect(logs.some(log => log.requestCount.value === 1)).toBe(true);
-      expect(logs.some(log => log.requestCount.value === 2)).toBe(true);
-      expect(logs.some(log => log.requestCount.value === 3)).toBe(false); // 古いログは含まれない
+      expect(logs.some((log) => log.requestCount.value === 1)).toBe(true);
+      expect(logs.some((log) => log.requestCount.value === 2)).toBe(true);
+      expect(logs.some((log) => log.requestCount.value === 3)).toBe(false); // 古いログは含まれない
     });
   });
 
@@ -154,7 +154,7 @@ describe('InMemoryRateLimitLogRepository', () => {
       expect(result.isSuccess).toBe(true);
       const logs = result.getValue()!;
       expect(logs).toHaveLength(2);
-      logs.forEach(log => {
+      logs.forEach((log) => {
         expect(log.userId.equals(userId)).toBe(true);
       });
     });
@@ -165,10 +165,10 @@ describe('InMemoryRateLimitLogRepository', () => {
 
       await repository.save(createTestLog(testUserIds.user123, 'endpoint-1', 1, new Date()));
       await repository.save(
-        createTestLog(testUserIds.user123, 'endpoint-2', 2, new Date(Date.now() - 30 * 1000))
+        createTestLog(testUserIds.user123, 'endpoint-2', 2, new Date(Date.now() - 30 * 1000)),
       );
       await repository.save(
-        createTestLog(testUserIds.user123, 'endpoint-3', 3, new Date(Date.now() - 90 * 1000))
+        createTestLog(testUserIds.user123, 'endpoint-3', 3, new Date(Date.now() - 90 * 1000)),
       );
 
       const result = await repository.findByUser(userId, window);
@@ -192,7 +192,7 @@ describe('InMemoryRateLimitLogRepository', () => {
       expect(result.isSuccess).toBe(true);
       const logs = result.getValue()!;
       expect(logs).toHaveLength(2);
-      logs.forEach(log => {
+      logs.forEach((log) => {
         expect(log.endpointId.value).toBe('endpoint-456');
       });
     });
@@ -225,16 +225,14 @@ describe('InMemoryRateLimitLogRepository', () => {
       const window = new RateLimitWindow(60);
 
       // ウィンドウ内のログ
+      await repository.save(createTestLog(testUserIds.user123, 'endpoint-456', 5, new Date()));
       await repository.save(
-        createTestLog(testUserIds.user123, 'endpoint-456', 5, new Date())
+        createTestLog(testUserIds.user123, 'endpoint-456', 3, new Date(Date.now() - 30 * 1000)),
       );
-      await repository.save(
-        createTestLog(testUserIds.user123, 'endpoint-456', 3, new Date(Date.now() - 30 * 1000))
-      );
-      
+
       // ウィンドウ外のログ
       await repository.save(
-        createTestLog(testUserIds.user123, 'endpoint-456', 10, new Date(Date.now() - 90 * 1000))
+        createTestLog(testUserIds.user123, 'endpoint-456', 10, new Date(Date.now() - 90 * 1000)),
       );
 
       const result = await repository.countRequests(userId, endpointId, window);
@@ -259,11 +257,11 @@ describe('InMemoryRateLimitLogRepository', () => {
     it('should clear all logs', async () => {
       await repository.save(createTestLog(testUserIds.user1));
       await repository.save(createTestLog(testUserIds.user2));
-      
+
       expect(repository.getAll()).toHaveLength(2);
-      
+
       repository.clear();
-      
+
       expect(repository.getAll()).toHaveLength(0);
     });
   });

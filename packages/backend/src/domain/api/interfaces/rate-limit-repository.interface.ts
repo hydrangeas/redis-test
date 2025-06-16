@@ -18,7 +18,7 @@ export interface IRateLimitRepository {
    */
   findByUserAndEndpoint(
     userId: UserId,
-    endpointPath: EndpointPath
+    endpointPath: EndpointPath,
   ): Promise<Result<RateLimiting | null>>;
 
   /**

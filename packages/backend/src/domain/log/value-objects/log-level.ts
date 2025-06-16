@@ -14,7 +14,7 @@ export class LogLevel {
 
   private constructor(
     private readonly _level: keyof typeof LogLevel.LEVELS,
-    private readonly _value: number
+    private readonly _value: number,
   ) {
     Object.freeze(this);
   }
@@ -46,7 +46,7 @@ export class LogLevel {
    */
   static fromString(level: string): Result<LogLevel> {
     const upperLevel = level.toUpperCase();
-    
+
     switch (upperLevel) {
       case 'DEBUG':
         return Result.ok(LogLevel.DEBUG);

@@ -1,10 +1,10 @@
-import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
-import { afterEach, vi, beforeAll, afterAll } from 'vitest';
-import { server } from '@/mocks/server';
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi, beforeAll, afterAll } from "vitest";
+import { server } from "@/mocks/server";
 
 // Start MSW server before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 // Reset handlers after each test
 afterEach(() => {
@@ -16,7 +16,7 @@ afterEach(() => {
 afterAll(() => server.close());
 
 // Mock Supabase client
-vi.mock('@/lib/supabase', () => ({
+vi.mock("@/lib/supabase", () => ({
   supabase: {
     auth: {
       getUser: vi.fn(),
@@ -30,8 +30,8 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 // Mock react-router-dom navigation
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom') as any;
+vi.mock("react-router-dom", async () => {
+  const actual = (await vi.importActual("react-router-dom")) as any;
   return {
     ...actual,
     useNavigate: () => vi.fn(),
@@ -46,9 +46,9 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,

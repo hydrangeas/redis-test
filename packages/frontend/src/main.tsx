@@ -26,7 +26,7 @@ if (import.meta.env.PROD) {
 initializeResourceHints();
 
 // DOM読み込み完了後にリンクプリロードを設定
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   setupLinkPreloading();
 });
 

@@ -8,7 +8,7 @@ describe('ResourceMetadata', () => {
         size: 1024,
         lastModified: new Date('2025-01-23T10:00:00Z'),
         etag: '"abc123"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       });
 
       expect(metadata.size).toBe(1024);
@@ -21,7 +21,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata.contentType).toBe('application/json');
@@ -32,7 +32,7 @@ describe('ResourceMetadata', () => {
         new ResourceMetadata({
           size: -1,
           lastModified: new Date(),
-          etag: '"test"'
+          etag: '"test"',
         });
       }).toThrow('Size cannot be negative');
     });
@@ -44,7 +44,7 @@ describe('ResourceMetadata', () => {
         size: 2048,
         lastModified: new Date('2025-01-23T10:00:00Z'),
         etag: '"xyz789"',
-        contentType: 'text/csv'
+        contentType: 'text/csv',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -56,7 +56,7 @@ describe('ResourceMetadata', () => {
     it('should generate etag if not provided', () => {
       const result = ResourceMetadata.create({
         size: 1024,
-        lastModified: new Date('2025-01-23T10:00:00Z')
+        lastModified: new Date('2025-01-23T10:00:00Z'),
       });
 
       expect(result.isSuccess).toBe(true);
@@ -68,7 +68,7 @@ describe('ResourceMetadata', () => {
       const result = ResourceMetadata.create({
         size: 1024,
         lastModified: new Date(),
-        etag: 'abc123'
+        etag: 'abc123',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -79,7 +79,7 @@ describe('ResourceMetadata', () => {
       const result = ResourceMetadata.create({
         size: 1024,
         lastModified: '2025-01-23T10:00:00Z',
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(result.isSuccess).toBe(true);
@@ -90,7 +90,7 @@ describe('ResourceMetadata', () => {
       const result = ResourceMetadata.create({
         size: 1024,
         lastModified: 'invalid-date',
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(result.isFailure).toBe(true);
@@ -101,7 +101,7 @@ describe('ResourceMetadata', () => {
       const result = ResourceMetadata.create({
         size: null as any,
         lastModified: new Date(),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(result.isFailure).toBe(true);
@@ -112,7 +112,7 @@ describe('ResourceMetadata', () => {
       const result = ResourceMetadata.create({
         size: -100,
         lastModified: new Date(),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(result.isFailure).toBe(true);
@@ -126,7 +126,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: date,
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata.getLastModifiedString()).toBe('Thu, 23 Jan 2025 10:00:00 GMT');
@@ -139,7 +139,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified,
-        etag: '"test"'
+        etag: '"test"',
       });
 
       const now = new Date('2025-01-23T10:05:30Z');
@@ -150,7 +150,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(Date.now() - 60000), // 1 minute ago
-        etag: '"test"'
+        etag: '"test"',
       });
 
       const age = metadata.calculateAge();
@@ -164,7 +164,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(Date.now() - 3600000), // 1 hour ago
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata.isStale(1800)).toBe(true); // 30 minutes threshold
@@ -174,7 +174,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(Date.now() - 60000), // 1 minute ago
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata.isStale(300)).toBe(false); // 5 minutes threshold
@@ -188,14 +188,14 @@ describe('ResourceMetadata', () => {
         size: 1024,
         lastModified: date,
         etag: '"abc123"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       });
 
       const metadata2 = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(date),
         etag: '"abc123"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       });
 
       expect(metadata1.equals(metadata2)).toBe(true);
@@ -206,13 +206,13 @@ describe('ResourceMetadata', () => {
       const metadata1 = new ResourceMetadata({
         size: 1024,
         lastModified: date,
-        etag: '"test"'
+        etag: '"test"',
       });
 
       const metadata2 = new ResourceMetadata({
         size: 2048,
         lastModified: date,
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata1.equals(metadata2)).toBe(false);
@@ -222,13 +222,13 @@ describe('ResourceMetadata', () => {
       const metadata1 = new ResourceMetadata({
         size: 1024,
         lastModified: new Date('2025-01-23T10:00:00Z'),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       const metadata2 = new ResourceMetadata({
         size: 1024,
         lastModified: new Date('2025-01-23T11:00:00Z'),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata1.equals(metadata2)).toBe(false);
@@ -238,7 +238,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(metadata.equals(null as any)).toBe(false);
@@ -251,12 +251,12 @@ describe('ResourceMetadata', () => {
         size: 1024,
         lastModified: new Date('2025-01-23T10:00:00Z'),
         etag: '"abc123"',
-        contentType: 'application/json'
+        contentType: 'application/json',
       });
 
       const updated = original.update({
         size: 2048,
-        etag: '"xyz789"'
+        etag: '"xyz789"',
       });
 
       // Original unchanged
@@ -266,7 +266,7 @@ describe('ResourceMetadata', () => {
       // Updated values
       expect(updated.size).toBe(2048);
       expect(updated.etag).toBe('"xyz789"');
-      
+
       // Unchanged values preserved
       expect(updated.lastModified).toEqual(original.lastModified);
       expect(updated.contentType).toBe(original.contentType);
@@ -276,7 +276,7 @@ describe('ResourceMetadata', () => {
       const original = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       const updated = original.update({});
@@ -290,7 +290,7 @@ describe('ResourceMetadata', () => {
       const metadata = new ResourceMetadata({
         size: 1024,
         lastModified: new Date(),
-        etag: '"test"'
+        etag: '"test"',
       });
 
       expect(() => {

@@ -6,7 +6,7 @@ export class DataResourceNotFound extends DomainEvent {
     public readonly userId: string,
     public readonly requestedPath: string,
     public readonly requestTime: Date,
-    eventVersion?: number
+    eventVersion?: number,
   ) {
     super(aggregateId, eventVersion);
   }

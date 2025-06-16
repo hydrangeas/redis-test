@@ -1,5 +1,5 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
+import { useCallback } from "react";
 
 interface NavigationOptions {
   replace?: boolean;
@@ -16,7 +16,7 @@ export const useNavigation = () => {
       const { replace = false, state, preserveQuery = false } = options || {};
 
       let targetPath = path;
-      
+
       // クエリパラメータを保持
       if (preserveQuery && location.search) {
         targetPath = `${path}${location.search}`;

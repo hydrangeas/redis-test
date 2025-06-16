@@ -30,7 +30,7 @@ export interface APIAccessMetadata {
 export interface IAPIAccessControlUseCase {
   /**
    * APIアクセスの可否を総合的に判断し、アクセスログを記録
-   * 
+   *
    * @param user - 認証済みユーザー
    * @param endpoint - アクセス先のエンドポイントパス
    * @param method - HTTPメソッド
@@ -41,12 +41,12 @@ export interface IAPIAccessControlUseCase {
     user: AuthenticatedUser,
     endpoint: string,
     method: string,
-    metadata?: APIAccessMetadata
+    metadata?: APIAccessMetadata,
   ): Promise<Result<APIAccessDecision, DomainError>>;
 
   /**
    * 公開エンドポイントへのアクセスを記録
-   * 
+   *
    * @param endpoint - アクセス先のエンドポイントパス
    * @param method - HTTPメソッド
    * @param metadata - 追加のメタデータ
@@ -55,6 +55,6 @@ export interface IAPIAccessControlUseCase {
   recordPublicAccess(
     endpoint: string,
     method: string,
-    metadata?: APIAccessMetadata
+    metadata?: APIAccessMetadata,
   ): Promise<Result<void, DomainError>>;
 }

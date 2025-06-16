@@ -9,22 +9,19 @@ import {
   XIcon,
 } from "@/components/icons";
 
-const alertVariants = cva(
-  "flex p-4 rounded-lg",
-  {
-    variants: {
-      variant: {
-        info: "bg-blue-50 text-blue-800",
-        success: "bg-green-50 text-green-800",
-        warning: "bg-yellow-50 text-yellow-800",
-        error: "bg-red-50 text-red-800",
-      },
+const alertVariants = cva("flex p-4 rounded-lg", {
+  variants: {
+    variant: {
+      info: "bg-blue-50 text-blue-800",
+      success: "bg-green-50 text-green-800",
+      warning: "bg-yellow-50 text-yellow-800",
+      error: "bg-red-50 text-red-800",
     },
-    defaultVariants: {
-      variant: "info",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "info",
+  },
+});
 
 const iconMap = {
   info: InformationCircleIcon,
@@ -59,14 +56,12 @@ export const Alert: React.FC<AlertProps> = ({
       {...props}
     >
       <Icon className="flex-shrink-0 h-5 w-5 mr-3" aria-hidden="true" />
-      
+
       <div className="flex-1">
-        {title && (
-          <h3 className="text-sm font-medium mb-1">{title}</h3>
-        )}
+        {title && <h3 className="text-sm font-medium mb-1">{title}</h3>}
         <div className="text-sm">{children}</div>
       </div>
-      
+
       {dismissible && (
         <button
           onClick={onDismiss}

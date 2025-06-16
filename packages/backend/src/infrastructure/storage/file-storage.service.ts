@@ -28,10 +28,10 @@ export class FileStorageService implements IFileStorage {
     @inject(DI_TOKENS.Logger)
     private readonly logger: Logger,
     @inject(DI_TOKENS.DataDirectory)
-    dataDirectory: string
+    dataDirectory: string,
   ) {
     this.dataDirectory = path.resolve(dataDirectory);
-    
+
     // LRU cache configuration
     this.cache = new LRUCache<string, CacheEntry>({
       max: 100, // Maximum 100 files
@@ -80,18 +80,15 @@ export class FileStorageService implements IFileStorage {
 
       return Result.ok(content);
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        path: filePath,
-      }, 'Failed to read file');
-
-      return Result.fail(
-        new DomainError(
-          'FILE_READ_ERROR',
-          'Failed to read file',
-          'INTERNAL'
-        )
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          path: filePath,
+        },
+        'Failed to read file',
       );
+
+      return Result.fail(new DomainError('FILE_READ_ERROR', 'Failed to read file', 'INTERNAL'));
     }
   }
 
@@ -114,11 +111,7 @@ export class FileStorageService implements IFileStorage {
       const stats = await fs.stat(absolutePath);
       if (!stats.isFile()) {
         return Result.fail(
-          new DomainError(
-            'NOT_A_FILE',
-            'Path does not point to a file',
-            'NOT_FOUND'
-          )
+          new DomainError('NOT_A_FILE', 'Path does not point to a file', 'NOT_FOUND'),
         );
       }
 
@@ -134,27 +127,19 @@ export class FileStorageService implements IFileStorage {
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         return Result.fail(
-          new DomainError(
-            'FILE_NOT_FOUND',
-            `File not found: ${filePath}`,
-            'NOT_FOUND'
-          )
+          new DomainError('FILE_NOT_FOUND', `File not found: ${filePath}`, 'NOT_FOUND'),
         );
       }
 
       return Result.fail(
-        new DomainError(
-          'METADATA_READ_ERROR',
-          'Failed to read file metadata',
-          'INTERNAL'
-        )
+        new DomainError('METADATA_READ_ERROR', 'Failed to read file metadata', 'INTERNAL'),
       );
     }
   }
 
   async streamFile(
     filePath: string,
-    options?: { start?: number; end?: number }
+    options?: { start?: number; end?: number },
   ): Promise<Result<NodeJS.ReadableStream, DomainError>> {
     try {
       const validationResult = await this.validatePath(filePath);
@@ -163,7 +148,7 @@ export class FileStorageService implements IFileStorage {
       }
 
       const absolutePath = path.join(this.dataDirectory, filePath);
-      
+
       // Check file exists and is readable
       await fs.access(absolutePath, fsConstants.R_OK);
 
@@ -177,21 +162,11 @@ export class FileStorageService implements IFileStorage {
       return Result.ok(stream);
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        return Result.fail(
-          new DomainError(
-            'FILE_NOT_FOUND',
-            'File not found',
-            'NOT_FOUND'
-          )
-        );
+        return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', 'NOT_FOUND'));
       }
 
       return Result.fail(
-        new DomainError(
-          'STREAM_ERROR',
-          'Failed to create file stream',
-          'INTERNAL'
-        )
+        new DomainError('STREAM_ERROR', 'Failed to create file stream', 'INTERNAL'),
       );
     }
   }
@@ -204,43 +179,31 @@ export class FileStorageService implements IFileStorage {
       }
 
       const absolutePath = path.join(this.dataDirectory, directory);
-      
+
       // Check if directory exists
       const stats = await fs.stat(absolutePath);
       if (!stats.isDirectory()) {
         return Result.fail(
-          new DomainError(
-            'NOT_A_DIRECTORY',
-            'Path does not point to a directory',
-            'NOT_FOUND'
-          )
+          new DomainError('NOT_A_DIRECTORY', 'Path does not point to a directory', 'NOT_FOUND'),
         );
       }
 
       // Read directory recursively
       const files = await this.readDirectoryRecursive(absolutePath, directory);
-      
+
       // Filter only JSON files
-      const jsonFiles = files.filter(file => file.endsWith('.json'));
+      const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
       return Result.ok(jsonFiles);
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         return Result.fail(
-          new DomainError(
-            'DIRECTORY_NOT_FOUND',
-            `Directory not found: ${directory}`,
-            'NOT_FOUND'
-          )
+          new DomainError('DIRECTORY_NOT_FOUND', `Directory not found: ${directory}`, 'NOT_FOUND'),
         );
       }
 
       return Result.fail(
-        new DomainError(
-          'DIRECTORY_READ_ERROR',
-          'Failed to read directory',
-          'INTERNAL'
-        )
+        new DomainError('DIRECTORY_READ_ERROR', 'Failed to read directory', 'INTERNAL'),
       );
     }
   }
@@ -271,44 +234,33 @@ export class FileStorageService implements IFileStorage {
     // Basic validation
     if (!filePath || filePath.trim().length === 0) {
       return Result.fail(
-        new DomainError(
-          'INVALID_PATH',
-          'File path cannot be empty',
-          'VALIDATION'
-        )
+        new DomainError('INVALID_PATH', 'File path cannot be empty', 'VALIDATION'),
       );
     }
 
     // Prevent path traversal attacks
     const normalizedPath = path.normalize(filePath);
     const absolutePath = path.resolve(this.dataDirectory, normalizedPath);
-    
-    if (!absolutePath.startsWith(this.dataDirectory)) {
-      this.logger.warn({
-        requestedPath: filePath,
-        normalizedPath,
-        absolutePath,
-        dataDirectory: this.dataDirectory,
-      }, 'Path traversal attempt detected');
 
-      return Result.fail(
-        new DomainError(
-          'PATH_TRAVERSAL',
-          'Invalid file path',
-          'SECURITY'
-        )
+    if (!absolutePath.startsWith(this.dataDirectory)) {
+      this.logger.warn(
+        {
+          requestedPath: filePath,
+          normalizedPath,
+          absolutePath,
+          dataDirectory: this.dataDirectory,
+        },
+        'Path traversal attempt detected',
       );
+
+      return Result.fail(new DomainError('PATH_TRAVERSAL', 'Invalid file path', 'SECURITY'));
     }
 
     // Check for dangerous characters
     const dangerousChars = /[<>:"|?*\x00-\x1f\x80-\x9f]/;
     if (dangerousChars.test(filePath)) {
       return Result.fail(
-        new DomainError(
-          'INVALID_CHARACTERS',
-          'Path contains invalid characters',
-          'VALIDATION'
-        )
+        new DomainError('INVALID_CHARACTERS', 'Path contains invalid characters', 'VALIDATION'),
       );
     }
 
@@ -316,7 +268,7 @@ export class FileStorageService implements IFileStorage {
   }
 
   private async readFileFromDisk(
-    absolutePath: string
+    absolutePath: string,
   ): Promise<Result<{ content: any; metadata: FileMetadata }, DomainError>> {
     try {
       const [content, stats] = await Promise.all([
@@ -330,11 +282,7 @@ export class FileStorageService implements IFileStorage {
         jsonData = JSON.parse(content);
       } catch (error) {
         return Result.fail(
-          new DomainError(
-            'INVALID_JSON',
-            'File contains invalid JSON',
-            'DATA_ERROR'
-          )
+          new DomainError('INVALID_JSON', 'File contains invalid JSON', 'DATA_ERROR'),
         );
       }
 
@@ -349,13 +297,7 @@ export class FileStorageService implements IFileStorage {
       return Result.ok({ content: jsonData, metadata });
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        return Result.fail(
-          new DomainError(
-            'FILE_NOT_FOUND',
-            'File not found',
-            'NOT_FOUND'
-          )
-        );
+        return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', 'NOT_FOUND'));
       }
 
       throw error;
@@ -364,7 +306,7 @@ export class FileStorageService implements IFileStorage {
 
   private async readDirectoryRecursive(
     absolutePath: string,
-    relativePath: string
+    relativePath: string,
   ): Promise<string[]> {
     const entries = await fs.readdir(absolutePath, { withFileTypes: true });
     const files: string[] = [];

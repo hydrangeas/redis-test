@@ -11,7 +11,7 @@ export enum ActionType {
   TOKEN_REFRESH = 'TOKEN_REFRESH',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   TIER_UPGRADE = 'TIER_UPGRADE',
-  
+
   // API関連
   API_ACCESS = 'API_ACCESS',
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
@@ -32,7 +32,7 @@ export class Action {
 
   private constructor(
     private readonly _type: ActionType,
-    private readonly _metadata?: Record<string, any>
+    private readonly _metadata?: Record<string, any>,
   ) {
     Object.freeze(this);
     if (this._metadata) {
@@ -152,8 +152,10 @@ export class Action {
    */
   equals(other: Action): boolean {
     if (!other) return false;
-    return this._type === other._type &&
-      JSON.stringify(this._metadata) === JSON.stringify(other._metadata);
+    return (
+      this._type === other._type &&
+      JSON.stringify(this._metadata) === JSON.stringify(other._metadata)
+    );
   }
 
   /**

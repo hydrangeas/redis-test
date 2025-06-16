@@ -19,11 +19,7 @@ export class AuthLogId extends ValueObject<AuthLogIdProps> {
   public static create(id: string): Result<AuthLogId> {
     if (!id || id.trim().length === 0) {
       return Result.fail(
-        new DomainError(
-          'INVALID_AUTH_LOG_ID',
-          'Auth Log ID cannot be empty',
-          ErrorType.VALIDATION
-        )
+        new DomainError('INVALID_AUTH_LOG_ID', 'Auth Log ID cannot be empty', ErrorType.VALIDATION),
       );
     }
 

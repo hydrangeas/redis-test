@@ -44,7 +44,8 @@ async function testSupabaseConnection() {
 
     // Test database connection (public schema)
     const { error: dbError } = await anonClient.from('_test_connection').select('*').limit(1);
-    if (dbError && dbError.code !== '42P01') { // 42P01 = table does not exist
+    if (dbError && dbError.code !== '42P01') {
+      // 42P01 = table does not exist
       console.error('❌ Database connection error:', dbError.message);
     } else {
       console.log('✅ Database is accessible');
@@ -97,7 +98,7 @@ async function testSupabaseConnection() {
   }
 
   console.log('\n✨ Supabase connection test completed!');
-  
+
   // Test OAuth providers configuration
   console.log('\n🔑 OAuth Providers Configuration:');
   const googleClientId = process.env.SUPABASE_AUTH_GOOGLE_CLIENT_ID;

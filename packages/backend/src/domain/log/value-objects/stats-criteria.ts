@@ -9,7 +9,7 @@ export class StatsCriteria {
     private readonly _timeRange: TimeRange,
     private readonly _groupBy?: string,
     private readonly _filters?: Map<string, any>,
-    private readonly _metrics?: string[]
+    private readonly _metrics?: string[],
   ) {
     Object.freeze(this);
     if (this._filters) {
@@ -90,11 +90,9 @@ export class StatsCriteria {
         'p95ResponseTime',
         'p99ResponseTime',
       ];
-      const invalidMetrics = metrics.filter(m => !validMetrics.includes(m));
+      const invalidMetrics = metrics.filter((m) => !validMetrics.includes(m));
       if (invalidMetrics.length > 0) {
-        return Result.fail<StatsCriteria>(
-          `無効なメトリクス: ${invalidMetrics.join(', ')}`
-        );
+        return Result.fail<StatsCriteria>(`無効なメトリクス: ${invalidMetrics.join(', ')}`);
       }
     }
 
@@ -140,13 +138,8 @@ export class StatsCriteria {
   withFilter(key: string, value: any): StatsCriteria {
     const newFilters = new Map(this._filters || []);
     newFilters.set(key, value);
-    
-    return new StatsCriteria(
-      this._timeRange,
-      this._groupBy,
-      newFilters,
-      this._metrics
-    );
+
+    return new StatsCriteria(this._timeRange, this._groupBy, newFilters, this._metrics);
   }
 
   /**
@@ -166,13 +159,13 @@ export class StatsCriteria {
    */
   equals(other: StatsCriteria): boolean {
     if (!other) return false;
-    
+
     // 時間範囲の比較
     if (!this._timeRange.equals(other._timeRange)) return false;
-    
+
     // グループ化キーの比較
     if (this._groupBy !== other._groupBy) return false;
-    
+
     // フィルターの比較
     const thisFilters = this._filters || new Map();
     const otherFilters = other._filters || new Map();
@@ -182,12 +175,12 @@ export class StatsCriteria {
         return false;
       }
     }
-    
+
     // メトリクスの比較
     const thisMetrics = this._metrics || [];
     const otherMetrics = other._metrics || [];
     if (thisMetrics.length !== otherMetrics.length) return false;
-    return thisMetrics.every(m => otherMetrics.includes(m));
+    return thisMetrics.every((m) => otherMetrics.includes(m));
   }
 
   /**
@@ -202,12 +195,14 @@ export class StatsCriteria {
     return {
       timeRange: this._timeRange.toJSON(),
       ...(this._groupBy && { groupBy: this._groupBy }),
-      ...(this._filters && this._filters.size > 0 && {
-        filters: Object.fromEntries(this._filters),
-      }),
-      ...(this._metrics && this._metrics.length > 0 && {
-        metrics: this._metrics,
-      }),
+      ...(this._filters &&
+        this._filters.size > 0 && {
+          filters: Object.fromEntries(this._filters),
+        }),
+      ...(this._metrics &&
+        this._metrics.length > 0 && {
+          metrics: this._metrics,
+        }),
     };
   }
 }

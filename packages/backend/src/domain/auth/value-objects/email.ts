@@ -10,7 +10,8 @@ interface EmailProps {
  * メールアドレスバリューオブジェクト
  */
 export class Email extends ValueObject<EmailProps> {
-  private static readonly EMAIL_REGEX = /^[a-zA-Z0-9]+([._+-]?[a-zA-Z0-9]+)*@[a-zA-Z0-9]+([.-]?[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
+  private static readonly EMAIL_REGEX =
+    /^[a-zA-Z0-9]+([._+-]?[a-zA-Z0-9]+)*@[a-zA-Z0-9]+([.-]?[a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
   private static readonly MAX_LENGTH = 255;
 
   get value(): string {
@@ -24,22 +25,14 @@ export class Email extends ValueObject<EmailProps> {
     // null/undefined チェック
     if (email === null || email === undefined) {
       return Result.fail(
-        new DomainError(
-          'EMAIL_REQUIRED',
-          'Email is required',
-          ErrorType.VALIDATION
-        )
+        new DomainError('EMAIL_REQUIRED', 'Email is required', ErrorType.VALIDATION),
       );
     }
 
     // 文字列型チェック
     if (typeof email !== 'string') {
       return Result.fail(
-        new DomainError(
-          'EMAIL_INVALID_TYPE',
-          'Email must be a string',
-          ErrorType.VALIDATION
-        )
+        new DomainError('EMAIL_INVALID_TYPE', 'Email must be a string', ErrorType.VALIDATION),
       );
     }
 
@@ -49,11 +42,7 @@ export class Email extends ValueObject<EmailProps> {
     // 空文字チェック
     if (trimmedEmail.length === 0) {
       return Result.fail(
-        new DomainError(
-          'EMAIL_EMPTY',
-          'Email cannot be empty',
-          ErrorType.VALIDATION
-        )
+        new DomainError('EMAIL_EMPTY', 'Email cannot be empty', ErrorType.VALIDATION),
       );
     }
 
@@ -63,19 +52,15 @@ export class Email extends ValueObject<EmailProps> {
         new DomainError(
           'EMAIL_TOO_LONG',
           `Email must be ${Email.MAX_LENGTH} characters or less`,
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
     // フォーマットチェック
     if (!Email.EMAIL_REGEX.test(trimmedEmail)) {
       return Result.fail(
-        new DomainError(
-          'EMAIL_INVALID_FORMAT',
-          'Email format is invalid',
-          ErrorType.VALIDATION
-        )
+        new DomainError('EMAIL_INVALID_FORMAT', 'Email format is invalid', ErrorType.VALIDATION),
       );
     }
 

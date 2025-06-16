@@ -11,32 +11,32 @@ export {
   Injectable,
   Singleton,
   Scoped,
-  
+
   // Injection decorators
   Inject,
   InjectLogger,
   InjectEnvConfig,
   InjectEventBus,
   InjectSupabaseClient,
-  
+
   // Repository injectors
   InjectUserRepository,
   InjectAuthLogRepository,
   InjectAPILogRepository,
   InjectRateLimitRepository,
   InjectOpenDataRepository,
-  
+
   // Service injectors
   InjectAuthenticationService,
   InjectRateLimitService,
   InjectDataAccessService,
   InjectJWTService,
-  
+
   // Use case injectors
   InjectAuthenticationUseCase,
   InjectDataAccessUseCase,
   InjectRateLimitUseCase,
-  
+
   // Utilities
   createInjectionDecorator,
   RegisterInterfaces,
@@ -73,7 +73,10 @@ export function isServiceRegistered(token: symbol): boolean {
 /**
  * Register a service in the container
  */
-export function registerService<T>(token: symbol, provider: { useClass?: any; useValue?: T; useFactory?: () => T }): void {
+export function registerService<T>(
+  token: symbol,
+  provider: { useClass?: any; useValue?: T; useFactory?: () => T },
+): void {
   container.register(token, provider as any);
 }
 

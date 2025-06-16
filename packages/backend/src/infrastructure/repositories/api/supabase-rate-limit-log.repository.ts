@@ -29,7 +29,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
     @inject(DI_TOKENS.SupabaseClient)
     private readonly supabase: SupabaseClient,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async save(log: RateLimitLog): Promise<Result<void, DomainError>> {
@@ -43,15 +43,11 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         created_at: new Date().toISOString(),
       };
 
-      const { error } = await this.supabase
-        .from('rate_limit_logs')
-        .insert(record);
+      const { error } = await this.supabase.from('rate_limit_logs').insert(record);
 
       if (error) {
         this.logger.error({ error, log: record }, 'Failed to save rate limit log');
-        return Result.fail(
-          DomainError.unexpected('SAVE_FAILED', 'Failed to save rate limit log')
-        );
+        return Result.fail(DomainError.unexpected('SAVE_FAILED', 'Failed to save rate limit log'));
       }
 
       this.logger.debug({ logId: log.id.value }, 'Rate limit log saved');
@@ -62,8 +58,8 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'SAVE_FAILED',
           'Failed to save rate limit log',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -74,7 +70,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         return Result.ok();
       }
 
-      const records: RateLimitLogRecord[] = logs.map(log => ({
+      const records: RateLimitLogRecord[] = logs.map((log) => ({
         id: log.id.value,
         user_id: log.userId.value,
         endpoint_id: log.endpointId.value,
@@ -83,14 +79,12 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         created_at: new Date().toISOString(),
       }));
 
-      const { error } = await this.supabase
-        .from('rate_limit_logs')
-        .insert(records);
+      const { error } = await this.supabase.from('rate_limit_logs').insert(records);
 
       if (error) {
         this.logger.error({ error, count: logs.length }, 'Failed to save rate limit logs');
         return Result.fail(
-          DomainError.unexpected('SAVE_MANY_FAILED', 'Failed to save rate limit logs')
+          DomainError.unexpected('SAVE_MANY_FAILED', 'Failed to save rate limit logs'),
         );
       }
 
@@ -102,8 +96,8 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'SAVE_MANY_FAILED',
           'Failed to save rate limit logs',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -111,7 +105,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
   async findByUserAndEndpoint(
     userId: UserId,
     endpointId: EndpointId,
-    window: RateLimitWindow
+    window: RateLimitWindow,
   ): Promise<Result<RateLimitLog[], DomainError>> {
     try {
       const now = new Date();
@@ -128,9 +122,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
 
       if (error) {
         this.logger.error({ error }, 'Failed to find rate limit logs');
-        return Result.fail(
-          DomainError.unexpected('FIND_FAILED', 'Failed to find rate limit logs')
-        );
+        return Result.fail(DomainError.unexpected('FIND_FAILED', 'Failed to find rate limit logs'));
       }
 
       const logs = await this.recordsToLogs(data || []);
@@ -141,21 +133,18 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'FIND_FAILED',
           'Failed to find rate limit logs',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
 
   async findByUser(
     userId: UserId,
-    window?: RateLimitWindow
+    window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[], DomainError>> {
     try {
-      let query = this.supabase
-        .from('rate_limit_logs')
-        .select('*')
-        .eq('user_id', userId.value);
+      let query = this.supabase.from('rate_limit_logs').select('*').eq('user_id', userId.value);
 
       if (window) {
         const now = new Date();
@@ -170,7 +159,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
       if (error) {
         this.logger.error({ error }, 'Failed to find user rate limit logs');
         return Result.fail(
-          DomainError.unexpected('FIND_BY_USER_FAILED', 'Failed to find user logs')
+          DomainError.unexpected('FIND_BY_USER_FAILED', 'Failed to find user logs'),
         );
       }
 
@@ -182,15 +171,15 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'FIND_BY_USER_FAILED',
           'Failed to find user logs',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
 
   async findByEndpoint(
     endpointId: EndpointId,
-    window?: RateLimitWindow
+    window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[], DomainError>> {
     try {
       let query = this.supabase
@@ -211,7 +200,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
       if (error) {
         this.logger.error({ error }, 'Failed to find endpoint rate limit logs');
         return Result.fail(
-          DomainError.unexpected('FIND_BY_ENDPOINT_FAILED', 'Failed to find endpoint logs')
+          DomainError.unexpected('FIND_BY_ENDPOINT_FAILED', 'Failed to find endpoint logs'),
         );
       }
 
@@ -223,8 +212,8 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'FIND_BY_ENDPOINT_FAILED',
           'Failed to find endpoint logs',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -239,9 +228,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
 
       if (countError) {
         this.logger.error({ error: countError }, 'Failed to count old logs');
-        return Result.fail(
-          DomainError.unexpected('COUNT_FAILED', 'Failed to count old logs')
-        );
+        return Result.fail(DomainError.unexpected('COUNT_FAILED', 'Failed to count old logs'));
       }
 
       // 削除を実行
@@ -252,15 +239,13 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
 
       if (deleteError) {
         this.logger.error({ error: deleteError }, 'Failed to delete old logs');
-        return Result.fail(
-          DomainError.unexpected('DELETE_FAILED', 'Failed to delete old logs')
-        );
+        return Result.fail(DomainError.unexpected('DELETE_FAILED', 'Failed to delete old logs'));
       }
 
       const deletedCount = deleteCount || 0;
       this.logger.info(
         { deletedCount, beforeDate: beforeDate.toISOString() },
-        'Old rate limit logs deleted'
+        'Old rate limit logs deleted',
       );
 
       return Result.ok(deletedCount);
@@ -270,8 +255,8 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'DELETE_FAILED',
           'Failed to delete old logs',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -279,7 +264,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
   async countRequests(
     userId: UserId,
     endpointId: EndpointId,
-    window: RateLimitWindow
+    window: RateLimitWindow,
   ): Promise<Result<number, DomainError>> {
     try {
       const now = new Date();
@@ -295,15 +280,10 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
 
       if (error) {
         this.logger.error({ error }, 'Failed to count requests');
-        return Result.fail(
-          DomainError.unexpected('COUNT_FAILED', 'Failed to count requests')
-        );
+        return Result.fail(DomainError.unexpected('COUNT_FAILED', 'Failed to count requests'));
       }
 
-      const totalCount = (data || []).reduce(
-        (sum, record) => sum + record.request_count,
-        0
-      );
+      const totalCount = (data || []).reduce((sum, record) => sum + record.request_count, 0);
 
       return Result.ok(totalCount);
     } catch (error) {
@@ -312,8 +292,8 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         DomainError.unexpected(
           'COUNT_FAILED',
           'Failed to count requests',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
@@ -329,11 +309,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
       const endpointIdResult = EndpointId.create(record.endpoint_id);
       const requestCountResult = RequestCount.create(record.request_count);
 
-      if (
-        userIdResult.isSuccess &&
-        endpointIdResult.isSuccess &&
-        requestCountResult.isSuccess
-      ) {
+      if (userIdResult.isSuccess && endpointIdResult.isSuccess && requestCountResult.isSuccess) {
         const logResult = RateLimitLog.create({
           userId: userIdResult.getValue()!,
           endpointId: endpointIdResult.getValue()!,

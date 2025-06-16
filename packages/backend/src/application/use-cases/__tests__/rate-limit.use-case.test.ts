@@ -62,13 +62,11 @@ describe('RateLimitUseCase', () => {
       const user = createTestUser(TierLevel.TIER1, 10); // 10回/分の制限
       const endpoint = '/api/data/test.json';
       const method = 'GET';
-      
+
       (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockResolvedValue(
-        Result.ok(5) // 現在5回使用済み
+        Result.ok(5), // 現在5回使用済み
       );
-      (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(
-        Result.ok()
-      );
+      (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
 
       // Act
       const result = await useCase.checkAndRecordAccess(user, endpoint, method);
@@ -85,7 +83,7 @@ describe('RateLimitUseCase', () => {
       expect(mockRateLimitRepository.countInWindow).toHaveBeenCalledWith(
         user.userId,
         expect.any(Date),
-        expect.any(Date)
+        expect.any(Date),
       );
       expect(mockRateLimitRepository.save).toHaveBeenCalled();
 
@@ -93,7 +91,7 @@ describe('RateLimitUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           getEventName: expect.any(Function),
-        })
+        }),
       );
       const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
       expect(event.getEventName()).toBe('APIAccessRecorded');
@@ -104,9 +102,9 @@ describe('RateLimitUseCase', () => {
       const user = createTestUser(TierLevel.TIER1, 10); // 10回/分の制限
       const endpoint = '/api/data/test.json';
       const method = 'GET';
-      
+
       (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockResolvedValue(
-        Result.ok(10) // すでに10回使用済み（制限値に到達）
+        Result.ok(10), // すでに10回使用済み（制限値に到達）
       );
 
       // Act
@@ -128,7 +126,7 @@ describe('RateLimitUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           getEventName: expect.any(Function),
-        })
+        }),
       );
       const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
       expect(event.getEventName()).toBe('RateLimitExceeded');
@@ -139,9 +137,9 @@ describe('RateLimitUseCase', () => {
           currentCount: 10,
           limit: 10,
           endpoint,
-          method
+          method,
         }),
-        'Rate limit exceeded'
+        'Rate limit exceeded',
       );
     });
 
@@ -180,9 +178,9 @@ describe('RateLimitUseCase', () => {
       const user = createTestUser(TierLevel.TIER1);
       const endpoint = '/api/data/test.json';
       const method = 'GET';
-      
+
       (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockResolvedValue(
-        Result.fail(new DomainError('DB_ERROR', 'Database error', ErrorType.INTERNAL))
+        Result.fail(new DomainError('DB_ERROR', 'Database error', ErrorType.INTERNAL)),
       );
 
       // Act
@@ -200,12 +198,12 @@ describe('RateLimitUseCase', () => {
       const user = createTestUser(TierLevel.TIER1);
       const endpoint = '/api/data/test.json';
       const method = 'GET';
-      
+
       (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockResolvedValue(
-        Result.ok(5)
+        Result.ok(5),
       );
       (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(
-        Result.fail(new DomainError('SAVE_ERROR', 'Save failed', ErrorType.INTERNAL))
+        Result.fail(new DomainError('SAVE_ERROR', 'Save failed', ErrorType.INTERNAL)),
       );
 
       // Act
@@ -225,7 +223,9 @@ describe('RateLimitUseCase', () => {
       const method = 'GET';
       const unexpectedError = new Error('Unexpected error');
 
-      (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockRejectedValue(unexpectedError);
+      (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockRejectedValue(
+        unexpectedError,
+      );
 
       // Act
       const result = await useCase.checkAndRecordAccess(user, endpoint, method);
@@ -242,7 +242,7 @@ describe('RateLimitUseCase', () => {
           method,
           error: 'Unexpected error',
         }),
-        'Unexpected error in rate limit check'
+        'Unexpected error in rate limit check',
       );
     });
   });
@@ -251,9 +251,9 @@ describe('RateLimitUseCase', () => {
     it('should return user usage status', async () => {
       // Arrange
       const user = createTestUser(TierLevel.TIER2, 120); // 120回/分の制限
-      
+
       (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockResolvedValue(
-        Result.ok(45)
+        Result.ok(45),
       );
 
       // Act
@@ -266,7 +266,7 @@ describe('RateLimitUseCase', () => {
       expect(status.limit).toBe(120);
       expect(status.windowStart).toBeInstanceOf(Date);
       expect(status.windowEnd).toBeInstanceOf(Date);
-      
+
       // ウィンドウサイズの確認（60秒）
       const windowSize = status.windowEnd.getTime() - status.windowStart.getTime();
       expect(windowSize).toBe(120000); // 120秒 (現在から過去60秒 + 未来60秒)
@@ -275,9 +275,9 @@ describe('RateLimitUseCase', () => {
     it('should handle repository error', async () => {
       // Arrange
       const user = createTestUser(TierLevel.TIER1);
-      
+
       (mockRateLimitRepository.countInWindow as MockedFunction<any>).mockResolvedValue(
-        Result.fail(new DomainError('DB_ERROR', 'Database error', ErrorType.INTERNAL))
+        Result.fail(new DomainError('DB_ERROR', 'Database error', ErrorType.INTERNAL)),
       );
 
       // Act
@@ -293,9 +293,9 @@ describe('RateLimitUseCase', () => {
     it('should reset user rate limit', async () => {
       // Arrange
       const userId = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       (mockRateLimitRepository.deleteByUserId as MockedFunction<any>).mockResolvedValue(
-        Result.ok()
+        Result.ok(),
       );
 
       // Act
@@ -305,13 +305,10 @@ describe('RateLimitUseCase', () => {
       expect(result.isSuccess).toBe(true);
       expect(mockRateLimitRepository.deleteByUserId).toHaveBeenCalledWith(
         expect.objectContaining({
-          value: userId
-        })
+          value: userId,
+        }),
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        { userId },
-        'Rate limit reset successfully'
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith({ userId }, 'Rate limit reset successfully');
     });
 
     it('should handle invalid user ID', async () => {
@@ -329,9 +326,9 @@ describe('RateLimitUseCase', () => {
     it('should handle repository error', async () => {
       // Arrange
       const userId = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       (mockRateLimitRepository.deleteByUserId as MockedFunction<any>).mockResolvedValue(
-        Result.fail(new DomainError('DELETE_ERROR', 'Delete failed', ErrorType.INTERNAL))
+        Result.fail(new DomainError('DELETE_ERROR', 'Delete failed', ErrorType.INTERNAL)),
       );
 
       // Act

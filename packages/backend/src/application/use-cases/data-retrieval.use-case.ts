@@ -25,61 +25,59 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   /**
    * 指定されたパスのデータを取得
    */
-  async retrieveData(path: string, user: AuthenticatedUser): Promise<Result<{
-    content: any;
-    checksum: string;
-    lastModified: Date;
-  }, DomainError>> {
+  async retrieveData(
+    path: string,
+    user: AuthenticatedUser,
+  ): Promise<
+    Result<
+      {
+        content: any;
+        checksum: string;
+        lastModified: Date;
+      },
+      DomainError
+    >
+  > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
       if (dataPathResult.isFailure) {
         this.logger.warn({ path, userId: user.userId.value }, 'Invalid data path');
-        
+
         // データアクセス拒否イベントを発行
-        await this.eventBus.publish(new DataAccessDenied(
-          user.userId.value,
-          1,
-          path,
-          'INVALID_PATH',
-          new Date()
-        ));
-        
+        await this.eventBus.publish(
+          new DataAccessDenied(user.userId.value, 1, path, 'INVALID_PATH', new Date()),
+        );
+
         return Result.fail(dataPathResult.error!);
       }
 
       const dataPath = dataPathResult.getValue();
 
       // データアクセス要求イベントを発行
-      await this.eventBus.publish(new DataAccessRequested(
-        user.userId.value,
-        1,
-        dataPath.value,
-        new Date()
-      ));
+      await this.eventBus.publish(
+        new DataAccessRequested(user.userId.value, 1, dataPath.value, new Date()),
+      );
 
       // リポジトリからリソースを検索
       const resourceResult = await this.dataRepository.findByPath(dataPath);
       if (resourceResult.isFailure) {
         this.logger.error(
           { path: dataPath.value, error: resourceResult.error, userId: user.userId.value },
-          'Failed to find resource'
+          'Failed to find resource',
         );
 
         // リソースが見つからない場合のイベント発行
         if (resourceResult.error!.type === ErrorType.NOT_FOUND) {
-          await this.eventBus.publish(new DataResourceNotFound(
-            user.userId.value,
-            1,
-            dataPath.value,
-            new Date()
-          ));
+          await this.eventBus.publish(
+            new DataResourceNotFound(user.userId.value, 1, dataPath.value, new Date()),
+          );
         }
 
         return Result.fail(resourceResult.error!);
@@ -92,7 +90,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       if (contentResult.isFailure) {
         this.logger.error(
           { path: dataPath.value, error: contentResult.error, userId: user.userId.value },
-          'Failed to get resource content'
+          'Failed to get resource content',
         );
         return Result.fail(contentResult.error!);
       }
@@ -101,44 +99,47 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      await this.eventBus.publish(new DataRetrieved(
-        resource.id.value,
-        1,
-        resource.path.value,
-        resource.metadata.size,
-        resource.metadata.contentType,
-        new Date()
-      ));
+      await this.eventBus.publish(
+        new DataRetrieved(
+          resource.id.value,
+          1,
+          resource.path.value,
+          resource.metadata.size,
+          resource.metadata.contentType,
+          new Date(),
+        ),
+      );
 
       this.logger.info(
-        { 
-          path: dataPath.value, 
+        {
+          path: dataPath.value,
           size: resource.metadata.size,
           contentType: resource.metadata.contentType,
           userId: user.userId.value,
-          tier: user.tier.level
+          tier: user.tier.level,
         },
-        'Data retrieved successfully'
+        'Data retrieved successfully',
       );
 
       return Result.ok({
         content: contentResult.getValue(),
         checksum: resource.metadata.etag,
-        lastModified: resource.metadata.lastModified
+        lastModified: resource.metadata.lastModified,
       });
     } catch (error) {
       this.logger.error(
-        { path, error: error instanceof Error ? error.message : 'Unknown error', userId: user.userId.value },
-        'Unexpected error in data retrieval'
+        {
+          path,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: user.userId.value,
+        },
+        'Unexpected error in data retrieval',
       );
-      
+
       return Result.fail(
-        new DomainError(
-          'DATA_RETRIEVAL_ERROR',
-          'Failed to retrieve data',
-          ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+        new DomainError('DATA_RETRIEVAL_ERROR', 'Failed to retrieve data', ErrorType.INTERNAL, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
   }
@@ -146,12 +147,17 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   /**
    * 指定されたパスのデータメタデータを取得
    */
-  async retrieveMetadata(path: string): Promise<Result<{
-    size: number;
-    lastModified: Date;
-    etag: string;
-    contentType: string;
-  }, DomainError>> {
+  async retrieveMetadata(path: string): Promise<
+    Result<
+      {
+        size: number;
+        lastModified: Date;
+        etag: string;
+        contentType: string;
+      },
+      DomainError
+    >
+  > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
@@ -181,8 +187,8 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
           'METADATA_RETRIEVAL_ERROR',
           'Failed to retrieve metadata',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -190,11 +196,19 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   /**
    * 条件付きデータ取得（ETagベース）
    */
-  async retrieveDataWithETag(path: string, etag: string): Promise<Result<{
-    data?: any;
-    notModified: boolean;
-    newEtag?: string;
-  }, DomainError>> {
+  async retrieveDataWithETag(
+    path: string,
+    etag: string,
+  ): Promise<
+    Result<
+      {
+        data?: any;
+        notModified: boolean;
+        newEtag?: string;
+      },
+      DomainError
+    >
+  > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
@@ -214,11 +228,8 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
 
       // ETagが一致する場合は304 Not Modified
       if (resource.matchesEtag(etag)) {
-        this.logger.debug(
-          { path: dataPath.value, etag },
-          'Resource not modified (ETag match)'
-        );
-        
+        this.logger.debug({ path: dataPath.value, etag }, 'Resource not modified (ETag match)');
+
         return Result.ok({
           notModified: true,
           newEtag: resource.metadata.etag,
@@ -235,14 +246,16 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      await this.eventBus.publish(new DataRetrieved(
-        resource.id.value,
-        1,
-        resource.path.value,
-        resource.metadata.size,
-        resource.metadata.contentType,
-        new Date()
-      ));
+      await this.eventBus.publish(
+        new DataRetrieved(
+          resource.id.value,
+          1,
+          resource.path.value,
+          resource.metadata.size,
+          resource.metadata.contentType,
+          new Date(),
+        ),
+      );
 
       return Result.ok({
         data: contentResult.getValue(),
@@ -255,8 +268,8 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
           'CONDITIONAL_RETRIEVAL_ERROR',
           'Failed to retrieve data with ETag',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }
@@ -264,11 +277,19 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   /**
    * 条件付きデータ取得（Last-Modifiedベース）
    */
-  async retrieveDataIfModified(path: string, ifModifiedSince: Date): Promise<Result<{
-    data?: any;
-    notModified: boolean;
-    lastModified?: Date;
-  }, DomainError>> {
+  async retrieveDataIfModified(
+    path: string,
+    ifModifiedSince: Date,
+  ): Promise<
+    Result<
+      {
+        data?: any;
+        notModified: boolean;
+        lastModified?: Date;
+      },
+      DomainError
+    >
+  > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
@@ -290,9 +311,9 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       if (!resource.isModifiedSince(ifModifiedSince)) {
         this.logger.debug(
           { path: dataPath.value, ifModifiedSince },
-          'Resource not modified (Last-Modified check)'
+          'Resource not modified (Last-Modified check)',
         );
-        
+
         return Result.ok({
           notModified: true,
           lastModified: resource.metadata.lastModified,
@@ -309,14 +330,16 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      await this.eventBus.publish(new DataRetrieved(
-        resource.id.value,
-        1,
-        resource.path.value,
-        resource.metadata.size,
-        resource.metadata.contentType,
-        new Date()
-      ));
+      await this.eventBus.publish(
+        new DataRetrieved(
+          resource.id.value,
+          1,
+          resource.path.value,
+          resource.metadata.size,
+          resource.metadata.contentType,
+          new Date(),
+        ),
+      );
 
       return Result.ok({
         data: contentResult.getValue(),
@@ -329,8 +352,8 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
           'CONDITIONAL_RETRIEVAL_ERROR',
           'Failed to retrieve data with If-Modified-Since',
           ErrorType.INTERNAL,
-          { error: error instanceof Error ? error.message : 'Unknown error' }
-        )
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+        ),
       );
     }
   }

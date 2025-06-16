@@ -2,7 +2,10 @@ import 'reflect-metadata';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SecurityMonitorHandler } from '../security-monitor.handler';
 import { TokenRefreshed, AuthenticationFailed } from '@/domain/auth/events';
-import { ISecurityAlertService, SecurityAlert } from '@/infrastructure/services/security-alert.service';
+import {
+  ISecurityAlertService,
+  SecurityAlert,
+} from '@/infrastructure/services/security-alert.service';
 import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
@@ -52,11 +55,7 @@ describe('SecurityMonitorHandler', () => {
       silent: vi.fn(),
     } as unknown as jest.Mocked<Logger>;
 
-    handler = new SecurityMonitorHandler(
-      mockAlertService,
-      mockAuthLogRepository,
-      mockLogger
-    );
+    handler = new SecurityMonitorHandler(mockAlertService, mockAuthLogRepository, mockLogger);
   });
 
   describe('Token Refresh Monitoring', () => {
@@ -64,14 +63,14 @@ describe('SecurityMonitorHandler', () => {
       // 閾値を超えるリフレッシュログを作成
       const userId = '550e8400-e29b-41d4-a716-446655440001';
       const userIdObj = UserId.create(userId).getValue();
-      
+
       const logs: AuthLogEntry[] = [];
       for (let i = 0; i < 11; i++) {
         const authEvent = AuthEvent.tokenRefresh().getValue();
         const provider = Provider.create('JWT').getValue();
         const ipAddress = IPAddress.unknown().getValue();
         const userAgent = UserAgent.unknown().getValue();
-        
+
         const logEntry = AuthLogEntry.create({
           userId: userIdObj,
           event: authEvent,
@@ -81,7 +80,7 @@ describe('SecurityMonitorHandler', () => {
           timestamp: new Date(Date.now() - i * 60 * 1000), // 過去1時間以内
           result: AuthResult.SUCCESS,
         }).getValue();
-        
+
         logs.push(logEntry);
       }
 
@@ -95,7 +94,7 @@ describe('SecurityMonitorHandler', () => {
         'old-token-id',
         'new-token-id',
         11, // 11回目のリフレッシュ
-        'session-123'
+        'session-123',
       );
 
       // ハンドラーを実行
@@ -112,7 +111,7 @@ describe('SecurityMonitorHandler', () => {
             threshold: 10,
             sessionId: 'session-123',
           }),
-        })
+        }),
       );
 
       // ログが記録されたことを確認
@@ -121,13 +120,13 @@ describe('SecurityMonitorHandler', () => {
           userId: userId,
           refreshCount: 11,
         }),
-        'Suspicious token refresh pattern detected'
+        'Suspicious token refresh pattern detected',
       );
     });
 
     it('should not alert for normal token refresh patterns', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440002';
-      
+
       // 正常な範囲のリフレッシュログ
       mockAuthLogRepository.findByUserId.mockResolvedValue(Result.ok([]));
 
@@ -138,7 +137,7 @@ describe('SecurityMonitorHandler', () => {
         'old-token-id',
         'new-token-id',
         1,
-        'session-123'
+        'session-123',
       );
 
       await handler.handle(event);
@@ -153,14 +152,14 @@ describe('SecurityMonitorHandler', () => {
     it('should detect brute force attempts', async () => {
       const ipAddress = '192.168.1.100';
       const ipAddressObj = IPAddress.create(ipAddress).getValue();
-      
+
       // 閾値を超える失敗ログを作成
       const logs: AuthLogEntry[] = [];
       for (let i = 0; i < 5; i++) {
         const authEvent = AuthEvent.loginFailed('Invalid credentials').getValue();
         const provider = Provider.create('Google').getValue();
         const userAgent = UserAgent.create('Mozilla/5.0').getValue();
-        
+
         const logEntry = AuthLogEntry.create({
           event: authEvent,
           provider,
@@ -170,7 +169,7 @@ describe('SecurityMonitorHandler', () => {
           result: AuthResult.FAILED,
           errorMessage: 'Invalid credentials',
         }).getValue();
-        
+
         logs.push(logEntry);
       }
 
@@ -184,7 +183,7 @@ describe('SecurityMonitorHandler', () => {
         'Invalid credentials',
         ipAddress,
         'Mozilla/5.0',
-        'attempted-user-id'
+        'attempted-user-id',
       );
 
       // ハンドラーを実行
@@ -201,7 +200,7 @@ describe('SecurityMonitorHandler', () => {
             provider: 'Google',
             userAgent: 'Mozilla/5.0',
           }),
-        })
+        }),
       );
 
       // IPブロック推奨ログが記録されたことを確認
@@ -210,7 +209,7 @@ describe('SecurityMonitorHandler', () => {
           ipAddress: ipAddress,
           action: 'RECOMMEND_IP_BLOCK',
         }),
-        'Recommending IP block due to suspicious activity'
+        'Recommending IP block due to suspicious activity',
       );
     });
   });
@@ -218,10 +217,10 @@ describe('SecurityMonitorHandler', () => {
   describe('Error Handling', () => {
     it('should handle repository errors gracefully', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440003';
-      
+
       // リポジトリエラーをシミュレート
       mockAuthLogRepository.findByUserId.mockResolvedValue(
-        Result.fail(new DomainError('DB_ERROR', 'Database connection failed'))
+        Result.fail(new DomainError('DB_ERROR', 'Database connection failed')),
       );
 
       const event = new TokenRefreshed(
@@ -231,7 +230,7 @@ describe('SecurityMonitorHandler', () => {
         'old-token-id',
         'new-token-id',
         1,
-        'session-123'
+        'session-123',
       );
 
       await handler.handle(event);
@@ -244,7 +243,7 @@ describe('SecurityMonitorHandler', () => {
             eventName: 'TokenRefreshed',
           }),
         }),
-        'Failed to monitor token refresh'
+        'Failed to monitor token refresh',
       );
 
       // アラートは送信されないことを確認
@@ -261,7 +260,7 @@ describe('SecurityMonitorHandler', () => {
         'old-token-id',
         'new-token-id',
         1,
-        'session-123'
+        'session-123',
       );
 
       await handler.handle(event);
@@ -271,7 +270,7 @@ describe('SecurityMonitorHandler', () => {
         expect.objectContaining({
           error: expect.stringContaining('Invalid user ID'),
         }),
-        'Failed to monitor token refresh'
+        'Failed to monitor token refresh',
       );
     });
   });

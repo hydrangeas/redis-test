@@ -31,11 +31,12 @@ class JSONValidator {
 
   async validateFile(filePath) {
     const relativePath = path.relative(this.dataDir, filePath);
-    
+
     try {
       // ファイルサイズチェック
       const stats = fs.statSync(filePath);
-      if (stats.size > 10 * 1024 * 1024) { // 10MB
+      if (stats.size > 10 * 1024 * 1024) {
+        // 10MB
         this.warnings.push({
           file: relativePath,
           message: 'File size exceeds 10MB',
@@ -126,7 +127,7 @@ class JSONValidator {
 
 // 実行
 const validator = new JSONValidator(path.join(__dirname, '../data'));
-validator.validate().then(success => {
+validator.validate().then((success) => {
   process.exit(success ? 0 : 1);
 });
 

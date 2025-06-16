@@ -39,16 +39,19 @@ describe('SupabaseAuthLogRepository', () => {
 
   describe('save', () => {
     it('should save auth log entry successfully', async () => {
-      const logEntryResult = AuthLogEntry.create({
-        userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
-        event: new AuthEvent(EventType.LOGIN, 'User logged in'),
-        provider: Provider.google(),
-        ipAddress: IPAddress.create('192.168.1.1').getValue(),
-        userAgent: UserAgent.create('Mozilla/5.0').getValue(),
-        timestamp: new Date(),
-        result: AuthResult.SUCCESS
-      }, LogId.generate());
-      
+      const logEntryResult = AuthLogEntry.create(
+        {
+          userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
+          event: new AuthEvent(EventType.LOGIN, 'User logged in'),
+          provider: Provider.google(),
+          ipAddress: IPAddress.create('192.168.1.1').getValue(),
+          userAgent: UserAgent.create('Mozilla/5.0').getValue(),
+          timestamp: new Date(),
+          result: AuthResult.SUCCESS,
+        },
+        LogId.generate(),
+      );
+
       if (logEntryResult.isFailure) {
         throw new Error(`Failed to create log entry: ${logEntryResult.error.message}`);
       }
@@ -76,17 +79,20 @@ describe('SupabaseAuthLogRepository', () => {
     });
 
     it('should save auth log with error message for failed authentication', async () => {
-      const logEntryResult = AuthLogEntry.create({
-        userId: undefined,
-        event: new AuthEvent(EventType.LOGIN_FAILED, 'Invalid credentials'),
-        provider: Provider.email(),
-        ipAddress: IPAddress.create('192.168.1.1').getValue(),
-        userAgent: UserAgent.create('Mozilla/5.0').getValue(),
-        timestamp: new Date(),
-        result: AuthResult.FAILED,
-        errorMessage: 'Invalid credentials'
-      }, LogId.generate());
-      
+      const logEntryResult = AuthLogEntry.create(
+        {
+          userId: undefined,
+          event: new AuthEvent(EventType.LOGIN_FAILED, 'Invalid credentials'),
+          provider: Provider.email(),
+          ipAddress: IPAddress.create('192.168.1.1').getValue(),
+          userAgent: UserAgent.create('Mozilla/5.0').getValue(),
+          timestamp: new Date(),
+          result: AuthResult.FAILED,
+          errorMessage: 'Invalid credentials',
+        },
+        LogId.generate(),
+      );
+
       if (logEntryResult.isFailure) {
         throw new Error(`Failed to create log entry: ${logEntryResult.error.message}`);
       }
@@ -103,21 +109,24 @@ describe('SupabaseAuthLogRepository', () => {
           event_type: EventType.LOGIN_FAILED,
           result: AuthResult.FAILED,
           error_message: 'Invalid credentials',
-        })
+        }),
       );
     });
 
     it('should handle save error', async () => {
-      const logEntryResult = AuthLogEntry.create({
-        userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
-        event: new AuthEvent(EventType.LOGIN, 'User logged in'),
-        provider: Provider.google(),
-        ipAddress: IPAddress.create('192.168.1.1').getValue(),
-        userAgent: UserAgent.create('Mozilla/5.0').getValue(),
-        timestamp: new Date(),
-        result: AuthResult.SUCCESS
-      }, LogId.generate());
-      
+      const logEntryResult = AuthLogEntry.create(
+        {
+          userId: UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue(),
+          event: new AuthEvent(EventType.LOGIN, 'User logged in'),
+          provider: Provider.google(),
+          ipAddress: IPAddress.create('192.168.1.1').getValue(),
+          userAgent: UserAgent.create('Mozilla/5.0').getValue(),
+          timestamp: new Date(),
+          result: AuthResult.SUCCESS,
+        },
+        LogId.generate(),
+      );
+
       if (logEntryResult.isFailure) {
         throw new Error(`Failed to create log entry: ${logEntryResult.error.message}`);
       }
@@ -202,10 +211,7 @@ describe('SupabaseAuthLogRepository', () => {
 
     it('should filter by time range when provided', async () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440000').getValue();
-      const timeRangeResult = TimeRange.create(
-        new Date('2025-01-01'),
-        new Date('2025-01-31')
-      );
+      const timeRangeResult = TimeRange.create(new Date('2025-01-01'), new Date('2025-01-31'));
       if (timeRangeResult.isFailure) {
         throw new Error(`Failed to create TimeRange: ${timeRangeResult.error}`);
       }
@@ -285,10 +291,7 @@ describe('SupabaseAuthLogRepository', () => {
 
   describe('getStatistics', () => {
     it('should calculate statistics correctly', async () => {
-      const timeRangeResult = TimeRange.create(
-        new Date('2025-01-01'),
-        new Date('2025-01-31')
-      );
+      const timeRangeResult = TimeRange.create(new Date('2025-01-01'), new Date('2025-01-31'));
       if (timeRangeResult.isFailure) {
         throw new Error(`Failed to create TimeRange: ${timeRangeResult.error}`);
       }
@@ -357,7 +360,7 @@ describe('SupabaseAuthLogRepository', () => {
       // Mock count query chain: select() -> lt() -> resolves with count
       mockChain.select.mockReturnValueOnce(mockChain);
       mockChain.lt.mockResolvedValueOnce({ count: mockCount, error: null });
-      
+
       // Mock delete query chain: delete() -> lt() -> resolves
       mockChain.delete.mockReturnValueOnce(mockChain);
       mockChain.lt.mockResolvedValueOnce({ error: null });
@@ -372,7 +375,7 @@ describe('SupabaseAuthLogRepository', () => {
           deletedCount: mockCount,
           beforeDate: beforeDate.toISOString(),
         }),
-        'Old auth logs deleted'
+        'Old auth logs deleted',
       );
     });
 

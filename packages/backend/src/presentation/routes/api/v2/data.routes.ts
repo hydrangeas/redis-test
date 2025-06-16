@@ -18,7 +18,9 @@ const DataQueryParams = Type.Object({
 type DataQueryParamsType = Static<typeof DataQueryParams>;
 
 const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
-  const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(DI_TOKENS.DataRetrievalUseCase);
+  const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
+    DI_TOKENS.DataRetrievalUseCase,
+  );
 
   // v2のエンドポイント（拡張機能付き）
   fastify.get<{
@@ -37,14 +39,14 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
         if (result.isFailure) {
           const error = result.getError();
           const problemDetails = toProblemDetails(error, request.url);
-          
+
           let statusCode = 500;
           if (error.type === 'NOT_FOUND') {
             statusCode = 404;
           } else if (error.type === 'VALIDATION') {
             statusCode = 400;
           }
-          
+
           return reply.code(statusCode).send(problemDetails);
         }
 
@@ -53,7 +55,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
         // v2で追加されたフィルタリング処理（仮実装）
         if (filter && typeof processedContent === 'object' && Array.isArray(processedContent)) {
-          processedContent = processedContent.filter(item => {
+          processedContent = processedContent.filter((item) => {
             return Object.entries(filter).every(([key, value]) => {
               return item[key] === value;
             });
@@ -62,9 +64,9 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
         // フィールド選択
         if (fields && fields.length > 0 && Array.isArray(processedContent)) {
-          processedContent = processedContent.map(item => {
+          processedContent = processedContent.map((item) => {
             const filtered: any = {};
-            fields.forEach(field => {
+            fields.forEach((field) => {
               if (field in item) {
                 filtered[field] = item[field];
               }
@@ -87,7 +89,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
         // ページネーション
         let paginatedContent = processedContent;
         let totalCount = Array.isArray(processedContent) ? processedContent.length : 1;
-        
+
         if (Array.isArray(processedContent) && (limit || offset)) {
           const start = offset || 0;
           const end = limit ? start + limit : undefined;
@@ -97,7 +99,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
         // v2では拡張ヘッダーを含む
         reply.headers({
           'Cache-Control': 'public, max-age=3600',
-          'ETag': `"${data.checksum}"`,
+          ETag: `"${data.checksum}"`,
           'Last-Modified': data.lastModified.toUTCString(),
           'Content-Type': 'application/json',
           'X-Total-Count': totalCount.toString(),
@@ -125,7 +127,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
             message: 'An unexpected error occurred',
             type: 'INTERNAL' as const,
           },
-          request.url
+          request.url,
         );
 
         return reply.code(500).send(problemDetails);

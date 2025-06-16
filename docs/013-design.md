@@ -104,12 +104,14 @@
 
 認証・認可・ロギングなどの横断的関心事は、ドメインロジックから分離して設計します：
 
-1. **配置の原則**: 
+1. **配置の原則**:
+
    - 認証：アプリケーション層またはインフラ層
    - 認可：ビジネスルールに関わる場合はドメイン層、それ以外はアプリケーション層
    - ロギング・監査：インフラ層（AOP等を活用）
 
 2. **実装パターン**:
+
    - ミドルウェアパターン
    - デコレータパターン
    - アスペクト指向プログラミング（AOP）
@@ -138,7 +140,7 @@ classDiagram
     class 集約名 {
         <<Aggregate>>
     }
-    
+
     %% エンティティ
     class エンティティ名 {
         <<Entity>>
@@ -146,7 +148,7 @@ classDiagram
         +属性1 property1
         +振る舞い1()
     }
-    
+
     %% バリューオブジェクト
     class バリューオブジェクト名 {
         <<Value Object>>
@@ -155,14 +157,14 @@ classDiagram
         +equals()
         +hashCode()
     }
-    
+
     %% ドメインサービス
     class ドメインサービス名 {
         <<Domain Service>>
         +ビジネスロジック1()
         +ビジネスロジック2()
     }
-    
+
     %% リポジトリインターフェース
     class リポジトリ名 {
         <<Repository>>
@@ -170,14 +172,14 @@ classDiagram
         +findById(id)
         +findByCondition(condition)
     }
-    
+
     %% ファクトリ
     class ファクトリ名 {
         <<Factory>>
         +create(params)
         +reconstruct(data)
     }
-    
+
     %% 関係性
     集約名 *-- エンティティ名 : contains
     エンティティ名 *-- バリューオブジェクト名 : has
@@ -189,16 +191,19 @@ classDiagram
 ### ドメインモデルの説明
 
 1. **集約名**
+
    - 集約ルート：エンティティ名
    - 責務：〇〇に関する一貫性を保証
    - 不変条件：ビジネスルールの説明
 
 2. **エンティティ名**
+
    - 識別子：id（UUID/連番など）
    - ライフサイクル：作成→更新→削除
    - 主要な振る舞い：ビジネスロジックの説明
 
 3. **バリューオブジェクト名**
+
    - 不変性：作成後は変更不可
    - 等価性：全ての属性が同じ場合に等価
 
@@ -214,25 +219,25 @@ graph TB
         API[REST API]
         Web[Webページ]
     end
-    
+
     subgraph "アプリケーション層"
         AppService[アプリケーションサービス]
         UseCase[ユースケース]
     end
-    
+
     subgraph "ドメイン層"
         Entity[エンティティ]
         ValueObject[バリューオブジェクト]
         DomainService[ドメインサービス]
         Repository[リポジトリインターフェース]
     end
-    
+
     subgraph "インフラストラクチャ層"
         RepositoryImpl[リポジトリ実装]
         DB[(データベース)]
         ExternalAPI[外部API]
     end
-    
+
     %% 依存関係
     API --> AppService
     Web --> AppService
@@ -243,13 +248,13 @@ graph TB
     RepositoryImpl -.-> Repository
     RepositoryImpl --> DB
     RepositoryImpl --> ExternalAPI
-    
+
     %% スタイル
     classDef presentation fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef application fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef domain fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef infrastructure fill:#efebe9,stroke:#3e2723,stroke-width:2px
-    
+
     class API,Web presentation
     class AppService,UseCase application
     class Entity,ValueObject,DomainService,Repository domain
@@ -259,6 +264,7 @@ graph TB
 ### アーキテクチャの説明
 
 1. **依存関係の方向**
+
    - 上位層から下位層への依存のみ許可
    - ドメイン層は他の層に依存しない
    - インフラ層はドメイン層のインターフェースを実装（DIP）
@@ -277,20 +283,20 @@ graph LR
         ServiceA[公開ホストサービス]
         ModelA[ドメインモデル]
     end
-    
+
     subgraph "コンテキストB"
         ACLB[腐敗防止層]
         ModelB[ドメインモデル]
     end
-    
+
     subgraph "外部システム"
         ExtSystem[外部API]
     end
-    
+
     ServiceA --> ACLB
     ACLB --> ModelB
     ExtSystem --> ACLB
-    
+
     %% イベント駆動
     ModelA -.->|ドメインイベント| EventBus[イベントバス]
     EventBus -.->|イベント通知| ModelB
@@ -299,10 +305,12 @@ graph LR
 ### 統合パターンの説明
 
 1. **腐敗防止層（ACL）**
+
    - 外部モデルから内部モデルへの変換
    - 外部システムの変更から内部を保護
 
 2. **公開ホストサービス**
+
    - 標準化されたインターフェース
    - 複数のコンシューマーへの提供
 
@@ -312,7 +320,7 @@ graph LR
 
 ## シーケンス図 <〇〇処理>
 
-```mermaid
+````mermaid
 sequenceDiagram
     participant UI as プレゼンテーション層
     participant App as アプリケーション層
@@ -320,7 +328,7 @@ sequenceDiagram
     participant Repo as リポジトリ(Interface)
     participant Infra as インフラ層
     participant DB as データベース
-    
+
     Note over App,Infra: 初期化時：DIコンテナでリポジトリ実装を注入
     UI->>App: リクエスト
     App->>Domain: ビジネスロジック実行
@@ -347,11 +355,12 @@ sequenceDiagram
     %%      %% これは独立した行のコメントです
     %%      NodeA --> NodeB
     %%      ```
-```
+````
 
 ### シーケンスの説明
 
 1. **レイヤー間の責務分担**
+
    - プレゼンテーション層：リクエストの受付とレスポンスの返却
    - アプリケーション層：トランザクション管理とユースケースの調整、依存性の注入
    - ドメイン層：ビジネスロジックの実行
@@ -365,7 +374,7 @@ sequenceDiagram
 
 ## ステートマシン図 <エンティティ名>
 
-```mermaid
+````mermaid
 stateDiagram-v2
     [*] --> 下書き: 作成
     下書き --> 公開済み: 公開する
@@ -376,7 +385,7 @@ stateDiagram-v2
     アーカイブ --> 公開済み: 復元する
     アーカイブ --> 削除済み: 削除する
     削除済み --> [*]
-    
+
     %% 状態の説明
     下書き: 編集可能
     公開済み: 編集不可・閲覧可能
@@ -395,11 +404,12 @@ stateDiagram-v2
     %%      %% これは独立した行のコメントです
     %%      NodeA --> NodeB
     %%      ```
-```
+````
 
 ### 状態遷移の説明
 
 1. **状態の定義**
+
    - 下書き：初期作成時の状態、編集可能
    - 公開済み：外部に公開された状態、編集不可
    - アーカイブ：過去のデータとして保管、検索対象外
@@ -411,7 +421,7 @@ stateDiagram-v2
 
 ## クラス図 <〇〇コンテキスト>
 
-```mermaid
+````mermaid
 classDiagram
     %% ドメイン層
     class 集約ルート {
@@ -422,7 +432,7 @@ classDiagram
         +update()
         +delete()
     }
-    
+
     class バリューオブジェクト {
         <<Value Object>>
         -String value1
@@ -430,19 +440,19 @@ classDiagram
         +equals()
         +validate()
     }
-    
+
     class ドメインサービス {
         <<Domain Service>>
         +complexBusinessLogic()
     }
-    
+
     class リポジトリインターフェース {
         <<interface>>
         +save(aggregate)
         +findById(id)
         +findByCondition(criteria)
     }
-    
+
     %% アプリケーション層
     class アプリケーションサービス {
         <<Application Service>>
@@ -450,7 +460,7 @@ classDiagram
         -domainService
         +executeUseCase()
     }
-    
+
     %% インフラ層
     class リポジトリ実装 {
         <<Repository Implementation>>
@@ -459,7 +469,7 @@ classDiagram
         +findById(id)
         +findByCondition(criteria)
     }
-    
+
     %% 関係性
     集約ルート *-- バリューオブジェクト
     アプリケーションサービス ..> 集約ルート
@@ -480,11 +490,12 @@ classDiagram
     %%      %% これは独立した行のコメントです
     %%      NodeA --> NodeB
     %%      ```
-```
+````
 
 ### クラス設計の説明
 
 1. **ドメイン層のクラス**
+
    - 集約ルート：ビジネスロジックの中心、外部からのアクセスポイント
    - バリューオブジェクト：不変で値の組み合わせで等価性を判断
    - ドメインサービス：複数の集約にまたがるビジネスロジック
@@ -505,19 +516,19 @@ classDiagram
         +Guid aggregateId
         +int version
     }
-    
+
     class 具体的イベント {
         <<Domain Event>>
         +String プロパティ1
         +int プロパティ2
         +getEventName()
     }
-    
+
     class イベントハンドラ {
         <<interface>>
         +handle(event)
     }
-    
+
     ドメインイベント <|-- 具体的イベント
     イベントハンドラ ..> ドメインイベント
 ```
@@ -525,6 +536,7 @@ classDiagram
 ### イベント設計の説明
 
 1. **イベントの実装方針**
+
    - イベント名は過去形で命名（〇〇された、〇〇が発生した）
    - 不変オブジェクトとして実装
    - 必要最小限の情報のみを含める
@@ -544,13 +556,13 @@ classDiagram
         +String message
         +String code
     }
-    
+
     class ビジネスルール例外 {
         <<Domain Exception>>
         +String ruleDescription
         +Object violatedValue
     }
-    
+
     class Result~T~ {
         <<Value Object>>
         +bool isSuccess
@@ -559,14 +571,14 @@ classDiagram
         +static Success(value)
         +static Failure(error)
     }
-    
+
     class Error {
         <<Value Object>>
         +String code
         +String message
         +ErrorType type
     }
-    
+
     ドメイン例外 <|-- ビジネスルール例外
     Result~T~ *-- Error
 ```
@@ -574,6 +586,7 @@ classDiagram
 ### エラー処理の説明
 
 1. **例外の使用方針**
+
    - ドメイン不変条件の違反：例外をスロー
    - 検証エラー：Result型または通知パターンを使用
    - 外部システムエラー：アプリケーション層で処理
@@ -595,21 +608,21 @@ graph TB
         Log[ロギングAOP]
         Cache[キャッシュインターセプタ]
     end
-    
+
     subgraph "アプリケーション層"
         AppService[アプリケーションサービス]
     end
-    
+
     subgraph "ドメイン層"
         Domain[ドメインロジック]
     end
-    
+
     Auth --> AppService
     Authz --> AppService
     Log --> AppService
     Cache --> AppService
     AppService --> Domain
-    
+
     Note over Auth,Cache: インフラ層で実装
     Note over Domain: ビジネスロジックのみ
 ```
@@ -617,14 +630,17 @@ graph TB
 ### 横断的関心事の実装指針
 
 1. **認証（Authentication）**
+
    - 実装場所：インフラ層（ミドルウェア）
    - プロジェクト固有：JWT、OAuth2、SAML等の選択
 
 2. **認可（Authorization）**
+
    - 単純な権限：アプリケーション層
    - ビジネスルール関連：ドメイン層の仕様オブジェクト
 
 3. **ロギング・監査**
+
    - 実装場所：インフラ層（AOP、インターセプタ）
    - ドメインイベントと連携した監査証跡
 
@@ -635,6 +651,7 @@ graph TB
 ## チェックリスト
 
 ### ドメインモデルの品質
+
 - [ ] すべての集約がドメインモデルとして表現されている
 - [ ] エンティティとバリューオブジェクトが適切に区別されている
 - [ ] ドメインサービスが識別され、責務が明確である
@@ -642,42 +659,49 @@ graph TB
 - [ ] 不変条件（ビジネスルール）が集約内で保証されている
 
 ### アーキテクチャの整合性
+
 - [ ] レイヤー間の依存関係が単一方向である
 - [ ] ドメイン層が技術的な詳細に依存していない
 - [ ] インフラ層の実装がインターフェースを通じて抽象化されている
 - [ ] 各層の責務が明確に分離されている
 
 ### 境界づけられたコンテキストの統合
+
 - [ ] コンテキスト間の統合パターンが明確に定義されている
 - [ ] 腐敗防止層（ACL）が適切に設計されている
 - [ ] イベント駆動の統合が考慮されている
 - [ ] 外部システムとの統合方法が具体的である
 
 ### 実装可能性
+
 - [ ] 使用する技術スタックでの実装方法が明確である
 - [ ] 永続化戦略が定義されている
 - [ ] トランザクション境界が明確である
 - [ ] パフォーマンスを考慮した設計になっている
 
 ### イベントストーミングとの整合性
+
 - [ ] イベントストーミングで識別した要素がすべて反映されている
 - [ ] ドメインイベントがステートマシン図に反映されている
 - [ ] コマンドがアプリケーションサービスに対応している
 - [ ] 読み取りモデルが適切に設計されている
 
 ### ドメインイベントの設計
+
 - [ ] 重要なビジネスイベントがドメインイベントとして定義されている
 - [ ] イベントの命名が過去形でユビキタス言語を使用している
 - [ ] イベントの発行と配信の仕組みが明確である
 - [ ] イベントハンドリングの責務が適切に配置されている
 
 ### 例外処理とエラー設計
+
 - [ ] ドメイン例外が適切に定義されている
 - [ ] エラー処理パターン（例外/Result型）が一貫している
 - [ ] 各層でのエラー処理責任が明確である
 - [ ] ビジネスルール違反が適切に表現されている
 
 ### 横断的関心事の設計
+
 - [ ] 認証・認可の実装場所が適切である
 - [ ] ドメインロジックから横断的関心事が分離されている
 - [ ] ロギング・監査の仕組みが設計されている
@@ -689,15 +713,14 @@ graph TB
 
 ## 変更履歴
 
-|更新日時|変更点|
-|-|-|
-|2025-01-22T16:30:00+09:00|ドメインイベント設計、例外処理設計、横断的関心事設計を追加|
-|2025-01-22T16:00:00+09:00|DIPの適用を明確化（シーケンス図修正）、ファクトリパターン追加|
-|2025-01-22T15:30:00+09:00|DDDの戦術的設計要素を追加（ドメインモデル図、レイヤードアーキテクチャ図、コンテキスト統合設計）|
-|2025-04-21T09:00:00+09:00|新規作成|
+| 更新日時                  | 変更点                                                                                          |
+| ------------------------- | ----------------------------------------------------------------------------------------------- |
+| 2025-01-22T16:30:00+09:00 | ドメインイベント設計、例外処理設計、横断的関心事設計を追加                                      |
+| 2025-01-22T16:00:00+09:00 | DIPの適用を明確化（シーケンス図修正）、ファクトリパターン追加                                   |
+| 2025-01-22T15:30:00+09:00 | DDDの戦術的設計要素を追加（ドメインモデル図、レイヤードアーキテクチャ図、コンテキスト統合設計） |
+| 2025-04-21T09:00:00+09:00 | 新規作成                                                                                        |
 
 （更新日時の降順で記載する）
-
 ````
 
 mermaidで作図をする際、下記の作成ルールを必ず順守してください。
@@ -709,6 +732,7 @@ mermaidで作図をする際、下記の作成ルールを必ず順守してく�
    - 悪い例: class class1, class2, class3 event;
    - 良い例: class class1,class2,class3 event;
 3. 【厳禁】行末にコメントを追加しないでください。コメントは必ず独立した行に記述してください。
+
    - 悪い例: `NodeA --> NodeB %% これは行末コメントです`
    - 良い例:
 

@@ -23,7 +23,7 @@ describe('LogAggregate', () => {
   let aggregate: LogAggregate;
   const validUserId = UserId.generate();
   const validEndpoint = new Endpoint(HttpMethod.GET, new ApiPath('/api/data/test.json'));
-  
+
   beforeEach(() => {
     const result = LogAggregate.create();
     aggregate = result.getValue()!;
@@ -32,7 +32,7 @@ describe('LogAggregate', () => {
   describe('create', () => {
     it('should create with default retention days', () => {
       const result = LogAggregate.create();
-      
+
       expect(result.isSuccess).toBe(true);
       const aggregate = result.getValue()!;
       expect(aggregate.retentionDays).toBe(90);
@@ -42,7 +42,7 @@ describe('LogAggregate', () => {
 
     it('should create with custom retention days', () => {
       const result = LogAggregate.create(30);
-      
+
       expect(result.isSuccess).toBe(true);
       const aggregate = result.getValue()!;
       expect(aggregate.retentionDays).toBe(30);
@@ -51,7 +51,7 @@ describe('LogAggregate', () => {
     it('should fail with invalid retention days', () => {
       const result1 = LogAggregate.create(0);
       const result2 = LogAggregate.create(366);
-      
+
       expect(result1.isFailure).toBe(true);
       expect(result1.getError().code).toBe('INVALID_RETENTION_DAYS');
       expect(result2.isFailure).toBe(true);
@@ -66,7 +66,7 @@ describe('LogAggregate', () => {
         headers: {},
         body: null,
       });
-      
+
       const responseInfo = new ResponseInfo({
         statusCode: 200,
         responseTime: 100,
@@ -74,16 +74,11 @@ describe('LogAggregate', () => {
         headers: {},
       });
 
-      const result = aggregate.logAPIAccess(
-        validUserId,
-        validEndpoint,
-        requestInfo,
-        responseInfo
-      );
+      const result = aggregate.logAPIAccess(validUserId, validEndpoint, requestInfo, responseInfo);
 
       expect(result.isSuccess).toBe(true);
       expect(aggregate.apiLogs).toHaveLength(1);
-      
+
       const log = aggregate.apiLogs[0];
       expect(log.userId?.equals(validUserId)).toBe(true);
       expect(log.endpoint.path.value).toBe('/api/data/test.json');
@@ -98,7 +93,7 @@ describe('LogAggregate', () => {
         headers: {},
         body: null,
       });
-      
+
       const responseInfo = new ResponseInfo({
         statusCode: 200,
         responseTime: 100,
@@ -106,17 +101,12 @@ describe('LogAggregate', () => {
         headers: {},
       });
 
-      aggregate.logAPIAccess(
-        validUserId,
-        validEndpoint,
-        requestInfo,
-        responseInfo
-      );
+      aggregate.logAPIAccess(validUserId, validEndpoint, requestInfo, responseInfo);
 
       const events = aggregate.domainEvents;
       expect(events).toHaveLength(1);
       expect(events[0]).toBeInstanceOf(APIAccessLoggedEvent);
-      
+
       const event = events[0] as APIAccessLoggedEvent;
       expect(event.userId).toBe(validUserId.value);
       expect(event.path).toBe('/api/data/test.json');
@@ -130,7 +120,7 @@ describe('LogAggregate', () => {
         headers: {},
         body: null,
       });
-      
+
       const responseInfo = new ResponseInfo({
         statusCode: 200,
         responseTime: 2000, // Slow response
@@ -138,17 +128,14 @@ describe('LogAggregate', () => {
         headers: {},
       });
 
-      aggregate.logAPIAccess(
-        validUserId,
-        validEndpoint,
-        requestInfo,
-        responseInfo
-      );
+      aggregate.logAPIAccess(validUserId, validEndpoint, requestInfo, responseInfo);
 
       const events = aggregate.domainEvents;
       expect(events).toHaveLength(2);
-      
-      const perfEvent = events.find(e => e instanceof PerformanceIssueDetectedEvent) as PerformanceIssueDetectedEvent;
+
+      const perfEvent = events.find(
+        (e) => e instanceof PerformanceIssueDetectedEvent,
+      ) as PerformanceIssueDetectedEvent;
       expect(perfEvent).toBeDefined();
       expect(perfEvent.endpoint).toBe('/api/data/test.json');
       expect(perfEvent.responseTime).toBe(2000);
@@ -162,7 +149,7 @@ describe('LogAggregate', () => {
         headers: {},
         body: null,
       });
-      
+
       const responseInfo = new ResponseInfo({
         statusCode: 404,
         responseTime: 50,
@@ -175,7 +162,7 @@ describe('LogAggregate', () => {
         validEndpoint,
         requestInfo,
         responseInfo,
-        'NOT_FOUND'
+        'NOT_FOUND',
       );
 
       expect(result.isSuccess).toBe(true);
@@ -192,7 +179,7 @@ describe('LogAggregate', () => {
         headers: {},
         body: null,
       });
-      
+
       const responseInfo = new ResponseInfo({
         statusCode: 200,
         responseTime: 100,
@@ -202,21 +189,11 @@ describe('LogAggregate', () => {
 
       // Add logs up to the limit
       for (let i = 0; i < 10000; i++) {
-        aggregate.logAPIAccess(
-          validUserId,
-          validEndpoint,
-          requestInfo,
-          responseInfo
-        );
+        aggregate.logAPIAccess(validUserId, validEndpoint, requestInfo, responseInfo);
       }
 
       // Try to add one more
-      const result = aggregate.logAPIAccess(
-        validUserId,
-        validEndpoint,
-        requestInfo,
-        responseInfo
-      );
+      const result = aggregate.logAPIAccess(validUserId, validEndpoint, requestInfo, responseInfo);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().code).toBe('API_LOG_LIMIT_EXCEEDED');
@@ -236,12 +213,12 @@ describe('LogAggregate', () => {
         ipAddress,
         userAgent,
         AuthResult.SUCCESS,
-        validUserId
+        validUserId,
       );
 
       expect(result.isSuccess).toBe(true);
       expect(aggregate.authLogs).toHaveLength(1);
-      
+
       const log = aggregate.authLogs[0];
       expect(log.userId?.equals(validUserId)).toBe(true);
       expect(log.event.type).toBe(EventType.LOGIN_SUCCESS);
@@ -260,13 +237,13 @@ describe('LogAggregate', () => {
         ipAddress,
         userAgent,
         AuthResult.SUCCESS,
-        validUserId
+        validUserId,
       );
 
       const events = aggregate.domainEvents;
       expect(events).toHaveLength(1);
       expect(events[0]).toBeInstanceOf(AuthEventLoggedEvent);
-      
+
       const authEvent = events[0] as AuthEventLoggedEvent;
       expect(authEvent.userId).toBe(validUserId.value);
       expect(authEvent.eventType).toBe(EventType.LOGIN_SUCCESS);
@@ -286,7 +263,7 @@ describe('LogAggregate', () => {
         userAgent,
         AuthResult.FAILED,
         undefined,
-        'Invalid credentials'
+        'Invalid credentials',
       );
 
       expect(result.isSuccess).toBe(true);
@@ -310,7 +287,7 @@ describe('LogAggregate', () => {
           userAgent,
           AuthResult.FAILED,
           undefined,
-          'Invalid credentials'
+          'Invalid credentials',
         );
       }
 
@@ -322,12 +299,14 @@ describe('LogAggregate', () => {
         userAgent,
         AuthResult.FAILED,
         undefined,
-        'Invalid credentials'
+        'Invalid credentials',
       );
 
       const events = aggregate.domainEvents;
-      const securityAlert = events.find(e => e instanceof SecurityAlertRaisedEvent) as SecurityAlertRaisedEvent;
-      
+      const securityAlert = events.find(
+        (e) => e instanceof SecurityAlertRaisedEvent,
+      ) as SecurityAlertRaisedEvent;
+
       expect(securityAlert).toBeDefined();
       expect(securityAlert.alertType).toBe('MULTIPLE_AUTH_FAILURES');
       expect(securityAlert.details.ipAddress).toBe('192.168.1.1');
@@ -344,7 +323,7 @@ describe('LogAggregate', () => {
         headers: {},
         body: null,
       });
-      
+
       const responseInfo = new ResponseInfo({
         statusCode: 200,
         responseTime: 100,
@@ -353,17 +332,12 @@ describe('LogAggregate', () => {
       });
 
       // Add current log
-      aggregate.logAPIAccess(
-        validUserId,
-        validEndpoint,
-        requestInfo,
-        responseInfo
-      );
+      aggregate.logAPIAccess(validUserId, validEndpoint, requestInfo, responseInfo);
 
       // Mock old log by manipulating the timestamp
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 100); // 100 days old
-      
+
       // We need to access the internal props to add old logs for testing
       // In real usage, logs would be reconstructed from repository
       const oldApiLog = aggregate.apiLogs[0];
@@ -376,9 +350,9 @@ describe('LogAggregate', () => {
 
     it('should remove logs older than retention period', () => {
       expect(aggregate.apiLogs).toHaveLength(1);
-      
+
       const result = aggregate.cleanupOldLogs();
-      
+
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(1); // 1 log removed
       expect(aggregate.apiLogs).toHaveLength(0);
@@ -406,7 +380,7 @@ describe('LogAggregate', () => {
             responseTime: 100 + i * 50,
             size: 1024,
             headers: {},
-          })
+          }),
         );
       }
 
@@ -420,7 +394,7 @@ describe('LogAggregate', () => {
           responseTime: 50,
           size: 0,
           headers: {},
-        })
+        }),
       );
     });
 
@@ -465,7 +439,7 @@ describe('LogAggregate', () => {
       events.forEach(({ event, result }, index) => {
         // Add a small delay between events to ensure different timestamps
         vi.setSystemTime(new Date(Date.now() + index * 1000));
-        
+
         aggregate.logAuthEvent(
           event,
           provider,
@@ -473,7 +447,7 @@ describe('LogAggregate', () => {
           userAgent,
           result,
           validUserId,
-          result === AuthResult.FAILED ? 'Invalid password' : undefined
+          result === AuthResult.FAILED ? 'Invalid password' : undefined,
         );
       });
     });
@@ -512,7 +486,7 @@ describe('LogAggregate', () => {
 
       // Add requests with various response times
       const responseTimes = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
-      
+
       responseTimes.forEach((time, index) => {
         aggregate.logAPIAccess(
           validUserId,
@@ -523,7 +497,7 @@ describe('LogAggregate', () => {
             responseTime: time,
             size: 1024,
             headers: {},
-          })
+          }),
         );
       });
     });
@@ -565,13 +539,15 @@ describe('LogAggregate', () => {
       scenarios.forEach(({ ip, result, count }) => {
         for (let i = 0; i < count; i++) {
           aggregate.logAuthEvent(
-            new AuthEvent(result === AuthResult.SUCCESS ? EventType.LOGIN_SUCCESS : EventType.LOGIN_FAILED),
+            new AuthEvent(
+              result === AuthResult.SUCCESS ? EventType.LOGIN_SUCCESS : EventType.LOGIN_FAILED,
+            ),
             provider,
             new IPAddress(ip),
             userAgent,
             result,
             result === AuthResult.SUCCESS ? validUserId : undefined,
-            result === AuthResult.FAILED ? 'Invalid credentials' : undefined
+            result === AuthResult.FAILED ? 'Invalid credentials' : undefined,
           );
         }
       });

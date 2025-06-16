@@ -41,9 +41,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   addResource(resource: OpenDataResource): Result<void> {
     const guardResult = Guard.againstNullOrUndefined(resource, 'resource');
     if (!guardResult.succeeded) {
-      return Result.fail(
-        DomainError.validation('INVALID_RESOURCE', guardResult.message)
-      );
+      return Result.fail(DomainError.validation('INVALID_RESOURCE', guardResult.message));
     }
 
     // 既存のリソースかチェック
@@ -51,21 +49,21 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
       return Result.fail(
         DomainError.businessRule(
           'RESOURCE_ALREADY_EXISTS',
-          `Resource ${resource.id.value} already exists`
-        )
+          `Resource ${resource.id.value} already exists`,
+        ),
       );
     }
 
     // 同じパスのリソースが存在しないかチェック
     const duplicate = Array.from(this.props.resources.values()).find(
-      (r) => r.path.value === resource.path.value
+      (r) => r.path.value === resource.path.value,
     );
     if (duplicate) {
       return Result.fail(
         DomainError.businessRule(
           'DUPLICATE_RESOURCE_PATH',
-          `Resource with path ${resource.path.value} already exists`
-        )
+          `Resource with path ${resource.path.value} already exists`,
+        ),
       );
     }
 
@@ -88,10 +86,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   removeResource(resourceId: ResourceId): Result<void> {
     if (!this.props.resources.has(resourceId.value)) {
       return Result.fail(
-        DomainError.notFound(
-          'RESOURCE_NOT_FOUND',
-          `Resource ${resourceId.value} not found`
-        )
+        DomainError.notFound('RESOURCE_NOT_FOUND', `Resource ${resourceId.value} not found`),
       );
     }
 
@@ -106,10 +101,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
     const resource = this.props.resources.get(resourceId.value);
     if (!resource) {
       return Result.fail(
-        DomainError.notFound(
-          'RESOURCE_NOT_FOUND',
-          `Resource ${resourceId.value} not found`
-        )
+        DomainError.notFound('RESOURCE_NOT_FOUND', `Resource ${resourceId.value} not found`),
       );
     }
 
@@ -121,15 +113,12 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
    */
   findResourceByPath(path: DataPath): Result<OpenDataResource> {
     const resource = Array.from(this.props.resources.values()).find(
-      (r) => r.path.value === path.value
+      (r) => r.path.value === path.value,
     );
 
     if (!resource) {
       return Result.fail(
-        DomainError.notFound(
-          'RESOURCE_NOT_FOUND',
-          `Resource with path ${path.value} not found`
-        )
+        DomainError.notFound('RESOURCE_NOT_FOUND', `Resource with path ${path.value} not found`),
       );
     }
 
@@ -143,25 +132,19 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
     userId: string,
     path: DataPath,
     userTier: string,
-    requestTime: Date = new Date()
-  ): Promise<Result<{
-    resource: OpenDataResource;
-    cacheHit: boolean;
-    cacheKey: string;
-  }>> {
+    requestTime: Date = new Date(),
+  ): Promise<
+    Result<{
+      resource: OpenDataResource;
+      cacheHit: boolean;
+      cacheKey: string;
+    }>
+  > {
     // リソースを検索
     const resourceResult = this.findResourceByPath(path);
     if (resourceResult.isFailure) {
       // リソースが見つからないイベントを発行
-      this.addDomainEvent(
-        new DataResourceNotFound(
-          this._id,
-          1,
-          userId,
-          path.value,
-          requestTime
-        )
-      );
+      this.addDomainEvent(new DataResourceNotFound(this._id, 1, userId, path.value, requestTime));
       return Result.fail(resourceResult.getError());
     }
 
@@ -178,14 +161,11 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
           path.value,
           userTier,
           'TIER_RESTRICTION',
-          requestTime
-        )
+          requestTime,
+        ),
       );
       return Result.fail(
-        DomainError.forbidden(
-          'ACCESS_DENIED',
-          'Your tier does not have access to this resource'
-        )
+        DomainError.forbidden('ACCESS_DENIED', 'Your tier does not have access to this resource'),
       );
     }
 
@@ -202,14 +182,14 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
         path.value,
         resource.metadata.size,
         resource.metadata.contentType,
-        requestTime
-      )
+        requestTime,
+      ),
     );
 
     // キャッシュ情報を返す
     const cacheHit = resource.isCacheValid(
       requestTime,
-      this.props.cacheSettings.defaultCacheDurationSeconds
+      this.props.cacheSettings.defaultCacheDurationSeconds,
     );
 
     return Result.ok({
@@ -222,10 +202,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   /**
    * リソースのメタデータを更新
    */
-  updateResourceMetadata(
-    resourceId: ResourceId,
-    metadata: ResourceMetadata
-  ): Result<void> {
+  updateResourceMetadata(resourceId: ResourceId, metadata: ResourceMetadata): Result<void> {
     const resourceResult = this.getResource(resourceId);
     if (resourceResult.isFailure) {
       return Result.fail(resourceResult.getError());
@@ -242,7 +219,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   processConditionalRequest(
     path: DataPath,
     etag?: string,
-    ifModifiedSince?: Date
+    ifModifiedSince?: Date,
   ): Result<{
     shouldSendResource: boolean;
     resource?: OpenDataResource;
@@ -307,7 +284,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
 
     for (const resource of this.props.resources.values()) {
       totalSize += resource.metadata.size;
-      
+
       const contentType = resource.metadata.contentType;
       mimeTypeCount.set(contentType, (mimeTypeCount.get(contentType) || 0) + 1);
     }
@@ -340,10 +317,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   /**
    * ファクトリメソッド
    */
-  static create(
-    props?: Partial<DataAggregateProps>,
-    id?: string
-  ): Result<DataAggregate> {
+  static create(props?: Partial<DataAggregateProps>, id?: string): Result<DataAggregate> {
     const defaultProps: DataAggregateProps = {
       resources: new Map(),
       cacheSettings: {
@@ -363,10 +337,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   /**
    * 既存のデータから再構築
    */
-  static reconstitute(
-    props: DataAggregateProps,
-    id: string
-  ): DataAggregate {
+  static reconstitute(props: DataAggregateProps, id: string): DataAggregate {
     return new DataAggregate(props, id);
   }
 }

@@ -15,17 +15,14 @@ describe('authenticate middleware', () => {
   let mockRequest: Partial<FastifyRequest>;
   let mockReply: Partial<FastifyReply>;
   let mockAuthUseCase: Partial<AuthenticationUseCase>;
-  
+
   function createMockAuthenticatedUser(userId = 'test-user-123'): AuthenticatedUser {
-    return new AuthenticatedUser(
-      new UserId(userId),
-      new UserTier('tier1')
-    );
+    return new AuthenticatedUser(new UserId(userId), new UserTier('tier1'));
   }
 
   beforeEach(() => {
     setupTestDI();
-    
+
     // Mock request
     mockRequest = {
       headers: {},
@@ -36,19 +33,19 @@ describe('authenticate middleware', () => {
         error: vi.fn(),
       } as any,
     };
-    
+
     // Mock reply
     mockReply = {
       code: vi.fn().mockReturnThis(),
       header: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
     };
-    
+
     // Mock AuthenticationUseCase
     mockAuthUseCase = {
       validateToken: vi.fn(),
     };
-    
+
     container.register(DI_TOKENS.AuthenticationUseCase, {
       useValue: mockAuthUseCase,
     });
@@ -59,13 +56,13 @@ describe('authenticate middleware', () => {
     mockRequest.headers = {
       authorization: 'Bearer valid-token',
     };
-    
+
     vi.mocked(mockAuthUseCase.validateToken).mockResolvedValue({
       success: true,
       data: {
         user: mockUser,
-        tokenId: 'token-123'
-      }
+        tokenId: 'token-123',
+      },
     });
 
     await authenticate(mockRequest as FastifyRequest, mockReply as FastifyReply);
@@ -79,7 +76,7 @@ describe('authenticate middleware', () => {
         userId: 'test-user-123',
         tier: 'tier1',
       },
-      'User authenticated successfully'
+      'User authenticated successfully',
     );
   });
 
@@ -94,7 +91,7 @@ describe('authenticate middleware', () => {
         type: expect.stringContaining('/errors/missing-auth-header'),
         title: 'Missing or invalid authorization header',
         status: 401,
-      })
+      }),
     );
     expect(mockAuthUseCase.validateToken).not.toHaveBeenCalled();
   });
@@ -113,7 +110,7 @@ describe('authenticate middleware', () => {
         type: expect.stringContaining('/errors/invalid-auth-format'),
         title: 'Authorization header must use Bearer scheme',
         status: 401,
-      })
+      }),
     );
   });
 
@@ -121,16 +118,16 @@ describe('authenticate middleware', () => {
     mockRequest.headers = {
       authorization: 'Bearer invalid-token',
     };
-    
+
     const error = new ApplicationError(
       'INVALID_TOKEN',
       'Token is invalid or expired',
-      'UNAUTHORIZED'
+      'UNAUTHORIZED',
     );
-    
+
     vi.mocked(mockAuthUseCase.validateToken).mockResolvedValue({
       success: false,
-      error
+      error,
     });
 
     await authenticate(mockRequest as FastifyRequest, mockReply as FastifyReply);
@@ -141,7 +138,7 @@ describe('authenticate middleware', () => {
         type: expect.stringContaining('/errors/invalid-token'),
         title: 'Token is invalid or expired',
         status: 401,
-      })
+      }),
     );
     expect(mockRequest.log.warn).toHaveBeenCalled();
   });
@@ -150,10 +147,8 @@ describe('authenticate middleware', () => {
     mockRequest.headers = {
       authorization: 'Bearer valid-token',
     };
-    
-    vi.mocked(mockAuthUseCase.validateToken).mockRejectedValue(
-      new Error('Unexpected error')
-    );
+
+    vi.mocked(mockAuthUseCase.validateToken).mockRejectedValue(new Error('Unexpected error'));
 
     await authenticate(mockRequest as FastifyRequest, mockReply as FastifyReply);
 
@@ -163,7 +158,7 @@ describe('authenticate middleware', () => {
         type: expect.stringContaining('/errors/auth-error'),
         title: 'An error occurred during authentication',
         status: 500,
-      })
+      }),
     );
     expect(mockRequest.log.error).toHaveBeenCalled();
   });
@@ -181,7 +176,7 @@ describe('authenticate middleware', () => {
         type: expect.stringContaining('/errors/missing-auth-header'),
         title: 'Missing or invalid authorization header',
         status: 401,
-      })
+      }),
     );
   });
 });

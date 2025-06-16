@@ -27,7 +27,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
   private initializeDefaultAggregate(): void {
     // デフォルトのレート制限設定
     const defaultRateLimits = new Map<string, RateLimit>();
-    
+
     // Tier1: 1分間に60リクエスト
     const tier1Limit = RateLimit.create(60, 60);
     if (tier1Limit.isSuccess) {
@@ -50,7 +50,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     const aggregateResult = APIAggregate.create({ defaultRateLimits });
     if (aggregateResult.isSuccess) {
       this.aggregate = aggregateResult.getValue()!;
-      
+
       // デフォルトのエンドポイントを追加
       this.addDefaultEndpoints();
     }
@@ -107,27 +107,22 @@ export class InMemoryAPIRepository implements IAPIRepository {
         DomainError.unexpected(
           'SAVE_FAILED',
           'Failed to save API aggregate',
-          error instanceof Error ? error : undefined
-        )
+          error instanceof Error ? error : undefined,
+        ),
       );
     }
   }
 
   async getAggregate(): Promise<Result<APIAggregate, DomainError>> {
     if (!this.aggregate) {
-      return Result.fail(
-        DomainError.notFound(
-          'AGGREGATE_NOT_FOUND',
-          'API aggregate not found'
-        )
-      );
+      return Result.fail(DomainError.notFound('AGGREGATE_NOT_FOUND', 'API aggregate not found'));
     }
 
     return Result.ok(this.aggregate);
   }
 
   async findByEndpointId(
-    endpointId: EndpointId
+    endpointId: EndpointId,
   ): Promise<Result<APIAggregate | null, DomainError>> {
     // APIEndpointはvalue objectになりidを持たないため、この検索方法は使用できません
     // 常にnullを返します
@@ -136,7 +131,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
 
   async findByPathAndMethod(
     path: EndpointPath,
-    method: HttpMethod
+    method: HttpMethod,
   ): Promise<Result<APIAggregate | null, DomainError>> {
     if (!this.aggregate) {
       return Result.ok(null);

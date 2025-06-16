@@ -54,8 +54,8 @@ export class RequestCount {
       return Result.fail(
         DomainError.validation(
           'INVALID_REQUEST_COUNT',
-          error instanceof Error ? error.message : 'Invalid request count'
-        )
+          error instanceof Error ? error.message : 'Invalid request count',
+        ),
       );
     }
   }

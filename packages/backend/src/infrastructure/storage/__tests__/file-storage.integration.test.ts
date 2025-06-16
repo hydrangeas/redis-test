@@ -14,11 +14,11 @@ describe('FileStorageService Integration', () => {
 
   beforeEach(async () => {
     container.clearInstances();
-    
+
     // Create a temporary test directory
     testDataDir = path.join(process.cwd(), 'test-data-' + Date.now());
     await fs.mkdir(testDataDir, { recursive: true });
-    
+
     mockLogger = {
       debug: () => {},
       info: () => {},
@@ -42,10 +42,7 @@ describe('FileStorageService Integration', () => {
     // Create test file
     const testData = { test: true, value: 42 };
     const testFile = 'test.json';
-    await fs.writeFile(
-      path.join(testDataDir, testFile),
-      JSON.stringify(testData)
-    );
+    await fs.writeFile(path.join(testDataDir, testFile), JSON.stringify(testData));
 
     const result = await service.readFile(testFile);
 
@@ -56,17 +53,14 @@ describe('FileStorageService Integration', () => {
   it('should cache files and serve from cache', async () => {
     const testData = { cached: true };
     const testFile = 'cached.json';
-    await fs.writeFile(
-      path.join(testDataDir, testFile),
-      JSON.stringify(testData)
-    );
+    await fs.writeFile(path.join(testDataDir, testFile), JSON.stringify(testData));
 
     // First read
     await service.readFile(testFile);
-    
+
     // Delete the file
     await fs.unlink(path.join(testDataDir, testFile));
-    
+
     // Should still work from cache
     const result = await service.readFile(testFile);
 
@@ -78,12 +72,12 @@ describe('FileStorageService Integration', () => {
     // Create nested directory structure
     await fs.mkdir(path.join(testDataDir, 'dir1'), { recursive: true });
     await fs.mkdir(path.join(testDataDir, 'dir1/subdir'), { recursive: true });
-    
+
     await fs.writeFile(path.join(testDataDir, 'file1.json'), '{}');
     await fs.writeFile(path.join(testDataDir, 'dir1/file2.json'), '{}');
     await fs.writeFile(path.join(testDataDir, 'dir1/subdir/file3.json'), '{}');
     await fs.writeFile(path.join(testDataDir, 'dir1/file.txt'), 'text'); // Should be filtered
-    
+
     const result = await service.listFiles('.');
 
     expect(result.isSuccess).toBe(true);
@@ -103,14 +97,11 @@ describe('FileStorageService Integration', () => {
 
   it('should detect file existence', async () => {
     const testFile = 'exists.json';
-    
+
     expect(await service.exists(testFile)).toBe(false);
-    
-    await fs.writeFile(
-      path.join(testDataDir, testFile),
-      JSON.stringify({ exists: true })
-    );
-    
+
+    await fs.writeFile(path.join(testDataDir, testFile), JSON.stringify({ exists: true }));
+
     expect(await service.exists(testFile)).toBe(true);
   });
 });

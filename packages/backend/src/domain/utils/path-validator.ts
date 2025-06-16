@@ -20,31 +20,28 @@ export class PathValidator {
 
     // 危険な文字列パターンのチェック
     const dangerousPatterns = [
-      /\.\./g,           // ディレクトリトラバーサル
-      /^\/+/,            // 絶対パス
-      /^~\//,            // ホームディレクトリ
-      /\0/g,             // nullバイト
-      /[\x00-\x1f]/g,    // 制御文字
+      /\.\./g, // ディレクトリトラバーサル
+      /^\/+/, // 絶対パス
+      /^~\//, // ホームディレクトリ
+      /\0/g, // nullバイト
+      /[\x00-\x1f]/g, // 制御文字
       /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i, // Windows予約名
     ];
 
     for (const pattern of dangerousPatterns) {
       if (pattern.test(inputPath)) {
-        throw new PathTraversalException(
-          inputPath,
-          this.sanitizePath(inputPath)
-        );
+        throw new PathTraversalException(inputPath, this.sanitizePath(inputPath));
       }
     }
 
     // パスの正規化
     const normalizedPath = path.normalize(inputPath);
-    
+
     // ベースパスが指定されている場合、相対パスチェック
     if (basePath) {
       const resolvedPath = path.resolve(basePath, normalizedPath);
       const resolvedBase = path.resolve(basePath);
-      
+
       // resolvedPathがresolvedBaseから始まるかチェック
       if (!resolvedPath.startsWith(resolvedBase)) {
         throw new PathTraversalException(inputPath, normalizedPath);
@@ -69,12 +66,12 @@ export class PathValidator {
    */
   private static sanitizePath(inputPath: string): string {
     return inputPath
-      .replace(/\.\./g, '')       // ディレクトリトラバーサル除去
-      .replace(/^\/+/, '')        // 先頭のスラッシュ除去
-      .replace(/^~\//, '')        // ホームディレクトリ参照除去
-      .replace(/\0/g, '')         // nullバイト除去
+      .replace(/\.\./g, '') // ディレクトリトラバーサル除去
+      .replace(/^\/+/, '') // 先頭のスラッシュ除去
+      .replace(/^~\//, '') // ホームディレクトリ参照除去
+      .replace(/\0/g, '') // nullバイト除去
       .replace(/[\x00-\x1f]/g, '') // 制御文字除去
-      .replace(/\/+/g, '/')       // 連続スラッシュを単一に
+      .replace(/\/+/g, '/') // 連続スラッシュを単一に
       .trim();
   }
 

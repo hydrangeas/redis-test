@@ -3,15 +3,15 @@
  * This file demonstrates various patterns for dependency injection
  */
 
-import { 
-  Injectable, 
+import {
+  Injectable,
   Singleton,
   Inject,
   InjectLogger,
   InjectEnvConfig,
   InjectAuthenticationService,
   DI_TOKENS,
-  PostConstruct
+  PostConstruct,
 } from '../index';
 import { Logger } from 'pino';
 import { EnvConfig } from '../../config/env.config';
@@ -25,12 +25,12 @@ import { Result } from '@/domain/shared/result';
 export class UserNotificationService {
   constructor(
     @InjectLogger() private readonly logger: Logger,
-    @InjectEnvConfig() private readonly config: EnvConfig
+    @InjectEnvConfig() private readonly config: EnvConfig,
   ) {}
 
   async sendWelcomeEmail(userId: string): Promise<Result<void>> {
     this.logger.info({ userId }, 'Sending welcome email');
-    
+
     // Implementation here
     return Result.ok();
   }
@@ -43,9 +43,7 @@ export class UserNotificationService {
 export class CacheService {
   private cache = new Map<string, any>();
 
-  constructor(
-    @InjectLogger() private readonly logger: Logger
-  ) {}
+  constructor(@InjectLogger() private readonly logger: Logger) {}
 
   @PostConstruct()
   async initialize(): Promise<void> {
@@ -73,7 +71,7 @@ interface IEmailProvider {
 export class EmailService {
   constructor(
     @Inject(DI_TOKENS.EmailProvider) private readonly emailProvider: IEmailProvider,
-    @InjectLogger() private readonly logger: Logger
+    @InjectLogger() private readonly logger: Logger,
   ) {}
 
   async sendEmail(to: string, subject: string, body: string): Promise<Result<void>> {
@@ -91,7 +89,7 @@ export class UserManagementService {
     @InjectAuthenticationService() private readonly authService: IAuthenticationService,
     @Inject(DI_TOKENS.UserRepository) private readonly userRepo: any,
     @Inject(DI_TOKENS.EventBus) private readonly eventBus: any,
-    @InjectLogger() private readonly logger: Logger
+    @InjectLogger() private readonly logger: Logger,
   ) {}
 
   async createUser(email: string, password: string): Promise<Result<string>> {
@@ -99,12 +97,12 @@ export class UserManagementService {
 
     // Validate and create user
     const result = await this.authService.register(email, password);
-    
+
     if (result.isSuccess) {
       // Publish user created event
       await this.eventBus.publish({
         type: 'UserCreated',
-        data: { userId: result.value }
+        data: { userId: result.value },
       });
     }
 
@@ -124,12 +122,12 @@ export class ProcessorFactory {
   constructor(
     @Inject(DI_TOKENS.JsonProcessor) private readonly jsonProcessor: IProcessor,
     @Inject(DI_TOKENS.XmlProcessor) private readonly xmlProcessor: IProcessor,
-    @InjectLogger() private readonly logger: Logger
+    @InjectLogger() private readonly logger: Logger,
   ) {}
 
   getProcessor(type: 'json' | 'xml'): IProcessor {
     this.logger.debug({ type }, 'Getting processor');
-    
+
     switch (type) {
       case 'json':
         return this.jsonProcessor;
@@ -151,14 +149,14 @@ describe('UserNotificationService', () => {
   it('should send welcome email', async () => {
     // Create test container with mocks
     const container = createTestContainer();
-    
+
     // Register the service
     container.register(UserNotificationService, { useClass: UserNotificationService });
-    
+
     // Resolve and test
     const service = container.resolve(UserNotificationService);
     const result = await service.sendWelcomeEmail('user-123');
-    
+
     expect(result.isSuccess).toBe(true);
   });
 });
@@ -171,19 +169,19 @@ import { container, setupDI, getService } from '../index';
 async function bootstrapApplication() {
   // Initialize the container
   await setupDI();
-  
+
   // Manually resolve services if needed
   const logger = getService<Logger>(DI_TOKENS.Logger);
   logger.info('Application started');
-  
+
   // Register additional services
   container.register(DI_TOKENS.EmailProvider, {
     useValue: {
       send: async (to: string, subject: string, body: string) => {
         console.log(`Sending email to ${to}: ${subject}`);
         return Result.ok();
-      }
-    }
+      },
+    },
   });
 }
 
@@ -194,12 +192,12 @@ export function registerEmailProvider(container: any, config: EnvConfig) {
   if (config.NODE_ENV === 'production') {
     // Use real email provider
     container.register(DI_TOKENS.EmailProvider, {
-      useClass: RealEmailProvider
+      useClass: RealEmailProvider,
     });
   } else {
     // Use mock email provider
     container.register(DI_TOKENS.EmailProvider, {
-      useValue: MockFactory.createMockEmailProvider()
+      useValue: MockFactory.createMockEmailProvider(),
     });
   }
 }
@@ -220,5 +218,5 @@ declare module '../test-container' {
 }
 
 MockFactory.createMockEmailProvider = () => ({
-  send: vi.fn().mockResolvedValue(Result.ok())
+  send: vi.fn().mockResolvedValue(Result.ok()),
 });

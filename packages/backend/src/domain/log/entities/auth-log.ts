@@ -44,18 +44,15 @@ export class AuthLog extends Entity<AuthLogProps> {
     super(props, id);
   }
 
-  public static create(
-    props: AuthLogProps,
-    id?: AuthLogId
-  ): Result<AuthLog> {
+  public static create(props: AuthLogProps, id?: AuthLogId): Result<AuthLog> {
     // Validate timestamp
     if (!props.timestamp || !(props.timestamp instanceof Date)) {
       return Result.fail(
         new DomainError(
           'INVALID_TIMESTAMP',
           'Timestamp must be a valid Date object',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -65,8 +62,8 @@ export class AuthLog extends Entity<AuthLogProps> {
         new DomainError(
           'FUTURE_TIMESTAMP',
           'Timestamp cannot be in the future',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -75,7 +72,7 @@ export class AuthLog extends Entity<AuthLogProps> {
         ...props,
         metadata: props.metadata || {},
       },
-      id || AuthLogId.generate()
+      id || AuthLogId.generate(),
     );
 
     return Result.ok(authLog);

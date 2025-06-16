@@ -67,10 +67,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     return this.props.metadata ? { ...this.props.metadata } : undefined;
   }
 
-  public static create(
-    props: AuthLogEntryProps,
-    id?: LogId
-  ): Result<AuthLogEntry> {
+  public static create(props: AuthLogEntryProps, id?: LogId): Result<AuthLogEntry> {
     // ビジネスルールの検証
     const validationResult = this.validate(props);
     if (validationResult.isFailure) {
@@ -98,7 +95,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     // 失敗時はエラーメッセージが必須
     if (props.result === AuthResult.FAILED && !props.errorMessage) {
       return Result.fail(
-        new ValidationError('Error message is required for failed authentication')
+        new ValidationError('Error message is required for failed authentication'),
       );
     }
 
@@ -108,16 +105,12 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
       !props.userId &&
       props.event.type !== EventType.LOGIN_FAILED
     ) {
-      return Result.fail(
-        new ValidationError('User ID is required for successful authentication')
-      );
+      return Result.fail(new ValidationError('User ID is required for successful authentication'));
     }
 
     // タイムスタンプは未来の時刻不可
     if (props.timestamp.getTime() > Date.now()) {
-      return Result.fail(
-        new ValidationError('Timestamp cannot be in the future')
-      );
+      return Result.fail(new ValidationError('Timestamp cannot be in the future'));
     }
 
     return Result.ok();
@@ -126,7 +119,11 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
   // 異常なアクセスパターンの検出
   public isAnomalous(): boolean {
     // 短時間での連続失敗
-    if (this.props.result === AuthResult.FAILED && this.props.metadata?.failureCount && this.props.metadata.failureCount > 5) {
+    if (
+      this.props.result === AuthResult.FAILED &&
+      this.props.metadata?.failureCount &&
+      this.props.metadata.failureCount > 5
+    ) {
       return true;
     }
 

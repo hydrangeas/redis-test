@@ -20,11 +20,11 @@ import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 const mockAccessControlService: IAPIAccessControlService = {
   canAccessEndpoint: vi.fn(),
   checkRateLimit: vi.fn(),
-  calculateResetTime: vi.fn()
+  calculateResetTime: vi.fn(),
 };
 
 const mockRateLimitUseCase: IRateLimitUseCase = {
-  checkAndRecordAccess: vi.fn()
+  checkAndRecordAccess: vi.fn(),
 };
 
 const mockApiLogRepository: IAPILogRepository = {
@@ -34,7 +34,7 @@ const mockApiLogRepository: IAPILogRepository = {
   findByTimeRange: vi.fn(),
   findErrors: vi.fn(),
   getStatistics: vi.fn(),
-  deleteOldLogs: vi.fn()
+  deleteOldLogs: vi.fn(),
 };
 
 const mockEventBus: IEventBus = {
@@ -42,7 +42,7 @@ const mockEventBus: IEventBus = {
   publishBatch: vi.fn(),
   subscribe: vi.fn(),
   unsubscribe: vi.fn(),
-  dispatch: vi.fn()
+  dispatch: vi.fn(),
 };
 
 const mockLogger: Logger = {
@@ -53,7 +53,7 @@ const mockLogger: Logger = {
   fatal: vi.fn(),
   trace: vi.fn(),
   child: vi.fn(),
-  level: 'info'
+  level: 'info',
 } as any;
 
 describe('APIAccessControlUseCase', () => {
@@ -68,7 +68,7 @@ describe('APIAccessControlUseCase', () => {
       mockRateLimitUseCase,
       mockApiLogRepository,
       mockEventBus,
-      mockLogger
+      mockLogger,
     );
 
     // 認証済みユーザーのセットアップ
@@ -83,11 +83,8 @@ describe('APIAccessControlUseCase', () => {
       throw new Error('Failed to create RateLimit');
     }
     const rateLimit = rateLimitResult.getValue();
-    
-    const tierResult = UserTier.create(
-      TierLevel.TIER1,
-      rateLimit
-    );
+
+    const tierResult = UserTier.create(TierLevel.TIER1, rateLimit);
     if (tierResult.isFailure) {
       throw new Error('Failed to create UserTier');
     }
@@ -96,9 +93,7 @@ describe('APIAccessControlUseCase', () => {
     authenticatedUser = new AuthenticatedUser(userId, tier);
 
     // デフォルトのモック設定
-    vi.mocked(mockAccessControlService.canAccessEndpoint).mockReturnValue(
-      Result.ok(true)
-    );
+    vi.mocked(mockAccessControlService.canAccessEndpoint).mockReturnValue(Result.ok(true));
     vi.mocked(mockApiLogRepository.save).mockResolvedValue(Result.ok());
   });
 
@@ -114,41 +109,35 @@ describe('APIAccessControlUseCase', () => {
         windowStart: new Date(),
         windowEnd: new Date(Date.now() + 60000),
         remainingRequests: 50,
-        retryAfter: null
+        retryAfter: null,
       };
 
       vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(
-        Result.ok(rateLimitResult)
+        Result.ok(rateLimitResult),
       );
 
       // Act
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual({
         allowed: true,
         reason: 'authenticated',
-        rateLimitStatus: rateLimitResult
+        rateLimitStatus: rateLimitResult,
       });
 
       // イベントが発行されたことを確認
-      expect(mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(APIAccessRequested)
-      );
-      
+      expect(mockEventBus.publish).toHaveBeenCalledWith(expect.any(APIAccessRequested));
+
       // 簡略化されたログ記録のため、APIログリポジトリは呼ばれない
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
           endpoint,
           method,
-          statusCode: 200
+          statusCode: 200,
         }),
-        'API access logged'
+        'API access logged',
       );
     });
 
@@ -158,18 +147,14 @@ describe('APIAccessControlUseCase', () => {
       const method = 'GET';
 
       // Act
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual({
         allowed: false,
         reason: 'endpoint_not_found',
-        message: 'Invalid endpoint path'
+        message: 'Invalid endpoint path',
       });
     });
 
@@ -178,29 +163,21 @@ describe('APIAccessControlUseCase', () => {
       const endpoint = '/api/admin/data.json';
       const method = 'GET';
 
-      vi.mocked(mockAccessControlService.canAccessEndpoint).mockReturnValue(
-        Result.ok(false)
-      );
+      vi.mocked(mockAccessControlService.canAccessEndpoint).mockReturnValue(Result.ok(false));
 
       // Act
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       // Assert
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual({
         allowed: false,
         reason: 'unauthorized',
-        message: 'Access to this endpoint is not allowed for your tier'
+        message: 'Access to this endpoint is not allowed for your tier',
       });
 
       // 不正アクセスイベントが発行されたことを確認
-      expect(mockEventBus.publish).toHaveBeenCalledWith(
-        expect.any(InvalidAPIAccess)
-      );
+      expect(mockEventBus.publish).toHaveBeenCalledWith(expect.any(InvalidAPIAccess));
     });
 
     it('should deny access when rate limit is exceeded', async () => {
@@ -214,19 +191,15 @@ describe('APIAccessControlUseCase', () => {
         windowStart: new Date(),
         windowEnd: new Date(Date.now() + 60000),
         remainingRequests: 0,
-        retryAfter: 45
+        retryAfter: 45,
       };
 
       vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(
-        Result.ok(rateLimitResult)
+        Result.ok(rateLimitResult),
       );
 
       // Act
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       // Assert
       expect(result.isSuccess).toBe(true);
@@ -234,7 +207,7 @@ describe('APIAccessControlUseCase', () => {
         allowed: false,
         reason: 'rate_limit_exceeded',
         rateLimitStatus: rateLimitResult,
-        message: 'Rate limit exceeded. Try again in 45 seconds'
+        message: 'Rate limit exceeded. Try again in 45 seconds',
       });
 
       // レート制限超過イベントが発行されたことを確認
@@ -247,16 +220,10 @@ describe('APIAccessControlUseCase', () => {
       const method = 'GET';
       const error = DomainError.internal('RATE_LIMIT_SERVICE_ERROR', 'Rate limit service error');
 
-      vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(
-        Result.fail(error)
-      );
+      vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(Result.fail(error));
 
       // Act
-      const result = await useCase.checkAndRecordAccess(
-        authenticatedUser,
-        endpoint,
-        method
-      );
+      const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
       // Assert
       expect(result.isFailure).toBe(true);
@@ -270,7 +237,7 @@ describe('APIAccessControlUseCase', () => {
       const metadata = {
         ipAddress: '192.168.1.1',
         userAgent: 'Mozilla/5.0',
-        correlationId: '123e4567-e89b-12d3-a456-426614174000'
+        correlationId: '123e4567-e89b-12d3-a456-426614174000',
       };
       const rateLimitResult = {
         allowed: true,
@@ -279,11 +246,11 @@ describe('APIAccessControlUseCase', () => {
         windowStart: new Date(),
         windowEnd: new Date(Date.now() + 60000),
         remainingRequests: 50,
-        retryAfter: null
+        retryAfter: null,
       };
 
       vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(
-        Result.ok(rateLimitResult)
+        Result.ok(rateLimitResult),
       );
 
       // Act
@@ -291,7 +258,7 @@ describe('APIAccessControlUseCase', () => {
         authenticatedUser,
         endpoint,
         method,
-        metadata
+        metadata,
       );
 
       // Assert
@@ -301,9 +268,9 @@ describe('APIAccessControlUseCase', () => {
           endpoint,
           method,
           statusCode: 200,
-          metadata
+          metadata,
         }),
-        'API access logged'
+        'API access logged',
       );
     });
   });
@@ -323,9 +290,9 @@ describe('APIAccessControlUseCase', () => {
         expect.objectContaining({
           endpoint,
           method,
-          statusCode: 200
+          statusCode: 200,
         }),
-        'API access logged'
+        'API access logged',
       );
     });
 
@@ -352,7 +319,7 @@ describe('APIAccessControlUseCase', () => {
       const method = 'GET';
       const metadata = {
         ipAddress: '10.0.0.1',
-        userAgent: 'curl/7.64.1'
+        userAgent: 'curl/7.64.1',
       };
 
       // Act
@@ -365,9 +332,9 @@ describe('APIAccessControlUseCase', () => {
           endpoint,
           method,
           statusCode: 200,
-          metadata
+          metadata,
         }),
-        'API access logged'
+        'API access logged',
       );
     });
   });
@@ -383,11 +350,11 @@ describe('APIAccessControlUseCase', () => {
         windowStart: new Date(),
         windowEnd: new Date(Date.now() + 60000),
         remainingRequests: 59,
-        retryAfter: null
+        retryAfter: null,
       };
 
       vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(
-        Result.ok(rateLimitResult)
+        Result.ok(rateLimitResult),
       );
 
       for (const endpoint of publicEndpoints) {
@@ -400,8 +367,8 @@ describe('APIAccessControlUseCase', () => {
           authenticatedUser,
           expect.any(EndpointPath),
           expect.objectContaining({
-            _value: 'public'
-          })
+            _value: 'public',
+          }),
         );
       }
     });
@@ -416,11 +383,11 @@ describe('APIAccessControlUseCase', () => {
         windowStart: new Date(),
         windowEnd: new Date(Date.now() + 60000),
         remainingRequests: 59,
-        retryAfter: null
+        retryAfter: null,
       };
 
       vi.mocked(mockRateLimitUseCase.checkAndRecordAccess).mockResolvedValue(
-        Result.ok(rateLimitResult)
+        Result.ok(rateLimitResult),
       );
 
       for (const endpoint of protectedEndpoints) {
@@ -432,8 +399,8 @@ describe('APIAccessControlUseCase', () => {
           authenticatedUser,
           expect.any(EndpointPath),
           expect.objectContaining({
-            _value: 'protected'
-          })
+            _value: 'protected',
+          }),
         );
       }
     });

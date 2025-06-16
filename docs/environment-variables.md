@@ -5,6 +5,7 @@ This document describes the environment variable management system for the OpenD
 ## Overview
 
 The project uses a type-safe environment variable system with validation at startup. This ensures that:
+
 - All required variables are present
 - Values are properly formatted and typed
 - Clear error messages are provided for misconfiguration
@@ -170,8 +171,8 @@ kind: ConfigMap
 metadata:
   name: app-config
 data:
-  NODE_ENV: "production"
-  LOG_LEVEL: "info"
+  NODE_ENV: 'production'
+  LOG_LEVEL: 'info'
 ---
 apiVersion: v1
 kind: Secret

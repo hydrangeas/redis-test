@@ -11,7 +11,7 @@ export interface EnvConfig {
  * 環境変数の検証とエラーメッセージ
  */
 function validateEnvVar(name: string, value: string | undefined): string {
-  if (!value || value.trim() === '') {
+  if (!value || value.trim() === "") {
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;
@@ -23,12 +23,18 @@ function validateEnvVar(name: string, value: string | undefined): string {
 function loadEnvConfig(): EnvConfig {
   try {
     return {
-      supabaseUrl: validateEnvVar('VITE_SUPABASE_URL', import.meta.env.VITE_SUPABASE_URL),
-      supabaseAnonKey: validateEnvVar('VITE_SUPABASE_ANON_KEY', import.meta.env.VITE_SUPABASE_ANON_KEY),
-      apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+      supabaseUrl: validateEnvVar(
+        "VITE_SUPABASE_URL",
+        import.meta.env.VITE_SUPABASE_URL
+      ),
+      supabaseAnonKey: validateEnvVar(
+        "VITE_SUPABASE_ANON_KEY",
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      ),
+      apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
     };
   } catch (error) {
-    console.error('Environment configuration error:', error);
+    console.error("Environment configuration error:", error);
     throw error;
   }
 }

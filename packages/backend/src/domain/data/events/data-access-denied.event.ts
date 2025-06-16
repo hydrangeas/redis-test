@@ -9,7 +9,7 @@ export class DataAccessDenied extends DomainEvent {
     public readonly userTier: string,
     public readonly reason: string,
     public readonly requestTime: Date,
-    eventVersion?: number
+    eventVersion?: number,
   ) {
     super(aggregateId, eventVersion);
   }

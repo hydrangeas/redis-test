@@ -12,7 +12,7 @@ class TestEvent implements DomainEvent {
     public readonly occurredAt: Date,
     public readonly userId: string,
     public readonly password?: string,
-    public readonly apiKey?: string
+    public readonly apiKey?: string,
   ) {}
 
   getEventName(): string {
@@ -26,7 +26,7 @@ describe('EventLogger', () => {
 
   beforeEach(() => {
     container.reset();
-    
+
     mockLogger = {
       info: vi.fn(),
       error: vi.fn(),
@@ -46,7 +46,7 @@ describe('EventLogger', () => {
         'evt-123',
         'agg-456',
         new Date('2025-01-14T12:00:00Z'),
-        'user-789'
+        'user-789',
       );
 
       await eventLogger.handle(event);
@@ -71,7 +71,7 @@ describe('EventLogger', () => {
         new Date('2025-01-14T12:00:00Z'),
         'user-789',
         'secret-password',
-        'secret-api-key'
+        'secret-api-key',
       );
 
       await eventLogger.handle(event);

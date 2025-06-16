@@ -1,5 +1,5 @@
-export { default as Table } from './Table';
-export type { TableProps } from './Table';
+export { default as Table } from "./Table";
+export type { TableProps } from "./Table";
 export {
   TableHeader,
   TableBody,
@@ -8,7 +8,7 @@ export {
   TableHead,
   TableCell,
   TableCaption,
-} from './Table';
+} from "./Table";
 export type {
   TableHeaderProps,
   TableBodyProps,
@@ -17,4 +17,4 @@ export type {
   TableHeadProps,
   TableCellProps,
   TableCaptionProps,
-} from './Table';
+} from "./Table";

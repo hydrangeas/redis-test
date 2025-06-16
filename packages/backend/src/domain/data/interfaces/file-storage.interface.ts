@@ -12,14 +12,14 @@ export interface IFileStorage {
    * @returns Parsed JSON content or error
    */
   readFile(path: string): Promise<Result<any, DomainError>>;
-  
+
   /**
    * Get file metadata without reading content
    * @param path - Relative path to the file
    * @returns File metadata or error
    */
   getFileMetadata(path: string): Promise<Result<FileMetadata, DomainError>>;
-  
+
   /**
    * Stream file content for large files
    * @param path - Relative path to the file
@@ -28,23 +28,23 @@ export interface IFileStorage {
    */
   streamFile(
     path: string,
-    options?: { start?: number; end?: number }
+    options?: { start?: number; end?: number },
   ): Promise<Result<NodeJS.ReadableStream, DomainError>>;
-  
+
   /**
    * List files in a directory
    * @param directory - Relative path to directory
    * @returns Array of file paths or error
    */
   listFiles(directory: string): Promise<Result<string[], DomainError>>;
-  
+
   /**
    * Check if file exists
    * @param path - Relative path to the file
    * @returns True if file exists
    */
   exists(path: string): Promise<boolean>;
-  
+
   /**
    * Clean up resources (close watchers, clear cache, etc.)
    */

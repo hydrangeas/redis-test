@@ -22,11 +22,11 @@ const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
 const start = async (): Promise<void> => {
   try {
-    await server.listen({ 
-      port: config.PORT, 
+    await server.listen({
+      port: config.PORT,
       host: config.HOST,
     });
-    
+
     logger.info({
       msg: 'Server started successfully',
       port: config.PORT,

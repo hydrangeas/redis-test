@@ -10,17 +10,17 @@ describe('Path Validation Plugin', () => {
   beforeEach(async () => {
     setupTestDI();
     app = fastify({ logger: false });
-    
+
     // パス検証プラグインを登録
     await app.register(pathValidationPlugin);
-    
+
     // テスト用エンドポイント
-    app.get('/secure/*', async (request) => ({ 
+    app.get('/secure/*', async (request) => ({
       path: request.url,
       query: request.query,
     }));
-    
-    app.get('/api/data/:id', async (request) => ({ 
+
+    app.get('/api/data/:id', async (request) => ({
       params: request.params,
       query: request.query,
     }));

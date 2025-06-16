@@ -14,7 +14,7 @@ declare module 'fastify' {
     authenticatedUser?: AuthenticatedUser;
     rateLimitStatus?: RateLimitCheckResult;
   }
-  
+
   interface FastifyContextConfig {
     requireAuth?: boolean;
   }

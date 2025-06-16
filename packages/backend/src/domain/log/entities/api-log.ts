@@ -61,18 +61,15 @@ export class APILog extends Entity<APILogProps> {
     super(props, id);
   }
 
-  public static create(
-    props: APILogProps,
-    id?: APILogId
-  ): Result<APILog> {
+  public static create(props: APILogProps, id?: APILogId): Result<APILog> {
     // Validate timestamp
     if (!props.timestamp || !(props.timestamp instanceof Date)) {
       return Result.fail(
         new DomainError(
           'INVALID_TIMESTAMP',
           'Timestamp must be a valid Date object',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -82,8 +79,8 @@ export class APILog extends Entity<APILogProps> {
         new DomainError(
           'FUTURE_TIMESTAMP',
           'Timestamp cannot be in the future',
-          ErrorType.VALIDATION
-        )
+          ErrorType.VALIDATION,
+        ),
       );
     }
 
@@ -92,7 +89,7 @@ export class APILog extends Entity<APILogProps> {
         ...props,
         metadata: props.metadata || {},
       },
-      id || APILogId.generate()
+      id || APILogId.generate(),
     );
 
     return Result.ok(apiLog);

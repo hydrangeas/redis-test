@@ -10,10 +10,10 @@ describe('IPAddress', () => {
         '172.16.0.1',
         '8.8.8.8',
         '255.255.255.255',
-        '0.0.0.0'
+        '0.0.0.0',
       ];
 
-      validIPv4s.forEach(ip => {
+      validIPv4s.forEach((ip) => {
         const result = IPAddress.create(ip);
         expect(result.isSuccess).toBe(true);
         expect(result.getValue().value).toBe(ip);
@@ -26,10 +26,10 @@ describe('IPAddress', () => {
         '2001:db8:85a3::8a2e:370:7334',
         '::1',
         'fe80::1',
-        '::ffff:192.168.1.1'
+        '::ffff:192.168.1.1',
       ];
 
-      validIPv6s.forEach(ip => {
+      validIPv6s.forEach((ip) => {
         const result = IPAddress.create(ip);
         expect(result.isSuccess).toBe(true);
         expect(result.getValue().value).toBe(ip);
@@ -107,15 +107,9 @@ describe('IPAddress', () => {
 
   describe('isPrivate', () => {
     it('should identify private IPv4 addresses', () => {
-      const privateIPs = [
-        '10.0.0.1',
-        '172.16.0.1',
-        '172.31.255.255',
-        '192.168.0.1',
-        '127.0.0.1'
-      ];
+      const privateIPs = ['10.0.0.1', '172.16.0.1', '172.31.255.255', '192.168.0.1', '127.0.0.1'];
 
-      privateIPs.forEach(ip => {
+      privateIPs.forEach((ip) => {
         const ipAddress = IPAddress.create(ip).getValue();
         expect(ipAddress.isPrivate()).toBe(true);
       });
@@ -126,24 +120,19 @@ describe('IPAddress', () => {
         '8.8.8.8',
         '1.1.1.1',
         '172.32.0.1', // Outside private range
-        '192.169.0.1' // Outside private range
+        '192.169.0.1', // Outside private range
       ];
 
-      publicIPs.forEach(ip => {
+      publicIPs.forEach((ip) => {
         const ipAddress = IPAddress.create(ip).getValue();
         expect(ipAddress.isPrivate()).toBe(false);
       });
     });
 
     it('should identify private IPv6 addresses', () => {
-      const privateIPv6s = [
-        '::1',
-        'fc00::1',
-        'fd00::1',
-        'fe80::1'
-      ];
+      const privateIPv6s = ['::1', 'fc00::1', 'fd00::1', 'fe80::1'];
 
-      privateIPv6s.forEach(ip => {
+      privateIPv6s.forEach((ip) => {
         const ipAddress = IPAddress.create(ip).getValue();
         expect(ipAddress.isPrivate()).toBe(true);
       });

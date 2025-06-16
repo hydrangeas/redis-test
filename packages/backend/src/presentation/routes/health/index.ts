@@ -12,7 +12,7 @@ const HealthStatus = Type.Object({
   status: Type.Union([
     Type.Literal('healthy'),
     Type.Literal('degraded'),
-    Type.Literal('unhealthy')
+    Type.Literal('unhealthy'),
   ]),
   timestamp: Type.String({ format: 'date-time' }),
   uptime: Type.Number({ description: 'Uptime in seconds' }),
@@ -21,17 +21,17 @@ const HealthStatus = Type.Object({
   services: Type.Object({
     database: Type.Object({
       status: Type.String(),
-      message: Type.Optional(Type.String())
+      message: Type.Optional(Type.String()),
     }),
     dataFiles: Type.Object({
       status: Type.String(),
-      message: Type.Optional(Type.String())
+      message: Type.Optional(Type.String()),
     }),
     cache: Type.Object({
       status: Type.String(),
-      message: Type.Optional(Type.String())
-    })
-  })
+      message: Type.Optional(Type.String()),
+    }),
+  }),
 });
 
 // 詳細ヘルスチェックのスキーマ
@@ -41,194 +41,210 @@ const DetailedHealthStatus = Type.Intersect([
     memory: Type.Object({
       used: Type.Number(),
       total: Type.Number(),
-      percentage: Type.Number()
+      percentage: Type.Number(),
     }),
     cpu: Type.Object({
-      usage: Type.Number()
-    })
-  })
+      usage: Type.Number(),
+    }),
+  }),
 ]);
 
 const healthRoutes: FastifyPluginAsync = async (fastify) => {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   // 基本的なヘルスチェック
-  fastify.get('/', {
-    schema: {
-      description: 'Basic health check endpoint',
-      tags: ['Health'],
-      response: {
-        200: HealthStatus,
-        503: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' },
-            message: { type: 'string' }
-          }
+  fastify.get(
+    '/',
+    {
+      schema: {
+        description: 'Basic health check endpoint',
+        tags: ['Health'],
+        response: {
+          200: HealthStatus,
+          503: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+              message: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (_request, reply) => {
+      try {
+        const checks = await performHealthChecks();
+
+        // 全体のステータスを決定
+        const overallStatus = determineOverallStatus(checks);
+
+        const response = {
+          status: overallStatus,
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime(),
+          environment: process.env.NODE_ENV || 'development',
+          version: process.env.npm_package_version || '1.0.0',
+          services: checks,
+        };
+
+        if (overallStatus === 'unhealthy') {
+          return reply.code(503).send(response);
         }
-      }
-    }
-  }, async (_request, reply) => {
-    try {
-      const checks = await performHealthChecks();
-      
-      // 全体のステータスを決定
-      const overallStatus = determineOverallStatus(checks);
-      
-      const response = {
-        status: overallStatus,
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-        version: process.env.npm_package_version || '1.0.0',
-        services: checks
-      };
 
-      if (overallStatus === 'unhealthy') {
-        return reply.code(503).send(response);
+        return response;
+      } catch (error) {
+        logger.error({ error }, 'Health check failed');
+        return reply.code(503).send({
+          status: 'unhealthy',
+          message: 'Health check failed',
+        });
       }
-
-      return response;
-    } catch (error) {
-      logger.error({ error }, 'Health check failed');
-      return reply.code(503).send({
-        status: 'unhealthy',
-        message: 'Health check failed'
-      });
-    }
-  });
+    },
+  );
 
   // 詳細なヘルスチェック
-  fastify.get('/detailed', {
-    schema: {
-      description: 'Detailed health check endpoint with system metrics',
-      tags: ['Health'],
-      response: {
-        200: DetailedHealthStatus,
-        503: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' },
-            message: { type: 'string' }
-          }
-        }
-      }
-    }
-  }, async (_request, reply) => {
-    try {
-      const checks = await performHealthChecks();
-      const overallStatus = determineOverallStatus(checks);
-      
-      // メモリ使用状況
-      const memoryUsage = process.memoryUsage();
-      const totalMemory = require('os').totalmem();
-      const usedMemory = memoryUsage.heapUsed + memoryUsage.external;
-      
-      // CPU使用状況（簡易版）
-      const cpuUsage = process.cpuUsage();
-      const cpuPercent = (cpuUsage.user + cpuUsage.system) / 1000000; // マイクロ秒をミリ秒に変換
-
-      const response = {
-        status: overallStatus,
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-        version: process.env.npm_package_version || '1.0.0',
-        services: checks,
-        memory: {
-          used: Math.round(usedMemory / 1024 / 1024), // MB単位
-          total: Math.round(totalMemory / 1024 / 1024), // MB単位
-          percentage: Math.round((usedMemory / totalMemory) * 100)
+  fastify.get(
+    '/detailed',
+    {
+      schema: {
+        description: 'Detailed health check endpoint with system metrics',
+        tags: ['Health'],
+        response: {
+          200: DetailedHealthStatus,
+          503: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+              message: { type: 'string' },
+            },
+          },
         },
-        cpu: {
-          usage: Math.round(cpuPercent)
+      },
+    },
+    async (_request, reply) => {
+      try {
+        const checks = await performHealthChecks();
+        const overallStatus = determineOverallStatus(checks);
+
+        // メモリ使用状況
+        const memoryUsage = process.memoryUsage();
+        const totalMemory = require('os').totalmem();
+        const usedMemory = memoryUsage.heapUsed + memoryUsage.external;
+
+        // CPU使用状況（簡易版）
+        const cpuUsage = process.cpuUsage();
+        const cpuPercent = (cpuUsage.user + cpuUsage.system) / 1000000; // マイクロ秒をミリ秒に変換
+
+        const response = {
+          status: overallStatus,
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime(),
+          environment: process.env.NODE_ENV || 'development',
+          version: process.env.npm_package_version || '1.0.0',
+          services: checks,
+          memory: {
+            used: Math.round(usedMemory / 1024 / 1024), // MB単位
+            total: Math.round(totalMemory / 1024 / 1024), // MB単位
+            percentage: Math.round((usedMemory / totalMemory) * 100),
+          },
+          cpu: {
+            usage: Math.round(cpuPercent),
+          },
+        };
+
+        if (overallStatus === 'unhealthy') {
+          return reply.code(503).send(response);
         }
-      };
 
-      if (overallStatus === 'unhealthy') {
-        return reply.code(503).send(response);
+        return response;
+      } catch (error) {
+        logger.error({ error }, 'Detailed health check failed');
+        return reply.code(503).send({
+          status: 'unhealthy',
+          message: 'Health check failed',
+        });
       }
-
-      return response;
-    } catch (error) {
-      logger.error({ error }, 'Detailed health check failed');
-      return reply.code(503).send({
-        status: 'unhealthy',
-        message: 'Health check failed'
-      });
-    }
-  });
+    },
+  );
 
   // Liveness probe (Kubernetes用)
-  fastify.get('/live', {
-    schema: {
-      description: 'Liveness probe for container orchestration',
-      tags: ['Health'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' }
-          }
+  fastify.get(
+    '/live',
+    {
+      schema: {
+        description: 'Liveness probe for container orchestration',
+        tags: ['Health'],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+            },
+          },
+          503: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+            },
+          },
         },
-        503: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' }
-          }
-        }
-      }
-    }
-  }, async () => {
-    // アプリケーションが動作していれば常にOK
-    return { status: 'ok' };
-  });
+      },
+    },
+    async () => {
+      // アプリケーションが動作していれば常にOK
+      return { status: 'ok' };
+    },
+  );
 
   // Readiness probe (Kubernetes用)
-  fastify.get('/ready', {
-    schema: {
-      description: 'Readiness probe for container orchestration',
-      tags: ['Health'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' },
-            checks: { type: 'object' }
-          }
+  fastify.get(
+    '/ready',
+    {
+      schema: {
+        description: 'Readiness probe for container orchestration',
+        tags: ['Health'],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+              checks: { type: 'object' },
+            },
+          },
+          503: {
+            type: 'object',
+            properties: {
+              status: { type: 'string' },
+              checks: { type: 'object' },
+            },
+          },
         },
-        503: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' },
-            checks: { type: 'object' }
-          }
+      },
+    },
+    async (_request, reply) => {
+      try {
+        const checks = await performHealthChecks();
+        const overallStatus = determineOverallStatus(checks);
+
+        const response = {
+          status: overallStatus === 'healthy' ? 'ready' : 'not_ready',
+          checks,
+        };
+
+        if (overallStatus !== 'healthy') {
+          return reply.code(503).send(response);
         }
-      }
-    }
-  }, async (_request, reply) => {
-    try {
-      const checks = await performHealthChecks();
-      const overallStatus = determineOverallStatus(checks);
-      
-      const response = {
-        status: overallStatus === 'healthy' ? 'ready' : 'not_ready',
-        checks
-      };
 
-      if (overallStatus !== 'healthy') {
-        return reply.code(503).send(response);
+        return response;
+      } catch (error) {
+        logger.error({ error }, 'Readiness check failed');
+        return reply.code(503).send({
+          status: 'not_ready',
+          checks: {},
+        });
       }
-
-      return response;
-    } catch (error) {
-      logger.error({ error }, 'Readiness check failed');
-      return reply.code(503).send({
-        status: 'not_ready',
-        checks: {}
-      });
-    }
-  });
+    },
+  );
 };
 
 // ヘルスチェックの実行
@@ -236,7 +252,7 @@ async function performHealthChecks() {
   const checks = {
     database: await checkDatabase(),
     dataFiles: await checkDataFiles(),
-    cache: await checkCache()
+    cache: await checkCache(),
   };
 
   return checks;
@@ -248,37 +264,34 @@ async function checkDatabase() {
     // Supabaseクライアントを使用した接続チェック
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
+
     if (!supabaseUrl || !supabaseKey) {
       return {
         status: 'unhealthy',
-        message: 'Database configuration missing'
+        message: 'Database configuration missing',
       };
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // 簡単なクエリを実行してデータベース接続を確認
-    const { error } = await supabase
-      .from('auth_logs')
-      .select('count')
-      .limit(1)
-      .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116は"no rows found"エラー
+    // 簡単なクエリを実行してデータベース接続を確認
+    const { error } = await supabase.from('auth_logs').select('count').limit(1).single();
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116は"no rows found"エラー
       return {
         status: 'unhealthy',
-        message: `Database connection failed: ${error.message}`
+        message: `Database connection failed: ${error.message}`,
       };
     }
 
     return {
-      status: 'healthy'
+      status: 'healthy',
     };
   } catch (error) {
     return {
       status: 'unhealthy',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -287,13 +300,13 @@ async function checkDatabase() {
 async function checkDataFiles() {
   try {
     const dataDirectory = process.env.DATA_DIRECTORY || path.join(process.cwd(), 'data');
-    
+
     // ディレクトリの存在確認
     const stats = await fs.stat(dataDirectory);
     if (!stats.isDirectory()) {
       return {
         status: 'unhealthy',
-        message: 'Data directory is not accessible'
+        message: 'Data directory is not accessible',
       };
     }
 
@@ -302,12 +315,12 @@ async function checkDataFiles() {
     await fs.access(testFile, fs.constants.R_OK);
 
     return {
-      status: 'healthy'
+      status: 'healthy',
     };
   } catch (error) {
     return {
       status: 'degraded',
-      message: 'Data files may not be fully accessible'
+      message: 'Data files may not be fully accessible',
     };
   }
 }
@@ -317,22 +330,22 @@ async function checkCache() {
   // 現在の実装では、キャッシュは常に利用可能
   // 将来的にRedisなどを使用する場合はここでチェック
   return {
-    status: 'healthy'
+    status: 'healthy',
   };
 }
 
 // 全体のステータスを決定
 function determineOverallStatus(checks: any): 'healthy' | 'degraded' | 'unhealthy' {
   const statuses = Object.values(checks).map((check: any) => check.status);
-  
+
   if (statuses.includes('unhealthy')) {
     return 'unhealthy';
   }
-  
+
   if (statuses.includes('degraded')) {
     return 'degraded';
   }
-  
+
   return 'healthy';
 }
 

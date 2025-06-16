@@ -42,17 +42,17 @@ describe('DataRetrievalUseCase Integration', () => {
       // Create authenticated user
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock authentication
@@ -78,7 +78,7 @@ describe('DataRetrievalUseCase Integration', () => {
             windowStart: new Date(Date.now() - 30000),
             windowEnd: new Date(Date.now() + 30000),
           },
-        })
+        }),
       );
 
       // Mock file system
@@ -112,7 +112,7 @@ describe('DataRetrievalUseCase Integration', () => {
         authenticatedUser,
         filePath,
         'GET',
-        expect.objectContaining({ ipAddress })
+        expect.objectContaining({ ipAddress }),
       );
     });
 
@@ -125,17 +125,17 @@ describe('DataRetrievalUseCase Integration', () => {
       // Create authenticated user
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock authentication
@@ -152,7 +152,7 @@ describe('DataRetrievalUseCase Integration', () => {
         Result.ok({
           allowed: true,
           reason: 'authenticated',
-        })
+        }),
       );
 
       // Mock file not found
@@ -187,17 +187,17 @@ describe('DataRetrievalUseCase Integration', () => {
       // Create authenticated user
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Mock authentication
@@ -224,7 +224,7 @@ describe('DataRetrievalUseCase Integration', () => {
             windowEnd: new Date(Date.now() + 45000),
             retryAfter: 45,
           },
-        })
+        }),
       );
 
       const result = await useCase.retrieveData({
@@ -252,11 +252,7 @@ describe('DataRetrievalUseCase Integration', () => {
       // Mock authentication failure
       vi.spyOn(authUseCase, 'validateToken').mockResolvedValue({
         success: false,
-        error: new ApplicationError(
-          'INVALID_TOKEN_FORMAT',
-          'Invalid token format',
-          'VALIDATION'
-        ),
+        error: new ApplicationError('INVALID_TOKEN_FORMAT', 'Invalid token format', 'VALIDATION'),
       });
 
       const result = await useCase.retrieveData({
@@ -281,24 +277,24 @@ describe('DataRetrievalUseCase Integration', () => {
       const mockData = {
         complexData: {
           items: [1, 2, 3],
-          metadata: { version: '1.0' }
-        }
+          metadata: { version: '1.0' },
+        },
       };
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER2');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Setup full mock chain
@@ -323,7 +319,7 @@ describe('DataRetrievalUseCase Integration', () => {
             windowStart: new Date(Date.now() - 30000),
             windowEnd: new Date(Date.now() + 30000),
           },
-        })
+        }),
       );
 
       mockDependencies.mockRepositories.openData.exists.mockResolvedValue(true);
@@ -361,17 +357,17 @@ describe('DataRetrievalUseCase Integration', () => {
       // Create authenticated user
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Setup authentication
@@ -387,7 +383,7 @@ describe('DataRetrievalUseCase Integration', () => {
         Result.ok({
           allowed: true,
           reason: 'authenticated',
-        })
+        }),
       );
 
       // Setup file system
@@ -421,17 +417,17 @@ describe('DataRetrievalUseCase Integration', () => {
       // Create authenticated user
       const userIdResult = UserId.create(userId);
       const userTierResult = UserTier.create('TIER1');
-      
+
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
       }
       if (userTierResult.isFailure) {
         throw new Error('Failed to create UserTier');
       }
-      
+
       const authenticatedUser = new AuthenticatedUser(
         userIdResult.getValue(),
-        userTierResult.getValue()
+        userTierResult.getValue(),
       );
 
       // Setup authentication

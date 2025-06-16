@@ -22,18 +22,12 @@ export class RateLimit {
    * @param windowSeconds - ウィンドウ期間（秒）
    * @returns 成功時はRateLimit、失敗時はDomainError
    */
-  static create(
-    maxRequests: number,
-    windowSeconds: number
-  ): Result<RateLimit, DomainError> {
+  static create(maxRequests: number, windowSeconds: number): Result<RateLimit, DomainError> {
     // null/undefinedチェック
     const maxRequestsGuard = Guard.againstNullOrUndefined(maxRequests, 'maxRequests');
     if (maxRequestsGuard.isFailure) {
       return Result.fail(
-        DomainError.validation(
-          'INVALID_MAX_REQUESTS',
-          'Max requests cannot be null or undefined'
-        )
+        DomainError.validation('INVALID_MAX_REQUESTS', 'Max requests cannot be null or undefined'),
       );
     }
 
@@ -42,8 +36,8 @@ export class RateLimit {
       return Result.fail(
         DomainError.validation(
           'INVALID_WINDOW_SECONDS',
-          'Window seconds cannot be null or undefined'
-        )
+          'Window seconds cannot be null or undefined',
+        ),
       );
     }
 
@@ -53,8 +47,8 @@ export class RateLimit {
         DomainError.validation(
           'INVALID_MAX_REQUESTS',
           `Max requests must be an integer. Received: ${maxRequests}`,
-          { maxRequests }
-        )
+          { maxRequests },
+        ),
       );
     }
 
@@ -63,8 +57,8 @@ export class RateLimit {
         DomainError.validation(
           'INVALID_WINDOW_SECONDS',
           `Window seconds must be an integer. Received: ${windowSeconds}`,
-          { windowSeconds }
-        )
+          { windowSeconds },
+        ),
       );
     }
 
@@ -74,8 +68,8 @@ export class RateLimit {
         DomainError.validation(
           'INVALID_MAX_REQUESTS',
           `Max requests must be positive. Received: ${maxRequests}`,
-          { maxRequests }
-        )
+          { maxRequests },
+        ),
       );
     }
 
@@ -84,8 +78,8 @@ export class RateLimit {
         DomainError.validation(
           'INVALID_WINDOW_SECONDS',
           `Window seconds must be positive. Received: ${windowSeconds}`,
-          { windowSeconds }
-        )
+          { windowSeconds },
+        ),
       );
     }
 
@@ -95,18 +89,19 @@ export class RateLimit {
         DomainError.validation(
           'MAX_REQUESTS_TOO_HIGH',
           `Max requests cannot exceed 10000. Received: ${maxRequests}`,
-          { maxRequests }
-        )
+          { maxRequests },
+        ),
       );
     }
 
-    if (windowSeconds > 86400) { // 24時間
+    if (windowSeconds > 86400) {
+      // 24時間
       return Result.fail(
         DomainError.validation(
           'WINDOW_SECONDS_TOO_HIGH',
           `Window seconds cannot exceed 86400 (24 hours). Received: ${windowSeconds}`,
-          { windowSeconds }
-        )
+          { windowSeconds },
+        ),
       );
     }
 
@@ -149,10 +144,7 @@ export class RateLimit {
    */
   equals(other: RateLimit): boolean {
     if (!other) return false;
-    return (
-      this._maxRequests === other._maxRequests &&
-      this._windowSeconds === other._windowSeconds
-    );
+    return this._maxRequests === other._maxRequests && this._windowSeconds === other._windowSeconds;
   }
 
   /**
@@ -240,10 +232,7 @@ export class RateLimit {
    * @param json - JSON形式のレート制限情報
    * @returns 復元されたRateLimit
    */
-  static fromJSON(json: {
-    maxRequests: number;
-    windowSeconds: number;
-  }): RateLimit {
+  static fromJSON(json: { maxRequests: number; windowSeconds: number }): RateLimit {
     return RateLimit.fromValues(json.maxRequests, json.windowSeconds);
   }
 }

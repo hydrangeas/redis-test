@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
@@ -8,7 +8,7 @@ export const AuthCallbackPage: React.FC = () => {
     // Supabaseが自動的に認証を処理するため、
     // 少し待ってからダッシュボードにリダイレクト
     const timer = setTimeout(() => {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }, 1000);
 
     return () => clearTimeout(timer);

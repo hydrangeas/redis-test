@@ -48,14 +48,18 @@ describe('Auth Plugin', () => {
 
     // Add test routes
     app.get('/public', async () => ({ message: 'public' }));
-    
-    app.get('/protected', {
-      preHandler: [app.authenticate],
-    }, async (request) => ({
-      message: 'protected',
-      userId: request.user?.userId.value,
-      tier: request.user?.tier.level.toLowerCase(),
-    }));
+
+    app.get(
+      '/protected',
+      {
+        preHandler: [app.authenticate],
+      },
+      async (request) => ({
+        message: 'protected',
+        userId: request.user?.userId.value,
+        tier: request.user?.tier.level.toLowerCase(),
+      }),
+    );
   });
 
   describe('Public routes', () => {
@@ -100,7 +104,7 @@ describe('Auth Plugin', () => {
 
     it('should verify token', async () => {
       vi.mocked(mockJWTService.verifyAccessToken).mockResolvedValueOnce(
-        Result.fail('Invalid token')
+        Result.fail('Invalid token'),
       );
 
       const response = await app.inject({
@@ -120,13 +124,13 @@ describe('Auth Plugin', () => {
 
     it('should authenticate valid token with tier from token', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';
-      
+
       vi.mocked(mockJWTService.verifyAccessToken).mockResolvedValueOnce(
         Result.ok({
           sub: userId,
           tier: 'tier2',
           type: 'access',
-        })
+        }),
       );
 
       const response = await app.inject({
@@ -146,26 +150,26 @@ describe('Auth Plugin', () => {
 
     it.skip('should authenticate valid token and fetch tier from user repository', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';
-      
+
       vi.mocked(mockJWTService.verifyAccessToken).mockResolvedValueOnce(
         Result.ok({
           sub: userId,
           type: 'access',
-        })
+        }),
       );
 
       const userIdObj = UserId.create(userId).getValue();
       const userTier = UserTier.create(TierLevel.TIER3).getValue();
-      const email = await import('@/domain/auth/value-objects/email').then(m => m.Email.create('test@example.com').getValue());
+      const email = await import('@/domain/auth/value-objects/email').then((m) =>
+        m.Email.create('test@example.com').getValue(),
+      );
       const user = User.create({
         id: userIdObj,
         email,
         tier: userTier,
       }).getValue();
 
-      vi.mocked(mockUserRepository.findById).mockResolvedValueOnce(
-        Result.ok(user)
-      );
+      vi.mocked(mockUserRepository.findById).mockResolvedValueOnce(Result.ok(user));
 
       const response = await app.inject({
         method: 'GET',
@@ -179,24 +183,24 @@ describe('Auth Plugin', () => {
       const body = JSON.parse(response.body);
       expect(body.userId).toBe(userId);
       expect(body.tier).toBe('tier3');
-      expect(mockUserRepository.findById).toHaveBeenCalledWith(expect.objectContaining({
-        _value: userId
-      }));
+      expect(mockUserRepository.findById).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _value: userId,
+        }),
+      );
     });
 
     it('should use default tier when user not found', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';
-      
+
       vi.mocked(mockJWTService.verifyAccessToken).mockResolvedValueOnce(
         Result.ok({
           sub: userId,
           type: 'access',
-        })
+        }),
       );
 
-      vi.mocked(mockUserRepository.findById).mockResolvedValueOnce(
-        Result.ok(null)
-      );
+      vi.mocked(mockUserRepository.findById).mockResolvedValueOnce(Result.ok(null));
 
       const response = await app.inject({
         method: 'GET',
@@ -217,7 +221,7 @@ describe('Auth Plugin', () => {
         Result.ok({
           sub: 'invalid-uuid',
           type: 'access',
-        })
+        }),
       );
 
       const response = await app.inject({
@@ -235,9 +239,7 @@ describe('Auth Plugin', () => {
     });
 
     it('should handle authentication errors', async () => {
-      vi.mocked(mockJWTService.verifyAccessToken).mockRejectedValueOnce(
-        new Error('Service error')
-      );
+      vi.mocked(mockJWTService.verifyAccessToken).mockRejectedValueOnce(new Error('Service error'));
 
       const response = await app.inject({
         method: 'GET',
@@ -262,17 +264,29 @@ describe('Auth Plugin', () => {
         excludePaths: ['/health', '/api-docs/*'],
       });
 
-      appWithExcludes.get('/health', {
-        preHandler: [appWithExcludes.authenticate],
-      }, async () => ({ status: 'ok' }));
+      appWithExcludes.get(
+        '/health',
+        {
+          preHandler: [appWithExcludes.authenticate],
+        },
+        async () => ({ status: 'ok' }),
+      );
 
-      appWithExcludes.get('/api-docs/swagger', {
-        preHandler: [appWithExcludes.authenticate],
-      }, async () => ({ docs: 'swagger' }));
+      appWithExcludes.get(
+        '/api-docs/swagger',
+        {
+          preHandler: [appWithExcludes.authenticate],
+        },
+        async () => ({ docs: 'swagger' }),
+      );
 
-      appWithExcludes.get('/api-docs/scalar', {
-        preHandler: [appWithExcludes.authenticate],
-      }, async () => ({ docs: 'scalar' }));
+      appWithExcludes.get(
+        '/api-docs/scalar',
+        {
+          preHandler: [appWithExcludes.authenticate],
+        },
+        async () => ({ docs: 'scalar' }),
+      );
 
       // Health check should not require auth
       const healthResponse = await appWithExcludes.inject({

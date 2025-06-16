@@ -14,28 +14,28 @@ import { DomainError } from '../../../../domain/errors/domain-error';
 describe('Data Access Route', () => {
   let app: FastifyInstance;
   let mockDataAccessUseCase: Partial<DataAccessUseCase>;
-  
-  function createMockAuthenticatedUser(userId = 'test-user-123', tier = 'tier1'): AuthenticatedUser {
-    return new AuthenticatedUser(
-      new UserId(userId),
-      new UserTier(tier as any)
-    );
+
+  function createMockAuthenticatedUser(
+    userId = 'test-user-123',
+    tier = 'tier1',
+  ): AuthenticatedUser {
+    return new AuthenticatedUser(new UserId(userId), new UserTier(tier as any));
   }
 
   beforeEach(async () => {
     setupTestDI();
-    
+
     // Mock DataAccessUseCase
     mockDataAccessUseCase = {
       getData: vi.fn(),
     };
-    
+
     container.register(DI_TOKENS.DataAccessUseCase, {
       useValue: mockDataAccessUseCase,
     });
 
     app = fastify({ logger: false });
-    
+
     // Register authentication decorator
     app.decorate('authenticate', async (request, reply) => {
       const authHeader = request.headers.authorization;
@@ -49,16 +49,16 @@ describe('Data Access Route', () => {
       }
       request.user = createMockAuthenticatedUser();
     });
-    
+
     // Register rate limit decorator
     app.decorate('checkRateLimit', async (request, reply) => {
       // Mock rate limit check - always pass in tests
     });
-    
+
     // Register error handler
     const errorHandler = (await import('../../../plugins/error-handler')).default;
     await app.register(errorHandler);
-    
+
     await app.register(dataAccessRoute);
   });
 
@@ -73,7 +73,7 @@ describe('Data Access Route', () => {
         key: 'value',
         numbers: [1, 2, 3],
       };
-      
+
       vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
         success: true,
         data: {
@@ -97,7 +97,7 @@ describe('Data Access Route', () => {
       expect(response.headers['content-type']).toContain('application/json');
       expect(response.headers['etag']).toBe('"abc123"');
       expect(response.headers['cache-control']).toBe('public, max-age=3600');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toEqual({
         data: mockData,
@@ -155,11 +155,7 @@ describe('Data Access Route', () => {
       vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
         success: false,
         data: null,
-        error: new DomainError(
-          'DATA_NOT_FOUND',
-          'Data file not found',
-          'NOT_FOUND'
-        ),
+        error: new DomainError('DATA_NOT_FOUND', 'Data file not found', 'NOT_FOUND'),
       });
 
       const response = await app.inject({
@@ -172,7 +168,7 @@ describe('Data Access Route', () => {
 
       expect(response.statusCode).toBe(404);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/data-not-found'),
@@ -185,11 +181,7 @@ describe('Data Access Route', () => {
       vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
         success: false,
         data: null,
-        error: new DomainError(
-          'INVALID_PATH',
-          'Path traversal detected',
-          'SECURITY'
-        ),
+        error: new DomainError('INVALID_PATH', 'Path traversal detected', 'SECURITY'),
       });
 
       const response = await app.inject({
@@ -208,17 +200,12 @@ describe('Data Access Route', () => {
       vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
         success: false,
         data: null,
-        error: new DomainError(
-          'RATE_LIMIT_EXCEEDED',
-          'API rate limit exceeded',
-          'RATE_LIMIT',
-          {
-            limit: 60,
-            remaining: 0,
-            reset: 1704067260,
-            retryAfter: 30,
-          }
-        ),
+        error: new DomainError('RATE_LIMIT_EXCEEDED', 'API rate limit exceeded', 'RATE_LIMIT', {
+          limit: 60,
+          remaining: 0,
+          reset: 1704067260,
+          retryAfter: 30,
+        }),
       });
 
       const response = await app.inject({
@@ -232,7 +219,7 @@ describe('Data Access Route', () => {
       expect(response.statusCode).toBe(429);
       // Note: Headers might not be set in test environment without middleware
       // The important thing is that we return 429 with proper error response
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/rate-limit-exceeded'),
@@ -241,9 +228,7 @@ describe('Data Access Route', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      vi.mocked(mockDataAccessUseCase.getData).mockRejectedValue(
-        new Error('Unexpected error')
-      );
+      vi.mocked(mockDataAccessUseCase.getData).mockRejectedValue(new Error('Unexpected error'));
 
       const response = await app.inject({
         method: 'GET',
@@ -255,7 +240,7 @@ describe('Data Access Route', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.headers['content-type']).toContain('application/problem+json');
-      
+
       const body = JSON.parse(response.body);
       expect(body).toMatchObject({
         type: expect.stringContaining('/errors/data-access-error'),

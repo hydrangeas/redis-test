@@ -53,6 +53,7 @@ nano .env.development.local
 ```
 
 開発環境の特徴：
+
 - デバッグモード有効
 - 詳細なログ出力
 - ホットリロード有効
@@ -67,6 +68,7 @@ nano .env.staging.local
 ```
 
 ステージング環境の特徴：
+
 - テストユーザーの設定
 - デバッグエンドポイント有効
 - 本番環境に近い設定
@@ -80,6 +82,7 @@ nano .env.production.local
 ```
 
 本番環境の特徴：
+
 - 最小限のログ出力
 - セキュリティ設定の強化
 - モニタリング有効
@@ -89,56 +92,56 @@ nano .env.production.local
 
 ### 基本設定
 
-| 設定項目 | 説明 | デフォルト値 |
-|---------|------|------------|
-| NODE_ENV | 環境タイプ | development |
-| APP_NAME | アプリケーション名 | Open Data API |
-| APP_VERSION | バージョン | 1.0.0 |
-| LOG_LEVEL | ログレベル | debug (dev) / info (staging) / warn (prod) |
+| 設定項目    | 説明               | デフォルト値                               |
+| ----------- | ------------------ | ------------------------------------------ |
+| NODE_ENV    | 環境タイプ         | development                                |
+| APP_NAME    | アプリケーション名 | Open Data API                              |
+| APP_VERSION | バージョン         | 1.0.0                                      |
+| LOG_LEVEL   | ログレベル         | debug (dev) / info (staging) / warn (prod) |
 
 ### Supabase設定
 
-| 設定項目 | 説明 | 必須 |
-|---------|------|-----|
-| SUPABASE_URL | SupabaseプロジェクトURL | ✓ |
-| SUPABASE_ANON_KEY | Supabase匿名キー | ✓ |
-| SUPABASE_SERVICE_ROLE_KEY | Supabaseサービスロールキー | ✓ |
+| 設定項目                  | 説明                       | 必須 |
+| ------------------------- | -------------------------- | ---- |
+| SUPABASE_URL              | SupabaseプロジェクトURL    | ✓    |
+| SUPABASE_ANON_KEY         | Supabase匿名キー           | ✓    |
+| SUPABASE_SERVICE_ROLE_KEY | Supabaseサービスロールキー | ✓    |
 
 ### API設定
 
-| 設定項目 | 説明 | デフォルト値 |
-|---------|------|------------|
-| API_PORT | APIサーバーのポート | 3000 |
-| API_HOST | APIサーバーのホスト | localhost |
-| API_BASE_URL | APIのベースURL | http://localhost:3000 |
+| 設定項目     | 説明                | デフォルト値          |
+| ------------ | ------------------- | --------------------- |
+| API_PORT     | APIサーバーのポート | 3000                  |
+| API_HOST     | APIサーバーのホスト | localhost             |
+| API_BASE_URL | APIのベースURL      | http://localhost:3000 |
 
 ### レート制限設定
 
-| 設定項目 | 説明 | デフォルト値 |
-|---------|------|------------|
-| RATE_LIMIT_ENABLED | レート制限の有効/無効 | true |
-| RATE_LIMIT_TIER1_MAX | Tier1の最大リクエスト数 | 60 |
-| RATE_LIMIT_TIER1_WINDOW | Tier1のウィンドウ時間（秒） | 60 |
-| RATE_LIMIT_TIER2_MAX | Tier2の最大リクエスト数 | 120 |
-| RATE_LIMIT_TIER2_WINDOW | Tier2のウィンドウ時間（秒） | 60 |
-| RATE_LIMIT_TIER3_MAX | Tier3の最大リクエスト数 | 300 |
-| RATE_LIMIT_TIER3_WINDOW | Tier3のウィンドウ時間（秒） | 60 |
+| 設定項目                | 説明                        | デフォルト値 |
+| ----------------------- | --------------------------- | ------------ |
+| RATE_LIMIT_ENABLED      | レート制限の有効/無効       | true         |
+| RATE_LIMIT_TIER1_MAX    | Tier1の最大リクエスト数     | 60           |
+| RATE_LIMIT_TIER1_WINDOW | Tier1のウィンドウ時間（秒） | 60           |
+| RATE_LIMIT_TIER2_MAX    | Tier2の最大リクエスト数     | 120          |
+| RATE_LIMIT_TIER2_WINDOW | Tier2のウィンドウ時間（秒） | 60           |
+| RATE_LIMIT_TIER3_MAX    | Tier3の最大リクエスト数     | 300          |
+| RATE_LIMIT_TIER3_WINDOW | Tier3のウィンドウ時間（秒） | 60           |
 
 ### セキュリティ設定
 
-| 設定項目 | 説明 | 注意事項 |
-|---------|------|---------|
-| CORS_ORIGINS | 許可するオリジン（カンマ区切り） | 本番環境では厳密に設定 |
-| JWT_SECRET | JWT署名用のシークレット | 最低32文字以上 |
-| ENCRYPTION_KEY | 暗号化キー | 最低32文字以上 |
+| 設定項目       | 説明                             | 注意事項               |
+| -------------- | -------------------------------- | ---------------------- |
+| CORS_ORIGINS   | 許可するオリジン（カンマ区切り） | 本番環境では厳密に設定 |
+| JWT_SECRET     | JWT署名用のシークレット          | 最低32文字以上         |
+| ENCRYPTION_KEY | 暗号化キー                       | 最低32文字以上         |
 
 ### 機能フラグ
 
-| 設定項目 | 説明 | デフォルト値 |
-|---------|------|------------|
-| FEATURE_API_DOCS_ENABLED | APIドキュメントの有効/無効 | true (dev/staging) / false (prod) |
-| FEATURE_HEALTH_CHECK_ENABLED | ヘルスチェックの有効/無効 | true |
-| FEATURE_METRICS_ENABLED | メトリクス収集の有効/無効 | false (dev) / true (staging/prod) |
+| 設定項目                     | 説明                       | デフォルト値                      |
+| ---------------------------- | -------------------------- | --------------------------------- |
+| FEATURE_API_DOCS_ENABLED     | APIドキュメントの有効/無効 | true (dev/staging) / false (prod) |
+| FEATURE_HEALTH_CHECK_ENABLED | ヘルスチェックの有効/無効  | true                              |
+| FEATURE_METRICS_ENABLED      | メトリクス収集の有効/無効  | false (dev) / true (staging/prod) |
 
 ## 設定の検証
 
@@ -203,6 +206,7 @@ console.log(tier1Config.window); // 60
 エラーメッセージを確認し、該当する設定項目を修正してください。
 
 例：
+
 ```
 Environment validation errors:
   SUPABASE_URL: Invalid url
@@ -225,10 +229,12 @@ NODE_ENV=production npm run start
 ## セキュリティの考慮事項
 
 1. **機密情報の管理**
+
    - `.env.local`ファイルはGitにコミットしない
    - 本番環境の機密情報は環境変数で管理
 
 2. **最小権限の原則**
+
    - 各環境で必要最小限の権限のみ付与
    - サービスロールキーは本番環境のみで使用
 
@@ -239,14 +245,17 @@ NODE_ENV=production npm run start
 ## ベストプラクティス
 
 1. **環境の分離**
+
    - 各環境で異なるSupabaseプロジェクトを使用
    - 環境間でデータを共有しない
 
 2. **設定の文書化**
+
    - 新しい設定項目は必ず文書化
    - デフォルト値と必須/オプションを明記
 
 3. **バックアップ**
+
    - 本番環境の設定は安全な場所にバックアップ
    - 災害時の復旧手順を準備
 

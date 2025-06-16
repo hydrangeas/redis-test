@@ -1,6 +1,6 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
 import {
   Table,
   TableHeader,
@@ -8,10 +8,10 @@ import {
   TableRow,
   TableCell,
   TableHeaderCell,
-} from './Table';
+} from "./Table";
 
-describe('Table', () => {
-  it('renders table element', () => {
+describe("Table", () => {
+  it("renders table element", () => {
     render(
       <Table>
         <TableBody>
@@ -21,12 +21,12 @@ describe('Table', () => {
         </TableBody>
       </Table>
     );
-    
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByText('Cell content')).toBeInTheDocument();
+
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.getByText("Cell content")).toBeInTheDocument();
   });
 
-  it('wraps table in scrollable container', () => {
+  it("wraps table in scrollable container", () => {
     render(
       <Table>
         <TableBody>
@@ -36,13 +36,13 @@ describe('Table', () => {
         </TableBody>
       </Table>
     );
-    
-    const table = screen.getByRole('table');
+
+    const table = screen.getByRole("table");
     const container = table.parentElement;
-    expect(container).toHaveClass('overflow-x-auto');
+    expect(container).toHaveClass("overflow-x-auto");
   });
 
-  it('applies bordered styles', () => {
+  it("applies bordered styles", () => {
     render(
       <Table bordered>
         <TableBody>
@@ -52,14 +52,14 @@ describe('Table', () => {
         </TableBody>
       </Table>
     );
-    
-    const table = screen.getByRole('table');
-    expect(table).toHaveClass('border', 'border-gray-200');
+
+    const table = screen.getByRole("table");
+    expect(table).toHaveClass("border", "border-gray-200");
   });
 });
 
-describe('TableHeader', () => {
-  it('renders thead element', () => {
+describe("TableHeader", () => {
+  it("renders thead element", () => {
     render(
       <table>
         <TableHeader>
@@ -69,15 +69,15 @@ describe('TableHeader', () => {
         </TableHeader>
       </table>
     );
-    
-    const thead = document.querySelector('thead');
+
+    const thead = document.querySelector("thead");
     expect(thead).toBeInTheDocument();
-    expect(thead).toHaveClass('bg-gray-50');
+    expect(thead).toHaveClass("bg-gray-50");
   });
 });
 
-describe('TableBody', () => {
-  it('renders tbody element', () => {
+describe("TableBody", () => {
+  it("renders tbody element", () => {
     render(
       <table>
         <TableBody>
@@ -87,15 +87,15 @@ describe('TableBody', () => {
         </TableBody>
       </table>
     );
-    
-    const tbody = document.querySelector('tbody');
+
+    const tbody = document.querySelector("tbody");
     expect(tbody).toBeInTheDocument();
-    expect(tbody).toHaveClass('bg-white', 'divide-y', 'divide-gray-200');
+    expect(tbody).toHaveClass("bg-white", "divide-y", "divide-gray-200");
   });
 });
 
-describe('TableRow', () => {
-  it('renders tr element with hover styles', () => {
+describe("TableRow", () => {
+  it("renders tr element with hover styles", () => {
     render(
       <table>
         <tbody>
@@ -105,14 +105,14 @@ describe('TableRow', () => {
         </tbody>
       </table>
     );
-    
-    const row = screen.getByRole('row');
-    expect(row).toHaveClass('hover:bg-gray-50', 'transition-colors');
+
+    const row = screen.getByRole("row");
+    expect(row).toHaveClass("hover:bg-gray-50", "transition-colors");
   });
 });
 
-describe('TableHeaderCell', () => {
-  it('renders th element with correct styles', () => {
+describe("TableHeaderCell", () => {
+  it("renders th element with correct styles", () => {
     render(
       <table>
         <thead>
@@ -122,15 +122,15 @@ describe('TableHeaderCell', () => {
         </thead>
       </table>
     );
-    
-    const th = screen.getByRole('columnheader');
-    expect(th).toHaveTextContent('Column Header');
-    expect(th).toHaveClass('font-medium', 'text-gray-500', 'uppercase');
+
+    const th = screen.getByRole("columnheader");
+    expect(th).toHaveTextContent("Column Header");
+    expect(th).toHaveClass("font-medium", "text-gray-500", "uppercase");
   });
 });
 
-describe('TableCell', () => {
-  it('renders td element with padding', () => {
+describe("TableCell", () => {
+  it("renders td element with padding", () => {
     render(
       <table>
         <tbody>
@@ -140,13 +140,13 @@ describe('TableCell', () => {
         </tbody>
       </table>
     );
-    
-    const cell = screen.getByRole('cell');
-    expect(cell).toHaveTextContent('Cell Data');
-    expect(cell).toHaveClass('px-6', 'py-4');
+
+    const cell = screen.getByRole("cell");
+    expect(cell).toHaveTextContent("Cell Data");
+    expect(cell).toHaveClass("px-6", "py-4");
   });
 
-  it('can span multiple columns', () => {
+  it("can span multiple columns", () => {
     render(
       <table>
         <tbody>
@@ -156,8 +156,8 @@ describe('TableCell', () => {
         </tbody>
       </table>
     );
-    
-    const cell = screen.getByRole('cell');
-    expect(cell).toHaveAttribute('colspan', '3');
+
+    const cell = screen.getByRole("cell");
+    expect(cell).toHaveAttribute("colspan", "3");
   });
 });

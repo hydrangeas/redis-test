@@ -26,7 +26,7 @@ export class ApiLogService implements IApiLogService {
     @inject(DI_TOKENS.ApiLogRepository)
     private readonly apiLogRepository: IAPILogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {
     this.startBufferFlush();
   }
@@ -47,19 +47,13 @@ export class ApiLogService implements IApiLogService {
       return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error }, 'Failed to save log to buffer');
-      return Result.fail(
-        new DomainError(
-          'LOG_SAVE_ERROR',
-          'Failed to save API log',
-          'INTERNAL'
-        )
-      );
+      return Result.fail(new DomainError('LOG_SAVE_ERROR', 'Failed to save API log', 'INTERNAL'));
     }
   }
 
   async getUsageStats(
     userId: UserId,
-    timeRange: { start: Date; end: Date }
+    timeRange: { start: Date; end: Date },
   ): Promise<Result<ApiUsageStats, DomainError>> {
     try {
       const timeRangeResult = TimeRange.create(timeRange.start, timeRange.end);
@@ -69,7 +63,7 @@ export class ApiLogService implements IApiLogService {
 
       const logsResult = await this.apiLogRepository.findByUserId(
         userId,
-        timeRangeResult.getValue()
+        timeRangeResult.getValue(),
       );
 
       if (logsResult.isFailure) {
@@ -77,7 +71,7 @@ export class ApiLogService implements IApiLogService {
       }
 
       const logs = logsResult.getValue();
-      
+
       if (logs.length === 0) {
         return Result.ok({
           totalRequests: 0,
@@ -94,61 +88,48 @@ export class ApiLogService implements IApiLogService {
       const stats = this.calculateStats(logs);
       return Result.ok(stats);
     } catch (error) {
-      this.logger.error({ error, userId: userId.value }, 
-        'Failed to calculate usage stats');
-      
+      this.logger.error({ error, userId: userId.value }, 'Failed to calculate usage stats');
+
       return Result.fail(
-        new DomainError(
-          'STATS_ERROR',
-          'Failed to calculate usage statistics',
-          'INTERNAL'
-        )
+        new DomainError('STATS_ERROR', 'Failed to calculate usage statistics', 'INTERNAL'),
       );
     }
   }
 
-  async getErrorLogs(
-    options?: {
-      userId?: UserId;
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<Result<APILogEntry[], DomainError>> {
+  async getErrorLogs(options?: {
+    userId?: UserId;
+    limit?: number;
+    offset?: number;
+  }): Promise<Result<APILogEntry[], DomainError>> {
     return this.apiLogRepository.findErrors(options);
   }
 
   async getSlowRequests(
     thresholdMs: number,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<Result<APILogEntry[], DomainError>> {
     return this.apiLogRepository.findSlowRequests(thresholdMs, limit);
   }
 
   private calculateStats(logs: APILogEntry[]): ApiUsageStats {
     const totalRequests = logs.length;
-    const successfulRequests = logs.filter(log => log.isSuccess).length;
+    const successfulRequests = logs.filter((log) => log.isSuccess).length;
     const failedRequests = totalRequests - successfulRequests;
 
     // レスポンスタイム統計
-    const responseTimes = logs
-      .map(log => log.responseInfo.responseTime)
-      .sort((a, b) => a - b);
-    
-    const averageResponseTime = responseTimes.reduce((sum, time) => 
-      sum + time, 0
-    ) / totalRequests;
-    
+    const responseTimes = logs.map((log) => log.responseInfo.responseTime).sort((a, b) => a - b);
+
+    const averageResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / totalRequests;
+
     const p95Index = Math.floor(responseTimes.length * 0.95);
     const p95ResponseTime = responseTimes[p95Index] || 0;
 
     // 帯域幅統計
-    const totalBandwidth = logs.reduce((sum, log) => 
-      sum + log.responseInfo.size, 0
-    );
+    const totalBandwidth = logs.reduce((sum, log) => sum + log.responseInfo.size, 0);
 
     // エンドポイント統計
     const endpointCounts = new Map<string, number>();
-    logs.forEach(log => {
+    logs.forEach((log) => {
       const endpoint = log.endpoint.path.value;
       const count = endpointCounts.get(endpoint) || 0;
       endpointCounts.set(endpoint, count + 1);
@@ -177,7 +158,7 @@ export class ApiLogService implements IApiLogService {
     // 定期的にバッファをフラッシュ
     this.flushTimer = setInterval(() => {
       if (this.buffer.length > 0) {
-        this.flushBuffer().catch(error => {
+        this.flushBuffer().catch((error) => {
           this.logger.error({ error }, 'Failed to flush buffer in timer');
         });
       }
@@ -189,24 +170,30 @@ export class ApiLogService implements IApiLogService {
 
     // バッチ処理のためにバッファから取り出す
     const itemsToSave = this.buffer.splice(0, this.MAX_BATCH_SIZE);
-    const logsToSave = itemsToSave.map(item => item.entry);
+    const logsToSave = itemsToSave.map((item) => item.entry);
 
     try {
       // バッチ保存を使用
       const result = await this.apiLogRepository.saveMany(logsToSave);
-      
+
       if (result.isFailure) {
-        this.logger.error({ 
-          error: result.getError(),
-          logCount: logsToSave.length,
-        }, 'Failed to save API logs batch');
-        
+        this.logger.error(
+          {
+            error: result.getError(),
+            logCount: logsToSave.length,
+          },
+          'Failed to save API logs batch',
+        );
+
         // 失敗したログをバッファに戻す
         this.buffer.unshift(...itemsToSave);
       } else {
-        this.logger.debug({ 
-          logCount: logsToSave.length,
-        }, 'API logs batch saved successfully');
+        this.logger.debug(
+          {
+            logCount: logsToSave.length,
+          },
+          'API logs batch saved successfully',
+        );
       }
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error saving API logs');

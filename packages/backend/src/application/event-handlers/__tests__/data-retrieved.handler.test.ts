@@ -44,7 +44,7 @@ describe('DataRetrievedHandler', () => {
         1024,
         'application/json',
         false,
-        150
+        150,
       );
 
       vi.mocked(mockAPILogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -78,7 +78,7 @@ describe('DataRetrievedHandler', () => {
           responseTime: 150,
           cached: false,
         }),
-        'Handling DataRetrieved event'
+        'Handling DataRetrieved event',
       );
     });
 
@@ -92,7 +92,7 @@ describe('DataRetrievedHandler', () => {
         10485760, // 10MB
         'application/json',
         false,
-        6000 // 6 seconds
+        6000, // 6 seconds
       );
 
       vi.mocked(mockAPILogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -108,7 +108,7 @@ describe('DataRetrievedHandler', () => {
           responseTime: 6000,
           resourceSize: 10485760,
         }),
-        'Slow data retrieval detected'
+        'Slow data retrieval detected',
       );
     });
 
@@ -122,7 +122,7 @@ describe('DataRetrievedHandler', () => {
         2048,
         'application/json',
         true, // cached
-        10 // Very fast due to cache
+        10, // Very fast due to cache
       );
 
       vi.mocked(mockAPILogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
@@ -146,7 +146,7 @@ describe('DataRetrievedHandler', () => {
         1024,
         'application/json',
         false,
-        150
+        150,
       );
 
       // Act
@@ -158,7 +158,7 @@ describe('DataRetrievedHandler', () => {
         expect.objectContaining({
           eventId: event.eventId,
         }),
-        'Invalid userId in DataRetrieved event'
+        'Invalid userId in DataRetrieved event',
       );
     });
 
@@ -172,7 +172,7 @@ describe('DataRetrievedHandler', () => {
         1024,
         'application/json',
         false,
-        150
+        150,
       );
 
       // Act
@@ -184,7 +184,7 @@ describe('DataRetrievedHandler', () => {
         expect.objectContaining({
           eventId: event.eventId,
         }),
-        'Invalid dataPath in DataRetrieved event'
+        'Invalid dataPath in DataRetrieved event',
       );
     });
 
@@ -198,12 +198,10 @@ describe('DataRetrievedHandler', () => {
         1024,
         'application/json',
         false,
-        150
+        150,
       );
 
-      vi.mocked(mockAPILogRepository.save).mockResolvedValueOnce(
-        Result.fail('Database error')
-      );
+      vi.mocked(mockAPILogRepository.save).mockResolvedValueOnce(Result.fail('Database error'));
 
       // Act
       await handler.handle(event);
@@ -214,7 +212,7 @@ describe('DataRetrievedHandler', () => {
           eventId: event.eventId,
           error: 'Database error',
         }),
-        'Failed to save data retrieval log'
+        'Failed to save data retrieval log',
       );
     });
 
@@ -228,7 +226,7 @@ describe('DataRetrievedHandler', () => {
         1024,
         'application/json',
         false,
-        150
+        150,
       );
 
       const error = new Error('Unexpected error');
@@ -236,14 +234,14 @@ describe('DataRetrievedHandler', () => {
 
       // Act & Assert
       await expect(handler.handle(event)).rejects.toThrow('Unexpected error');
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: event.eventId,
           error: 'Unexpected error',
           stack: expect.any(String),
         }),
-        'Error handling DataRetrieved event'
+        'Error handling DataRetrieved event',
       );
     });
   });

@@ -33,7 +33,7 @@ export class DomainError {
     /** エラーの種別 */
     public readonly type: ErrorType,
     /** 追加の詳細情報 */
-    public readonly details?: any
+    public readonly details?: any,
   ) {}
 
   /**

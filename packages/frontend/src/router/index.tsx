@@ -1,17 +1,17 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { HomePage } from '@/pages/HomePage';
-import { LoginPage } from '@/pages/LoginPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { AuthCallbackPage } from '@/pages/auth/CallbackPage';
-import { ApiDocsPage } from '@/pages/ApiDocsPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { HomePage } from "@/pages/HomePage";
+import { LoginPage } from "@/pages/LoginPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { AuthCallbackPage } from "@/pages/auth/CallbackPage";
+import { ApiDocsPage } from "@/pages/ApiDocsPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // ルート定義
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <Layout />,
     children: [
       {
@@ -19,11 +19,11 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: 'login',
+        path: "login",
         element: <LoginPage />,
       },
       {
-        path: 'dashboard',
+        path: "dashboard",
         element: (
           <ProtectedRoute>
             <DashboardPage />
@@ -31,15 +31,15 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'api-docs',
+        path: "api-docs",
         element: <ApiDocsPage />,
       },
       {
-        path: 'auth/callback',
+        path: "auth/callback",
         element: <AuthCallbackPage />,
       },
       {
-        path: '*',
+        path: "*",
         element: <NotFoundPage />,
       },
     ],

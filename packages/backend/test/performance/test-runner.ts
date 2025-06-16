@@ -7,7 +7,7 @@ import { Logger } from 'pino';
 // Simple test runner for debugging
 async function runSimpleTest() {
   console.log('Starting simple rate limit test...');
-  
+
   // Mock logger
   const mockLogger: Logger = {
     debug: vi.fn(),
@@ -15,11 +15,11 @@ async function runSimpleTest() {
     warn: vi.fn(),
     error: vi.fn(),
   } as any;
-  
+
   // Create services
   const rateLimitService = new InMemoryRateLimitService(mockLogger);
   const tester = new RateLimitPerformanceTester(rateLimitService);
-  
+
   try {
     // Run a simple test
     const metrics = await tester.runLoadTest({
@@ -28,7 +28,7 @@ async function runSimpleTest() {
       userTier: TierLevel.TIER1,
       endpoint: '/secure/test/data.json',
     });
-    
+
     console.log('Test completed successfully!');
     console.log('Metrics:', {
       totalRequests: metrics.totalRequests,
@@ -37,7 +37,6 @@ async function runSimpleTest() {
       avgResponseTime: metrics.averageResponseTime.toFixed(2) + 'ms',
       p99ResponseTime: metrics.p99ResponseTime.toFixed(2) + 'ms',
     });
-    
   } catch (error) {
     console.error('Test failed:', error);
   } finally {

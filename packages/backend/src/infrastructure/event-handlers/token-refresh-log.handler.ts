@@ -18,7 +18,7 @@ export class TokenRefreshLogHandler implements IEventHandler<TokenRefreshed> {
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
     @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger
+    private readonly logger: Logger,
   ) {}
 
   async handle(event: TokenRefreshed): Promise<void> {
@@ -26,45 +26,60 @@ export class TokenRefreshLogHandler implements IEventHandler<TokenRefreshed> {
       // UserIdの作成
       const userIdResult = UserId.create(event.userId);
       if (userIdResult.isFailure) {
-        this.logger.error({
-          userId: event.userId,
-          error: userIdResult.getError().message,
-        }, 'Invalid user ID in token refresh event');
+        this.logger.error(
+          {
+            userId: event.userId,
+            error: userIdResult.getError().message,
+          },
+          'Invalid user ID in token refresh event',
+        );
         return;
       }
 
       // AuthEventの作成
       const authEventResult = AuthEvent.tokenRefresh();
       if (authEventResult.isFailure) {
-        this.logger.error({
-          error: authEventResult.getError().message,
-        }, 'Failed to create auth event');
+        this.logger.error(
+          {
+            error: authEventResult.getError().message,
+          },
+          'Failed to create auth event',
+        );
         return;
       }
 
       // Providerの作成
       const providerResult = Provider.create('JWT');
       if (providerResult.isFailure) {
-        this.logger.error({
-          error: providerResult.getError().message,
-        }, 'Failed to create provider');
+        this.logger.error(
+          {
+            error: providerResult.getError().message,
+          },
+          'Failed to create provider',
+        );
         return;
       }
 
       // IPAddressとUserAgentは不明（リフレッシュ時は通常IPが取得できない）
       const ipAddressResult = IPAddress.unknown();
       if (ipAddressResult.isFailure) {
-        this.logger.error({
-          error: ipAddressResult.getError().message,
-        }, 'Failed to create IP address');
+        this.logger.error(
+          {
+            error: ipAddressResult.getError().message,
+          },
+          'Failed to create IP address',
+        );
         return;
       }
 
       const userAgentResult = UserAgent.unknown();
       if (userAgentResult.isFailure) {
-        this.logger.error({
-          error: userAgentResult.getError().message,
-        }, 'Failed to create user agent');
+        this.logger.error(
+          {
+            error: userAgentResult.getError().message,
+          },
+          'Failed to create user agent',
+        );
         return;
       }
 
@@ -86,33 +101,45 @@ export class TokenRefreshLogHandler implements IEventHandler<TokenRefreshed> {
       });
 
       if (logEntryResult.isFailure) {
-        this.logger.error({
-          error: logEntryResult.getError().message,
-          event: event.getMetadata(),
-        }, 'Failed to create auth log entry');
+        this.logger.error(
+          {
+            error: logEntryResult.getError().message,
+            event: event.getMetadata(),
+          },
+          'Failed to create auth log entry',
+        );
         return;
       }
 
       // ログエントリの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
       if (saveResult.isFailure) {
-        this.logger.error({
-          error: saveResult.getError().message,
-          event: event.getMetadata(),
-        }, 'Failed to save auth log entry');
+        this.logger.error(
+          {
+            error: saveResult.getError().message,
+            event: event.getMetadata(),
+          },
+          'Failed to save auth log entry',
+        );
         return;
       }
 
-      this.logger.info({
-        userId: event.userId,
-        sessionId: event.sessionId,
-        refreshCount: event.refreshCount,
-      }, 'Token refresh logged successfully');
+      this.logger.info(
+        {
+          userId: event.userId,
+          sessionId: event.sessionId,
+          refreshCount: event.refreshCount,
+        },
+        'Token refresh logged successfully',
+      );
     } catch (error) {
-      this.logger.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        event: event.getMetadata(),
-      }, 'Failed to handle token refresh event');
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          event: event.getMetadata(),
+        },
+        'Failed to handle token refresh event',
+      );
     }
   }
 }

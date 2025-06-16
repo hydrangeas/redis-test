@@ -33,7 +33,7 @@ export interface IRateLimitUseCase {
   checkAndRecordAccess(
     user: AuthenticatedUser,
     endpoint: string,
-    method: string
+    method: string,
   ): Promise<Result<RateLimitCheckResult, DomainError>>;
 
   /**
@@ -41,14 +41,17 @@ export interface IRateLimitUseCase {
    * @param user 認証済みユーザー
    * @returns 使用状況情報
    */
-  getUserUsageStatus(
-    user: AuthenticatedUser
-  ): Promise<Result<{
-    currentCount: number;
-    limit: number;
-    windowStart: Date;
-    windowEnd: Date;
-  }, DomainError>>;
+  getUserUsageStatus(user: AuthenticatedUser): Promise<
+    Result<
+      {
+        currentCount: number;
+        limit: number;
+        windowStart: Date;
+        windowEnd: Date;
+      },
+      DomainError
+    >
+  >;
 
   /**
    * レート制限をリセット（管理用）

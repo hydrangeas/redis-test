@@ -42,7 +42,7 @@ describe('MimeType', () => {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       ];
 
-      validTypes.forEach(type => {
+      validTypes.forEach((type) => {
         expect(() => new MimeType(type)).not.toThrow();
       });
     });
@@ -131,7 +131,7 @@ describe('MimeType', () => {
       const type1 = new MimeType('application/json');
       const type2 = new MimeType('application/json');
       const type3 = new MimeType('text/plain');
-      
+
       expect(type1.equals(type2)).toBe(true);
       expect(type1.equals(type3)).toBe(false);
     });
@@ -155,7 +155,7 @@ describe('MimeType', () => {
       const original = new MimeType('application/pdf');
       const json = original.toJSON();
       const restored = MimeType.fromJSON(json);
-      
+
       expect(restored.equals(original)).toBe(true);
       expect(restored.value).toBe(original.value);
     });

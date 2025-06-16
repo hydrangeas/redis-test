@@ -55,7 +55,7 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
   async updateUser(id: string, updates: any): Promise<any | null> {
     const user = this.mockUsers.get(id);
     if (!user) return null;
-    
+
     const updatedUser = {
       ...user,
       ...updates,
