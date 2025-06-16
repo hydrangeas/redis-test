@@ -14,7 +14,7 @@ import { Logger } from 'pino';
 import { AuthEvent } from '@/domain/log/value-objects/auth-event';
 import { Provider } from '@/domain/log/value-objects/provider';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
-import { AuthResult } from '@/domain/log/enums';
+import { AuthResult } from '@/domain/log/value-objects';
 
 interface AuthLogRecord {
   id: string;

@@ -6,7 +6,7 @@ import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { Result } from '@/domain/shared/result';
 import { Logger } from 'pino';
 import { EventType } from '@/domain/log/value-objects/auth-event';
-import { AuthResult } from '@/domain/log/enums';
+import { AuthResult } from '@/domain/log/value-objects';
 
 describe('RateLimitExceededHandler', () => {
   let handler: RateLimitExceededHandler;

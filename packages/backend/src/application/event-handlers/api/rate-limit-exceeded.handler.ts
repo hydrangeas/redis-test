@@ -10,7 +10,7 @@ import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { Provider } from '@/domain/log/value-objects/provider';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
-import { AuthResult } from '@/domain/log/enums';
+import { AuthResult } from '@/domain/log/value-objects';
 
 /**
  * レート制限超過イベントのハンドラー

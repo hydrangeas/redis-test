@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AuthLogEntry, AuthResult } from '../auth-log-entry';
+import { AuthLogEntry } from '../auth-log-entry';
+import { AuthResult } from '../../value-objects';
 import { LogId } from '../../value-objects/log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { AuthEvent, EventType } from '../../value-objects/auth-event';

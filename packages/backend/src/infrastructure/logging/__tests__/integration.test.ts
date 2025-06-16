@@ -9,8 +9,9 @@ import { UserAuthenticated } from '@/domain/auth/events/user-authenticated.event
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
-import { HTTPMethod } from '@/domain/api/value-objects/http-method';
+import { APIEndpoint } from '@/domain/api/entities/api-endpoint.entity';
+import { HttpMethod } from '@/domain/api/value-objects/http-method';
+import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
 
 describe('Logging Infrastructure Integration', () => {
   let mockLogger: Logger;
@@ -49,12 +50,21 @@ describe('Logging Infrastructure Integration', () => {
 
   describe('Domain Event Logging', () => {
     it('should log UserAuthenticated event', async () => {
-      const userId = UserId.create();
+      const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
+      if (userIdResult.isFailure) {
+        throw new Error('Failed to create user ID');
+      }
+      const userId = userIdResult.getValue();
+      
       const event = new UserAuthenticated(
-        userId,
-        'google' as any,
-        TierLevel.TIER1,
-        '127.0.0.1'
+        userId.value,  // aggregateId
+        1,  // eventVersion
+        userId.value,  // userId
+        'google',  // provider
+        'tier1',  // tier
+        'session-123',  // sessionId
+        '127.0.0.1',  // ipAddress
+        'Mozilla/5.0'  // userAgent
       );
 
       await eventBus.publish(event);
@@ -62,32 +72,54 @@ describe('Logging Infrastructure Integration', () => {
       // 少し待機（非同期処理のため）
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.objectContaining({
-          event: expect.objectContaining({
-            name: 'UserAuthenticated',
-            eventId: event.eventId,
-            aggregateId: event.aggregateId,
-            occurredAt: event.occurredAt,
-            data: expect.objectContaining({
-              provider: 'google',
-              tier: 'tier1',
-              ipAddress: '127.0.0.1',
-            }),
-          }),
-          context: 'domain_event',
-        }),
-        'Domain event: UserAuthenticated'
+      // Verify the event was logged
+      expect(mockLogger.info).toHaveBeenCalled();
+      
+      // Get the first call to info
+      const firstCall = (mockLogger.info as any).mock.calls.find((call: any[]) => 
+        call[1] === 'Domain event: UserAuthenticated'
       );
+      
+      if (firstCall) {
+        const loggedData = firstCall[0];
+        expect(loggedData.context).toBe('domain_event');
+        expect(loggedData.event.name).toBe('UserAuthenticated');
+        expect(loggedData.event.eventId).toBe(event.eventId);
+        
+        // The sanitized data includes the properties from the event
+        expect(loggedData.event.data.userId).toBe(userId.value);
+        expect(loggedData.event.data.provider).toBe('google');
+        expect(loggedData.event.data.tier).toBe('tier1');
+        expect(loggedData.event.data.ipAddress).toBe('127.0.0.1');
+      } else {
+        // Check all calls for debugging
+        console.log('All logger.info calls:', (mockLogger.info as any).mock.calls);
+        throw new Error('Expected log message not found');
+      }
     });
 
     it('should log APIAccessRequested event with sanitized data', async () => {
+      const endpointResult = APIEndpoint.create({
+        path: '/api/data/test.json',
+        method: HttpMethod.GET,
+        type: EndpointType.PROTECTED,
+        isActive: true,
+      });
+      
+      if (endpointResult.isFailure) {
+        throw new Error('Failed to create endpoint');
+      }
+      
+      const endpoint = endpointResult.getValue();
       const event = new APIAccessRequested(
-        'user-123',
-        APIEndpoint.create('/api/data/test.json'),
-        HTTPMethod.GET,
-        '127.0.0.1',
-        { authorization: 'Bearer secret-token' } // センシティブデータ
+        endpoint.id.value,  // aggregateId
+        'user-123',  // userId
+        endpoint.id.value,  // endpointId
+        endpoint.path.value,  // path
+        HttpMethod.GET,  // method
+        EndpointType.PROTECTED,  // endpointType
+        new Date(),  // requestTime
+        1  // eventVersion
       );
 
       await eventBus.publish(event);

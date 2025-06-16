@@ -8,7 +8,7 @@ import { Provider } from '@/domain/log/value-objects/provider';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { AuthResult } from '@/domain/log/enums';
+import { AuthResult } from '@/domain/log/value-objects';
 import { Logger } from 'pino';
 import { createSupabaseMock } from './mock-setup-helper';
 

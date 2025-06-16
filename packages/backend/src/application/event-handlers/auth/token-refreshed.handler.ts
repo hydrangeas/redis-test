@@ -7,7 +7,7 @@ import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { AuthEventType } from '@/domain/log/value-objects/auth-event';
-import { AuthResult } from '@/domain/log/enums';
+import { AuthResult } from '@/domain/log/value-objects';
 
 /**
  * トークンリフレッシュイベントのハンドラー

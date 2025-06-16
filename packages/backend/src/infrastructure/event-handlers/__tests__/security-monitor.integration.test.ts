@@ -6,7 +6,8 @@ import { ISecurityAlertService, SecurityAlert } from '@/infrastructure/services/
 import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
-import { AuthLogEntry, AuthResult } from '@/domain/log/entities/auth-log-entry';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { AuthResult } from '@/domain/log/value-objects';
 import { EventType, AuthEvent } from '@/domain/log/value-objects/auth-event';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';

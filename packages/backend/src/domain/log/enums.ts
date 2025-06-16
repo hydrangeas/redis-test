@@ -1,8 +1,2 @@
-/**
- * 認証結果
- */
-export enum AuthResult {
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  BLOCKED = 'BLOCKED',
-}
+// AuthResult has been moved to value-objects/auth-result.ts
+// Please import from '@/domain/log/value-objects' instead

@@ -12,36 +12,29 @@ declare module 'fastify' {
 
 export const fileSecurityMiddleware = async (
   request: FastifyRequest,
-  reply: FastifyReply,
-  done: HookHandlerDoneFunction
+  reply: FastifyReply
 ) => {
-  try {
-    const securityService = container.resolve(SecureFileAccessService);
-    const user = request.user;
+  const securityService = container.resolve(SecureFileAccessService);
+  const user = request.user;
 
-    // Create security context
-    const context: SecurityContext = {
-      userId: user?.id || 'anonymous',
-      userTier: user?.app_metadata?.tier || 'none',
-      ipAddress: request.ip,
-      userAgent: request.headers['user-agent'] || 'unknown',
-    };
+  // Create security context
+  const context: SecurityContext = {
+    userId: user?.userId?.value || 'anonymous',
+    userTier: user?.tier?.level || 'none',
+    ipAddress: request.ip,
+    userAgent: request.headers['user-agent'] || 'unknown',
+  };
 
-    // Set security headers
-    reply.headers({
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Content-Security-Policy': "default-src 'none'",
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-      'Pragma': 'no-cache',
-    });
+  // Set security headers
+  reply.headers({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Content-Security-Policy': "default-src 'none'",
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Pragma': 'no-cache',
+  });
 
-    // Attach security context to request
-    request.securityContext = context;
-
-    done();
-  } catch (error) {
-    done(error as Error);
-  }
+  // Attach security context to request
+  request.securityContext = context;
 };

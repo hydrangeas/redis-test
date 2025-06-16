@@ -3,8 +3,9 @@
  */
 export enum AuthResult {
   SUCCESS = 'SUCCESS',
-  FAILURE = 'FAILURE',
+  FAILED = 'FAILED',  // Changed from FAILURE to FAILED for compatibility
   EXPIRED = 'EXPIRED',
+  BLOCKED = 'BLOCKED',  // Added from old enum
 }
 
 /**
@@ -33,6 +34,6 @@ export const AuthResultHelper = {
    * 失敗した認証結果かどうかを判定
    */
   isFailure(result: AuthResult): boolean {
-    return result === AuthResult.FAILURE || result === AuthResult.EXPIRED;
+    return result === AuthResult.FAILED || result === AuthResult.EXPIRED || result === AuthResult.BLOCKED;
   },
 };

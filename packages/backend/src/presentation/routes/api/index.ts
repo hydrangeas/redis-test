@@ -114,17 +114,10 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
   // 認証関連ルート（バージョン共通）
   await fastify.register(authRoutes, { prefix: '/auth' });
   
-  // バージョン別ルートの登録
-  await fastify.register(async (instance) => {
-    // v1ルート
-    await instance.register(dataRoutesV1, { prefix: '/data' });
-    
-    // v2ルート（同じパスで異なる実装）
-    await instance.register(dataRoutesV2, { prefix: '/data' });
-    
-    // 現在のデータルート（デフォルトバージョンで動作）
-    await instance.register(dataRoutes, { prefix: '/data' });
-  });
+  // データルートの登録
+  // バージョニングプラグインがバージョンに応じて適切なルートを選択するため
+  // 現在のバージョンに応じたデータルートのみを登録
+  await fastify.register(dataRoutes, { prefix: '/data' });
 };
 
 export default apiRoutes;

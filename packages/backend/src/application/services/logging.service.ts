@@ -292,11 +292,11 @@ export class LoggingService {
       case AuthEvent.LOGIN_FAILED:
       case AuthEvent.TOKEN_REFRESH_FAILED:
       case AuthEvent.LOGOUT_FAILED:
-        return AuthResult.FAILURE;
+        return AuthResult.FAILED;
       case AuthEvent.TOKEN_EXPIRED:
         return AuthResult.EXPIRED;
       default:
-        return AuthResult.FAILURE;
+        return AuthResult.FAILED;
     }
   }
 }

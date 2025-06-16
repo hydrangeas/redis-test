@@ -1,10 +1,24 @@
 import 'reflect-metadata';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FileStorageService } from '../file-storage.service';
 import { container } from 'tsyringe';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import * as path from 'path';
 import { Logger } from 'pino';
+
+// Mock LRUCache for integration tests
+vi.mock('lru-cache', () => {
+  const store = new Map();
+  return {
+    LRUCache: vi.fn().mockImplementation(() => ({
+      get: vi.fn((key) => store.get(key)),
+      set: vi.fn((key, value) => store.set(key, value)),
+      delete: vi.fn((key) => store.delete(key)),
+      clear: vi.fn(() => store.clear()),
+      has: vi.fn((key) => store.has(key)),
+    })),
+  };
+});
 
 describe('Data Access Integration with FileStorageService', () => {
   let service: FileStorageService;

@@ -11,7 +11,25 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ErrorType } from '@/domain/errors/domain-error';
 
-vi.mock('fs/promises');
+vi.mock('fs/promises', () => ({
+  default: {
+    stat: vi.fn(),
+    readFile: vi.fn(),
+    readdir: vi.fn(),
+    access: vi.fn(),
+    constants: {
+      F_OK: 0
+    }
+  },
+  stat: vi.fn(),
+  readFile: vi.fn(),
+  readdir: vi.fn(),
+  access: vi.fn(),
+  constants: {
+    F_OK: 0
+  }
+}));
+
 vi.mock('crypto', () => ({
   createHash: vi.fn(() => ({
     update: vi.fn().mockReturnThis(),
@@ -23,6 +41,8 @@ vi.mock('crypto', () => ({
 describe('OpenDataRepository', () => {
   let repository: OpenDataRepository;
   let mockLogger: Logger;
+  let mockFileStorage: any;
+  const testDataDirectory = '/test/data';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,8 +55,15 @@ describe('OpenDataRepository', () => {
       trace: vi.fn()
     } as any;
 
-    process.env.DATA_DIRECTORY = '/test/data';
-    repository = new OpenDataRepository(mockLogger);
+    mockFileStorage = {
+      exists: vi.fn(),
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+      delete: vi.fn(),
+      list: vi.fn(),
+    };
+
+    repository = new OpenDataRepository(mockLogger, mockFileStorage, testDataDirectory);
   });
 
   describe('findByPath', () => {

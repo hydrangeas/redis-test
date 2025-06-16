@@ -183,10 +183,13 @@ export function createMockAuthResult(result: string): AuthResult {
     case 'SUCCESS':
       return AuthResult.SUCCESS;
     case 'FAILURE':
-      return AuthResult.FAILURE;
+    case 'FAILED':
+      return AuthResult.FAILED;
     case 'EXPIRED':
       return AuthResult.EXPIRED;
+    case 'BLOCKED':
+      return AuthResult.BLOCKED;
     default:
-      return AuthResult.FAILURE;
+      return AuthResult.FAILED;
   }
 }

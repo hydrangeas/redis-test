@@ -92,7 +92,7 @@ export class AuthLog extends Entity<AuthLogProps> {
    * Check if this log represents a failed authentication
    */
   isFailure(): boolean {
-    return this.result === AuthResult.FAILURE;
+    return this.result === AuthResult.FAILED;
   }
 
   /**

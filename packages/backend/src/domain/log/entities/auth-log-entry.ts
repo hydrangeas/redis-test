@@ -8,7 +8,7 @@ import { Provider } from '@/domain/log/value-objects/provider';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { ValidationError } from '@/domain/errors/validation-error';
-import { AuthResult } from '@/domain/log/enums';
+import { AuthResult } from '@/domain/log/value-objects';
 
 interface AuthLogEntryProps {
   userId?: UserId;

@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
-import { FastifyInstance } from 'fastify';
-import { buildServer } from '@/presentation/server';
+import Fastify, { FastifyInstance } from 'fastify';
+import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { setupTestDI } from '@/infrastructure/di/container';
 import { container } from 'tsyringe';
+import authPlugin from '@/presentation/plugins/auth.plugin';
+import rateLimitPlugin from '@/presentation/plugins/rate-limit.plugin';
+import dataRoutes from '@/presentation/routes/api/data';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { IJwtService } from '@/application/interfaces/jwt.service.interface';
 import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
@@ -10,7 +13,7 @@ import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
 import { IAuthenticationUseCase } from '@/application/interfaces/authentication-use-case.interface';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { UserId } from '@/domain/auth/value-objects/user-id';
@@ -32,6 +35,8 @@ describe('Data Routes', () => {
     
     // DIコンテナをリセット
     container.reset();
+    
+    try {
     
     // Test DI設定
     setupTestDI();
@@ -105,12 +110,51 @@ describe('Data Routes', () => {
     };
     container.register(DI_TOKENS.RateLimitUseCase, { useValue: mockRateLimitUseCase });
     
-    // サーバー構築
-    server = await buildServer();
+    // SecurityAuditServiceのモックを登録
+    const mockSecurityAuditService = {
+      logSecurityEvent: vi.fn().mockResolvedValue(Result.ok()),
+      logPathTraversalAttempt: vi.fn().mockResolvedValue(Result.ok()),
+      logUnauthorizedAccess: vi.fn().mockResolvedValue(Result.ok()),
+      logSuspiciousActivity: vi.fn().mockResolvedValue(Result.ok()),
+    };
+    container.register(DI_TOKENS.SecurityAuditService, { useValue: mockSecurityAuditService });
+    
+    // SecureFileAccessServiceのモックを登録
+    const mockSecureFileAccess = {
+      validateAndSanitizePath: vi.fn().mockResolvedValue(Result.ok('/data/test.json')),
+      checkAccess: vi.fn().mockResolvedValue(Result.ok(true)),
+    };
+    container.register(DI_TOKENS.SecureFileAccessService, { useValue: mockSecureFileAccess });
+    
+    // テスト用の最小限のサーバー構築
+    server = Fastify({
+      logger: false,
+    }).withTypeProvider<TypeBoxTypeProvider>();
+    
+    // 必要なプラグインのみ登録
+    await server.register(authPlugin, {
+      excludePaths: ['/health'],
+    });
+    await server.register(rateLimitPlugin, {
+      excludePaths: ['/health'],
+    });
+    
+    // データルートのみ登録
+    await server.register(dataRoutes, { prefix: '/api/data' });
+    
+    // ヘルスチェックエンドポイント（テスト用）
+    server.get('/health', async () => ({ status: 'ok' }));
+    
+    } catch (error) {
+      console.error('Failed to build server:', error);
+      throw error;
+    }
   });
 
   afterAll(async () => {
-    await server.close();
+    if (server) {
+      await server.close();
+    }
   });
 
   beforeEach(() => {
@@ -142,15 +186,13 @@ describe('Data Routes', () => {
         },
       });
 
-      // Debug: log the response if it's not 200
-      if (response.statusCode !== 200) {
-        console.log('Response status:', response.statusCode);
-        console.log('Response body:', response.body);
-        console.log('JWT verify was called:', mockJwtService.verifyAccessToken.mock.calls.length, 'times');
-        if (mockJwtService.verifyAccessToken.mock.calls.length > 0) {
-          console.log('JWT verify calls:', mockJwtService.verifyAccessToken.mock.calls);
-        }
-        console.log('AuthenticationUseCase validateToken was called:', mockAuthenticationUseCase.validateToken.mock.calls.length, 'times');
+      // Debug: always log the response for debugging
+      console.log('Response status:', response.statusCode);
+      console.log('Response body:', response.body);
+      console.log('Response headers:', response.headers);
+      console.log('DataRetrievalUseCase was called:', mockDataRetrievalUseCase.retrieveData.mock.calls.length, 'times');
+      if (mockDataRetrievalUseCase.retrieveData.mock.calls.length > 0) {
+        console.log('DataRetrievalUseCase calls:', mockDataRetrievalUseCase.retrieveData.mock.calls);
       }
 
       expect(response.statusCode).toBe(200);

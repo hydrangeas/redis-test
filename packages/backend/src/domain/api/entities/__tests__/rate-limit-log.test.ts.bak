@@ -3,19 +3,19 @@ import { RateLimitLog } from '../rate-limit-log.entity';
 import { RateLimitLogId } from '../../value-objects/rate-limit-log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { EndpointId } from '../../value-objects/endpoint-id';
-import { RequestCount } from '../../value-objects/request-count';
+import { v4 as uuidv4 } from 'uuid';
 
 describe('RateLimitLog', () => {
-  let userId: UserId;
-  let endpointId: EndpointId;
-  let requestedAt: Date;
-  let requestCount: RequestCount;
+  let userId: string;
+  let endpointId: string;
+  let requestId: string;
+  let timestamp: Date;
 
   beforeEach(() => {
-    userId = UserId.generate();
-    endpointId = EndpointId.generate();
-    requestedAt = new Date();
-    requestCount = RequestCount.create(1).getValue();
+    userId = UserId.generate().value;
+    endpointId = EndpointId.generate().value;
+    requestId = uuidv4();
+    timestamp = new Date();
   });
 
   describe('create', () => {
@@ -23,8 +23,8 @@ describe('RateLimitLog', () => {
       const result = RateLimitLog.create({
         userId,
         endpointId,
-        requestCount,
-        requestedAt,
+        requestId,
+        timestamp,
       });
 
       expect(result.isSuccess).toBe(true);

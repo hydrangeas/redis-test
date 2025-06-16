@@ -15,6 +15,7 @@ import type { Logger } from 'pino';
 describe('AuthenticationUseCase', () => {
   let useCase: AuthenticationUseCase;
   let mockAuthAdapter: IAuthAdapter;
+  let mockJWTValidator: any;
   let mockAuthService: AuthenticationService;
   let mockEventBus: IEventBus;
   let mockLogger: Logger;
@@ -26,6 +27,10 @@ describe('AuthenticationUseCase', () => {
       verifyToken: vi.fn(),
       refreshAccessToken: vi.fn(),
       signOut: vi.fn(),
+    };
+
+    mockJWTValidator = {
+      validateToken: vi.fn(),
     };
 
     mockAuthService = {
@@ -47,6 +52,7 @@ describe('AuthenticationUseCase', () => {
 
     useCase = new AuthenticationUseCase(
       mockAuthAdapter,
+      mockJWTValidator,
       mockAuthService,
       mockEventBus,
       mockLogger
@@ -71,6 +77,9 @@ describe('AuthenticationUseCase', () => {
         UserTier.createDefault(TierLevel.TIER2)
       );
 
+      vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
+        DomainResult.ok({ sub: validUuid })
+      );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
       vi.mocked(mockAuthService.validateToken).mockReturnValue(
         DomainResult.ok(authenticatedUser)
@@ -89,6 +98,10 @@ describe('AuthenticationUseCase', () => {
     });
 
     it('should fail for empty token', async () => {
+      vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
+        DomainResult.fail(new Error('Invalid token format'))
+      );
+
       const result = await useCase.validateToken('');
 
       expect(result.success).toBe(false);
@@ -102,6 +115,9 @@ describe('AuthenticationUseCase', () => {
     it('should fail when token verification fails', async () => {
       const token = 'invalid.jwt.token';
 
+      vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
+        DomainResult.ok({ sub: 'test' })
+      );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(null);
 
       const result = await useCase.validateToken(token);
@@ -129,6 +145,9 @@ describe('AuthenticationUseCase', () => {
         user_metadata: {},
       };
 
+      vi.mocked(mockJWTValidator.validateToken).mockResolvedValue(
+        DomainResult.ok({ sub: validUuid })
+      );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
       vi.mocked(mockAuthService.validateToken).mockReturnValue(
         DomainResult.fail(new Error('Token expired'))

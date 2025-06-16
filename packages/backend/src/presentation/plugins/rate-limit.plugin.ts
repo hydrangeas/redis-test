@@ -21,6 +21,15 @@ export interface RateLimitPluginOptions {
   includeHeaders?: boolean;
 }
 
+declare module 'fastify' {
+  interface FastifyInstance {
+    checkRateLimit: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+  }
+  interface FastifyRequest {
+    rateLimitInfo?: any;
+  }
+}
+
 const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (
   fastify,
   options

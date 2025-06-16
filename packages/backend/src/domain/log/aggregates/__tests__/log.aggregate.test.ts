@@ -11,7 +11,7 @@ import { AuthEvent, EventType } from '../../value-objects/auth-event';
 import { Provider } from '../../value-objects/provider';
 import { IPAddress } from '../../value-objects/ip-address';
 import { UserAgent } from '../../value-objects/user-agent';
-import { AuthResult } from '../../entities/auth-log-entry';
+import { AuthResult } from '../../value-objects';
 import {
   APIAccessLoggedEvent,
   AuthEventLoggedEvent,
