@@ -8,6 +8,7 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import fp from 'fastify-plugin';
+import { metrics } from '@/plugins/monitoring';
 
 
 interface AuthPluginOptions {
@@ -107,6 +108,12 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
         const error = verifyResult.getError();
         request.log.warn({ error: error.message }, 'Token verification failed');
         
+        // Track failed authentication attempt
+        metrics.authenticationAttempts.inc({
+          provider: 'jwt',
+          status: 'failed',
+        });
+        
         await reply.code(401).send({
           type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,
           title: 'Invalid token',
@@ -170,6 +177,17 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       
       // AuthenticatedUserオブジェクトの作成
       request.user = new AuthenticatedUser(userId, userTier);
+      
+      // Track successful authentication
+      metrics.authenticationAttempts.inc({
+        provider: 'jwt',
+        status: 'success',
+      });
+      
+      // Update active users gauge
+      metrics.activeUsers.inc({
+        tier: userTier.level.toLowerCase(),
+      });
       
       request.log.debug({
         userId: userId.value,

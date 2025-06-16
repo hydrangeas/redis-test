@@ -3,15 +3,9 @@
  * This module provides all DI-related functionality for the application
  */
 
-export { DI_TOKENS, DIToken, LifecycleScope, createToken } from './tokens';
+export { DI_TOKENS, LifecycleScope, createToken } from './tokens';
+export type { DIToken } from './tokens';
 export { setupDI, setupTestDI } from './container';
-export { 
-  TestContainerFactory, 
-  createTestContainer, 
-  MockFactory, 
-  DITestUtils,
-  TEST_ENV_CONFIG 
-} from './test-container';
 export {
   // Lifecycle decorators
   Injectable,
@@ -53,7 +47,7 @@ export {
 } from './decorators';
 
 // Re-export TSyringe utilities for convenience
-export { container, DependencyContainer, InjectionToken as TSyringeToken } from 'tsyringe';
+export { container } from 'tsyringe';
 
 /**
  * Initialize the DI container for the application

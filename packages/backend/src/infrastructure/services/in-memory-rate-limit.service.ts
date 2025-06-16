@@ -4,6 +4,7 @@ import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-use
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { metrics } from '@/plugins/monitoring';
 
 interface WindowEntry {
   timestamp: number;
@@ -66,6 +67,19 @@ export class InMemoryRateLimitService implements IRateLimitService {
 
     // ウィンドウを更新
     this.windows.set(key, entries);
+
+    // メトリクスを記録
+    metrics.rateLimitHits.inc({
+      user_tier: user.tier.level,
+      endpoint: endpoint.path.value,
+    });
+
+    if (!allowed) {
+      metrics.rateLimitExceeded.inc({
+        user_tier: user.tier.level,
+        endpoint: endpoint.path.value,
+      });
+    }
 
     this.logger.debug({
       userId: user.userId.value,
