@@ -1,9 +1,39 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
+import versioningPlugin from '@/presentation/plugins/versioning.plugin';
 import authRoutes from './auth';
 import dataRoutes from './data';
+import dataRoutesV1 from './v1/data.routes';
+import dataRoutesV2 from './v2/data.routes';
 
 const apiRoutes: FastifyPluginAsync = async (fastify) => {
+  // バージョニングプラグインを登録
+  await fastify.register(versioningPlugin, {
+    defaultVersion: '2',
+    supportedVersions: ['1', '2', '2.1'],
+    deprecatedVersions: ['1'],
+    enableFallback: true,
+  });
+
+  // 共通エンドポイント（全バージョン）
+  fastify.get('/status', {
+    schema: {
+      description: 'Get API status',
+      tags: ['Health'],
+      response: {
+        200: Type.Object({
+          status: Type.String(),
+          version: Type.String(),
+        }),
+      },
+    },
+  }, async (request, reply) => {
+    return {
+      status: 'ok',
+      version: request.apiVersion!,
+    };
+  });
+
   // APIバージョン情報
   fastify.get('/version', {
     schema: {
@@ -56,11 +86,45 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  // 認証関連ルート
+  // 条件付きルート - バージョンに応じて利用可能な機能を返す
+  fastify.get('/features', {
+    schema: {
+      description: 'Get available features for current API version',
+      tags: ['Health'],
+      response: {
+        200: Type.Object({
+          base: Type.Array(Type.String()),
+          advanced: Type.Optional(Type.Array(Type.String())),
+        }),
+      },
+    },
+  }, async (request, reply) => {
+    const features = {
+      base: ['data_access', 'rate_limiting', 'authentication'],
+    };
+
+    // v2以上でのみ利用可能な機能
+    if (request.apiVersion && parseFloat(request.apiVersion) >= 2) {
+      features['advanced'] = ['filtering', 'sorting', 'pagination', 'field_selection'];
+    }
+
+    return features;
+  });
+
+  // 認証関連ルート（バージョン共通）
   await fastify.register(authRoutes, { prefix: '/auth' });
   
-  // データアクセスルート
-  await fastify.register(dataRoutes, { prefix: '/data' });
+  // バージョン別ルートの登録
+  await fastify.register(async (instance) => {
+    // v1ルート
+    await instance.register(dataRoutesV1, { prefix: '/data' });
+    
+    // v2ルート（同じパスで異なる実装）
+    await instance.register(dataRoutesV2, { prefix: '/data' });
+    
+    // 現在のデータルート（デフォルトバージョンで動作）
+    await instance.register(dataRoutes, { prefix: '/data' });
+  });
 };
 
 export default apiRoutes;
