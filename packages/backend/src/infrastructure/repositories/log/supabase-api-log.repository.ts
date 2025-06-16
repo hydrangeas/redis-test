@@ -228,9 +228,9 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   }
 
   /**
-   * エラーログのみを検索
+   * エラーログのみを検索（互換性のための旧メソッド）
    */
-  async findErrors(
+  async findErrorsByTimeRange(
     timeRange?: TimeRange,
     limit: number = 100
   ): Promise<Result<APILogEntry[], DomainError>> {
@@ -487,5 +487,155 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
     }
 
     return logEntries;
+  }
+
+  /**
+   * 複数のログエントリを一括保存
+   */
+  async saveMany(logEntries: APILogEntry[]): Promise<Result<void, DomainError>> {
+    try {
+      const records: APILogRecord[] = logEntries.map(logEntry => ({
+        id: logEntry.id.value,
+        user_id: logEntry.userId?.value || null,
+        method: logEntry.endpoint.method,
+        endpoint: logEntry.endpoint.path.value,
+        status_code: logEntry.responseInfo.statusCode,
+        response_time: logEntry.responseInfo.responseTime,
+        response_size: logEntry.responseInfo.size || null,
+        ip_address: logEntry.requestInfo.ipAddress,
+        user_agent: logEntry.requestInfo.userAgent || null,
+        error_message: logEntry.error || null,
+        metadata: {
+          ...logEntry.requestInfo.headers,
+          ...logEntry.responseInfo.headers,
+          ...(logEntry.requestInfo.body ? { requestBody: logEntry.requestInfo.body } : {}),
+        },
+        request_id: logEntry.id.value,
+        created_at: logEntry.timestamp.toISOString(),
+      }));
+
+      const { error } = await this.supabase
+        .from('api_logs')
+        .insert(records);
+
+      if (error) {
+        this.logger.error({ error, count: records.length }, 'Failed to save API logs batch');
+        return Result.fail(
+          new DomainError(
+            'API_LOG_BATCH_SAVE_FAILED',
+            'Failed to save API logs batch',
+            ErrorType.INTERNAL
+          )
+        );
+      }
+
+      this.logger.debug({ count: records.length }, 'API logs batch saved successfully');
+      return Result.ok(undefined as any);
+    } catch (error) {
+      this.logger.error({ error }, 'Unexpected error saving API logs batch');
+      return Result.fail(
+        new DomainError(
+          'API_LOG_BATCH_SAVE_ERROR',
+          'Unexpected error saving API logs batch',
+          ErrorType.INTERNAL
+        )
+      );
+    }
+  }
+
+  /**
+   * 遅いリクエストを検索
+   */
+  async findSlowRequests(
+    thresholdMs: number,
+    limit: number = 100
+  ): Promise<Result<APILogEntry[], DomainError>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('api_logs')
+        .select('*')
+        .gte('response_time', thresholdMs)
+        .order('response_time', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        this.logger.error({ error, thresholdMs }, 'Failed to find slow API requests');
+        return Result.fail(
+          new DomainError(
+            'API_LOG_FIND_SLOW_FAILED',
+            'Failed to find slow API requests',
+            ErrorType.INTERNAL
+          )
+        );
+      }
+
+      const logEntries = await this.recordsToLogEntries(data || []);
+      return Result.ok(logEntries);
+    } catch (error) {
+      this.logger.error({ error }, 'Unexpected error finding slow API requests');
+      return Result.fail(
+        new DomainError(
+          'API_LOG_FIND_SLOW_ERROR',
+          'Unexpected error finding slow API requests',
+          ErrorType.INTERNAL
+        )
+      );
+    }
+  }
+
+  /**
+   * エラーログを検索（新しいオプション付きメソッド）
+   */
+  async findErrors(
+    options?: {
+      userId?: UserId;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<Result<APILogEntry[], DomainError>> {
+    try {
+      let query = this.supabase
+        .from('api_logs')
+        .select('*')
+        .gte('status_code', 400)
+        .order('created_at', { ascending: false });
+
+      if (options?.userId) {
+        query = query.eq('user_id', options.userId.value);
+      }
+
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 100) - 1);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        this.logger.error({ error, options }, 'Failed to find API error logs');
+        return Result.fail(
+          new DomainError(
+            'API_LOG_FIND_ERRORS_FAILED',
+            'Failed to find API error logs',
+            ErrorType.INTERNAL
+          )
+        );
+      }
+
+      const logEntries = await this.recordsToLogEntries(data || []);
+      return Result.ok(logEntries);
+    } catch (error) {
+      this.logger.error({ error }, 'Unexpected error finding API error logs');
+      return Result.fail(
+        new DomainError(
+          'API_LOG_FIND_ERRORS_ERROR',
+          'Unexpected error finding API error logs',
+          ErrorType.INTERNAL
+        )
+      );
+    }
   }
 }

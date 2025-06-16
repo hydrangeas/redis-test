@@ -72,4 +72,32 @@ export interface IAPILogRepository {
    * @param beforeDate この日付より前のログを削除
    */
   deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>>;
+
+  /**
+   * 複数のログエントリを一括保存
+   * @param logEntries ログエントリの配列
+   */
+  saveMany(logEntries: APILogEntry[]): Promise<Result<void, DomainError>>;
+
+  /**
+   * 遅いリクエストを検索
+   * @param thresholdMs 閾値（ミリ秒）
+   * @param limit 取得件数上限
+   */
+  findSlowRequests(
+    thresholdMs: number,
+    limit?: number
+  ): Promise<Result<APILogEntry[], DomainError>>;
+
+  /**
+   * エラーログを検索（オプション付き）
+   * @param options 検索オプション
+   */
+  findErrors(
+    options?: {
+      userId?: UserId;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<Result<APILogEntry[], DomainError>>;
 }
