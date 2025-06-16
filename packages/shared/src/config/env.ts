@@ -145,11 +145,31 @@ export function getEnvironmentConfig(env: EnvConfig): {
     // CORS設定
     corsOrigins: env.CORS_ORIGIN.split(',').map(origin => origin.trim()),
     
-    // セッション設定
-    sessionExpiryMs: env.SESSION_EXPIRY_HOURS * 60 * 60 * 1000,
-    refreshTokenExpiryMs: env.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    // レート制限設定
+    rateLimit: {
+      tier1: env.RATE_LIMIT_TIER1,
+      tier2: env.RATE_LIMIT_TIER2,
+      tier3: env.RATE_LIMIT_TIER3,
+      window: env.RATE_LIMIT_WINDOW,
+    },
+    
+    // セキュリティ設定
+    security: {
+      jwtSecret: env.JWT_SECRET || '',
+      jwtExpiresIn: `${env.SESSION_EXPIRY_HOURS}h`,
+      refreshTokenExpiresIn: `${env.REFRESH_TOKEN_EXPIRY_DAYS}d`,
+    },
     
     // API設定
-    apiUrl: `${env.API_PREFIX}/${env.API_VERSION}`,
+    api: {
+      baseUrl: `${env.API_PREFIX}/${env.API_VERSION}`,
+      port: env.PORT,
+      host: env.HOST,
+    },
+    
+    // フロントエンド設定
+    frontend: {
+      url: env.FRONTEND_URL,
+    },
   };
 }

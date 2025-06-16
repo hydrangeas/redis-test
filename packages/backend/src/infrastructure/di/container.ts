@@ -277,7 +277,7 @@ function registerDomainServices(container: DependencyContainer): void {
   });
   
   // RateLimitServiceの実装を登録
-  const { InMemoryRateLimitService } = require('@/infrastructure/services/in-memory-rate-limit.service');
+  const { InMemoryRateLimitService } = require('../services/in-memory-rate-limit.service');
   container.register(DI_TOKENS.RateLimitService, {
     useClass: InMemoryRateLimitService,
   });

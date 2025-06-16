@@ -66,6 +66,5 @@
     ],
     "import/no-duplicates": "error",
     "no-console": ["warn", { "allow": ["warn", "error"] }]
-  },
-  "ignorePatterns": ["dist", "build", "coverage", "node_modules", "*.js", "*.mjs"]
+  }
 }
