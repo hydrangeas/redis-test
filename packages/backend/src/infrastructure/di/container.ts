@@ -266,12 +266,12 @@ function registerDomainServices(container: DependencyContainer): void {
   });
   
   // Import domain services synchronously for tests
-  const { APIAccessControlService } = require('@/domain/api/services/api-access-control.service');
+  const { APIAccessControlService } = require('../../domain/api/services/api-access-control.service');
   container.register(DI_TOKENS.APIAccessControlService, {
     useClass: APIAccessControlService,
   });
   
-  const { DataAccessService } = require('@/domain/data/services/data-access.service');
+  const { DataAccessService } = require('../../domain/data/services/data-access.service');
   container.register(DI_TOKENS.DataAccessService, {
     useClass: DataAccessService,
   });
@@ -297,19 +297,19 @@ function registerApplicationServices(container: DependencyContainer): void {
   });
   
   // DataAccessUseCaseの同期インポート
-  const { DataAccessUseCase } = require('@/application/use-cases/data-access.use-case');
+  const { DataAccessUseCase } = require('../../application/use-cases/data-access.use-case');
   container.register(DI_TOKENS.DataAccessUseCase, {
     useClass: DataAccessUseCase,
   });
   
   // RateLimitUseCaseの同期インポート
-  const { RateLimitUseCase } = require('@/application/use-cases/rate-limit.use-case');
+  const { RateLimitUseCase } = require('../../application/use-cases/rate-limit.use-case');
   container.register(DI_TOKENS.RateLimitUseCase, {
     useClass: RateLimitUseCase,
   });
   
   // APIAccessControlUseCaseの同期インポート
-  const { APIAccessControlUseCase } = require('@/application/use-cases/api-access-control.use-case');
+  const { APIAccessControlUseCase } = require('../../application/use-cases/api-access-control.use-case');
   container.register(DI_TOKENS.APIAccessControlUseCase, {
     useClass: APIAccessControlUseCase,
   });
@@ -350,7 +350,7 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
   
   // Factoriesの登録
-  const { OpenDataResourceFactory } = require('@/domain/data/factories/open-data-resource.factory');
+  const { OpenDataResourceFactory } = require('../../domain/data/factories/open-data-resource.factory');
   container.register(DI_TOKENS.OpenDataResourceFactory, {
     useClass: OpenDataResourceFactory,
   });
