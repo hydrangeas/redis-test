@@ -139,10 +139,9 @@ export function setupTestDI(): DependencyContainer {
   });
   
   // テスト用にSupabaseUserRepositoryを登録
-  import('../repositories/auth/supabase-user.repository').then(module => {
-    container.register(DI_TOKENS.UserRepository, {
-      useClass: module.SupabaseUserRepository,
-    });
+  const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
+  container.register(DI_TOKENS.UserRepository, {
+    useClass: SupabaseUserRepository,
   });
   
   // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
@@ -266,24 +265,21 @@ function registerDomainServices(container: DependencyContainer): void {
     useClass: AuthenticationService,
   });
   
-  // Import and register new domain services
-  import('@/domain/api/services/api-access-control.service').then(module => {
-    container.register(DI_TOKENS.APIAccessControlService, {
-      useClass: module.APIAccessControlService,
-    });
+  // Import domain services synchronously for tests
+  const { APIAccessControlService } = require('@/domain/api/services/api-access-control.service');
+  container.register(DI_TOKENS.APIAccessControlService, {
+    useClass: APIAccessControlService,
   });
   
-  import('@/domain/data/services/data-access.service').then(module => {
-    container.register(DI_TOKENS.DataAccessService, {
-      useClass: module.DataAccessService,
-    });
+  const { DataAccessService } = require('@/domain/data/services/data-access.service');
+  container.register(DI_TOKENS.DataAccessService, {
+    useClass: DataAccessService,
   });
   
   // RateLimitServiceの実装を登録
-  import('@/infrastructure/services/in-memory-rate-limit.service').then(module => {
-    container.register(DI_TOKENS.RateLimitService, {
-      useClass: module.InMemoryRateLimitService,
-    });
+  const { InMemoryRateLimitService } = require('@/infrastructure/services/in-memory-rate-limit.service');
+  container.register(DI_TOKENS.RateLimitService, {
+    useClass: InMemoryRateLimitService,
   });
   
   // ... 他のドメインサービス
@@ -300,25 +296,22 @@ function registerApplicationServices(container: DependencyContainer): void {
     useClass: DataRetrievalUseCase,
   });
   
-  // DataAccessUseCaseの動的インポート
-  import('@/application/use-cases/data-access.use-case').then(module => {
-    container.register(DI_TOKENS.DataAccessUseCase, {
-      useClass: module.DataAccessUseCase,
-    });
+  // DataAccessUseCaseの同期インポート
+  const { DataAccessUseCase } = require('@/application/use-cases/data-access.use-case');
+  container.register(DI_TOKENS.DataAccessUseCase, {
+    useClass: DataAccessUseCase,
   });
   
-  // RateLimitUseCaseの動的インポート
-  import('@/application/use-cases/rate-limit.use-case').then(module => {
-    container.register(DI_TOKENS.RateLimitUseCase, {
-      useClass: module.RateLimitUseCase,
-    });
+  // RateLimitUseCaseの同期インポート
+  const { RateLimitUseCase } = require('@/application/use-cases/rate-limit.use-case');
+  container.register(DI_TOKENS.RateLimitUseCase, {
+    useClass: RateLimitUseCase,
   });
   
-  // APIAccessControlUseCaseの動的インポート
-  import('@/application/use-cases/api-access-control.use-case').then(module => {
-    container.register(DI_TOKENS.APIAccessControlUseCase, {
-      useClass: module.APIAccessControlUseCase,
-    });
+  // APIAccessControlUseCaseの同期インポート
+  const { APIAccessControlUseCase } = require('@/application/use-cases/api-access-control.use-case');
+  container.register(DI_TOKENS.APIAccessControlUseCase, {
+    useClass: APIAccessControlUseCase,
   });
   
   // ... 他のアプリケーションサービス
@@ -339,83 +332,72 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
   
   // UserRepositoryの登録
-  import('../repositories/auth/supabase-user.repository').then(module => {
-    container.register(DI_TOKENS.UserRepository, {
-      useClass: module.SupabaseUserRepository,
-    });
+  const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
+  container.register(DI_TOKENS.UserRepository, {
+    useClass: SupabaseUserRepository,
   });
   
   // AuthLogRepositoryの登録
-  import('../repositories/log/supabase-auth-log.repository').then(module => {
-    container.register(DI_TOKENS.AuthLogRepository, {
-      useClass: module.SupabaseAuthLogRepository,
-    });
+  const { SupabaseAuthLogRepository } = require('../repositories/log/supabase-auth-log.repository');
+  container.register(DI_TOKENS.AuthLogRepository, {
+    useClass: SupabaseAuthLogRepository,
   });
   
   // APILogRepositoryの登録
-  import('../repositories/log/supabase-api-log.repository').then(module => {
-    container.register(DI_TOKENS.APILogRepository, {
-      useClass: module.SupabaseAPILogRepository,
-    });
+  const { SupabaseAPILogRepository } = require('../repositories/log/supabase-api-log.repository');
+  container.register(DI_TOKENS.APILogRepository, {
+    useClass: SupabaseAPILogRepository,
   });
   
   // Factoriesの登録
-  import('@/domain/data/factories/open-data-resource.factory').then(module => {
-    container.register(DI_TOKENS.OpenDataResourceFactory, {
-      useClass: module.OpenDataResourceFactory,
-    });
+  const { OpenDataResourceFactory } = require('@/domain/data/factories/open-data-resource.factory');
+  container.register(DI_TOKENS.OpenDataResourceFactory, {
+    useClass: OpenDataResourceFactory,
   });
   
   // JWTServiceの登録
-  import('../auth/services/jwt.service').then(module => {
-    container.register(DI_TOKENS.JwtService, {
-      useClass: module.JWTService,
-    });
+  const { JWTService } = require('../auth/services/jwt.service');
+  container.register(DI_TOKENS.JwtService, {
+    useClass: JWTService,
   });
   
   // FileStorageServiceの登録
-  import('../storage/file-storage.service').then(module => {
-    container.register(DI_TOKENS.FileStorage, {
-      useClass: module.FileStorageService,
-    });
-    container.register(DI_TOKENS.FileStorageService, {
-      useClass: module.FileStorageService,
-    });
+  const { FileStorageService } = require('../storage/file-storage.service');
+  container.register(DI_TOKENS.FileStorage, {
+    useClass: FileStorageService,
+  });
+  container.register(DI_TOKENS.FileStorageService, {
+    useClass: FileStorageService,
   });
   
   // SupabaseServiceの登録
-  import('../services/supabase.service').then(module => {
-    container.register(DI_TOKENS.SupabaseService, {
-      useClass: module.SupabaseService,
-    });
+  const { SupabaseService } = require('../services/supabase.service');
+  container.register(DI_TOKENS.SupabaseService, {
+    useClass: SupabaseService,
   });
   
   // SecurityAuditServiceの登録
-  import('../services/security-audit.service').then(module => {
-    container.register(DI_TOKENS.SecurityAuditService, {
-      useClass: module.SecurityAuditService,
-    });
+  const { SecurityAuditService } = require('../services/security-audit.service');
+  container.register(DI_TOKENS.SecurityAuditService, {
+    useClass: SecurityAuditService,
   });
   
   // SecureFileAccessServiceの登録
-  import('../services/secure-file-access.service').then(module => {
-    container.register(DI_TOKENS.SecureFileAccessService, {
-      useClass: module.SecureFileAccessService,
-    });
+  const { SecureFileAccessService } = require('../services/secure-file-access.service');
+  container.register(DI_TOKENS.SecureFileAccessService, {
+    useClass: SecureFileAccessService,
   });
   
   // DatabaseSeederの登録
-  import('../seeders/database-seeder').then(module => {
-    container.register('DatabaseSeeder', {
-      useClass: module.DatabaseSeeder,
-    });
+  const { DatabaseSeeder } = require('../seeders/database-seeder');
+  container.register('DatabaseSeeder', {
+    useClass: DatabaseSeeder,
   });
   
   // ApiLogServiceの登録
-  import('../services/api-log.service').then(module => {
-    container.register(DI_TOKENS.ApiLogService, {
-      useClass: module.ApiLogService,
-    });
+  const { ApiLogService } = require('../services/api-log.service');
+  container.register(DI_TOKENS.ApiLogService, {
+    useClass: ApiLogService,
   });
   
   // 他のインフラストラクチャサービスは後続タスクで実装
