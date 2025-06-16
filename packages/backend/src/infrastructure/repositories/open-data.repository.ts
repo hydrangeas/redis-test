@@ -9,8 +9,11 @@ import { ResourceMetadata } from '@/domain/data/value-objects/resource-metadata'
 import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { IFileStorage } from '@/domain/data/interfaces/file-storage.interface';
-import { Logger } from 'pino';
+import type { Logger } from 'pino';
 import { DI_TOKENS } from '../di/tokens';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { createHash } from 'crypto';
 
 interface CacheEntry {
   resource: OpenDataResource;
@@ -27,7 +30,9 @@ export class OpenDataRepository implements IOpenDataRepository {
     @inject(DI_TOKENS.Logger)
     private readonly logger: Logger,
     @inject(DI_TOKENS.FileStorage)
-    private readonly fileStorage: IFileStorage
+    private readonly fileStorage: IFileStorage,
+    @inject(DI_TOKENS.DataDirectory)
+    private readonly dataDirectory: string
   ) {}
 
   /**
