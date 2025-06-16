@@ -6,7 +6,7 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '8.15.5'
 
 jobs:
   lint-and-type-check:
@@ -16,8 +16,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
@@ -46,8 +44,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
@@ -62,10 +58,20 @@ jobs:
         env:
           CI: true
           NODE_ENV: test
+          PORT: 3001
+          HOST: localhost
+          LOG_LEVEL: error
           SUPABASE_URL: http://localhost:54321
           SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
           SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
           JWT_SECRET: test-jwt-secret-key-for-testing-only-must-be-at-least-32-chars
+          API_BASE_URL: http://localhost:3001
+          FRONTEND_URL: http://localhost:3000
+          RATE_LIMIT_TIER1: 10
+          RATE_LIMIT_TIER2: 20
+          RATE_LIMIT_TIER3: 30
+          RATE_LIMIT_WINDOW: 60
+          CORS_ORIGIN: http://localhost:3000
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -93,8 +99,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
@@ -114,11 +118,22 @@ jobs:
         run: pnpm run test:integration
         env:
           CI: true
+          NODE_ENV: test
+          PORT: 3001
+          HOST: localhost
+          LOG_LEVEL: error
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL || 'http://localhost:54321' }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU' }}
           JWT_SECRET: test-jwt-secret-key-for-testing-only-must-be-at-least-32-chars
+          API_BASE_URL: http://localhost:3001
+          FRONTEND_URL: http://localhost:3000
+          RATE_LIMIT_TIER1: 10
+          RATE_LIMIT_TIER2: 20
+          RATE_LIMIT_TIER3: 30
+          RATE_LIMIT_WINDOW: 60
+          CORS_ORIGIN: http://localhost:3000
 
   e2e-tests:
     name: E2E Tests
@@ -127,8 +142,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
@@ -142,7 +155,7 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Build application
-        run: pnpm run build
+        run: pnpm run build:vercel
 
       - name: Run E2E tests
         run: pnpm run test:e2e
@@ -171,8 +184,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
@@ -183,7 +194,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm run build
+        run: pnpm run build:vercel
+        env:
+          NODE_ENV: production
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL || 'http://localhost:54321' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' }}
 
       - name: Check bundle size
         run: pnpm run size
