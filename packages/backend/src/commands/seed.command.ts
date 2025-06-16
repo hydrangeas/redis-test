@@ -1,9 +1,13 @@
 import 'reflect-metadata';
+import * as dotenv from 'dotenv';
 import { container } from 'tsyringe';
-import { setupDI } from '@/infrastructure/di';
+import { setupDI } from '@/infrastructure/di/container';
 import { DatabaseSeeder } from '@/infrastructure/seeders/database-seeder';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+// Load environment variables
+dotenv.config();
 
 async function runSeeder() {
   try {
