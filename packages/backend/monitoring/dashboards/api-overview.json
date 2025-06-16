@@ -1,0 +1,280 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "open-data-api-overview",
+    "title": "Open Data API Overview",
+    "tags": ["api", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "type": "graph",
+        "title": "Request Rate",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (method)",
+            "legendFormat": "{{ method }}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Requests/sec"
+          },
+          {
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "type": "graph",
+        "title": "Response Time (P95)",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P99",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Response Time"
+          },
+          {
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "type": "graph",
+        "title": "Error Rate",
+        "datasource": "Prometheus",
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [0.05],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "60s",
+          "handler": 1,
+          "name": "High Error Rate",
+          "noDataState": "no_data",
+          "notifications": []
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(errors_total[5m])) by (type)",
+            "legendFormat": "{{ type }}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Error Rate"
+          },
+          {
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "type": "graph",
+        "title": "Rate Limit Status",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(rate_limit_hits_total[5m])) by (user_tier)",
+            "legendFormat": "{{ user_tier }} - hits",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(rate_limit_exceeded_total[5m])) by (user_tier)",
+            "legendFormat": "{{ user_tier }} - exceeded",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+        "type": "stat",
+        "title": "Active Users by Tier",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "active_users",
+            "legendFormat": "{{ tier }}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+        "type": "stat",
+        "title": "Data Transfer",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(rate(data_transfer_bytes_total[5m])) by (direction)",
+            "legendFormat": "{{ direction }}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "unit": "Bps"
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "type": "graph",
+        "title": "Memory Usage",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "nodejs_heap_size_used_bytes",
+            "legendFormat": "Heap Used",
+            "refId": "A"
+          },
+          {
+            "expr": "nodejs_heap_size_total_bytes",
+            "legendFormat": "Heap Total",
+            "refId": "B"
+          },
+          {
+            "expr": "nodejs_external_memory_bytes",
+            "legendFormat": "External",
+            "refId": "C"
+          },
+          {
+            "expr": "process_resident_memory_bytes",
+            "legendFormat": "RSS",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "bytes",
+            "label": "Memory"
+          },
+          {
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+        "type": "stat",
+        "title": "Total Requests",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(increase(http_requests_total[1h]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+        "type": "stat",
+        "title": "Error Count (1h)",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "sum(increase(errors_total[1h]))",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
