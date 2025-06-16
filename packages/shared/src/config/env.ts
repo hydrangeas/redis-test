@@ -102,7 +102,33 @@ export function getPublicEnv(env: EnvConfig): PublicEnvConfig {
 /**
  * 環境に応じた設定を取得
  */
-export function getEnvironmentConfig(env: EnvConfig) {
+export function getEnvironmentConfig(env: EnvConfig): {
+  isDevelopment: boolean;
+  isProduction: boolean;
+  isStaging: boolean;
+  isTest: boolean;
+  logLevel: string;
+  corsOrigins: string[];
+  rateLimit: {
+    tier1: number;
+    tier2: number;
+    tier3: number;
+    window: number;
+  };
+  security: {
+    jwtSecret: string;
+    jwtExpiresIn: string;
+    refreshTokenExpiresIn: string;
+  };
+  api: {
+    baseUrl: string;
+    port: number;
+    host: string;
+  };
+  frontend: {
+    url: string;
+  };
+} {
   const isDevelopment = env.NODE_ENV === 'development';
   const isProduction = env.NODE_ENV === 'production';
   const isStaging = env.NODE_ENV === 'staging';

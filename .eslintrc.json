@@ -22,7 +22,11 @@
   "settings": {
     "import/resolver": {
       "typescript": {
-        "project": ["./tsconfig.json", "./packages/*/tsconfig.json"]
+        "project": ["./tsconfig.json", "./packages/*/tsconfig.json"],
+        "alwaysTryTypes": true
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     }
   },
