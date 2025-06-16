@@ -4,12 +4,12 @@ import { EndpointPath } from '../value-objects/endpoint-path';
 import { HttpMethod } from '../value-objects/http-method';
 import { EndpointType } from '../value-objects/endpoint-type';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { RateLimitLog } from './rate-limit-log.entity';
 import { RequestCount } from '../value-objects/request-count';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 export interface APIEndpointProps {
   path: EndpointPath;
@@ -25,6 +25,14 @@ export interface RateLimitCheckResult {
   requestCount: RequestCount;
   remainingRequests: number;
   retryAfterSeconds?: number;
+}
+
+export interface CreateAPIEndpointProps {
+  path: string;
+  method: HttpMethod;
+  type: EndpointType;
+  description?: string;
+  isActive?: boolean;
 }
 
 export class APIEndpoint extends Entity<APIEndpointProps> {
@@ -56,6 +64,10 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     return this.props.isActive;
   }
 
+  get description(): string | undefined {
+    return this.props.description;
+  }
+
   /**
    * エンドポイントパスがこのエンドポイントにマッチするかチェック
    */
@@ -76,22 +88,10 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     
     // ウィンドウ内のリクエストをカウント
     const requestsInWindow = userLogs.filter(log => 
-      window.contains(log.requestedAt)
+      window.contains(log.timestamp)
     );
     
-    const requestCountResult = RequestCount.create(requestsInWindow.length);
-    if (requestCountResult.isFailure) {
-      // If we can't create a request count, assume 0
-      const requestCount = RequestCount.create(0).getValue();
-      return {
-        isExceeded: false,
-        requestCount,
-        remainingRequests: rateLimit.maxRequests,
-        retryAfterSeconds: undefined,
-      };
-    }
-    
-    const requestCount = requestCountResult.getValue();
+    const requestCount = new RequestCount(requestsInWindow.length);
     const isExceeded = requestCount.exceeds(rateLimit.maxRequests);
     const remainingRequests = Math.max(0, rateLimit.maxRequests - requestCount.count);
     
@@ -99,7 +99,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     if (isExceeded && requestsInWindow.length > 0) {
       // 最も古いリクエストがウィンドウから出るまでの時間
       const oldestRequest = requestsInWindow[0];
-      retryAfterSeconds = window.getSecondsUntilExpires(oldestRequest.requestedAt);
+      retryAfterSeconds = window.getSecondsUntilExpires(oldestRequest.timestamp);
     }
     
     return {
@@ -111,159 +111,138 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   }
 
   /**
-   * アクセスを記録
+   * アクセスログを記録
    */
-  recordRequest(userId: UserId, timestamp: Date = new Date()): Result<void> {
+  recordAccess(
+    userId: UserId,
+    requestId: string,
+    currentTime: Date = new Date()
+  ): Result<void, DomainError> {
     const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
     
+    // 新しいログエントリを作成
     const newLogResult = RateLimitLog.create({
-      userId,
-      endpointId: this.id,
-      requestCount: RequestCount.create(1).getValue(),
-      requestedAt: timestamp,
+      userId: userId.value,
+      endpointId: this.id.value,
+      requestId,
+      timestamp: currentTime,
     });
-    
+
     if (newLogResult.isFailure) {
       return Result.fail(newLogResult.getError());
     }
-    
+
+    // ログを追加（新しいものを後ろに）
     userLogs.push(newLogResult.getValue());
-    
-    // ログを時系列でソート
-    userLogs.sort((a, b) => a.requestedAt.getTime() - b.requestedAt.getTime());
-    
     this.props.rateLimitLogs.set(userId.value, userLogs);
-    
-    // 古いログをクリーンアップ（1時間以上前のログを削除）
-    this.cleanupOldLogs(userId, timestamp);
-    
-    return Result.ok();
+
+    return Result.ok(undefined);
   }
 
   /**
    * 古いログをクリーンアップ
    */
-  private cleanupOldLogs(userId: UserId, currentTime: Date): void {
-    const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
-    const oneHourAgo = new Date(currentTime.getTime() - 60 * 60 * 1000);
+  cleanupOldLogs(maxAgeSeconds: number, currentTime: Date = new Date()): void {
+    const cutoffTime = new Date(currentTime.getTime() - maxAgeSeconds * 1000);
     
-    const recentLogs = userLogs.filter(log => 
-      log.requestedAt.getTime() > oneHourAgo.getTime()
-    );
-    
-    if (recentLogs.length !== userLogs.length) {
-      this.props.rateLimitLogs.set(userId.value, recentLogs);
+    // 各ユーザーのログをクリーンアップ
+    for (const [userId, logs] of this.props.rateLimitLogs.entries()) {
+      const filteredLogs = logs.filter(log => log.timestamp > cutoffTime);
+      
+      if (filteredLogs.length === 0) {
+        // ログが空になった場合はエントリ自体を削除
+        this.props.rateLimitLogs.delete(userId);
+      } else {
+        this.props.rateLimitLogs.set(userId, filteredLogs);
+      }
     }
   }
 
   /**
    * エンドポイントを有効化
    */
-  activate(): Result<void> {
-    if (this.props.isActive) {
-      return Result.fail(new Error('Endpoint is already active'));
-    }
-    
+  activate(): void {
     this.props.isActive = true;
-    return Result.ok();
   }
 
   /**
    * エンドポイントを無効化
    */
-  deactivate(): Result<void> {
-    if (!this.props.isActive) {
-      return Result.fail(new Error('Endpoint is already inactive'));
-    }
-    
+  deactivate(): void {
     this.props.isActive = false;
-    return Result.ok();
   }
 
   /**
-   * ティアごとのレート制限を取得
+   * ユーザーのアクセスログ数を取得
    */
-  getRateLimitForTier(userTier: UserTier): Result<RateLimit> {
-    // 現在の実装ではエンドポイントごとの個別制限はなく、
-    // ティアのデフォルト値を使用
-    return Result.ok(userTier.rateLimit);
-  }
-
-  /**
-   * レート制限ログを追加
-   */
-  async addRateLimitLog(
-    userId: UserId,
-    timestamp: Date = new Date()
-  ): Promise<Result<void>> {
-    return this.recordRequest(userId, timestamp);
-  }
-
-  /**
-   * ユーザーのログをクリーンアップ
-   */
-  async cleanupLogsForUser(
-    userId: UserId,
-    cutoffTime: Date
-  ): Promise<Result<number>> {
+  getUserLogCount(userId: UserId): number {
     const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
-    const beforeCount = userLogs.length;
-    
-    const recentLogs = userLogs.filter(log => 
-      log.requestedAt.getTime() > cutoffTime.getTime()
-    );
-    
-    if (recentLogs.length !== userLogs.length) {
-      this.props.rateLimitLogs.set(userId.value, recentLogs);
-    }
-    
-    const cleanedCount = beforeCount - recentLogs.length;
-    return Result.ok(cleanedCount);
+    return userLogs.length;
   }
 
   /**
-   * すべてのログをクリーンアップ
+   * 全ユーザーのアクセスログ数を取得
    */
-  async cleanupAllLogs(cutoffTime: Date): Promise<Result<number>> {
-    let totalCleaned = 0;
-    
-    for (const [userId, logs] of this.props.rateLimitLogs.entries()) {
-      const beforeCount = logs.length;
-      const recentLogs = logs.filter(log => 
-        log.requestedAt.getTime() > cutoffTime.getTime()
-      );
-      
-      if (recentLogs.length !== logs.length) {
-        this.props.rateLimitLogs.set(userId, recentLogs);
-        totalCleaned += beforeCount - recentLogs.length;
-      }
+  getTotalLogCount(): number {
+    let total = 0;
+    for (const logs of this.props.rateLimitLogs.values()) {
+      total += logs.length;
     }
-    
-    return Result.ok(totalCleaned);
+    return total;
   }
 
   /**
-   * ファクトリメソッド
+   * APIEndpointを作成
    */
   static create(
-    props: Omit<APIEndpointProps, 'rateLimitLogs'>,
+    props: CreateAPIEndpointProps,
     id?: EndpointId
-  ): Result<APIEndpoint> {
+  ): Result<APIEndpoint, DomainError> {
+    // EndpointPathの作成
+    const pathResult = EndpointPath.create(props.path);
+    if (pathResult.isFailure) {
+      return Result.fail(
+        new DomainError(
+          'INVALID_ENDPOINT_PATH',
+          pathResult.getError().message,
+          ErrorType.VALIDATION
+        )
+      );
+    }
+
     const endpointProps: APIEndpointProps = {
-      ...props,
+      path: pathResult.getValue(),
+      method: props.method,
+      type: props.type,
+      description: props.description,
+      isActive: props.isActive ?? true,
       rateLimitLogs: new Map(),
     };
+
+    // Ensure we always have an EndpointId
+    const endpointId = id || EndpointId.generate();
     
-    return Result.ok(new APIEndpoint(endpointProps, id));
+    return Result.ok(new APIEndpoint(endpointProps, endpointId));
   }
 
   /**
    * 既存のデータから再構築
    */
-  static reconstitute(
-    props: APIEndpointProps,
-    id: EndpointId
-  ): APIEndpoint {
-    return new APIEndpoint(props, id);
+  static reconstruct(
+    props: APIEndpointProps & { id: string }
+  ): Result<APIEndpoint, DomainError> {
+    const idResult = EndpointId.create(props.id);
+    if (idResult.isFailure) {
+      return Result.fail(
+        new DomainError(
+          'INVALID_ENDPOINT_ID',
+          idResult.getError().message,
+          ErrorType.VALIDATION
+        )
+      );
+    }
+
+    const { id, ...endpointProps } = props;
+    return Result.ok(new APIEndpoint(endpointProps, idResult.getValue()));
   }
 }

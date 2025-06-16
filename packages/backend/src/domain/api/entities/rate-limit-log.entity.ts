@@ -1,96 +1,132 @@
-import { Entity } from '@/domain/shared/entity';
-import { RateLimitLogId } from '../value-objects/rate-limit-log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { EndpointId } from '../value-objects/endpoint-id';
-import { RequestCount } from '../value-objects/request-count';
-import { Result } from '@/domain/shared/result';
-import { Guard } from '@/domain/shared/guard';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 export interface RateLimitLogProps {
-  userId: UserId;
-  endpointId: EndpointId;
-  requestCount: RequestCount;
-  requestedAt: Date;
-  requestMetadata?: Record<string, any>;
+  userId: string;
+  endpointId: string;
+  requestId: string;
+  timestamp: Date;
+  exceeded: boolean;
+}
+
+export interface CreateRateLimitLogProps {
+  userId: string;
+  endpointId: string;
+  requestId: string;
+  timestamp?: Date;
+  exceeded?: boolean;
 }
 
 export class RateLimitLog extends Entity<RateLimitLogProps> {
-  private constructor(props: RateLimitLogProps, id?: RateLimitLogId) {
+  private constructor(props: RateLimitLogProps, id?: UniqueEntityId) {
     super(props, id);
   }
 
-  get id(): RateLimitLogId {
-    return this._id as RateLimitLogId;
+  get id(): UniqueEntityId {
+    return this._id;
   }
 
-  get userId(): UserId {
+  get userId(): string {
     return this.props.userId;
   }
 
-  get endpointId(): EndpointId {
+  get endpointId(): string {
     return this.props.endpointId;
   }
 
-  get requestCount(): RequestCount {
-    return this.props.requestCount;
+  get requestId(): string {
+    return this.props.requestId;
   }
 
-  get requestedAt(): Date {
-    return this.props.requestedAt;
+  get timestamp(): Date {
+    return this.props.timestamp;
   }
 
-  get requestMetadata(): Record<string, any> | undefined {
-    return this.props.requestMetadata;
+  get exceeded(): boolean {
+    return this.props.exceeded;
   }
 
   /**
-   * ログが特定のウィンドウ内かチェック
+   * レート制限超過をマーク
    */
-  isWithinWindow(windowStart: Date, windowEnd: Date): boolean {
-    const logTime = this.requestedAt.getTime();
-    return logTime >= windowStart.getTime() && logTime < windowEnd.getTime();
+  markAsExceeded(): void {
+    this.props.exceeded = true;
   }
 
   /**
-   * ログの経過時間を取得（秒）
+   * ログが期限切れかチェック
+   */
+  isExpired(maxAgeSeconds: number, currentTime: Date = new Date()): boolean {
+    const ageInMillis = currentTime.getTime() - this.props.timestamp.getTime();
+    return ageInMillis > maxAgeSeconds * 1000;
+  }
+
+  /**
+   * ログの年齢を秒で取得
    */
   getAgeInSeconds(currentTime: Date = new Date()): number {
-    return Math.floor((currentTime.getTime() - this.requestedAt.getTime()) / 1000);
+    return Math.floor((currentTime.getTime() - this.props.timestamp.getTime()) / 1000);
   }
 
   /**
-   * ファクトリメソッド
+   * RateLimitLogを作成
    */
   static create(
-    props: RateLimitLogProps,
-    id?: RateLimitLogId
-  ): Result<RateLimitLog> {
-    const guardResult = Guard.againstNullOrUndefinedBulk([
-      { argument: props.userId, argumentName: 'userId' },
-      { argument: props.endpointId, argumentName: 'endpointId' },
-      { argument: props.requestCount, argumentName: 'requestCount' },
-      { argument: props.requestedAt, argumentName: 'requestedAt' },
-    ]);
-
-    if (!guardResult.succeeded) {
-      return Result.fail(new Error(guardResult.message));
+    props: CreateRateLimitLogProps,
+    id?: UniqueEntityId
+  ): Result<RateLimitLog, DomainError> {
+    // Validate userId
+    if (!props.userId || typeof props.userId !== 'string') {
+      return Result.fail(
+        new DomainError(
+          'INVALID_USER_ID',
+          'User ID is required and must be a string',
+          ErrorType.VALIDATION
+        )
+      );
     }
 
-    // タイムスタンプが未来でないことを確認
-    if (props.requestedAt.getTime() > Date.now()) {
-      return Result.fail(new Error('Requested at cannot be in the future'));
+    // Validate endpointId
+    if (!props.endpointId || typeof props.endpointId !== 'string') {
+      return Result.fail(
+        new DomainError(
+          'INVALID_ENDPOINT_ID',
+          'Endpoint ID is required and must be a string',
+          ErrorType.VALIDATION
+        )
+      );
     }
 
-    return Result.ok(new RateLimitLog(props, id));
+    // Validate requestId
+    if (!props.requestId || typeof props.requestId !== 'string') {
+      return Result.fail(
+        new DomainError(
+          'INVALID_REQUEST_ID',
+          'Request ID is required and must be a string',
+          ErrorType.VALIDATION
+        )
+      );
+    }
+
+    const logProps: RateLimitLogProps = {
+      userId: props.userId,
+      endpointId: props.endpointId,
+      requestId: props.requestId,
+      timestamp: props.timestamp || new Date(),
+      exceeded: props.exceeded || false,
+    };
+
+    return Result.ok(new RateLimitLog(logProps, id));
   }
 
   /**
    * 既存のデータから再構築
    */
-  static reconstitute(
-    props: RateLimitLogProps,
-    id: RateLimitLogId
-  ): RateLimitLog {
-    return new RateLimitLog(props, id);
+  static reconstruct(
+    props: RateLimitLogProps & { id: string }
+  ): Result<RateLimitLog, DomainError> {
+    const { id, ...logProps } = props;
+    return Result.ok(new RateLimitLog(logProps, new UniqueEntityId(id)));
   }
 }
