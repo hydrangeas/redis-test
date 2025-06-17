@@ -273,7 +273,11 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     }
 
     // レート制限を超えていない場合のみアクセスを記録
-    // Record request at aggregate level - endpoints don't track requests
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const recordResult = endpoint.recordAccess(userId, requestId, requestTime);
+    if (recordResult.isFailure) {
+      return Result.fail(recordResult.getError());
+    }
 
     // APIアクセス記録イベントを発行
     this.addDomainEvent(
@@ -286,10 +290,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     );
 
     // 記録後の最新状態を返す
-    // Note: checkRateLimitのタイムスタンプを1ms後にすることで、
-    // 記録したリクエストが確実にウィンドウ内に含まれるようにする
-    const checkTime = new Date(requestTime.getTime() + 1);
-    const finalCheck = endpoint.checkRateLimit(userId, rateLimit, checkTime);
+    const finalCheck = endpoint.checkRateLimit(userId, rateLimit, requestTime);
 
     return Result.ok({
       isExceeded: finalCheck.isExceeded,

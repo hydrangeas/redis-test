@@ -27,7 +27,7 @@ export class RequestCount {
   }
 
   public exceeds(limit: number): boolean {
-    return this._count >= limit;
+    return this._count > limit;
   }
 
   public add(count: number): RequestCount {

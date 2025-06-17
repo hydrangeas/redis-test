@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenDataResource } from '../open-data-resource';
 import { DataPath } from '../data-path';
 import { ResourceMetadata } from '../resource-metadata';
-import { ValidationError } from '@/domain/errors/validation-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 describe('OpenDataResource', () => {
   let validPath: DataPath;
@@ -64,7 +64,8 @@ describe('OpenDataResource', () => {
       const result = OpenDataResource.create(null as any, validMetadata);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBeInstanceOf(ValidationError);
+      expect(result.getError()).toBeInstanceOf(DomainError);
+      expect(result.getError().type).toBe(ErrorType.VALIDATION);
       expect(result.getError().message).toBe('Path is required');
     });
 
@@ -72,7 +73,8 @@ describe('OpenDataResource', () => {
       const result = OpenDataResource.create(validPath, null as any);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBeInstanceOf(ValidationError);
+      expect(result.getError()).toBeInstanceOf(DomainError);
+      expect(result.getError().type).toBe(ErrorType.VALIDATION);
       expect(result.getError().message).toBe('Metadata is required');
     });
 
@@ -80,7 +82,8 @@ describe('OpenDataResource', () => {
       const result = OpenDataResource.create(validPath, validMetadata, null as any);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBeInstanceOf(ValidationError);
+      expect(result.getError()).toBeInstanceOf(DomainError);
+      expect(result.getError().type).toBe(ErrorType.VALIDATION);
       expect(result.getError().message).toBe('CreatedAt is required');
     });
   });

@@ -228,14 +228,23 @@ describe('APIAggregate', () => {
     beforeEach(() => {
       // Add internal endpoint
       const pathResult = EndpointPath.create('/internal/api');
+      if (!pathResult.isSuccess) {
+        throw new Error(`Failed to create path: ${pathResult.getError().message}`);
+      }
       const typeResult = EndpointType.create('internal');
-      const endpoint = APIEndpoint.create({
+      if (!typeResult.isSuccess) {
+        throw new Error(`Failed to create type: ${typeResult.getError().message}`);
+      }
+      const endpointResult = APIEndpoint.create({
         path: pathResult.getValue(),
         method: HttpMethod.GET,
         type: typeResult.getValue(),
         isActive: true,
-      }).getValue();
-      aggregate.addEndpoint(endpoint);
+      });
+      if (!endpointResult.isSuccess) {
+        throw new Error(`Failed to create endpoint: ${endpointResult.getError().message}`);
+      }
+      aggregate.addEndpoint(endpointResult.getValue());
     });
 
     it('should allow TIER3 to access internal endpoints', async () => {
