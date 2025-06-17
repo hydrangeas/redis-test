@@ -15,6 +15,9 @@ import { DataAccessService } from '@/domain/data/services/data-access.service';
 import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
 import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
 import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
+import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
+import { RateLimitUseCase } from '@/application/use-cases/rate-limit.use-case';
+import { APIAccessControlUseCase } from '@/application/use-cases/api-access-control.use-case';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { EventBus } from '../events/event-bus';
 import { IEventStore } from '@/domain/interfaces/event-store.interface';
@@ -328,22 +331,14 @@ function registerApplicationServices(container: DependencyContainer): void {
     useClass: DataRetrievalUseCase,
   });
 
-  // DataAccessUseCaseの同期インポート
-  const { DataAccessUseCase } = require('../../application/use-cases/data-access.use-case');
   container.register(DI_TOKENS.DataAccessUseCase, {
     useClass: DataAccessUseCase,
   });
 
-  // RateLimitUseCaseの同期インポート
-  const { RateLimitUseCase } = require('../../application/use-cases/rate-limit.use-case');
   container.register(DI_TOKENS.RateLimitUseCase, {
     useClass: RateLimitUseCase,
   });
 
-  // APIAccessControlUseCaseの同期インポート
-  const {
-    APIAccessControlUseCase,
-  } = require('../../application/use-cases/api-access-control.use-case');
   container.register(DI_TOKENS.APIAccessControlUseCase, {
     useClass: APIAccessControlUseCase,
   });
