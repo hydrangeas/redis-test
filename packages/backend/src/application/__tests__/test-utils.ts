@@ -67,8 +67,27 @@ export function setupDependencies() {
     validateAccessToken: vi.fn(),
   };
 
+  const mockAPIAccessControlService = {
+    checkAccess: vi.fn(),
+    validateEndpointAccess: vi.fn(),
+  };
+
+  const mockRateLimitService = {
+    checkLimit: vi.fn(),
+    recordUsage: vi.fn(),
+    getUsageStatus: vi.fn(),
+  };
+
+  const mockDataAccessService = {
+    checkAccess: vi.fn(),
+    getResourceMetadata: vi.fn(),
+  };
+
   container.registerInstance(DI_TOKENS.EventBus, mockEventBus);
   container.registerInstance(DI_TOKENS.AuthenticationService, mockAuthenticationService);
+  container.registerInstance(DI_TOKENS.APIAccessControlService, mockAPIAccessControlService);
+  container.registerInstance(DI_TOKENS.RateLimitService, mockRateLimitService);
+  container.registerInstance(DI_TOKENS.DataAccessService, mockDataAccessService);
   container.registerInstance(DI_TOKENS.UserRepository, mockRepositories.authentication);
   container.registerInstance(DI_TOKENS.RateLimitLogRepository, mockRepositories.rateLimitLog);
   container.registerInstance(DI_TOKENS.OpenDataRepository, mockRepositories.openData);
@@ -89,6 +108,9 @@ export function setupDependencies() {
     mockAuthAdapter,
     mockJWTValidator,
     mockAuthenticationService,
+    mockAPIAccessControlService,
+    mockRateLimitService,
+    mockDataAccessService,
   };
 }
 
