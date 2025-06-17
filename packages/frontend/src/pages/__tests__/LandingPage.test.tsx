@@ -35,7 +35,7 @@ describe("LandingPage", () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: null },
       error: null,
-    });
+    } as any);
 
     renderWithRouter(<LandingPage />);
 
@@ -143,7 +143,7 @@ describe("LandingPage", () => {
     });
 
     vi.mocked(supabase.auth.signOut).mockResolvedValue({
-      error: new Error("Logout failed"),
+      error: new Error("Logout failed") as any,
     });
 
     // Mock window.alert

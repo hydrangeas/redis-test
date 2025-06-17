@@ -2,7 +2,6 @@ import React from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
-import { AuthProvider } from "../contexts/AuthContext";
 
 // Create a custom render function that includes providers
 export function renderWithRouter(
@@ -10,9 +9,7 @@ export function renderWithRouter(
   options?: Omit<RenderOptions, "wrapper">
 ) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <BrowserRouter>
-      <AuthProvider>{children}</AuthProvider>
-    </BrowserRouter>
+    <BrowserRouter>{children}</BrowserRouter>
   );
 
   return render(ui, { wrapper: Wrapper, ...options });

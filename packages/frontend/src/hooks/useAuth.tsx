@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     // 認証状態の変更を監視
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_, session) => {
         if (session?.user) {
           setUser(session.user);
         } else {

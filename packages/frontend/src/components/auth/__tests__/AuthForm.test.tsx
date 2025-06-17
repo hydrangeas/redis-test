@@ -15,7 +15,7 @@ vi.mock("react-router-dom", async () => {
 
 // Mock Supabase Auth UI React
 vi.mock("@supabase/auth-ui-react", () => ({
-  Auth: ({ onlyThirdPartyProviders, providers, localization }: any) => (
+  Auth: ({ providers, localization }: any) => (
     <div data-testid="supabase-auth">
       <div>Supabase Auth UI</div>
       {providers &&
@@ -90,7 +90,7 @@ describe("AuthForm", () => {
     };
 
     vi.mocked(supabase.auth.onAuthStateChange).mockImplementation(
-      (callback) => {
+      (callback: any) => {
         authCallback = callback;
         return mockAuthListener as any;
       }
@@ -120,7 +120,7 @@ describe("AuthForm", () => {
     };
 
     vi.mocked(supabase.auth.onAuthStateChange).mockImplementation(
-      (callback) => {
+      (callback: any) => {
         authCallback = callback;
         return mockAuthListener as any;
       }

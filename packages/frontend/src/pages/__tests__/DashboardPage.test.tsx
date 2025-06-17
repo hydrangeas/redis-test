@@ -23,7 +23,7 @@ describe("DashboardPage", () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: null },
       error: null,
-    });
+    } as any);
 
     renderWithRouter(<DashboardPage />);
 
@@ -168,7 +168,7 @@ describe("DashboardPage", () => {
     });
 
     vi.mocked(supabase.auth.signOut).mockResolvedValue({
-      error: new Error("Logout failed"),
+      error: new Error("Logout failed") as any,
     });
 
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});

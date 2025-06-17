@@ -37,7 +37,7 @@ describe("App", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
+      mockAuthListener as unknown as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     render(<App />);
@@ -60,7 +60,7 @@ describe("App", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
+      mockAuthListener as unknown as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     const consoleErrorSpy = vi
@@ -95,7 +95,7 @@ describe("App", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
+      mockAuthListener as unknown as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     const { unmount } = render(<App />);

@@ -161,7 +161,7 @@ export const DashboardPage: React.FC = () => {
     {
       key: "count" as keyof UsageStats,
       header: "使用回数",
-      render: (value: any, item: UsageStats) => `${item.count} / ${item.limit}`,
+      render: (_: any, item: UsageStats) => `${item.count} / ${item.limit}`,
     },
     {
       key: "resetAt" as keyof UsageStats,

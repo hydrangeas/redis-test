@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type MockedFunction } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ResponsiveTable } from "@/components/ui/ResponsiveTable";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -6,9 +6,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 // Mock useMediaQuery hook
 vi.mock("@/hooks/useMediaQuery");
 
-const mockUseMediaQuery = useMediaQuery as vi.MockedFunction<
-  typeof useMediaQuery
->;
+const mockUseMediaQuery = useMediaQuery as MockedFunction<typeof useMediaQuery>;
 
 interface TestData {
   id: string;
@@ -49,7 +47,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -74,7 +72,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -89,7 +87,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -109,7 +107,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -127,7 +125,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -145,7 +143,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -166,7 +164,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={[]}
           columns={columns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 
@@ -187,7 +185,7 @@ describe("ResponsiveTable", () => {
             { key: "name" as keyof TestData, header: "Name" },
             { key: "id" as keyof TestData, header: "ID" },
           ]}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item: any) => item.id}
         />
       );
 

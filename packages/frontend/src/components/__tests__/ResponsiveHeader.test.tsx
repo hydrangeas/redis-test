@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type MockedFunction } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { ResponsiveHeader } from "@/components/Header/ResponsiveHeader";
@@ -10,10 +10,8 @@ import type { User } from "@supabase/supabase-js";
 vi.mock("@/hooks/useAuth");
 vi.mock("@/hooks/useMediaQuery");
 
-const mockUseAuth = useAuth as vi.MockedFunction<typeof useAuth>;
-const mockUseMediaQuery = useMediaQuery as vi.MockedFunction<
-  typeof useMediaQuery
->;
+const mockUseAuth = useAuth as MockedFunction<typeof useAuth>;
+const mockUseMediaQuery = useMediaQuery as MockedFunction<typeof useMediaQuery>;
 
 const renderWithRouter = (component: React.ReactElement) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);

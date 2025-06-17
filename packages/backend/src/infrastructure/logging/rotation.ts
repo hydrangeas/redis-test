@@ -1,4 +1,4 @@
-import pino from 'pino';
+import pino, { type LoggerOptions } from 'pino';
 // @ts-ignore - pino-multi-stream doesn't have type declarations
 import pinoMultiStream from 'pino-multi-stream';
 import { createStream } from 'rotating-file-stream';
@@ -133,7 +133,7 @@ export function getLogRotationConfig(): RotatingLoggerOptions {
 /**
  * Custom serializers for sensitive data
  */
-export const logSerializers = {
+export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
   req: (req: any) => ({
     id: req.id,
     method: req.method,
