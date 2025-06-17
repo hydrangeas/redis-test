@@ -158,7 +158,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       try {
         // Try to decode tokens to get JTI claims
-        const decoded = this.jwtValidator.decodeToken<any>(session.access_token);
+        const decoded = this.jwtValidator.decodeToken(session.access_token);
         newTokenId = decoded?.jti;
       } catch (e) {
         // If we can't decode, that's ok - token IDs are optional

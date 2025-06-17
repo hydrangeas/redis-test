@@ -24,7 +24,7 @@ interface DataAccessRequest {
 }
 
 interface DataAccessResponse {
-  content: any;
+  content: unknown;
   etag: string;
   lastModified: Date;
   size: number;

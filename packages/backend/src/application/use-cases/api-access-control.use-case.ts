@@ -199,14 +199,14 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   /**
    * APIアクセスログを記録
    */
-  private async recordAPIAccess(
+  private recordAPIAccess(
     userId: UserId | undefined,
     endpoint: string,
     method: string,
     statusCode: number,
     startTime: number,
     metadata?: APIAccessMetadata,
-  ): Promise<void> {
+  ): void {
     const responseTime = Date.now() - startTime;
 
     // 簡略化: 現時点ではログ記録の詳細実装を省略
