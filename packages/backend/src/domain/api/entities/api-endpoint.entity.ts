@@ -240,7 +240,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
       );
     }
 
-    const { id, ...endpointProps } = props;
+    const { id: _id, ...endpointProps } = props;
     return Result.ok(new APIEndpoint(endpointProps, idResult.getValue()));
   }
 }

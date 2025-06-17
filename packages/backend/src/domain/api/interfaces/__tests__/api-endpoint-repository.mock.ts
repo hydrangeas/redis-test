@@ -31,26 +31,26 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
   /**
    * エンドポイントを保存
    */
-  async save(endpoint: APIEndpoint): Promise<Result<void>> {
+  save(endpoint: APIEndpoint): Promise<Result<void>> {
     this.saveSpy(endpoint);
 
     try {
       const key = this.createKey(endpoint.path, endpoint.method);
       this.endpoints.set(key, endpoint);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('SAVE_FAILED', 'Failed to save endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * パスとメソッドでエンドポイントを検索
    */
-  async findByPathAndMethod(
+  findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
   ): Promise<Result<APIEndpoint | null>> {
@@ -59,13 +59,13 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
     try {
       const key = this.createKey(path, method);
       const endpoint = this.endpoints.get(key) || null;
-      return Result.ok(endpoint);
+      return Promise.resolve(Result.ok(endpoint));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('FIND_FAILED', 'Failed to find endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
