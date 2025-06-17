@@ -8,6 +8,7 @@ import Modal, {
 } from "./Modal";
 import { Button } from "../Button";
 import { Input } from "../Input";
+import type { StoryContext } from "@/test/types";
 
 const meta = {
   title: "UI/Modal",
@@ -33,7 +34,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const ModalDemo = (args: any) => {
+const ModalDemo = (args: StoryContext["args"]) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -67,7 +68,7 @@ export const Default: Story = {
 };
 
 export const Small: Story = {
-  render: () => {
+  render: function SmallModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -101,7 +102,7 @@ export const Small: Story = {
 };
 
 export const Large: Story = {
-  render: () => {
+  render: function LargeModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (

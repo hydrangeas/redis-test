@@ -24,6 +24,12 @@ export interface StoryRenderArgs<T = Record<string, unknown>> {
   args: T;
 }
 
+export interface StoryContext<T = Record<string, unknown>> {
+  args: T;
+  globals: Record<string, unknown>;
+  parameters: Record<string, unknown>;
+}
+
 export interface RouterModule {
   useNavigate: () => typeof vi.fn;
   useLocation: () => { pathname: string };

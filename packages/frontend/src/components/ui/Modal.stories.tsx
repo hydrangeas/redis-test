@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 import { useState } from "react";
+import type { StoryContext } from "@/test/types";
 
 const meta = {
   title: "UI/Modal",
@@ -28,7 +29,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Wrapper component to handle modal state
-const ModalDemo = (args: any) => {
+const ModalDemo = (args: StoryContext["args"]) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

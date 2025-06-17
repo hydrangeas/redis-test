@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
-  const actual = (await vi.importActual("react-router-dom")) as any;
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -35,7 +35,7 @@ describe("LandingPage", () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: null },
       error: null,
-    } as any);
+    });
 
     renderWithRouter(<LandingPage />);
 
@@ -55,7 +55,7 @@ describe("LandingPage", () => {
     };
 
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser as any },
+      data: { user: mockUser },
       error: null,
     });
 
@@ -79,7 +79,7 @@ describe("LandingPage", () => {
     };
 
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser as any },
+      data: { user: mockUser },
       error: null,
     });
 
@@ -106,7 +106,7 @@ describe("LandingPage", () => {
     };
 
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser as any },
+      data: { user: mockUser },
       error: null,
     });
 
@@ -138,12 +138,12 @@ describe("LandingPage", () => {
     };
 
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser as any },
+      data: { user: mockUser },
       error: null,
     });
 
     vi.mocked(supabase.auth.signOut).mockResolvedValue({
-      error: new Error("Logout failed") as any,
+      error: new Error("Logout failed"),
     });
 
     // Mock window.alert

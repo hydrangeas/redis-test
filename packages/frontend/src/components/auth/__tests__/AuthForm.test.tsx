@@ -3,10 +3,11 @@ import { screen, waitFor } from "@testing-library/react";
 import { renderWithRouter } from "@/test/test-utils";
 import { AuthForm } from "../AuthForm";
 import { supabase } from "@/lib/supabase";
+import type { MockAuthUIProps } from "@/test/types";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
-  const actual = (await vi.importActual("react-router-dom")) as any;
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -15,7 +16,7 @@ vi.mock("react-router-dom", async () => {
 
 // Mock Supabase Auth UI React
 vi.mock("@supabase/auth-ui-react", () => ({
-  Auth: ({ providers, localization }: any) => (
+  Auth: ({ providers, localization }: MockAuthUIProps) => (
     <div data-testid="supabase-auth">
       <div>Supabase Auth UI</div>
       {providers &&
@@ -35,13 +36,25 @@ vi.mock("@supabase/auth-ui-shared", () => ({
   ThemeSupa: {},
 }));
 
+type AuthEvent = "SIGNED_IN" | "SIGNED_OUT" | "TOKEN_REFRESHED" | "USER_UPDATED";
+type AuthSession = { user: { id: string } } | null;
+type AuthCallback = (event: AuthEvent, session: AuthSession) => void;
+
+interface MockAuthListener {
+  data: {
+    subscription: {
+      unsubscribe: () => void;
+    };
+  };
+}
+
 describe("AuthForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should render the Supabase Auth UI component", () => {
-    const mockAuthListener = {
+    const mockAuthListener: MockAuthListener = {
       data: {
         subscription: {
           unsubscribe: vi.fn(),
@@ -49,7 +62,7 @@ describe("AuthForm", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as any
+      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     renderWithRouter(<AuthForm />);
@@ -59,7 +72,7 @@ describe("AuthForm", () => {
   });
 
   it("should render Google and GitHub provider buttons", () => {
-    const mockAuthListener = {
+    const mockAuthListener: MockAuthListener = {
       data: {
         subscription: {
           unsubscribe: vi.fn(),
@@ -67,7 +80,7 @@ describe("AuthForm", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as any
+      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     renderWithRouter(<AuthForm />);
@@ -79,9 +92,9 @@ describe("AuthForm", () => {
   });
 
   it("should navigate to dashboard on successful sign in", async () => {
-    let authCallback: ((event: string, session: any) => void) | null = null;
+    let authCallback: AuthCallback | null = null;
 
-    const mockAuthListener = {
+    const mockAuthListener: MockAuthListener = {
       data: {
         subscription: {
           unsubscribe: vi.fn(),
@@ -90,9 +103,9 @@ describe("AuthForm", () => {
     };
 
     vi.mocked(supabase.auth.onAuthStateChange).mockImplementation(
-      (callback: any) => {
-        authCallback = callback;
-        return mockAuthListener as any;
+      (callback) => {
+        authCallback = callback as AuthCallback;
+        return mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>;
       }
     );
 
@@ -109,9 +122,9 @@ describe("AuthForm", () => {
   });
 
   it("should not navigate on other auth events", async () => {
-    let authCallback: ((event: string, session: any) => void) | null = null;
+    let authCallback: AuthCallback | null = null;
 
-    const mockAuthListener = {
+    const mockAuthListener: MockAuthListener = {
       data: {
         subscription: {
           unsubscribe: vi.fn(),
@@ -120,9 +133,9 @@ describe("AuthForm", () => {
     };
 
     vi.mocked(supabase.auth.onAuthStateChange).mockImplementation(
-      (callback: any) => {
-        authCallback = callback;
-        return mockAuthListener as any;
+      (callback) => {
+        authCallback = callback as AuthCallback;
+        return mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>;
       }
     );
 
@@ -140,7 +153,7 @@ describe("AuthForm", () => {
 
   it("should unsubscribe from auth listener on unmount", () => {
     const unsubscribeSpy = vi.fn();
-    const mockAuthListener = {
+    const mockAuthListener: MockAuthListener = {
       data: {
         subscription: {
           unsubscribe: unsubscribeSpy,
@@ -148,7 +161,7 @@ describe("AuthForm", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as any
+      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     const { unmount } = renderWithRouter(<AuthForm />);
@@ -161,7 +174,7 @@ describe("AuthForm", () => {
   });
 
   it("should have accessible container", () => {
-    const mockAuthListener = {
+    const mockAuthListener: MockAuthListener = {
       data: {
         subscription: {
           unsubscribe: vi.fn(),
@@ -169,7 +182,7 @@ describe("AuthForm", () => {
       },
     };
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as any
+      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     const { container } = renderWithRouter(<AuthForm />);
