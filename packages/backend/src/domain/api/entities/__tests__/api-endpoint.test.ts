@@ -267,9 +267,8 @@ describe('APIEndpoint', () => {
       expect(tier1Result.isSuccess).toBe(true);
       const tier1 = tier1Result.getValue();
 
-      const rateLimitResult = tier1.getRateLimit();
-      expect(rateLimitResult.isSuccess).toBe(true);
-      const rateLimit = rateLimitResult.getValue();
+      const rateLimit = tier1.getRateLimit();
+      expect(rateLimit).toBeDefined();
 
       expect(rateLimit.maxRequests).toBe(60);
       expect(rateLimit.windowSeconds).toBe(60);

@@ -35,6 +35,7 @@ describe('AuthenticationUseCase', () => {
 
     mockAuthService = {
       validateToken: vi.fn(),
+      validateAccessToken: vi.fn(),
     } as any;
 
     mockEventBus = {
@@ -81,7 +82,7 @@ describe('AuthenticationUseCase', () => {
         DomainResult.ok({ sub: validUuid }),
       );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
-      vi.mocked(mockAuthService.validateToken).mockReturnValue(DomainResult.ok(authenticatedUser));
+      vi.mocked(mockAuthService.validateAccessToken).mockResolvedValue(DomainResult.ok(authenticatedUser));
 
       const result = await useCase.validateToken(token);
 
@@ -91,7 +92,7 @@ describe('AuthenticationUseCase', () => {
         expect(result.data.tokenId).toBe('token-id-123');
       }
       expect(mockAuthAdapter.verifyToken).toHaveBeenCalledWith(token);
-      expect(mockAuthService.validateToken).toHaveBeenCalledWith(tokenPayload);
+      expect(mockAuthService.validateAccessToken).toHaveBeenCalledWith(tokenPayload);
       expect(mockEventBus.publish).not.toHaveBeenCalled();
     });
 
@@ -145,7 +146,7 @@ describe('AuthenticationUseCase', () => {
         DomainResult.ok({ sub: validUuid }),
       );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
-      vi.mocked(mockAuthService.validateToken).mockReturnValue(
+      vi.mocked(mockAuthService.validateAccessToken).mockResolvedValue(
         DomainResult.fail(new Error('Token expired')),
       );
 

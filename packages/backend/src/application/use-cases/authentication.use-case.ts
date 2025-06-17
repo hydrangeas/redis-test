@@ -104,7 +104,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       return ApplicationResult.ok({
         user: authenticatedUser,
-        tokenId: tokenPayload.sub, // Use sub as tokenId since jti is not available
+        tokenId: tokenPayload.jti || tokenPayload.sub, // Use jti if available, otherwise sub
       });
     } catch (error) {
       this.logger.error(
