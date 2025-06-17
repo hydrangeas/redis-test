@@ -9,8 +9,8 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { HttpMethod as ApiHttpMethod } from '@/domain/api/value-objects/http-method';
-import { StatusCode } from '@/domain/log/value-objects/status-code';
-import { ResponseTime } from '@/domain/log/value-objects/response-time';
+import { RequestInfo } from '@/domain/log/value-objects/request-info';
+import { ResponseInfo } from '@/domain/log/value-objects/response-info';
 
 /**
  * APIアクセス要求イベントのハンドラー
@@ -65,13 +65,17 @@ export class APIAccessRequestedHandler implements IEventHandler<APIAccessRequest
         return;
       }
 
-      // HttpMethodの作成
-      const httpMethodResult = ApiHttpMethod.create(event.method);
-      if (httpMethodResult.isFailure) {
+      // HttpMethodの検証
+      let httpMethod: ApiHttpMethod;
+      try {
+        // event.method is already an HttpMethod enum value
+        httpMethod = event.method as ApiHttpMethod;
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: httpMethodResult.error,
+            method: event.method,
+            error: error instanceof Error ? error.message : 'Invalid HTTP method',
           },
           'Invalid method in APIAccessRequested event',
         );
@@ -79,56 +83,52 @@ export class APIAccessRequestedHandler implements IEventHandler<APIAccessRequest
       }
 
       // Endpointの作成
-      const endpointResult = Endpoint.create({
-        path: apiPath,
-        method: httpMethodResult.getValue(),
-      });
-      if (endpointResult.isFailure) {
+      let endpoint: Endpoint;
+      try {
+        endpoint = new Endpoint(httpMethod, apiPath);
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: endpointResult.error,
+            error: error instanceof Error ? error.message : 'Failed to create endpoint',
           },
           'Failed to create Endpoint',
         );
         return;
       }
 
-      // ステータスコードとレスポンスタイムは初期値を設定
-      // 実際の値は後続のイベントで更新される可能性がある
-      const statusCodeResult = StatusCode.create(0); // 処理中
-      const responseTimeResult = ResponseTime.create(0);
+      // RequestInfoの作成
+      const requestInfo = new RequestInfo({
+        ipAddress: '0.0.0.0', // TODO: Get from request context
+        userAgent: 'API Access', // TODO: Get from request headers
+        headers: {}, // TODO: Get from request
+        body: null,
+        queryParams: undefined,
+      });
 
-      if (statusCodeResult.isFailure || responseTimeResult.isFailure) {
-        this.logger.error(
-          {
-            eventId: event.eventId,
-          },
-          'Failed to create initial status code or response time',
-        );
-        return;
-      }
+      // ResponseInfoの作成（初期値）
+      const responseInfo = new ResponseInfo({
+        statusCode: 0, // 処理中
+        responseTime: 0,
+        size: 0,
+        headers: {},
+      });
 
       // APIログエントリの作成
       const logEntryResult = APILogEntry.create({
         userId: userIdResult.getValue(),
-        endpoint: endpointResult.getValue(),
-        statusCode: statusCodeResult.getValue(),
-        responseTime: responseTimeResult.getValue(),
-        requestedAt: event.requestTime,
-        metadata: {
-          endpointId: event.endpointId,
-          endpointType: event.endpointType,
-          eventId: event.eventId,
-          aggregateId: event.aggregateId,
-        },
+        endpoint: endpoint,
+        requestInfo: requestInfo,
+        responseInfo: responseInfo,
+        timestamp: event.requestTime,
+        error: undefined,
       });
 
       if (logEntryResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create APILogEntry',
         );
@@ -141,7 +141,7 @@ export class APIAccessRequestedHandler implements IEventHandler<APIAccessRequest
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save API access log',
         );

@@ -10,9 +10,8 @@ export class APIAccessRecorded extends DomainEvent {
     version: number,
     public readonly endpoint: string,
     public readonly method: string,
-    occurredAt?: Date,
   ) {
-    super(aggregateId, version, occurredAt);
+    super(aggregateId, version);
   }
 
   getEventName(): string {

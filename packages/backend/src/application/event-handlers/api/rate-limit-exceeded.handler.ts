@@ -57,7 +57,7 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
         this.logger.error(
           {
             eventId: event.eventId,
-            error: authEventResult.error,
+            error: authEventResult.getError(),
           },
           'Failed to create AuthEvent',
         );
@@ -70,7 +70,7 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
         this.logger.error(
           {
             eventId: event.eventId,
-            error: providerResult.error,
+            error: providerResult.getError(),
           },
           'Failed to create Provider',
         );
@@ -82,7 +82,7 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
         this.logger.error(
           {
             eventId: event.eventId,
-            error: ipAddressResult.error,
+            error: ipAddressResult.getError(),
           },
           'Failed to create IPAddress',
         );
@@ -94,7 +94,7 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
         this.logger.error(
           {
             eventId: event.eventId,
-            error: userAgentResult.error,
+            error: userAgentResult.getError(),
           },
           'Failed to create UserAgent',
         );
@@ -125,7 +125,7 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create AuthLogEntry for rate limit exceeded',
         );
@@ -146,12 +146,11 @@ export class RateLimitExceededHandler implements IEventHandler<RateLimitExceeded
       }
 
       // 異常なアクセスパターンの検出
-      const recentBlocksResult = await this.authLogRepository.findByEventType({
-        eventType: EventType.RATE_LIMIT_CHECK,
-        userId: userIdResult.getValue(),
-        result: AuthResult.BLOCKED,
-        limit: 10,
-      });
+      const recentBlocksResult = await this.authLogRepository.findByUserId(
+        userIdResult.getValue(),
+        undefined,
+        10,
+      );
 
       if (recentBlocksResult.isSuccess && recentBlocksResult.getValue().length >= 5) {
         this.logger.error(

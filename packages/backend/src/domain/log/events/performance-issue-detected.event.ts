@@ -16,4 +16,8 @@ export class PerformanceIssueDetectedEvent extends DomainEvent {
   getAggregateId(): string {
     return this.endpoint;
   }
+
+  getEventName(): string {
+    return 'PerformanceIssueDetected';
+  }
 }

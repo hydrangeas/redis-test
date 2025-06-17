@@ -6,7 +6,7 @@ import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { Provider } from '@/domain/log/value-objects/provider';
 import { IPAddress as IpAddress } from '@/domain/log/value-objects/ip-address';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
@@ -43,7 +43,7 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
         this.logger.error(
           {
             eventId: event.eventId,
-            error: userIdResult.error,
+            error: userIdResult.getError(),
           },
           'Invalid userId in UserAuthenticated event',
         );
@@ -55,7 +55,7 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
         this.logger.error(
           {
             eventId: event.eventId,
-            error: providerResult.error,
+            error: providerResult.getError(),
           },
           'Invalid provider in UserAuthenticated event',
         );
@@ -73,7 +73,7 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
             {
               eventId: event.eventId,
               ipAddress: event.ipAddress,
-              error: ipResult.error,
+              error: ipResult.getError(),
             },
             'Invalid IP address in UserAuthenticated event',
           );
@@ -91,23 +91,37 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
             {
               eventId: event.eventId,
               userAgent: event.userAgent,
-              error: uaResult.error,
+              error: uaResult.getError(),
             },
             'Invalid user agent in UserAuthenticated event',
           );
         }
       }
 
+      // Create AuthEvent
+      const authEventResult = AuthEvent.create(EventType.LOGIN, 'User authenticated successfully');
+      if (authEventResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: authEventResult.getError(),
+          },
+          'Failed to create AuthEvent',
+        );
+        return;
+      }
+
       // 認証ログエントリの作成
       const logEntryResult = AuthLogEntry.create({
         userId: userIdResult.getValue(),
-        eventType: AuthEventType.LOGIN,
+        event: authEventResult.getValue(),
         provider: providerResult.getValue(),
-        ipAddress,
-        userAgent,
+        ipAddress: ipAddress || IpAddress.create('0.0.0.0').getValue(),
+        userAgent: userAgent || UserAgent.create('Unknown').getValue(),
+        timestamp: new Date(),
         result: AuthResult.SUCCESS,
-        sessionId: event.sessionId,
         metadata: {
+          sessionId: event.sessionId,
           tier: event.tier,
           eventId: event.eventId,
           aggregateId: event.aggregateId,
@@ -118,7 +132,7 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create AuthLogEntry',
         );
@@ -127,11 +141,11 @@ export class UserAuthenticatedHandler implements IEventHandler<UserAuthenticated
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save auth log',
         );

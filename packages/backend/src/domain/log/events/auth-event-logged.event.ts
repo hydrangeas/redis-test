@@ -20,4 +20,8 @@ export class AuthEventLoggedEvent extends DomainEvent {
   getAggregateId(): string {
     return this.logId;
   }
+
+  getEventName(): string {
+    return 'AuthEventLogged';
+  }
 }

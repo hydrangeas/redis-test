@@ -9,8 +9,8 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { HttpMethod as ApiHttpMethod } from '@/domain/api/value-objects/http-method';
-import { StatusCode } from '@/domain/log/value-objects/status-code';
-import { ResponseTime } from '@/domain/log/value-objects/response-time';
+import { RequestInfo } from '@/domain/log/value-objects/request-info';
+import { ResponseInfo } from '@/domain/log/value-objects/response-info';
 
 /**
  * データ取得イベントのハンドラー
@@ -67,69 +67,58 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
         return;
       }
 
-      // HttpMethodの作成（データ取得はGETメソッド）
-      const httpMethodResult = ApiHttpMethod.create('GET');
-      if (httpMethodResult.isFailure) {
-        this.logger.error(
-          {
-            eventId: event.eventId,
-            error: httpMethodResult.error,
-          },
-          'Failed to create HttpMethod',
-        );
-        return;
-      }
+      // HttpMethodの設定（データ取得はGETメソッド）
+      const httpMethod = ApiHttpMethod.GET;
 
       // Endpointの作成
-      const endpointResult = Endpoint.create({
-        path: apiPath,
-        method: httpMethodResult.getValue(),
-      });
-      if (endpointResult.isFailure) {
+      let endpoint: Endpoint;
+      try {
+        endpoint = new Endpoint(httpMethod, apiPath);
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: endpointResult.error,
+            error: error instanceof Error ? error.message : 'Failed to create endpoint',
           },
           'Failed to create Endpoint',
         );
         return;
       }
 
-      // ステータスコードとレスポンスタイムの作成
-      const statusCodeResult = StatusCode.create(200); // データ取得成功
-      const responseTimeResult = ResponseTime.create(event.responseTime);
+      // RequestInfoの作成
+      const requestInfo = new RequestInfo({
+        ipAddress: '0.0.0.0', // TODO: Get from request context
+        userAgent: 'Data Access', // TODO: Get from request headers
+        headers: {},
+        body: null,
+        queryParams: undefined,
+      });
 
-      if (statusCodeResult.isFailure || responseTimeResult.isFailure) {
-        this.logger.error(
-          {
-            eventId: event.eventId,
-          },
-          'Failed to create status code or response time',
-        );
-        return;
-      }
+      // ResponseInfoの作成
+      const responseInfo = new ResponseInfo({
+        statusCode: 200,
+        responseTime: event.responseTime,
+        size: event.resourceSize,
+        headers: {
+          'content-type': event.mimeType,
+        },
+      });
 
       // APIログエントリの作成
       const logEntryResult = APILogEntry.create({
         userId: userIdResult.getValue(),
-        endpoint: endpointResult.getValue(),
-        statusCode: statusCodeResult.getValue(),
-        responseTime: responseTimeResult.getValue(),
-        metadata: {
-          dataSize: event.resourceSize,
-          mimeType: event.mimeType,
-          cached: event.cached,
-          eventId: event.eventId,
-          aggregateId: event.aggregateId,
-        },
+        endpoint: endpoint,
+        requestInfo: requestInfo,
+        responseInfo: responseInfo,
+        timestamp: new Date(),
+        error: undefined,
       });
 
       if (logEntryResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create APILogEntry for data retrieval',
         );
@@ -142,7 +131,7 @@ export class DataRetrievedHandler implements IEventHandler<DataRetrieved> {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save data retrieval log',
         );

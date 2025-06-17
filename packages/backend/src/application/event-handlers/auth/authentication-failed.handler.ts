@@ -6,7 +6,7 @@ import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { Provider } from '@/domain/log/value-objects/provider';
 import { IPAddress as IpAddress } from '@/domain/log/value-objects/ip-address';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
@@ -43,7 +43,7 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
         this.logger.error(
           {
             eventId: event.eventId,
-            error: providerResult.error,
+            error: providerResult.getError(),
           },
           'Invalid provider in AuthenticationFailed event',
         );
@@ -56,7 +56,7 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
         this.logger.error(
           {
             eventId: event.eventId,
-            error: ipResult.error,
+            error: ipResult.getError(),
           },
           'Invalid IP address in AuthenticationFailed event',
         );
@@ -74,7 +74,7 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
             {
               eventId: event.eventId,
               userAgent: event.userAgent,
-              error: uaResult.error,
+              error: uaResult.getError(),
             },
             'Invalid user agent in AuthenticationFailed event',
           );
@@ -92,20 +92,34 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
             {
               eventId: event.eventId,
               attemptedUserId: event.attemptedUserId,
-              error: userIdResult.error,
+              error: userIdResult.getError(),
             },
             'Invalid attempted userId in AuthenticationFailed event',
           );
         }
       }
 
+      // Create AuthEvent
+      const authEventResult = AuthEvent.create(EventType.LOGIN_FAILED, event.reason);
+      if (authEventResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: authEventResult.getError(),
+          },
+          'Failed to create AuthEvent',
+        );
+        return;
+      }
+
       // 認証ログエントリの作成
       const logEntryResult = AuthLogEntry.create({
         userId,
-        eventType: AuthEventType.LOGIN,
+        event: authEventResult.getValue(),
         provider: providerResult.getValue(),
         ipAddress: ipResult.getValue(),
-        userAgent,
+        userAgent: userAgent || UserAgent.create('Unknown').getValue(),
+        timestamp: new Date(),
         result: AuthResult.FAILED,
         errorMessage: event.reason,
         metadata: {
@@ -118,7 +132,7 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create AuthLogEntry for authentication failure',
         );
@@ -127,11 +141,11 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save authentication failure log',
         );
@@ -139,12 +153,13 @@ export class AuthenticationFailedHandler implements IEventHandler<Authentication
       }
 
       // セキュリティ警告の確認（同一IPからの複数の失敗など）
-      const recentFailuresResult = await this.authLogRepository.findFailures({
-        ipAddress: ipResult.getValue(),
-        limit: 10,
-      });
+      const recentFailuresResult = await this.authLogRepository.findByIPAddress(
+        ipResult.getValue(),
+        undefined,
+        10,
+      );
 
-      if (recentFailuresResult.isSuccess() && recentFailuresResult.getValue().length >= 5) {
+      if (recentFailuresResult.isSuccess && recentFailuresResult.getValue().length >= 5) {
         this.logger.warn(
           {
             eventId: event.eventId,

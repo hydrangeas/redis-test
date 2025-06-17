@@ -20,4 +20,8 @@ export class APIAccessLoggedEvent extends DomainEvent {
   getAggregateId(): string {
     return this.logId;
   }
+
+  getEventName(): string {
+    return 'APIAccessLogged';
+  }
 }

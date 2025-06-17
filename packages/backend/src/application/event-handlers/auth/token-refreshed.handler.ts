@@ -6,8 +6,11 @@ import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { AuthResult } from '@/domain/log/value-objects';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
 
 /**
  * トークンリフレッシュイベントのハンドラー
@@ -39,7 +42,7 @@ export class TokenRefreshedHandler implements IEventHandler<TokenRefreshed> {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: userIdResult.error,
+            error: userIdResult.getError(),
           },
           'Invalid userId in TokenRefreshed event',
         );
@@ -47,12 +50,57 @@ export class TokenRefreshedHandler implements IEventHandler<TokenRefreshed> {
       }
 
       // 認証ログエントリの作成
+      // Create AuthEvent
+      const authEventResult = AuthEvent.create(EventType.TOKEN_REFRESH, 'Token refreshed successfully');
+      if (authEventResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: authEventResult.getError(),
+          },
+          'Failed to create AuthEvent',
+        );
+        return;
+      }
+
+      // Create Provider (default for token refresh)
+      const providerResult = Provider.create('jwt');
+      if (providerResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: providerResult.getError(),
+          },
+          'Failed to create Provider',
+        );
+        return;
+      }
+
+      // Create dummy IP and UserAgent for token refresh
+      const ipAddressResult = IPAddress.create('0.0.0.0');
+      const userAgentResult = UserAgent.create('Token Refresh');
+
+      if (ipAddressResult.isFailure || userAgentResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: ipAddressResult.isFailure ? ipAddressResult.getError() : userAgentResult.getError(),
+          },
+          'Failed to create IP or UserAgent',
+        );
+        return;
+      }
+
       const logEntryResult = AuthLogEntry.create({
         userId: userIdResult.getValue(),
-        eventType: AuthEventType.TOKEN_REFRESH,
+        event: authEventResult.getValue(),
+        provider: providerResult.getValue(),
+        ipAddress: ipAddressResult.getValue(),
+        userAgent: userAgentResult.getValue(),
+        timestamp: new Date(),
         result: AuthResult.SUCCESS,
-        sessionId: event.sessionId,
         metadata: {
+          sessionId: event.sessionId,
           oldTokenId: event.oldTokenId,
           newTokenId: event.newTokenId,
           refreshCount: event.refreshCount,
@@ -65,7 +113,7 @@ export class TokenRefreshedHandler implements IEventHandler<TokenRefreshed> {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create AuthLogEntry for token refresh',
         );
@@ -74,11 +122,11 @@ export class TokenRefreshedHandler implements IEventHandler<TokenRefreshed> {
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save token refresh log',
         );

@@ -6,8 +6,11 @@ import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEventType } from '@/domain/log/value-objects/auth-event';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { AuthResult } from '@/domain/log/value-objects';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
 
 /**
  * ユーザーログアウトイベントのハンドラー
@@ -40,9 +43,50 @@ export class UserLoggedOutHandler implements IEventHandler<UserLoggedOut> {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: userIdResult.error,
+            error: userIdResult.getError(),
           },
           'Invalid userId in UserLoggedOut event',
+        );
+        return;
+      }
+
+      // Create AuthEvent
+      const authEventResult = AuthEvent.create(EventType.LOGOUT, event.reason || 'User logged out');
+      if (authEventResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: authEventResult.getError(),
+          },
+          'Failed to create AuthEvent',
+        );
+        return;
+      }
+
+      // Create Provider (default for logout)
+      const providerResult = Provider.create('session');
+      if (providerResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: providerResult.getError(),
+          },
+          'Failed to create Provider',
+        );
+        return;
+      }
+
+      // Create dummy IP and UserAgent for logout
+      const ipAddressResult = IPAddress.create('0.0.0.0');
+      const userAgentResult = UserAgent.create('User Logout');
+
+      if (ipAddressResult.isFailure || userAgentResult.isFailure) {
+        this.logger.error(
+          {
+            eventId: event.eventId,
+            error: ipAddressResult.isFailure ? ipAddressResult.getError() : userAgentResult.getError(),
+          },
+          'Failed to create IP or UserAgent',
         );
         return;
       }
@@ -50,10 +94,14 @@ export class UserLoggedOutHandler implements IEventHandler<UserLoggedOut> {
       // 認証ログエントリの作成
       const logEntryResult = AuthLogEntry.create({
         userId: userIdResult.getValue(),
-        eventType: AuthEventType.LOGOUT,
+        event: authEventResult.getValue(),
+        provider: providerResult.getValue(),
+        ipAddress: ipAddressResult.getValue(),
+        userAgent: userAgentResult.getValue(),
+        timestamp: new Date(),
         result: AuthResult.SUCCESS,
-        sessionId: event.sessionId,
         metadata: {
+          sessionId: event.sessionId,
           reason: event.reason,
           allSessions: event.allSessions,
           eventId: event.eventId,
@@ -65,7 +113,7 @@ export class UserLoggedOutHandler implements IEventHandler<UserLoggedOut> {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create AuthLogEntry for logout',
         );
@@ -74,11 +122,11 @@ export class UserLoggedOutHandler implements IEventHandler<UserLoggedOut> {
 
       // ログの保存
       const saveResult = await this.authLogRepository.save(logEntryResult.getValue());
-      if (saveResult.isFailure()) {
+      if (saveResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save logout log',
         );

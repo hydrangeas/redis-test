@@ -9,8 +9,8 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { HttpMethod as ApiHttpMethod } from '@/domain/api/value-objects/http-method';
-import { StatusCode } from '@/domain/log/value-objects/status-code';
-import { ResponseTime } from '@/domain/log/value-objects/response-time';
+import { RequestInfo } from '@/domain/log/value-objects/request-info';
+import { ResponseInfo } from '@/domain/log/value-objects/response-info';
 
 /**
  * データリソース未発見イベントのハンドラー
@@ -64,68 +64,56 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
         return;
       }
 
-      // HttpMethodの作成（データ取得はGETメソッド）
-      const httpMethodResult = ApiHttpMethod.create('GET');
-      if (httpMethodResult.isFailure) {
-        this.logger.error(
-          {
-            eventId: event.eventId,
-            error: httpMethodResult.error,
-          },
-          'Failed to create HttpMethod',
-        );
-        return;
-      }
+      // HttpMethodの設定（データ取得はGETメソッド）
+      const httpMethod = ApiHttpMethod.GET;
 
       // Endpointの作成
-      const endpointResult = Endpoint.create({
-        path: apiPath,
-        method: httpMethodResult.getValue(),
-      });
-      if (endpointResult.isFailure) {
+      let endpoint: Endpoint;
+      try {
+        endpoint = new Endpoint(httpMethod, apiPath);
+      } catch (error) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: endpointResult.error,
+            error: error instanceof Error ? error.message : 'Failed to create endpoint',
           },
           'Failed to create Endpoint',
         );
         return;
       }
 
-      // ステータスコードとレスポンスタイムの作成
-      const statusCodeResult = StatusCode.create(404); // Not Found
-      const responseTimeResult = ResponseTime.create(0); // エラーレスポンスは即座に返される
+      // RequestInfoの作成
+      const requestInfo = new RequestInfo({
+        ipAddress: '0.0.0.0', // TODO: Get from request context
+        userAgent: 'Data Access', // TODO: Get from request headers
+        headers: {},
+        body: null,
+        queryParams: undefined,
+      });
 
-      if (statusCodeResult.isFailure || responseTimeResult.isFailure) {
-        this.logger.error(
-          {
-            eventId: event.eventId,
-          },
-          'Failed to create status code or response time',
-        );
-        return;
-      }
+      // ResponseInfoの作成（404 Not Found）
+      const responseInfo = new ResponseInfo({
+        statusCode: 404,
+        responseTime: 0, // エラーレスポンスは即座に返される
+        size: 0,
+        headers: {},
+      });
 
       // APIログエントリの作成
       const logEntryResult = APILogEntry.create({
         userId: userIdResult.getValue(),
-        endpoint: endpointResult.getValue(),
-        statusCode: statusCodeResult.getValue(),
-        responseTime: responseTimeResult.getValue(),
-        requestedAt: event.requestTime,
+        endpoint: endpoint,
+        requestInfo: requestInfo,
+        responseInfo: responseInfo,
+        timestamp: event.requestTime,
         error: 'Resource not found',
-        metadata: {
-          eventId: event.eventId,
-          aggregateId: event.aggregateId,
-        },
       });
 
       if (logEntryResult.isFailure) {
         this.logger.error(
           {
             eventId: event.eventId,
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
           },
           'Failed to create APILogEntry for resource not found',
         );
@@ -138,7 +126,7 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
         this.logger.error(
           {
             eventId: event.eventId,
-            error: saveResult.error,
+            error: saveResult.getError(),
           },
           'Failed to save resource not found log',
         );
@@ -146,10 +134,7 @@ export class DataResourceNotFoundHandler implements IEventHandler<DataResourceNo
       }
 
       // 頻繁な404エラーの検出
-      const recentErrorsResult = await this.apiLogRepository.findErrors({
-        statusCode: statusCodeResult.getValue(),
-        limit: 20,
-      });
+      const recentErrorsResult = await this.apiLogRepository.findErrors(undefined, 20);
 
       if (recentErrorsResult.isSuccess && recentErrorsResult.getValue().length >= 10) {
         this.logger.warn(

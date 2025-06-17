@@ -2,7 +2,6 @@ import { APIEndpoint } from '../entities/api-endpoint.entity';
 import { EndpointPath } from '../value-objects/endpoint-path';
 import { HttpMethod } from '../value-objects/http-method';
 import { EndpointType } from '../value-objects/endpoint-type';
-import { Result } from '@/domain/shared/result';
 
 /**
  * APIエンドポイントのファクトリクラス
@@ -25,7 +24,7 @@ export class APIEndpointFactory {
     }
 
     const result = APIEndpoint.create({
-      path: pathResult.getValue(),
+      path: path,
       method,
       type: typeResult.getValue(),
       description: `Data endpoint: ${path}`,
@@ -53,7 +52,7 @@ export class APIEndpointFactory {
     }
 
     const result = APIEndpoint.create({
-      path: pathResult.getValue(),
+      path: '/health',
       method: HttpMethod.GET,
       type: typeResult.getValue(),
       description: 'Health check endpoint',
@@ -81,7 +80,7 @@ export class APIEndpointFactory {
     }
 
     const result = APIEndpoint.create({
-      path: pathResult.getValue(),
+      path: '/api-docs',
       method: HttpMethod.GET,
       type: typeResult.getValue(),
       description: 'API documentation endpoint',
@@ -115,7 +114,7 @@ export class APIEndpointFactory {
     }
 
     const result = APIEndpoint.create({
-      path: pathResult.getValue(),
+      path: fullPath,
       method,
       type: typeResult.getValue(),
       description: `Authentication endpoint: ${fullPath}`,
@@ -145,7 +144,7 @@ export class APIEndpointFactory {
     }
 
     const result = APIEndpoint.create({
-      path: pathResult.getValue(),
+      path: path,
       method,
       type: typeResult.getValue(),
       description: `Admin endpoint: ${path}`,
@@ -180,7 +179,7 @@ export class APIEndpointFactory {
     }
 
     const result = APIEndpoint.create({
-      path: pathResult.getValue(),
+      path: pathPattern,
       method,
       type: typeResult.getValue(),
       description: `Pattern endpoint: ${pathPattern}`,

@@ -16,4 +16,8 @@ export class SecurityAlertRaisedEvent extends DomainEvent {
   getAggregateId(): string {
     return this.userId || 'system';
   }
+
+  getEventName(): string {
+    return 'SecurityAlertRaised';
+  }
 }

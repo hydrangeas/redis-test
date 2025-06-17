@@ -1,11 +1,11 @@
 import { injectable } from 'tsyringe';
-import { OpenDataResource } from '../value-objects/open-data-resource';
+import { OpenDataResource } from '../entities/open-data-resource.entity';
+import { ResourceId } from '../value-objects/resource-id';
 import { DataPath } from '../value-objects/data-path';
 import { ResourceMetadata } from '../value-objects/resource-metadata';
-import { FileMetadata } from '../value-objects/file-metadata';
 import { MimeType } from '../value-objects/mime-type';
 import { FileSize } from '../value-objects/file-size';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 export interface FileSystemMetadata {
@@ -50,26 +50,27 @@ export class OpenDataResourceFactory {
       }
       const fileSize = fileSizeResult.getValue();
 
-      // FileMetadataの作成
-      const fileMetadata = new FileMetadata(
-        fileSize,
-        mimeType,
-        fsMetadata.lastModified,
-        fsMetadata.etag || this.generateEtag(fsMetadata),
+      // ResourceMetadataの作成（FileMetadataではなく直接ResourceMetadataを作成）
+
+      const resourceMetadata = new ResourceMetadata({
+        size: fileSize.value,
+        lastModified: fsMetadata.lastModified,
+        etag: fsMetadata.etag || this.generateEtag(fsMetadata),
+        contentType: mimeType.value,
+      });
+
+      // ResourceIdをパスから生成
+      const resourceId = ResourceId.fromPath(pathString);
+
+      // OpenDataResourceエンティティの作成
+      const resource = new OpenDataResource(
+        resourceId,
+        dataPath,
+        resourceMetadata,
+        new Date(),
       );
 
-      // ResourceMetadataの作成
-      const resourceMetadata = new ResourceMetadata(
-        dataPath.extractTitle(),
-        dataPath.extractDescription() || '',
-        fileMetadata.size.value,
-        fileMetadata.mimeType.value,
-        fileMetadata.lastModified,
-        fileMetadata.etag,
-      );
-
-      // OpenDataResourceの作成
-      return OpenDataResource.createNew(dataPath, resourceMetadata);
+      return Result.ok(resource);
     } catch (error) {
       return Result.fail(
         new DomainError(
@@ -105,17 +106,26 @@ export class OpenDataResourceFactory {
       const dataPath = pathResult.getValue();
 
       // ResourceMetadataの作成
-      const resourceMetadata = new ResourceMetadata(
-        data.title,
-        data.description,
-        data.size,
-        data.mimeType,
-        data.lastModified,
-        data.etag,
+      const resourceMetadata = new ResourceMetadata({
+        size: data.size,
+        lastModified: data.lastModified,
+        etag: data.etag,
+        contentType: data.mimeType,
+      });
+
+      // ResourceIdをパスから生成
+      const resourceId = ResourceId.fromPath(data.path);
+
+      // OpenDataResourceエンティティの作成
+      const resource = new OpenDataResource(
+        resourceId,
+        dataPath,
+        resourceMetadata,
+        data.createdAt,
+        data.accessedAt,
       );
 
-      // OpenDataResourceの作成
-      return OpenDataResource.create(dataPath, resourceMetadata, data.createdAt, data.accessedAt);
+      return Result.ok(resource);
     } catch (error) {
       return Result.fail(
         new DomainError(
