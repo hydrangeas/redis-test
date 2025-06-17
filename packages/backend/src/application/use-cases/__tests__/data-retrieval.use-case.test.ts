@@ -13,12 +13,17 @@ import { DataRetrieved } from '@/domain/data/events/data-retrieved.event';
 import { DataResourceNotFound } from '@/domain/data/events/data-resource-not-found.event';
 import { DataAccessDenied } from '@/domain/data/events/data-access-denied.event';
 import { Logger } from 'pino';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 
 describe('DataRetrievalUseCase', () => {
   let useCase: DataRetrievalUseCase;
   let mockDataRepository: IOpenDataRepository;
   let mockEventBus: IEventBus;
   let mockLogger: Logger;
+  let authenticatedUser: AuthenticatedUser;
 
   beforeEach(() => {
     // モックの初期化
@@ -50,6 +55,19 @@ describe('DataRetrievalUseCase', () => {
     } as any;
 
     useCase = new DataRetrievalUseCase(mockDataRepository, mockEventBus, mockLogger);
+
+    // 認証済みユーザーのセットアップ
+    const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
+    const tierResult = UserTier.create(TierLevel.TIER1);
+    
+    if (userIdResult.isFailure || tierResult.isFailure) {
+      throw new Error('Failed to create test user');
+    }
+    
+    const userId = userIdResult.getValue();
+    const tier = tierResult.getValue();
+    
+    authenticatedUser = new AuthenticatedUser(userId, tier);
   });
 
   describe('retrieveData', () => {
@@ -71,11 +89,14 @@ describe('DataRetrievalUseCase', () => {
       (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(Result.ok(content));
 
       // Act
-      const result = await useCase.retrieveData(path);
+      const result = await useCase.retrieveData(path, authenticatedUser);
 
       // Assert
       expect(result.isSuccess).toBe(true);
-      expect(result.getValue()).toEqual(content);
+      const retrievedData = result.getValue();
+      expect(retrievedData.content).toEqual(content);
+      expect(retrievedData.checksum).toBe('"test-etag"');
+      expect(retrievedData.lastModified).toBeInstanceOf(Date);
 
       // Verify events were published
       expect(mockEventBus.publish).toHaveBeenCalledWith(
@@ -107,7 +128,7 @@ describe('DataRetrievalUseCase', () => {
       const invalidPath = 'invalid/path';
 
       // Act
-      const result = await useCase.retrieveData(invalidPath);
+      const result = await useCase.retrieveData(invalidPath, authenticatedUser);
 
       // Assert
       expect(result.isFailure).toBe(true);
@@ -123,7 +144,7 @@ describe('DataRetrievalUseCase', () => {
       const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
       expect(event.getEventName()).toBe('DataAccessDenied');
 
-      expect(mockLogger.warn).toHaveBeenCalledWith({ path: invalidPath }, 'Invalid data path');
+      expect(mockLogger.warn).toHaveBeenCalledWith({ path: invalidPath, userId: authenticatedUser.userId.value }, 'Invalid data path');
     });
 
     it('should handle resource not found', async () => {
@@ -141,7 +162,7 @@ describe('DataRetrievalUseCase', () => {
       );
 
       // Act
-      const result = await useCase.retrieveData(path);
+      const result = await useCase.retrieveData(path, authenticatedUser);
 
       // Assert
       expect(result.isFailure).toBe(true);
@@ -174,7 +195,7 @@ describe('DataRetrievalUseCase', () => {
       );
 
       // Act
-      const result = await useCase.retrieveData(path);
+      const result = await useCase.retrieveData(path, authenticatedUser);
 
       // Assert
       expect(result.isFailure).toBe(true);
@@ -189,7 +210,7 @@ describe('DataRetrievalUseCase', () => {
       (mockDataRepository.findByPath as MockedFunction<any>).mockRejectedValue(unexpectedError);
 
       // Act
-      const result = await useCase.retrieveData(path);
+      const result = await useCase.retrieveData(path, authenticatedUser);
 
       // Assert
       expect(result.isFailure).toBe(true);

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { APIAccessControlUseCase } from '../api-access-control.use-case';
 import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { Logger } from 'pino';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
@@ -27,15 +26,6 @@ const mockRateLimitUseCase: IRateLimitUseCase = {
   checkAndRecordAccess: vi.fn(),
 };
 
-const mockApiLogRepository: IAPILogRepository = {
-  save: vi.fn(),
-  findById: vi.fn(),
-  findByUserId: vi.fn(),
-  findByTimeRange: vi.fn(),
-  findErrors: vi.fn(),
-  getStatistics: vi.fn(),
-  deleteOldLogs: vi.fn(),
-};
 
 const mockEventBus: IEventBus = {
   publish: vi.fn(),
@@ -66,7 +56,6 @@ describe('APIAccessControlUseCase', () => {
     useCase = new APIAccessControlUseCase(
       mockAccessControlService,
       mockRateLimitUseCase,
-      mockApiLogRepository,
       mockEventBus,
       mockLogger,
     );
@@ -94,7 +83,6 @@ describe('APIAccessControlUseCase', () => {
 
     // デフォルトのモック設定
     vi.mocked(mockAccessControlService.canAccessEndpoint).mockReturnValue(Result.ok(true));
-    vi.mocked(mockApiLogRepository.save).mockResolvedValue(Result.ok());
   });
 
   describe('checkAndRecordAccess', () => {
