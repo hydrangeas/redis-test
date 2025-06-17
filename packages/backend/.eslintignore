@@ -5,6 +5,9 @@ tests/**/*
 *.config.js
 vite.config.ts
 vitest.*.config.ts
+**/*.test.ts
+**/*.spec.ts
+src/server.test.ts
 
 # Build output
 dist
