@@ -71,6 +71,11 @@ interface MockDependencies {
     checkAccess: ReturnType<typeof vi.fn>;
     getResourceMetadata: ReturnType<typeof vi.fn>;
   };
+  mockApiLogService: {
+    logRequest: ReturnType<typeof vi.fn>;
+    getLogsByUserId: ReturnType<typeof vi.fn>;
+    getLogsByEndpoint: ReturnType<typeof vi.fn>;
+  };
 }
 
 export function setupDependencies(): MockDependencies {
@@ -148,11 +153,18 @@ export function setupDependencies(): MockDependencies {
     getResourceMetadata: vi.fn(),
   };
 
+  const mockApiLogService = {
+    logRequest: vi.fn(),
+    getLogsByUserId: vi.fn(),
+    getLogsByEndpoint: vi.fn(),
+  };
+
   container.registerInstance(DI_TOKENS.EventBus, mockEventBus);
   container.registerInstance(DI_TOKENS.AuthenticationService, mockAuthenticationService);
   container.registerInstance(DI_TOKENS.APIAccessControlService, mockAPIAccessControlService);
   container.registerInstance(DI_TOKENS.RateLimitService, mockRateLimitService);
   container.registerInstance(DI_TOKENS.DataAccessService, mockDataAccessService);
+  container.registerInstance(DI_TOKENS.ApiLogService, mockApiLogService);
   container.registerInstance(DI_TOKENS.UserRepository, mockRepositories.authentication);
   container.registerInstance(DI_TOKENS.RateLimitLogRepository, mockRepositories.rateLimitLog);
   container.registerInstance(DI_TOKENS.OpenDataRepository, mockRepositories.openData);
@@ -176,6 +188,7 @@ export function setupDependencies(): MockDependencies {
     mockAPIAccessControlService,
     mockRateLimitService,
     mockDataAccessService,
+    mockApiLogService,
   };
 }
 

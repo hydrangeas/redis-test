@@ -19,7 +19,7 @@ describe('RateLimitExceededHandler', () => {
       save: vi.fn(),
       findById: vi.fn(),
       findByUserId: vi.fn(),
-      findByEventType: vi.fn(),
+      findByUserId: vi.fn(),
       findByIPAddress: vi.fn(),
       findFailures: vi.fn(),
       findSuspiciousActivities: vi.fn(),
@@ -51,7 +51,7 @@ describe('RateLimitExceededHandler', () => {
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
-      vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(Result.ok([]));
+      vi.mocked(mockAuthLogRepository.findByUserId).mockResolvedValueOnce(Result.ok([]));
 
       // Act
       await handler.handle(event);
@@ -109,7 +109,7 @@ describe('RateLimitExceededHandler', () => {
             }) as AuthLogEntry,
         );
 
-      vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(
+      vi.mocked(mockAuthLogRepository.findByUserId).mockResolvedValueOnce(
         Result.ok(previousViolations),
       );
 
@@ -165,7 +165,7 @@ describe('RateLimitExceededHandler', () => {
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.fail('Database error'));
-      vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(Result.ok([]));
+      vi.mocked(mockAuthLogRepository.findByUserId).mockResolvedValueOnce(Result.ok([]));
 
       // Act
       await handler.handle(event);
@@ -180,7 +180,7 @@ describe('RateLimitExceededHandler', () => {
       );
     });
 
-    it('should handle findByEventType failure gracefully', async () => {
+    it('should handle findByUserId failure gracefully', async () => {
       // Arrange
       const event = new RateLimitExceeded(
         'agg-123',
@@ -193,7 +193,7 @@ describe('RateLimitExceededHandler', () => {
       );
 
       vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
-      vi.mocked(mockAuthLogRepository.findByEventType).mockResolvedValueOnce(
+      vi.mocked(mockAuthLogRepository.findByUserId).mockResolvedValueOnce(
         Result.fail('Query error'),
       );
 

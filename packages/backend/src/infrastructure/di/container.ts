@@ -471,7 +471,7 @@ function registerTestInfrastructureServices(container: DependencyContainer): voi
   });
 
   // RateLimitLogRepositoryの登録（InMemoryRateLimitServiceが依存）
-  const { SupabaseRateLimitLogRepository } = require('../repositories/log/supabase-rate-limit-log.repository');
+  const { SupabaseRateLimitLogRepository } = require('../repositories/api/supabase-rate-limit-log.repository');
   container.register(DI_TOKENS.RateLimitLogRepository, {
     useClass: SupabaseRateLimitLogRepository,
   });

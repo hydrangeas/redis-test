@@ -90,7 +90,6 @@ describe("LandingPage", () => {
   });
 
   it("should navigate to dashboard when dashboard button is clicked", async () => {
-    const user = userEvent.setup();
     const mockUser = {
       id: "test-user-id",
       email: "test@example.com",

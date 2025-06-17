@@ -18,7 +18,6 @@ describe('UserAuthenticatedHandler', () => {
       save: vi.fn(),
       findById: vi.fn(),
       findByUserId: vi.fn(),
-      findByEventType: vi.fn(),
       findByIPAddress: vi.fn(),
       findFailures: vi.fn(),
       findSuspiciousActivities: vi.fn(),

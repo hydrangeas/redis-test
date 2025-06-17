@@ -61,13 +61,11 @@ describe('DataRetrievedHandler', () => {
       expect(savedLog.endpoint.method.value).toBe('GET');
       expect(savedLog.statusCode.value).toBe(200);
       expect(savedLog.responseTime.value).toBe(150);
-      expect(savedLog.metadata).toMatchObject({
-        dataSize: 1024,
-        mimeType: 'application/json',
-        cached: false,
-        eventId: event.eventId,
-        aggregateId: 'agg-123',
-      });
+      expect(savedLog.metadata?.dataSize).toBe(1024);
+      expect(savedLog.metadata?.mimeType).toBe('application/json');
+      expect(savedLog.metadata?.cached).toBe(false);
+      expect(savedLog.metadata?.eventId).toBe(event.eventId);
+      expect(savedLog.metadata?.aggregateId).toBe('agg-123');
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -132,7 +130,7 @@ describe('DataRetrievedHandler', () => {
 
       // Assert
       const savedLog = vi.mocked(mockAPILogRepository.save).mock.calls[0][0];
-      expect(savedLog.metadata.cached).toBe(true);
+      expect(savedLog.metadata?.cached).toBe(true);
       expect(savedLog.responseTime.value).toBe(10);
     });
 
