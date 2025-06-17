@@ -9,6 +9,7 @@ import { Result } from '@/domain/errors';
 import { Email } from '@/domain/auth/value-objects/email';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
@@ -47,7 +48,7 @@ describe('APIAccessControlUseCase Integration', () => {
     it('should allow access within rate limit', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -103,7 +104,7 @@ describe('APIAccessControlUseCase Integration', () => {
     it('should deny access when rate limit exceeded', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440001'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -156,7 +157,7 @@ describe('APIAccessControlUseCase Integration', () => {
     it('should handle rate limit check errors', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -215,7 +216,7 @@ describe('APIAccessControlUseCase Integration', () => {
     it('should coordinate rate limiting and logging across contexts', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440003'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER2');
+      const userTierResult = UserTier.create(TierLevel.TIER2);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -264,7 +265,7 @@ describe('APIAccessControlUseCase Integration', () => {
     it('should handle concurrent requests properly', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440004'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');

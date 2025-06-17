@@ -13,6 +13,7 @@ import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-use
 import { Email } from '@/domain/auth/value-objects/email';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import { ApplicationError } from '@/application/errors/application-error';
 
 describe('DataRetrievalUseCase Integration', () => {
@@ -41,7 +42,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -124,7 +125,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -186,7 +187,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -283,7 +284,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER2');
+      const userTierResult = UserTier.create(TierLevel.TIER2);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -356,7 +357,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -416,7 +417,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Create authenticated user
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
