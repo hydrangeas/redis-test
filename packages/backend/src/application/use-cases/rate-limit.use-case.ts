@@ -93,7 +93,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
         );
 
         // レート制限超過イベントを発行
-        await this.eventBus.publish(
+        this.eventBus.publish(
           new RateLimitExceeded(
             user.userId.value,
             1,
@@ -139,7 +139,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       }
 
       // APIアクセス記録イベントを発行
-      await this.eventBus.publish(
+      this.eventBus.publish(
         new APIAccessRecorded(user.userId.value, 1, endpoint, method),
       );
 

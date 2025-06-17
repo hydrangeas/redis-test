@@ -105,7 +105,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       return ApplicationResult.ok({
         user: authenticatedUser,
-        tokenId: (tokenPayload as any).jti || tokenPayload.sub, // Use jti if available, otherwise sub
+        tokenId: (tokenPayload as { jti?: string; sub: string }).jti || tokenPayload.sub, // Use jti if available, otherwise sub
       });
     } catch (error) {
       this.logger.error(
@@ -158,7 +158,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       try {
         // Try to decode tokens to get JTI claims
-        const decoded = this.jwtValidator.decodeToken(session.access_token);
+        const decoded = this.jwtValidator.decodeToken<{ jti?: string }>(session.access_token);
         newTokenId = decoded?.jti;
       } catch (e) {
         // If we can't decode, that's ok - token IDs are optional
@@ -179,7 +179,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
       this.logger.info(
         {
           userId: session.user.id,
-          tier: session.user.app_metadata?.tier || 'tier1',
+          tier: (session.user.app_metadata as { tier?: string })?.tier || 'tier1',
         },
         'Token refreshed successfully',
       );
@@ -189,7 +189,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
         refreshToken: session.refresh_token,
         expiresIn: session.expires_in,
         userId: session.user.id,
-        tier: session.user.app_metadata?.tier || 'tier1',
+        tier: (session.user.app_metadata as { tier?: string })?.tier || 'tier1',
       });
     } catch (error) {
       this.logger.error(

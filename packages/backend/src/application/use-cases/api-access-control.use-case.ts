@@ -92,7 +92,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       const rateLimitStatus = rateLimitResult.getValue();
 
       // 3. アクセスログの記録
-      await this.recordAPIAccess(
+      this.recordAPIAccess(
         user.userId,
         endpoint,
         method,
@@ -173,7 +173,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
 
     try {
       // 公開エンドポイントへのアクセスログを記録
-      await this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
+      this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
 
       return Result.ok(undefined);
     } catch (error) {
@@ -234,7 +234,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     startTime: number,
     metadata?: APIAccessMetadata,
   ): Promise<void> {
-    await this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
+    this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
 
     this.eventBus.publish(
       new InvalidAPIAccess(userId.toString(), endpoint, method, 'unauthorized', new Date()),

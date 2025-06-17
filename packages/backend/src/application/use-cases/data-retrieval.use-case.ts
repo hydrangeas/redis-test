@@ -37,7 +37,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     user: AuthenticatedUser,
   ): Promise<
     Result<{
-      content: any;
+      content: unknown;
       checksum: string;
       lastModified: Date;
     }>
@@ -221,7 +221,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     etag: string,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       newEtag?: string;
     }>
@@ -301,7 +301,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     ifModifiedSince: Date,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       lastModified?: Date;
     }>

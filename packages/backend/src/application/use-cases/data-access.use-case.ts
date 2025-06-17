@@ -24,7 +24,7 @@ interface DataAccessRequest {
 }
 
 interface DataAccessResponse {
-  content: unknown;
+  content: unknown; // eslint-disable-line @typescript-eslint/no-explicit-any
   etag: string;
   lastModified: Date;
   size: number;
@@ -188,7 +188,7 @@ export class DataAccessUseCase {
     }
   }
 
-  private canAccessResource(_user: AuthenticatedUser, _resource: any): boolean {
+  private canAccessResource(_user: AuthenticatedUser, _resource: unknown): boolean {
     // 将来的にリソースレベルのアクセス制御を実装
     // 現在はすべての認証済みユーザーがアクセス可能
     return true;

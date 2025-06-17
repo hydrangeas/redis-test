@@ -1,9 +1,10 @@
 import 'reflect-metadata';
-import fastify from 'fastify';
-import { container } from 'tsyringe';
 
 import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 import type { EnvConfig } from './infrastructure/config';
+
+import fastify from 'fastify';
+import { container } from 'tsyringe';
 
 import { setupDI, DI_TOKENS } from './infrastructure/di';
 import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
