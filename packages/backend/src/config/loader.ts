@@ -8,9 +8,80 @@ import { developmentConfigSchema, stagingConfigSchema, productionConfigSchema } 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+interface Config {
+  app: {
+    name: string | undefined;
+    version: string | undefined;
+    env: string;
+  };
+  server: {
+    port: number;
+    host: string;
+    baseUrl: string;
+  };
+  supabase: {
+    url: string | undefined;
+    anonKey: string | undefined;
+    serviceRoleKey: string | undefined;
+  };
+  logging: {
+    level: string;
+    pretty: boolean;
+  };
+  security: {
+    cors: {
+      origins: string[];
+      credentials: boolean;
+    };
+    jwtSecret: string;
+    encryptionKey: string;
+  };
+  rateLimit: {
+    enabled: boolean;
+    tiers: {
+      tier1: {
+        max: number;
+        window: number;
+      };
+      tier2: {
+        max: number;
+        window: number;
+      };
+      tier3: {
+        max: number;
+        window: number;
+      };
+    };
+  };
+  features: {
+    apiDocs: boolean;
+    healthCheck: boolean;
+    metrics: boolean;
+  };
+  development?: {
+    debug: boolean;
+    mockData: boolean;
+    hotReload: boolean;
+  };
+  staging?: {
+    testUsers?: string[];
+    debugEndpoints: boolean;
+  };
+  production?: {
+    monitoring: {
+      enabled: boolean;
+      endpoint?: string;
+    };
+    backup: {
+      enabled: boolean;
+      schedule: string;
+    };
+  };
+}
+
 export class ConfigLoader {
   private static instance: ConfigLoader;
-  private config: any;
+  private config: Config;
 
   private constructor() {
     this.loadEnvironmentVariables();
@@ -161,17 +232,18 @@ export class ConfigLoader {
     }
   }
 
-  getConfig() {
+  getConfig(): Config {
     return this.config;
   }
 
   get<T>(path: string): T {
     const keys = path.split('.');
-    let value = this.config;
+    let value: unknown = this.config;
 
     for (const key of keys) {
-      value = value?.[key];
-      if (value === undefined) {
+      if (value && typeof value === 'object' && key in value) {
+        value = (value as Record<string, unknown>)[key];
+      } else {
         throw new Error(`Configuration key not found: ${path}`);
       }
     }

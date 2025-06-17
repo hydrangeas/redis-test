@@ -24,7 +24,7 @@ interface DataAccessRequest {
 }
 
 interface DataAccessResponse {
-  content: unknown; // eslint-disable-line @typescript-eslint/no-explicit-any
+  content: unknown;
   etag: string;
   lastModified: Date;
   size: number;

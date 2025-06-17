@@ -29,7 +29,8 @@ export function getCorsOrigins(): string[] {
 }
 
 export function getRateLimitConfig(tier: string) {
-  const tierConfig = config.rateLimit.tiers[tier.toLowerCase()];
+  const lowerTier = tier.toLowerCase() as 'tier1' | 'tier2' | 'tier3';
+  const tierConfig = config.rateLimit.tiers[lowerTier];
   if (!tierConfig) {
     throw new Error(`Unknown tier: ${tier}`);
   }

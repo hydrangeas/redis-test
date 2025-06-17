@@ -1,15 +1,18 @@
 import 'reflect-metadata';
+
 import * as dotenv from 'dotenv';
 import { container } from 'tsyringe';
+
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { setupDI } from '@/infrastructure/di/container';
 import { DatabaseSeeder } from '@/infrastructure/seeders/database-seeder';
-import { Logger } from 'pino';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import type { Logger } from 'pino';
 
 // Load environment variables
 dotenv.config();
 
-async function runSeeder() {
+async function runSeeder(): Promise<void> {
   try {
     // DI設定
     await setupDI();
@@ -36,7 +39,7 @@ async function runSeeder() {
   }
 }
 
-async function resetDatabase() {
+async function resetDatabase(): Promise<void> {
   try {
     // DI設定
     await setupDI();
@@ -70,10 +73,10 @@ const command = args[0];
 
 switch (command) {
   case 'seed':
-    runSeeder();
+    void runSeeder();
     break;
   case 'reset':
-    resetDatabase();
+    void resetDatabase();
     break;
   default:
     console.log('Usage: npm run db:seed [seed|reset]');
