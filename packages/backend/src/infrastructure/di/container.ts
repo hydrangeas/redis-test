@@ -153,6 +153,7 @@ export function setupTestDI(): DependencyContainer {
   registerTestRepositories(container);
   registerDomainServices(container);
   registerApplicationServices(container);
+  registerTestInfrastructureServices(container);
 
   // テスト用にJwtServiceのモックを登録（auth.plugin.tsで必要）
   // 実際のモックはテストで上書き可能
@@ -453,4 +454,25 @@ function registerInfrastructureServices(container: DependencyContainer): void {
 
   // 他のインフラストラクチャサービスは後続タスクで実装
   // ... 他のインフラストラクチャサービス
+}
+
+/**
+ * テスト用インフラストラクチャサービスの登録
+ */
+function registerTestInfrastructureServices(container: DependencyContainer): void {
+  // TransactionManagerのモック登録
+  container.register(DI_TOKENS.TransactionManager, {
+    useValue: {
+      transaction: async (fn: () => Promise<unknown>) => {
+        // テスト環境ではトランザクションなしで直接実行
+        return fn();
+      },
+    },
+  });
+
+  // RateLimitLogRepositoryの登録（InMemoryRateLimitServiceが依存）
+  const { SupabaseRateLimitLogRepository } = require('../repositories/log/supabase-rate-limit-log.repository');
+  container.register(DI_TOKENS.RateLimitLogRepository, {
+    useClass: SupabaseRateLimitLogRepository,
+  });
 }

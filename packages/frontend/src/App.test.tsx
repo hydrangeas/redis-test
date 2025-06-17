@@ -39,11 +39,28 @@ const mockSupabase = supabase as unknown as MockSupabase;
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Setup default mocks
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
+      // Simulate auth state change to trigger loading state update
+      setTimeout(() => callback('INITIAL', null), 0);
+      return {
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+        error: null,
+      };
+    });
   });
 
   it("should show loading state initially", () => {
-    // Mock getSession to never resolve
-    mockSupabase.auth.getSession.mockImplementation(
+    // Mock getUser to never resolve
+    mockSupabase.auth.getUser.mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -57,16 +74,32 @@ describe("App", () => {
       data: { session: null },
       error: null,
     });
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    // Make onAuthStateChange trigger loading update immediately
+    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
+      callback('INITIAL', null);
+      return {
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+        error: null,
+      };
+    });
 
     render(<App />);
 
     await waitFor(() => {
       expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
 
   it("should handle auth check error gracefully", async () => {
-    mockSupabase.auth.getSession.mockRejectedValue(
+    mockSupabase.auth.getUser.mockRejectedValue(
       new Error("Auth error")
     );
 
@@ -81,7 +114,7 @@ describe("App", () => {
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Auth state error:",
+      "Error checking user:",
       expect.any(Error)
     );
     consoleErrorSpy.mockRestore();
