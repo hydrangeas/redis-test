@@ -1,5 +1,6 @@
 {
   "root": true,
+  "ignorePatterns": ["vitest.setup.ts", "vitest.config.ts", "dist", "node_modules"],
   "env": {
     "es2022": true,
     "node": true

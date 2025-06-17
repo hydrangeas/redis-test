@@ -10,6 +10,9 @@ import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
 import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
 import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { APIAccessControlService } from '@/domain/api/services/api-access-control.service';
+import { DataAccessService } from '@/domain/data/services/data-access.service';
+import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
 import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
 import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
@@ -298,21 +301,15 @@ function registerDomainServices(container: DependencyContainer): void {
     useClass: AuthenticationService,
   });
 
-  // Import domain services synchronously for tests
-  const {
-    APIAccessControlService,
-  } = require('../../domain/api/services/api-access-control.service');
   container.register(DI_TOKENS.APIAccessControlService, {
     useClass: APIAccessControlService,
   });
 
-  const { DataAccessService } = require('../../domain/data/services/data-access.service');
   container.register(DI_TOKENS.DataAccessService, {
     useClass: DataAccessService,
   });
 
   // RateLimitServiceの実装を登録
-  const { InMemoryRateLimitService } = require('../services/in-memory-rate-limit.service');
   container.register(DI_TOKENS.RateLimitService, {
     useClass: InMemoryRateLimitService,
   });
