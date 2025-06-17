@@ -1,14 +1,16 @@
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
-import { IRateLimitService } from '@/domain/api/interfaces/rate-limit-service.interface';
+
+import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
-import { ApiPath } from '@/domain/api/value-objects/api-path';
-import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { rateLimitHits, rateLimitExceeded } from '@/monitoring/metrics';
+import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
+import type { IRateLimitService } from '@/domain/api/interfaces/rate-limit-service.interface';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 export interface RateLimitPluginOptions {
   // レート制限をスキップするパス

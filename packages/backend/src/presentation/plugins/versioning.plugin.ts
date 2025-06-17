@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { coerce } from 'semver';
+
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 
 export interface VersioningOptions {
   // デフォルトバージョン

@@ -1,8 +1,10 @@
-import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
-import { DomainException } from '../../domain/errors/exceptions';
+
 import { toProblemDetails, mapValidationError } from '../errors/error-mapper';
-import { ProblemDetails } from '../../domain/errors/problem-details';
+
+import type { DomainException } from '../../domain/errors/exceptions';
+import type { ProblemDetails } from '../../domain/errors/problem-details';
+import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 /**
  * グローバルエラーハンドラー

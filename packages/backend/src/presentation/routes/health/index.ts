@@ -1,11 +1,15 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Type } from '@sinclair/typebox';
-import { container } from 'tsyringe';
-import { createClient } from '@supabase/supabase-js';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+
+import { Type } from '@sinclair/typebox';
+import { createClient } from '@supabase/supabase-js';
+import { container } from 'tsyringe';
+
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import type { FastifyPluginAsync } from 'fastify';
+import type { Logger } from 'pino';
+
 
 // ヘルスステータスのスキーマ
 const HealthStatus = Type.Object({

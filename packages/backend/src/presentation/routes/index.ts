@@ -1,7 +1,9 @@
-import { FastifyPluginAsync } from 'fastify';
+
 import authRoutes from './auth';
-import healthRoutes from './health';
 import dataRoutes from './data';
+import healthRoutes from './health';
+
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * APIルートを登録するプラグイン

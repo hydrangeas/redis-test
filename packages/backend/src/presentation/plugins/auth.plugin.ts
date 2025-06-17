@@ -1,14 +1,16 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import fp from 'fastify-plugin';
 import { container } from 'tsyringe';
-import { IJWTService } from '@/application/interfaces/jwt.service.interface';
-import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
-import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import fp from 'fastify-plugin';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { metrics } from '@/plugins/monitoring';
+
+import type { IJWTService } from '@/application/interfaces/jwt.service.interface';
+import type { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
+import type { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 interface AuthPluginOptions {
   excludePaths?: string[];

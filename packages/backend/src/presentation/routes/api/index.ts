@@ -1,8 +1,12 @@
-import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
+
+
 import versioningPlugin from '@/presentation/plugins/versioning.plugin';
+
 import authRoutes from './auth';
 import dataRoutes from './data';
+
+import type { FastifyPluginAsync } from 'fastify';
 // import dataRoutesV1 from './v1/data.routes';
 // import dataRoutesV2 from './v2/data.routes';
 

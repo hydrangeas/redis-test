@@ -1,18 +1,24 @@
-import Fastify, { FastifyInstance } from 'fastify';
-import { fastifySwagger } from '@fastify/swagger';
 import { fastifyCors } from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
-import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { v4 as uuidv4 } from 'uuid';
+import { fastifySwagger } from '@fastify/swagger';
+import Fastify from 'fastify';
 import { container } from 'tsyringe';
+import { v4 as uuidv4 } from 'uuid';
+
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 import authPlugin from './plugins/auth.plugin';
 import errorHandlerPlugin from './plugins/error-handler';
 import loggingPlugin from './plugins/logging.plugin';
 import rateLimitPlugin from './plugins/rate-limit.plugin';
 import apiRoutes from './routes/api';
 import apiDocsRoute from './routes/api-docs';
-import { Logger } from 'pino';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+
+
+import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import type { FastifyInstance } from 'fastify';
+import type { Logger } from 'pino';
 
 export async function buildServer(): Promise<FastifyInstance<any, any, any, any, TypeBoxTypeProvider>> {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);

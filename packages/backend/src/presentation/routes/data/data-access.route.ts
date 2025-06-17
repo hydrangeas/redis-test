@@ -1,10 +1,13 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Static, Type } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
-import { toProblemDetails } from '@/presentation/errors/error-mapper';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
+import type { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
+import type { Static} from '@sinclair/typebox';
+import type { FastifyPluginAsync } from 'fastify';
 
 // レスポンススキーマ
 const DataResponse = Type.Object({

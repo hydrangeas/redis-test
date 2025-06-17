@@ -1,15 +1,18 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Type, Static } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
-import {
-  ISecureFileAccess,
-} from '@/domain/data/interfaces/secure-file-access.interface';
+
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { fileSecurityMiddleware } from '@/presentation/middleware/file-security.middleware';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+
+import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
+import type {
+  ISecureFileAccess,
+} from '@/domain/data/interfaces/secure-file-access.interface';
+import type { Static } from '@sinclair/typebox';
+import type { FastifyPluginAsync } from 'fastify';
 
 // パスパラメータのスキーマ
 const DataPathParams = Type.Object({
@@ -139,7 +142,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
           // この場合は認証ミドルウェアが正しく動作していない
           throw new Error('Authentication middleware did not set request.user');
         }
-        const user = request.user as AuthenticatedUser;
+        const user = request.user;
         const dataPath = request.params['*'];
         // Endpoint and method are used for logging context only
 

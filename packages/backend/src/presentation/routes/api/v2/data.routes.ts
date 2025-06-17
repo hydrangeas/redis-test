@@ -1,11 +1,14 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Type, Static } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
+
+import { DomainError } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { DomainError } from '@/domain/errors/domain-error';
+
+import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Static } from '@sinclair/typebox';
+import type { FastifyPluginAsync } from 'fastify';
 
 // v2で追加されたフィルタリング機能のスキーマ
 const DataQueryParams = Type.Object({
@@ -92,7 +95,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
         // ページネーション
         let paginatedContent = processedContent;
-        let totalCount = Array.isArray(processedContent) ? processedContent.length : 1;
+        const totalCount = Array.isArray(processedContent) ? processedContent.length : 1;
 
         if (Array.isArray(processedContent) && (limit || offset)) {
           const start = offset || 0;

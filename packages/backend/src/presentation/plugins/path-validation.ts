@@ -31,7 +31,7 @@ export default fp(
 
         for (const [key, value] of Object.entries(request.query)) {
           if (typeof value === 'string') {
-            let sanitizedValue = value
+            const sanitizedValue = value
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')

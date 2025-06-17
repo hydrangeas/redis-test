@@ -1,11 +1,13 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
+
+import { DomainError } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { DomainError } from '@/domain/errors/domain-error';
+
+import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(

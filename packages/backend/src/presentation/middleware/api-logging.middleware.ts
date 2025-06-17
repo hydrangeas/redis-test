@@ -6,7 +6,6 @@ import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-
 import { LogId } from '@/domain/log/value-objects/log-id';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';

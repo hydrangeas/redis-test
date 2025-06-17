@@ -1,6 +1,8 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
+
 import { setupRequestLogging } from '@/infrastructure/logging';
+
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 interface LoggingPluginOptions {
   skipPaths?: string[];

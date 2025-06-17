@@ -1,7 +1,9 @@
-import fp from 'fastify-plugin';
 import cors from '@fastify/cors';
+import fp from 'fastify-plugin';
 import { container } from 'tsyringe';
+
 import { DI_TOKENS } from '../../infrastructure/di';
+
 import type { EnvConfig } from '../../infrastructure/config';
 
 /**

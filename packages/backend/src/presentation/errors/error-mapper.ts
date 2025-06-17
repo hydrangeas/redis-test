@@ -1,9 +1,12 @@
 import { container } from 'tsyringe';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import { ApplicationError } from '@/application/errors/application-error';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DomainException } from '@/domain/errors/exceptions';
-import { ProblemDetails } from '@/domain/errors/problem-details';
-import { ApplicationError, ApplicationErrorType } from '@/application/errors/application-error';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import type { ApplicationErrorType } from '@/application/errors/application-error';
+import type { ProblemDetails } from '@/domain/errors/problem-details';
 import type { EnvConfig } from '@/infrastructure/config';
 
 /**

@@ -1,6 +1,7 @@
-import { FastifyPluginAsync } from 'fastify';
 import scalarPlugin from '@scalar/fastify-api-reference';
 import * as yaml from 'yaml';
+
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * APIドキュメントルート

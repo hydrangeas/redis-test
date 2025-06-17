@@ -1,6 +1,8 @@
-import { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
+
 import { apiLoggingMiddleware } from '../middleware/api-logging.middleware';
+
+import type { FastifyPluginAsync } from 'fastify';
 
 const apiLoggingPlugin: FastifyPluginAsync = async (fastify) => {
   // API logging middleware
