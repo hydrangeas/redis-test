@@ -5,20 +5,10 @@ import { renderWithRouter } from "@/test/test-utils";
 import { LandingPage } from "../LandingPage";
 import { supabase } from "@/lib/supabase";
 
-const mockNavigate = vi.fn();
-
 // Mock ResponsiveHeader to avoid useAuth context issues
 vi.mock("@/components/Header/ResponsiveHeader", () => ({
   ResponsiveHeader: () => <div data-testid="header">Header</div>,
 }));
-
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
 
 describe("LandingPage", () => {
   beforeEach(() => {
@@ -46,8 +36,13 @@ describe("LandingPage", () => {
   it("should render the landing page with correct content", async () => {
     renderWithRouter(<LandingPage />);
 
+    // Wait for loading to finish
     await waitFor(() => {
-      expect(screen.getByText("奈良県の公開データを")).toBeInTheDocument();
+      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/奈良県の公開データを/)).toBeInTheDocument();
       expect(
         screen.getByText(/奈良県が公開している様々な統計データを/)
       ).toBeInTheDocument();
@@ -115,10 +110,9 @@ describe("LandingPage", () => {
       expect(screen.getByText("ダッシュボードへ")).toBeInTheDocument();
     });
 
-    const dashboardButton = screen.getByText("ダッシュボードへ");
-    await user.click(dashboardButton);
-
-    expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
+    // Check that the link is properly configured
+    const dashboardLink = screen.getByText("ダッシュボードへ").closest('a');
+    expect(dashboardLink).toHaveAttribute("href", "/dashboard");
   });
 
 
@@ -149,9 +143,16 @@ describe("LandingPage", () => {
   it("should have accessible structure", async () => {
     renderWithRouter(<LandingPage />);
 
+    // Wait for loading to finish
+    await waitFor(() => {
+      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+    });
+
     // Check for main content
-    const main = screen.getByRole("main");
-    expect(main).toBeInTheDocument();
+    await waitFor(() => {
+      const main = screen.getByRole("main");
+      expect(main).toBeInTheDocument();
+    });
 
     // Check for main headings in sections  
     await waitFor(() => {
