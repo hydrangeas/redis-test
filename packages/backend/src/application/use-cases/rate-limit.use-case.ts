@@ -59,21 +59,20 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       // スライディングウィンドウ内のアクセス数をカウント
       const window = new RateLimitWindow(windowSizeSeconds, now);
-      const countResult = await this.rateLimitRepository.countRequests(
-        user.userId,
-        endpointId,
-        window,
-      );
-
-      if (countResult.isFailure) {
+      
+      // すべてのエンドポイントへのアクセスをカウント（ユーザーベースのレート制限）
+      const logsResult = await this.rateLimitRepository.findByUser(user.userId, window);
+      
+      if (logsResult.isFailure) {
         this.logger.error(
-          { userId: user.userId.value, error: countResult.getError() },
-          'Failed to count rate limit logs',
+          { userId: user.userId.value, error: logsResult.getError() },
+          'Failed to get rate limit logs',
         );
-        return Result.fail(countResult.getError());
+        return Result.fail(logsResult.getError());
       }
-
-      const currentCount = countResult.getValue();
+      
+      const logs = logsResult.getValue();
+      const currentCount = logs.length; // Each log represents one request
 
       // レート制限チェック
       if (currentCount >= limit) {

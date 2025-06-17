@@ -61,7 +61,16 @@ describe('RateLimitUseCase Integration', () => {
       const method = 'GET';
 
       // Mock rate limit check - under limit
-      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(Result.ok(25));
+      // Mock findByUser to return 25 existing logs
+      const mockLogs = Array(25).fill(null).map((_, i) => ({
+        id: `log-${i}`,
+        userId: userIdResult.getValue(),
+        endpointId: 'endpoint-1',
+        requestId: `request-${i}`,
+        timestamp: new Date(),
+        exceeded: false,
+      }));
+      mockDependencies.mockRepositories.rateLimitLog.findByUser.mockResolvedValue(Result.ok(mockLogs));
       mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(Result.ok());
 
       const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
@@ -101,7 +110,16 @@ describe('RateLimitUseCase Integration', () => {
       const method = 'POST';
 
       // Mock rate limit check - at limit
-      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(Result.ok(60));
+      // Mock findByUser to return 60 existing logs (at limit)
+      const mockLogs = Array(60).fill(null).map((_, i) => ({
+        id: `log-${i}`,
+        userId: userIdResult.getValue(),
+        endpointId: 'endpoint-1',
+        requestId: `request-${i}`,
+        timestamp: new Date(),
+        exceeded: false,
+      }));
+      mockDependencies.mockRepositories.rateLimitLog.findByUser.mockResolvedValue(Result.ok(mockLogs));
 
       const result = await useCase.checkAndRecordAccess(authenticatedUser, endpoint, method);
 
@@ -134,9 +152,16 @@ describe('RateLimitUseCase Integration', () => {
       const endpoint = '/secure/data.json';
 
       // Mock rate limit check for tier2 user
-      mockDependencies.mockRepositories.rateLimitLog.countRequests.mockResolvedValue(
-        Result.ok(100),
-      );
+      // Mock findByUser to return 100 existing logs (under tier2 limit of 120)
+      const mockLogs = Array(100).fill(null).map((_, i) => ({
+        id: `log-${i}`,
+        userId: userIdResult.getValue(),
+        endpointId: 'endpoint-1',
+        requestId: `request-${i}`,
+        timestamp: new Date(),
+        exceeded: false,
+      }));
+      mockDependencies.mockRepositories.rateLimitLog.findByUser.mockResolvedValue(Result.ok(mockLogs));
       mockDependencies.mockRepositories.rateLimitLog.save.mockResolvedValue(Result.ok());
 
       const result = await useCase.checkAndRecordAccess(tier2User, endpoint, 'GET');

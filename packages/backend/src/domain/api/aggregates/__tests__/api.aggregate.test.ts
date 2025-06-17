@@ -227,16 +227,12 @@ describe('APIAggregate', () => {
   describe('tier access control', () => {
     beforeEach(() => {
       // Add internal endpoint
-      const pathResult = EndpointPath.create('/internal/api');
-      if (!pathResult.isSuccess) {
-        throw new Error(`Failed to create path: ${pathResult.getError().message}`);
-      }
       const typeResult = EndpointType.create('internal');
       if (!typeResult.isSuccess) {
         throw new Error(`Failed to create type: ${typeResult.getError().message}`);
       }
       const endpointResult = APIEndpoint.create({
-        path: pathResult.getValue(),
+        path: '/internal/api', // Pass string, not EndpointPath object
         method: HttpMethod.GET,
         type: typeResult.getValue(),
         isActive: true,
