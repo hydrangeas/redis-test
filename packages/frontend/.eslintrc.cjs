@@ -9,6 +9,20 @@ module.exports = {
     "prettier",
   ],
   ignorePatterns: ["dist", ".eslintrc.cjs", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts", "e2e"],
+  overrides: [
+    {
+      files: ["**/__tests__/**/*", "**/test/**/*", "**/*.test.*", "**/*.spec.*", "**/test-utils.tsx"],
+      rules: {
+        "react-refresh/only-export-components": "off",
+      },
+    },
+    {
+      files: ["**/hooks/useAuth.tsx"],
+      rules: {
+        "react-refresh/only-export-components": ["warn", { allowConstantExport: true, allowExportNames: ["useAuth"] }],
+      },
+    },
+  ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: "latest",

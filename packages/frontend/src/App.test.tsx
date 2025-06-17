@@ -23,7 +23,18 @@ vi.mock("@/lib/supabase", () => ({
 
 // Import supabase after mock
 import { supabase } from "@/lib/supabase";
-const mockSupabase = supabase as any;
+
+interface MockSupabase {
+  auth: {
+    getSession: ReturnType<typeof vi.fn>;
+    getUser: ReturnType<typeof vi.fn>;
+    onAuthStateChange: ReturnType<typeof vi.fn>;
+    signInWithOAuth: ReturnType<typeof vi.fn>;
+    signOut: ReturnType<typeof vi.fn>;
+  };
+}
+
+const mockSupabase = supabase as unknown as MockSupabase;
 
 describe("App", () => {
   beforeEach(() => {

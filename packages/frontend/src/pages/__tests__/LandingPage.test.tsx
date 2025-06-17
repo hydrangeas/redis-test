@@ -34,7 +34,13 @@ describe("LandingPage", () => {
           unsubscribe: vi.fn(),
         },
       },
-    } as any);
+    } as {
+      data: {
+        subscription: {
+          unsubscribe: () => void;
+        };
+      };
+    });
   });
 
   it("should render the landing page with correct content", async () => {
