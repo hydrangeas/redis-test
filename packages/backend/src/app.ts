@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 
-import type { FastifyServerOptions, FastifyInstance } from 'fastify';
-import type { EnvConfig } from './infrastructure/config';
-
 import fastify from 'fastify';
 import { container } from 'tsyringe';
 
 import { setupDI, DI_TOKENS } from './infrastructure/di';
 import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
+
+import type { FastifyServerOptions, FastifyInstance } from 'fastify';
+import type { EnvConfig } from './infrastructure/config';
 
 export default async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
   // DIコンテナをセットアップ

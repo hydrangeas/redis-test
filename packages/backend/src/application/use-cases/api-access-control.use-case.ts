@@ -51,7 +51,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       // エンドポイントパスの作成
       const endpointPathResult = EndpointPath.create(endpoint);
       if (endpointPathResult.isFailure) {
-        await this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
+        this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
         return Result.ok({
           allowed: false,
           reason: 'endpoint_not_found',
@@ -70,7 +70,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       );
 
       if (accessCheckResult.isFailure || !accessCheckResult.getValue()) {
-        await this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
+        this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
         return Result.ok({
           allowed: false,
           reason: 'unauthorized',
@@ -164,11 +164,11 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   /**
    * 公開エンドポイントへのアクセスを記録
    */
-  async recordPublicAccess(
+  recordPublicAccess(
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
-  ): Promise<Result<void>> {
+  ): Result<void> {
     const startTime = Date.now();
 
     try {
@@ -227,13 +227,13 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   /**
    * 認可されていないアクセスを記録
    */
-  private async recordUnauthorizedAccess(
+  private recordUnauthorizedAccess(
     userId: UserId,
     endpoint: string,
     method: string,
     startTime: number,
     metadata?: APIAccessMetadata,
-  ): Promise<void> {
+  ): void {
     this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
 
     this.eventBus.publish(
