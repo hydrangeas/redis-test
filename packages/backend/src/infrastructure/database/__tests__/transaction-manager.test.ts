@@ -1,17 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TransactionManager } from '../transaction-manager';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { Logger } from 'pino';
 
 describe('TransactionManager', () => {
   let transactionManager: TransactionManager;
-  let mockSupabase: SupabaseClient;
   let mockEventBus: IEventBus;
   let mockLogger: Logger;
 
   beforeEach(() => {
-    mockSupabase = {} as SupabaseClient;
 
     mockEventBus = {
       publish: vi.fn(),
@@ -29,7 +26,7 @@ describe('TransactionManager', () => {
       debug: vi.fn(),
     } as any;
 
-    transactionManager = new TransactionManager(mockSupabase, mockEventBus, mockLogger);
+    transactionManager = new TransactionManager(mockEventBus, mockLogger);
   });
 
   describe('executeInTransaction', () => {
