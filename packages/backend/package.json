@@ -42,6 +42,7 @@
     "@fastify/swagger-ui": "^3.0.0",
     "@fastify/type-provider-typebox": "^5.1.0",
     "@scalar/fastify-api-reference": "^1.24.0",
+    "@sinclair/typebox": "^0.34.35",
     "@supabase/supabase-js": "^2.50.0",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonwebtoken": "^9.0.9",

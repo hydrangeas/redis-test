@@ -1,4 +1,4 @@
-import { ApplicationError } from './application-error';
+import type { ApplicationError } from './application-error';
 
 export interface SuccessResult<T> {
   success: true;

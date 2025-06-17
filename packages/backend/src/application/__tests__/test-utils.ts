@@ -219,7 +219,13 @@ export function createMockAuthRepository(): {
   };
 }
 
-export function createMockAPIEndpointRepository() {
+export function createMockAPIEndpointRepository(): {
+  save: ReturnType<typeof vi.fn>;
+  findByPath: ReturnType<typeof vi.fn>;
+  findAll: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+} {
   return {
     save: vi.fn(),
     findByPath: vi.fn(),
@@ -229,7 +235,18 @@ export function createMockAPIEndpointRepository() {
   };
 }
 
-export function createMockRateLimitLogRepository() {
+export function createMockRateLimitLogRepository(): {
+  save: ReturnType<typeof vi.fn>;
+  saveMany: ReturnType<typeof vi.fn>;
+  findByUserAndEndpoint: ReturnType<typeof vi.fn>;
+  findByUser: ReturnType<typeof vi.fn>;
+  findByEndpoint: ReturnType<typeof vi.fn>;
+  deleteOldLogs: ReturnType<typeof vi.fn>;
+  countRequests: ReturnType<typeof vi.fn>;
+  countInWindow: ReturnType<typeof vi.fn>;
+  findByUserId: ReturnType<typeof vi.fn>;
+  cleanupOldLogs: ReturnType<typeof vi.fn>;
+} {
   return {
     save: vi.fn(),
     saveMany: vi.fn(),
@@ -244,7 +261,11 @@ export function createMockRateLimitLogRepository() {
   };
 }
 
-export function createMockOpenDataRepository() {
+export function createMockOpenDataRepository(): {
+  findByPath: ReturnType<typeof vi.fn>;
+  listByDirectory: ReturnType<typeof vi.fn>;
+  exists: ReturnType<typeof vi.fn>;
+} {
   return {
     findByPath: vi.fn(),
     listByDirectory: vi.fn(),
@@ -252,7 +273,12 @@ export function createMockOpenDataRepository() {
   };
 }
 
-export function createMockAuthLogRepository() {
+export function createMockAuthLogRepository(): {
+  save: ReturnType<typeof vi.fn>;
+  findByUserId: ReturnType<typeof vi.fn>;
+  findByDateRange: ReturnType<typeof vi.fn>;
+  countByResult: ReturnType<typeof vi.fn>;
+} {
   return {
     save: vi.fn(),
     findByUserId: vi.fn(),
@@ -261,7 +287,13 @@ export function createMockAuthLogRepository() {
   };
 }
 
-export function createMockAPILogRepository() {
+export function createMockAPILogRepository(): {
+  save: ReturnType<typeof vi.fn>;
+  findByUserId: ReturnType<typeof vi.fn>;
+  findByEndpoint: ReturnType<typeof vi.fn>;
+  findByDateRange: ReturnType<typeof vi.fn>;
+  countByStatusCode: ReturnType<typeof vi.fn>;
+} {
   return {
     save: vi.fn(),
     findByUserId: vi.fn(),
