@@ -1,21 +1,22 @@
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import type { UserId } from '@/domain/auth/value-objects/user-id';
-import type { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { DomainError } from '@/domain/errors/domain-error';
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
-import type { UniqueEntityId } from '@/domain/shared/entity';
 import { Guard } from '@/domain/shared/guard';
 import { Result } from '@/domain/shared/result';
 
-import type { APIEndpoint } from '../entities/api-endpoint.entity';
 import { APIAccessRecorded } from '../events/api-access-recorded.event';
 import { APIAccessRequested } from '../events/api-access-requested.event';
 import { InvalidAPIAccess } from '../events/invalid-api-access.event';
 import { RateLimitExceeded } from '../events/rate-limit-exceeded.event';
+
+import type { APIEndpoint } from '../entities/api-endpoint.entity';
 import type { EndpointId } from '../value-objects/endpoint-id';
 import type { EndpointPath } from '../value-objects/endpoint-path';
 import type { HttpMethod } from '../value-objects/http-method';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { UserTier } from '@/domain/auth/value-objects/user-tier';
+import type { UniqueEntityId } from '@/domain/shared/entity';
 
 export interface APIAggregateProps {
   endpoints: Map<string, APIEndpoint>; // endpointId -> APIEndpoint

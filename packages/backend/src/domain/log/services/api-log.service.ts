@@ -1,19 +1,20 @@
 import { inject, injectable } from 'tsyringe';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
+
+import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { APILogEntry } from '@/domain/log/entities/api-log-entry';
 import { SimpleApiLogEntry } from '@/domain/log/entities/simple-api-log-entry';
-import { Result } from '@/domain/errors';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { LogId } from '@/domain/log/value-objects/log-id';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
 import { HttpMethod } from '@/domain/log/value-objects/http-method';
-import { StatusCode } from '@/domain/log/value-objects/status-code';
-import { ResponseTime } from '@/domain/log/value-objects/response-time';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { LogId } from '@/domain/log/value-objects/log-id';
+import { ResponseTime } from '@/domain/log/value-objects/response-time';
+import { StatusCode } from '@/domain/log/value-objects/status-code';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
-import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 @injectable()
 export class APILogService {

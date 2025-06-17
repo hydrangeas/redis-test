@@ -1,15 +1,18 @@
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 import { Entity } from '@/domain/shared/entity';
+
+import { RateLimitLog } from './rate-limit-log.entity';
 import { EndpointId } from '../value-objects/endpoint-id';
 import { EndpointPath } from '../value-objects/endpoint-path';
-import { HttpMethod } from '../value-objects/http-method';
-import { EndpointType } from '../value-objects/endpoint-type';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
-import { RateLimitLog } from './rate-limit-log.entity';
-import { RequestCount } from '../value-objects/request-count';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { RequestCount } from '../value-objects/request-count';
+
+import type { EndpointType } from '../value-objects/endpoint-type';
+import type { HttpMethod } from '../value-objects/http-method';
+import type { RateLimit } from '@/domain/auth/value-objects/rate-limit';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+
 
 export interface APIEndpointProps {
   path: EndpointPath;

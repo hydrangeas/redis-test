@@ -34,7 +34,7 @@ export class EndpointPath {
 
   private createPattern(path: string): RegExp {
     // ワイルドカードをRegExpに変換
-    let pattern = path
+    const pattern = path
       .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // エスケープ
       .replace(/\*/g, '.*') // * を .* に変換
       .replace(/:(\w+)/g, '([^/]+)'); // :param を ([^/]+) に変換

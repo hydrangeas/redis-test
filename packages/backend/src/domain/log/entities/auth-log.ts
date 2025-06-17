@@ -1,10 +1,11 @@
-import { Entity, UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEvent } from '@/domain/log/value-objects/auth-event';
-import { AuthResult } from '@/domain/log/value-objects/auth-result';
 import { AuthLogId } from '@/domain/log/value-objects/auth-log-id';
+import { AuthResult } from '@/domain/log/value-objects/auth-result';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { AuthEvent } from '@/domain/log/value-objects/auth-event';
 
 export interface AuthLogProps {
   userId: UserId;

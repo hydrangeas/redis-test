@@ -1,7 +1,9 @@
-import { Brand, toBrand } from '@/domain/shared/types/brand';
-import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
 import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+import { toBrand } from '@/domain/shared/types/brand';
+
+import type { Brand} from '@/domain/shared/types/brand';
 
 /**
  * ブランド型としてのUserId

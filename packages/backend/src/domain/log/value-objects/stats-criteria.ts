@@ -1,6 +1,7 @@
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { TimeRange } from './time-range';
+
+import type { TimeRange } from './time-range';
 
 /**
  * 統計条件を表すバリューオブジェクト

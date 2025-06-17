@@ -1,15 +1,20 @@
+import { DomainError } from '@/domain/errors/domain-error';
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
 import { UniqueEntityId } from '@/domain/shared/entity';
-import { OpenDataResource } from '../entities/open-data-resource.entity';
-import { ResourceId } from '../value-objects/resource-id';
-import { DataPath } from '../value-objects/data-path';
-import { ResourceMetadata } from '../value-objects/resource-metadata';
-import { Result } from '@/domain/shared/result';
 import { Guard } from '@/domain/shared/guard';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/shared/result';
+
+import { DataAccessDenied } from '../events/data-access-denied.event';
 import { DataAccessRequested } from '../events/data-access-requested.event';
 import { DataResourceNotFound } from '../events/data-resource-not-found.event';
-import { DataAccessDenied } from '../events/data-access-denied.event';
+
+import type { OpenDataResource } from '../entities/open-data-resource.entity';
+import type { DataPath } from '../value-objects/data-path';
+
+import type { ResourceId } from '../value-objects/resource-id';
+import type { ResourceMetadata } from '../value-objects/resource-metadata';
+
+
 
 export interface DataAggregateProps {
   resources: Map<string, OpenDataResource>; // resourceId -> OpenDataResource

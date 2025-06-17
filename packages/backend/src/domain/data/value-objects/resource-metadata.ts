@@ -1,6 +1,6 @@
-import { Guard } from '@/domain/shared/guard';
-import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { Guard } from '@/domain/shared/guard';
 
 /**
  * リソースメタデータ値オブジェクト

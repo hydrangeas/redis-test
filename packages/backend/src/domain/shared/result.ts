@@ -1,4 +1,4 @@
-import { DomainError } from '../errors/domain-error';
+import type { DomainError } from '../errors/domain-error';
 
 export class Result<T> {
   public isSuccess: boolean;

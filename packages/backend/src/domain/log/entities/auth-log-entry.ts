@@ -1,14 +1,17 @@
-import { Entity } from '@/domain/shared/entity';
-import { Result } from '@/domain/shared/result';
-import { Guard } from '@/domain/shared/guard';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
-import { Provider } from '@/domain/log/value-objects/provider';
-import { IPAddress } from '@/domain/log/value-objects/ip-address';
-import { UserAgent } from '@/domain/log/value-objects/user-agent';
+
+import type { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { ValidationError } from '@/domain/errors/validation-error';
 import { AuthResult } from '@/domain/log/value-objects';
+import { EventType } from '@/domain/log/value-objects/auth-event';
+import { LogId } from '@/domain/log/value-objects/log-id';
+import { Entity } from '@/domain/shared/entity';
+import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { AuthEvent} from '@/domain/log/value-objects/auth-event';
+import type { IPAddress } from '@/domain/log/value-objects/ip-address';
+import type { Provider } from '@/domain/log/value-objects/provider';
 
 interface AuthLogEntryProps {
   userId?: UserId;

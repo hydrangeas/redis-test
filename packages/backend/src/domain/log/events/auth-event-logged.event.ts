@@ -1,5 +1,6 @@
 import { DomainEvent } from '@/domain/shared/domain-event';
-import { EventType } from '../value-objects/auth-event';
+
+import type { EventType } from '../value-objects/auth-event';
 
 /**
  * 認証イベントログ記録イベント

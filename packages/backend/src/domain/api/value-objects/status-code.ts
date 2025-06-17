@@ -1,6 +1,6 @@
-import { ValueObject } from '@/domain/shared/value-object';
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { ValueObject } from '@/domain/shared/value-object';
 
 export interface StatusCodeProps {
   value: number;

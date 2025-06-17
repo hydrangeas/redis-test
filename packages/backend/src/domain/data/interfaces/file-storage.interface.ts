@@ -1,4 +1,4 @@
-import { Result } from '@/domain/errors/result';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * File storage interface for data persistence

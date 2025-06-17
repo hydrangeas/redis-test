@@ -1,9 +1,11 @@
-import { ValueObject } from '@/domain/shared/value-object';
-import { EndpointPath } from './endpoint-path';
-import { HttpMethod } from './http-method';
-import { EndpointType } from './endpoint-type';
-import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { ValueObject } from '@/domain/shared/value-object';
+
+import type { EndpointPath } from './endpoint-path';
+import type { EndpointType } from './endpoint-type';
+import type { HttpMethod } from './http-method';
+
 
 export interface APIEndpointProps {
   path: EndpointPath;

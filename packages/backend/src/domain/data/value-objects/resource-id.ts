@@ -1,7 +1,9 @@
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { UniqueEntityId } from '@/domain/shared/entity';
 import * as crypto from 'crypto';
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { UniqueEntityId } from '@/domain/shared/entity';
+
 
 /**
  * リソースID値オブジェクト

@@ -1,6 +1,7 @@
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import * as path from 'path';
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 
 /**
  * データパス値オブジェクト

@@ -1,10 +1,14 @@
-import { IUserRepository } from '../user-repository.interface';
-import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors';
-import { User } from '../../entities/user';
-import { UserId } from '../../value-objects/user-id';
-import { Email } from '../../value-objects/email';
 import { vi } from 'vitest';
+
+import { DomainError } from '@/domain/errors';
+import { Result } from '@/domain/errors/result';
+
+
+import type { User } from '../../entities/user';
+import type { Email } from '../../value-objects/email';
+import type { UserId } from '../../value-objects/user-id';
+import type { IUserRepository } from '../user-repository.interface';
+
 
 /**
  * ユーザーリポジトリのモック実装

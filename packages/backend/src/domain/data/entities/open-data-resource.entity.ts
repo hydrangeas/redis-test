@@ -1,7 +1,10 @@
-import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+import { Entity } from '@/domain/shared/entity';
+
 import { ResourceId } from '../value-objects/resource-id';
-import { DataPath } from '../value-objects/data-path';
-import { ResourceMetadata } from '../value-objects/resource-metadata';
+
+import type { DataPath } from '../value-objects/data-path';
+import type { ResourceMetadata } from '../value-objects/resource-metadata';
+import type { UniqueEntityId } from '@/domain/shared/entity';
 
 export interface OpenDataResourceProps {
   path: DataPath;

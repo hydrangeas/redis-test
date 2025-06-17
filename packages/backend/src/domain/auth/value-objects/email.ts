@@ -1,6 +1,6 @@
-import { ValueObject } from '@/domain/shared/value-object';
-import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/shared/result';
+import { ValueObject } from '@/domain/shared/value-object';
 
 interface EmailProps {
   value: string;

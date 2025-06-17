@@ -1,7 +1,8 @@
-import { Result } from '@/domain/errors/result';
-import { OpenDataResource } from '../entities/open-data-resource.entity';
-import { DataPath } from '../value-objects/data-path';
-import { ResourceId } from '../value-objects/resource-id';
+
+import type { OpenDataResource } from '../entities/open-data-resource.entity';
+import type { DataPath } from '../value-objects/data-path';
+import type { ResourceId } from '../value-objects/resource-id';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * オープンデータリポジトリのインターフェース

@@ -26,7 +26,7 @@ export function parseHttpMethod(value: string): HttpMethod {
   if (!isValidHttpMethod(upperValue)) {
     throw new Error(`Invalid HTTP method: ${value}`);
   }
-  return upperValue as HttpMethod;
+  return upperValue;
 }
 
 /**

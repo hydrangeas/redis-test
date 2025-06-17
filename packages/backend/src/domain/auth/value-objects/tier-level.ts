@@ -32,5 +32,5 @@ export function parseTierLevel(value: string): TierLevel {
   if (!isValidTierLevel(upperValue)) {
     throw new Error(`Invalid tier level: ${value}`);
   }
-  return upperValue as TierLevel;
+  return upperValue;
 }

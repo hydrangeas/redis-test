@@ -1,7 +1,8 @@
-import { APIEndpoint } from '../value-objects/api-endpoint';
-import { EndpointPath } from '../value-objects/endpoint-path';
-import { HttpMethod } from '../value-objects/http-method';
-import { Result } from '@/domain/errors/result';
+
+import type { APIEndpoint } from '../value-objects/api-endpoint';
+import type { EndpointPath } from '../value-objects/endpoint-path';
+import type { HttpMethod } from '../value-objects/http-method';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * APIエンドポイントリポジトリインターフェース

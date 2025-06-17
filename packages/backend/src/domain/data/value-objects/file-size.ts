@@ -1,6 +1,7 @@
-import { ValidationError } from '../../errors/validation-error';
-import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+
+import { ValidationError } from '../../errors/validation-error';
 
 /**
  * ファイルサイズを表すバリューオブジェクト

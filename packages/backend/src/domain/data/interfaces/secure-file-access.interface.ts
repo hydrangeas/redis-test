@@ -1,4 +1,4 @@
-import { Result } from '@/domain/errors/result';
+import type { Result } from '@/domain/errors/result';
 
 export interface SecurityContext {
   userId: string;

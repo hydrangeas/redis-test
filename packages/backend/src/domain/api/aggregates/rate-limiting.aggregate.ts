@@ -1,14 +1,15 @@
-import type { UserId } from '@/domain/auth/value-objects/user-id';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { ValidationError } from '@/domain/errors/validation-error';
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
-import type { UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/shared/result';
 
 import { RateLimitLog } from '../entities/rate-limit-log.entity';
-import { EndpointPath } from '../value-objects/endpoint-path';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';
 import { RequestCount } from '../value-objects/request-count';
+
+import type { EndpointPath } from '../value-objects/endpoint-path';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { UniqueEntityId } from '@/domain/shared/entity';
 
 export interface RateLimitingProps {
   userId: UserId;

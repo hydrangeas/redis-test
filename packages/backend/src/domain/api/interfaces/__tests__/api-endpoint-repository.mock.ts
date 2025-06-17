@@ -1,10 +1,14 @@
-import { IAPIEndpointRepository } from '../api-endpoint-repository.interface';
-import { APIEndpoint } from '../../value-objects/api-endpoint';
-import { EndpointPath } from '../../value-objects/endpoint-path';
-import { HttpMethod } from '../../value-objects/http-method';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { vi } from 'vitest';
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+
+import type { APIEndpoint } from '../../value-objects/api-endpoint';
+import type { EndpointPath } from '../../value-objects/endpoint-path';
+import type { HttpMethod } from '../../value-objects/http-method';
+import type { IAPIEndpointRepository } from '../api-endpoint-repository.interface';
+
+
 
 /**
  * APIエンドポイントリポジトリのモック実装

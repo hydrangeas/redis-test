@@ -1,6 +1,7 @@
-import { Result } from '@/domain/errors/result';
-import { APILogEntry } from '../entities/api-log-entry';
-import { UserId } from '@/domain/auth/value-objects/user-id';
+import type { APILogEntry } from '../entities/api-log-entry';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { Result } from '@/domain/errors/result';
+
 
 export interface ApiUsageStats {
   totalRequests: number;

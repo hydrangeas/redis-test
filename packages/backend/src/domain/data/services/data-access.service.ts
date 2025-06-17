@@ -1,8 +1,10 @@
 import { injectable } from 'tsyringe';
-import { AuthenticatedUser } from '../../auth/value-objects/authenticated-user';
-import { DataPath } from '../value-objects/data-path';
+
 import { Result } from '@/domain/shared/result';
+
+import { AuthenticatedUser } from '../../auth/value-objects/authenticated-user';
 import { DomainError, ErrorType } from '../../errors/domain-error';
+import { DataPath } from '../value-objects/data-path';
 
 export interface DataAccessValidationResult {
   allowed: boolean;

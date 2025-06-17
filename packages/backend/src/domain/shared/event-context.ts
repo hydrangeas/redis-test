@@ -1,4 +1,4 @@
-import { CorrelationId } from './value-objects/correlation-id';
+import type { CorrelationId } from './value-objects/correlation-id';
 
 export class EventContext {
   constructor(

@@ -1,10 +1,11 @@
-import { Result } from '@/domain/errors/result';
-import { AuthLogEntry } from '../entities/auth-log-entry';
-import { LogId } from '../value-objects/log-id';
-import { TimeRange } from '../value-objects/time-range';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { EventType } from '../value-objects/auth-event';
-import { IPAddress } from '../value-objects/ip-address';
+
+import type { AuthLogEntry } from '../entities/auth-log-entry';
+import type { EventType } from '../value-objects/auth-event';
+import type { IPAddress } from '../value-objects/ip-address';
+import type { LogId } from '../value-objects/log-id';
+import type { TimeRange } from '../value-objects/time-range';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * 認証ログリポジトリのインターフェース

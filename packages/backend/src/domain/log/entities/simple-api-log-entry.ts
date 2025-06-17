@@ -1,12 +1,15 @@
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { Entity } from '@/domain/shared/entity';
 import { Result } from '@/domain/shared/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { LogId } from '../value-objects/log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { HttpMethod } from '../value-objects/http-method';
-import { StatusCode } from '../value-objects/status-code';
-import { IPAddress } from '../value-objects/ip-address';
-import { UserAgent } from '../value-objects/user-agent';
+
+
+
+import type { HttpMethod } from '../value-objects/http-method';
+import type { IPAddress } from '../value-objects/ip-address';
+import type { LogId } from '../value-objects/log-id';
+import type { StatusCode } from '../value-objects/status-code';
+import type { UserAgent } from '../value-objects/user-agent';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
 
 interface SimpleApiLogEntryProps {
   userId?: UserId;

@@ -1,9 +1,12 @@
-import { Entity, UniqueEntityId } from '@/domain/shared/entity';
-import { UserId } from '../value-objects/user-id';
-import { Email } from '../value-objects/email';
-import { UserTier } from '../value-objects/user-tier';
-import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+import { Result } from '@/domain/shared/result';
+
+import { UserId } from '../value-objects/user-id';
+
+import type { Email } from '../value-objects/email';
+import type { UserTier } from '../value-objects/user-tier';
+
 
 export interface UserProps {
   email: Email;

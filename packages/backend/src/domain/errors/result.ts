@@ -1,4 +1,4 @@
-import { DomainError } from './domain-error';
+import type { DomainError } from './domain-error';
 
 /**
  * Result型パターンの実装

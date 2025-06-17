@@ -1,6 +1,6 @@
+import { TierLevel } from './tier-level';
 import { UserId } from './user-id';
 import { UserTier } from './user-tier';
-import { TierLevel } from './tier-level';
 
 /**
  * 認証済みユーザーを表現するバリューオブジェクト

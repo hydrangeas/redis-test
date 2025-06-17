@@ -1,5 +1,5 @@
-import { HttpMethod, parseHttpMethod } from './http-method';
 import { ApiPath } from './api-path';
+import { HttpMethod, parseHttpMethod } from './http-method';
 import { ValidationError } from '../../errors/validation-error';
 
 /**
