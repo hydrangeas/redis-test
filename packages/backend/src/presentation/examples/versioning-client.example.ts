@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 /**
  * API Versioning Client Examples
  *
@@ -6,7 +8,7 @@
  */
 
 // Example 1: Using URL path versioning
-async function getDataWithUrlVersion() {
+async function _getDataWithUrlVersion() {
   const response = await fetch('/api/v1/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -21,7 +23,7 @@ async function getDataWithUrlVersion() {
 }
 
 // Example 2: Using Accept-Version header
-async function getDataWithHeaderVersion() {
+async function _getDataWithHeaderVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -36,7 +38,7 @@ async function getDataWithHeaderVersion() {
 }
 
 // Example 3: Using X-API-Version header
-async function getDataWithXApiVersion() {
+async function _getDataWithXApiVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -48,7 +50,7 @@ async function getDataWithXApiVersion() {
 }
 
 // Example 4: Using query parameter
-async function getDataWithQueryVersion() {
+async function _getDataWithQueryVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json?version=1', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -59,7 +61,7 @@ async function getDataWithQueryVersion() {
 }
 
 // Example 5: Handling version fallback
-async function getDataWithUnsupportedVersion() {
+async function _getDataWithUnsupportedVersion() {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -105,7 +107,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`API Error: ${error.title} - ${error.detail}`);
+      throw new Error(`API Error: ${(error as any).title} - ${(error as any).detail}`);
     }
 
     return response.json();
@@ -129,7 +131,7 @@ class ApiClient {
 }
 
 // Usage example
-async function main() {
+async function _main() {
   const client = new ApiClient('https://api.example.com', 'YOUR_TOKEN', '2');
 
   try {
@@ -151,4 +153,13 @@ async function main() {
   }
 }
 
-export { ApiClient };
+// Export all example functions to avoid unused warnings
+export { 
+  ApiClient,
+  _getDataWithUrlVersion,
+  _getDataWithHeaderVersion,
+  _getDataWithXApiVersion,
+  _getDataWithQueryVersion,
+  _getDataWithUnsupportedVersion,
+  _main
+};

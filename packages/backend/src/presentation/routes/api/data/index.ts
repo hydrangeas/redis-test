@@ -2,15 +2,14 @@ import { FastifyPluginAsync } from 'fastify';
 import { Type, Static } from '@sinclair/typebox';
 import { container } from 'tsyringe';
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
-import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
 import {
   ISecureFileAccess,
-  SecurityContext,
 } from '@/domain/data/interfaces/secure-file-access.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { fileSecurityMiddleware } from '@/presentation/middleware/file-security.middleware';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 // パスパラメータのスキーマ
 const DataPathParams = Type.Object({
@@ -29,7 +28,7 @@ const ErrorResponse = Type.Object({
   title: Type.String({ description: 'Error title' }),
   status: Type.Number({ description: 'HTTP status code' }),
   detail: Type.Optional(Type.String({ description: 'Error details' })),
-  instance: Type.String({ description: 'Instance URI' }),
+  instance: Type.Optional(Type.String({ description: 'Instance URI' })),
 });
 
 // データ一覧のクエリパラメータ
@@ -78,7 +77,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );
-  const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
+  // Rate limit use case is not directly used in data routes (handled by middleware)
   const secureFileAccess = container.resolve<ISecureFileAccess>(DI_TOKENS.SecureFileAccessService);
 
   // ワイルドカードルートでデータアクセス
@@ -142,8 +141,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         }
         const user = request.user as AuthenticatedUser;
         const dataPath = request.params['*'];
-        const endpoint = `/api/data/${dataPath}`;
-        const method = request.method;
+        // Endpoint and method are used for logging context only
 
         request.log.info(
           {
@@ -171,9 +169,9 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
           const problemDetails = toProblemDetails(error, request.url);
 
           let statusCode = 400;
-          if (error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
             statusCode = 404;
-          } else if (error.type === 'SECURITY') {
+          } else if (error instanceof DomainError && error.type === ErrorType.FORBIDDEN) {
             statusCode = 403;
           }
 
@@ -199,11 +197,11 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
 
           // エラータイプによるステータスコード決定
           let statusCode = 500;
-          if (error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
             statusCode = 404;
-          } else if (error.type === 'VALIDATION') {
+          } else if (error instanceof DomainError && error.type === 'VALIDATION') {
             statusCode = 400;
-          } else if (error.type === 'UNAUTHORIZED') {
+          } else if (error instanceof DomainError && error.type === 'UNAUTHORIZED') {
             statusCode = 403;
           }
 
@@ -302,8 +300,8 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       try {
-        const user = request.user as AuthenticatedUser;
-        const { prefix, limit = 20, offset = 0 } = request.query;
+        // User is already authenticated by middleware
+        const { prefix: _prefix, limit = 20, offset = 0 } = request.query;
 
         // データ一覧の実装（現時点では仮実装）
         // TODO: 実際のファイルシステムまたはメタデータストアから取得

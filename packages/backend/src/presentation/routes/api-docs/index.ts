@@ -15,7 +15,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
         hide: true, // Scalar UIから隠す
       },
     },
-    async (request, reply) => {
+    async (_request, _reply) => {
       return fastify.swagger();
     },
   );
@@ -28,8 +28,8 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
         hide: true, // Scalar UIから隠す
       },
     },
-    async (request, reply) => {
-      reply.type('text/yaml');
+    async (_request, _reply) => {
+      _reply.type('text/yaml');
       const spec = fastify.swagger();
       return yaml.stringify(spec);
     },
@@ -39,9 +39,9 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
   await fastify.register(scalarPlugin, {
     routePrefix: '/api-docs',
     configuration: {
-      spec: {
-        url: '/api/openapi.json', // OpenAPI仕様書のURL
-      },
+      // spec: {
+      //   url: '/api/openapi.json', // OpenAPI仕様書のURL
+      // },
       theme: 'purple', // UIテーマ
       layout: 'modern', // レイアウトスタイル
       darkMode: true, // ダークモード有効
@@ -63,7 +63,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
         preferredSecurityScheme: 'bearerAuth', // デフォルトの認証スキーム
       },
       defaultOpenAllTags: false, // すべてのタグを展開しない
-      onSpecUpdate: (spec: any) => {
+      onSpecUpdate: (_spec: any) => {
         // 仕様書が更新されたときの処理
         fastify.log.info('OpenAPI specification updated');
       },
@@ -95,7 +95,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request, reply) => {
+    async (_request, _reply) => {
       return {
         message: 'API Documentation',
         ui: '/api/api-docs',

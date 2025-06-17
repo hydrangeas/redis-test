@@ -14,7 +14,7 @@ import apiDocsRoute from './routes/api-docs';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
-export async function buildServer(): Promise<FastifyInstance> {
+export async function buildServer(): Promise<FastifyInstance<any, any, any, any, TypeBoxTypeProvider>> {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   const server = Fastify({
@@ -55,7 +55,7 @@ export async function buildServer(): Promise<FastifyInstance> {
       if (!origin || allowedOrigins.includes(origin)) {
         cb(null, true);
       } else {
-        cb(new Error('Not allowed by CORS'));
+        cb(new Error('Not allowed by CORS'), false);
       }
     },
     credentials: true,
@@ -141,7 +141,7 @@ export async function buildServer(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request, reply) => {
+    async () => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -170,7 +170,7 @@ export async function buildServer(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request, reply) => {
+    async () => {
       return {
         name: 'Open Data API',
         version: process.env.API_VERSION || '1.0.0',

@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { FastifyPluginAsync, FastifyRequest } from 'fastify';
-import { SemVer, coerce, satisfies } from 'semver';
+import { coerce } from 'semver';
 
 export interface VersioningOptions {
   // デフォルトバージョン
@@ -173,7 +173,7 @@ const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, 
   });
 
   // APIバージョン情報エンドポイント
-  fastify.get('/api/versions', async (request, reply) => {
+  fastify.get('/api/versions', async (request, _reply) => {
     return {
       current: defaultVersion,
       supported: supportedVersions,

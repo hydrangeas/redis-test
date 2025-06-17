@@ -3,8 +3,8 @@ import { Type } from '@sinclair/typebox';
 import versioningPlugin from '@/presentation/plugins/versioning.plugin';
 import authRoutes from './auth';
 import dataRoutes from './data';
-import dataRoutesV1 from './v1/data.routes';
-import dataRoutesV2 from './v2/data.routes';
+// import dataRoutesV1 from './v1/data.routes';
+// import dataRoutesV2 from './v2/data.routes';
 
 const apiRoutes: FastifyPluginAsync = async (fastify) => {
   // バージョニングプラグインを登録
@@ -30,7 +30,7 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request, reply) => {
+    async (request, _reply) => {
       return {
         status: 'ok',
         version: request.apiVersion!,
@@ -113,14 +113,14 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request, reply) => {
-      const features = {
+    async (request, _reply) => {
+      const features: { base: string[]; advanced?: string[] } = {
         base: ['data_access', 'rate_limiting', 'authentication'],
       };
 
       // v2以上でのみ利用可能な機能
       if (request.apiVersion && parseFloat(request.apiVersion) >= 2) {
-        features['advanced'] = ['filtering', 'sorting', 'pagination', 'field_selection'];
+        features.advanced = ['filtering', 'sorting', 'pagination', 'field_selection'];
       }
 
       return features;

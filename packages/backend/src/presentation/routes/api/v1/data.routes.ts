@@ -1,10 +1,11 @@
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { DomainError } from '@/domain/errors/domain-error';
 
 const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
@@ -12,33 +13,33 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
   );
 
   // v1専用のエンドポイント
-  fastify.get('/*', {
-    handler: fastify.routeVersion('1', async (request, reply) => {
+  fastify.get<{ Params: { '*': string } }>('/*', {
+    handler: fastify.routeVersion('1', async (_request: FastifyRequest<{ Params: { '*': string } }>, _reply: FastifyReply) => {
       try {
-        const user = request.user as AuthenticatedUser;
-        const dataPath = request.params['*'];
+        const user = _request.user as AuthenticatedUser;
+        const dataPath = _request.params['*'];
 
         // v1の実装（基本機能のみ）
         const result = await dataRetrievalUseCase.retrieveData(dataPath, user);
 
         if (result.isFailure) {
           const error = result.getError();
-          const problemDetails = toProblemDetails(error, request.url);
+          const problemDetails = toProblemDetails(error, _request.url);
 
           let statusCode = 500;
-          if (error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === 'NOT_FOUND') {
             statusCode = 404;
-          } else if (error.type === 'VALIDATION') {
+          } else if (error instanceof DomainError && error.type === 'VALIDATION') {
             statusCode = 400;
           }
 
-          return reply.code(statusCode).send(problemDetails);
+          return _reply.code(statusCode).send(problemDetails);
         }
 
         const data = result.getValue();
 
         // v1では基本的なヘッダーのみ
-        reply.headers({
+        _reply.headers({
           'Cache-Control': 'public, max-age=3600',
           'Content-Type': 'application/json',
         });
@@ -54,10 +55,10 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
             message: 'An unexpected error occurred',
             type: 'INTERNAL' as const,
           },
-          request.url,
+          _request.url,
         );
 
-        return reply.code(500).send(problemDetails);
+        return _reply.code(500).send(problemDetails);
       }
     }),
     schema: {

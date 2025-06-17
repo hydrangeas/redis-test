@@ -5,6 +5,7 @@ import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-u
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { DomainError } from '@/domain/errors/domain-error';
 
 // v2で追加されたフィルタリング機能のスキーマ
 const DataQueryParams = Type.Object({
@@ -27,27 +28,30 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
     Params: { '*': string };
     Querystring: DataQueryParamsType;
   }>('/*', {
-    handler: fastify.routeVersion(['2', '2.1'], async (request, reply) => {
+    handler: fastify.routeVersion(['2', '2.1'], async (_request: import('fastify').FastifyRequest<{
+      Params: { '*': string };
+      Querystring: DataQueryParamsType;
+    }>, _reply: import('fastify').FastifyReply) => {
       try {
-        const user = request.user as AuthenticatedUser;
-        const dataPath = request.params['*'];
-        const { filter, fields, sort, limit, offset } = request.query;
+        const user = _request.user as AuthenticatedUser;
+        const dataPath = _request.params['*'];
+        const { filter, fields, sort, limit, offset } = _request.query;
 
         // v2の実装（フィルタリング機能追加）
         const result = await dataRetrievalUseCase.retrieveData(dataPath, user);
 
         if (result.isFailure) {
           const error = result.getError();
-          const problemDetails = toProblemDetails(error, request.url);
+          const problemDetails = toProblemDetails(error, _request.url);
 
           let statusCode = 500;
-          if (error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === 'NOT_FOUND') {
             statusCode = 404;
-          } else if (error.type === 'VALIDATION') {
+          } else if (error instanceof DomainError && error.type === 'VALIDATION') {
             statusCode = 400;
           }
 
-          return reply.code(statusCode).send(problemDetails);
+          return _reply.code(statusCode).send(problemDetails);
         }
 
         const data = result.getValue();
@@ -64,9 +68,9 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
         // フィールド選択
         if (fields && fields.length > 0 && Array.isArray(processedContent)) {
-          processedContent = processedContent.map((item) => {
+          processedContent = processedContent.map((item: any) => {
             const filtered: any = {};
-            fields.forEach((field) => {
+            fields.forEach((field: any) => {
               if (field in item) {
                 filtered[field] = item[field];
               }
@@ -97,7 +101,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
         }
 
         // v2では拡張ヘッダーを含む
-        reply.headers({
+        _reply.headers({
           'Cache-Control': 'public, max-age=3600',
           ETag: `"${data.checksum}"`,
           'Last-Modified': data.lastModified.toUTCString(),
@@ -127,10 +131,10 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
             message: 'An unexpected error occurred',
             type: 'INTERNAL' as const,
           },
-          request.url,
+          _request.url,
         );
 
-        return reply.code(500).send(problemDetails);
+        return _reply.code(500).send(problemDetails);
       }
     }),
     schema: {

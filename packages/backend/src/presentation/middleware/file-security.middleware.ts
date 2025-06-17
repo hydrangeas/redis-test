@@ -1,6 +1,4 @@
-import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
-import { container } from 'tsyringe';
-import { SecureFileAccessService } from '@/infrastructure/services/secure-file-access.service';
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { SecurityContext } from '@/domain/data/interfaces/secure-file-access.interface';
 
 // Extend FastifyRequest type to include security context
@@ -10,8 +8,9 @@ declare module 'fastify' {
   }
 }
 
-export const fileSecurityMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
-  const securityService = container.resolve(SecureFileAccessService);
+export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: FastifyReply) => {
+  // File security is handled by the route handler directly
+  // This middleware only sets up the security context
   const user = request.user;
 
   // Create security context
@@ -23,7 +22,7 @@ export const fileSecurityMiddleware = async (request: FastifyRequest, reply: Fas
   };
 
   // Set security headers
-  reply.headers({
+  _reply.headers({
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',

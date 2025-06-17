@@ -3,7 +3,16 @@ import { RateLimitCheckResult } from '@/application/interfaces/rate-limit-use-ca
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: AuthenticatedUser & {
+    user?: AuthenticatedUser;
+    authenticatedUser?: AuthenticatedUser;
+    rateLimitStatus?: RateLimitCheckResult;
+    apiLoggingContext?: {
+      startTime: number;
+      userId?: string;
+      userTier?: string;
+      requestId: string;
+    };
+    jwtPayload?: {
       sub: string;
       email?: string;
       tier?: string;
@@ -11,8 +20,6 @@ declare module 'fastify' {
       exp?: number;
       iat?: number;
     };
-    authenticatedUser?: AuthenticatedUser;
-    rateLimitStatus?: RateLimitCheckResult;
   }
 
   interface FastifyContextConfig {

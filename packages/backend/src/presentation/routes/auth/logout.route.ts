@@ -21,7 +21,7 @@ const ErrorResponse = Type.Object({
   title: Type.String(),
   status: Type.Number(),
   detail: Type.Optional(Type.String()),
-  instance: Type.String(),
+  instance: Type.Optional(Type.String()),
 });
 
 type LogoutResponseType = Static<typeof LogoutResponse>;

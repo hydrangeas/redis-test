@@ -14,7 +14,7 @@ const loggingPlugin: FastifyPluginAsync<LoggingPluginOptions> = async (fastify, 
   setupRequestLogging(fastify);
 
   // 追加のカスタムロギング（ユーザー情報など）
-  fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.addHook('onResponse', async (request: FastifyRequest, _reply: FastifyReply) => {
     // スキップするパスの場合はログを出力しない
     if (skipPaths.some((path) => request.url === path || request.url.startsWith(path))) {
       return;
@@ -34,12 +34,7 @@ const loggingPlugin: FastifyPluginAsync<LoggingPluginOptions> = async (fastify, 
   });
 };
 
-// TypeScript宣言の拡張
-declare module 'fastify' {
-  interface FastifyRequest {
-    startTime?: number;
-  }
-}
+// startTime is already declared in monitoring.ts
 
 export default fp(loggingPlugin, {
   name: 'logging-plugin',

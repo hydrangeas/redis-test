@@ -19,7 +19,7 @@ export default fp(
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'", config.SUPABASE_URL],
+          connectSrc: ["'self'", ...(config.SUPABASE_URL ? [config.SUPABASE_URL] : [])],
           fontSrc: ["'self'"],
           objectSrc: ["'none'"],
           mediaSrc: ["'self'"],

@@ -5,39 +5,28 @@ import { APILogEntry } from '@/domain/log/entities/api-log-entry';
 import { LogId } from '@/domain/log/value-objects/log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { Endpoint } from '@/domain/api/value-objects/endpoint';
-import { APIPath } from '@/domain/api/value-objects/api-path';
+import { ApiPath } from '@/domain/api/value-objects/api-path';
+import { HttpMethod } from '@/domain/api/value-objects/http-method';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
 import { Stream } from 'stream';
-import { HttpMethodType } from '@/domain/log/value-objects/http-method';
 
-interface RequestContext {
-  startTime: number;
-  userId?: string;
-  userTier?: string;
-  requestId: string;
-}
-
-declare module 'fastify' {
-  interface FastifyRequest {
-    context: RequestContext;
-  }
-}
+// ApiLoggingContext interface removed - defined in fastify.d.ts
 
 export const apiLoggingMiddleware = {
   // リクエスト開始時
-  onRequest: async (request: FastifyRequest, reply: FastifyReply) => {
-    request.context = {
+  onRequest: async (request: FastifyRequest, _reply: FastifyReply) => {
+    request.apiLoggingContext = {
       startTime: Date.now(),
       requestId: request.id,
     };
 
     // ユーザー情報の取得（認証済みの場合）
     if (request.user) {
-      request.context.userId = request.user.userId.value;
-      request.context.userTier = request.user.tier.level;
+      request.apiLoggingContext!.userId = request.user.userId.value;
+      request.apiLoggingContext!.userTier = request.user.tier.level.toString();
     }
   },
 
@@ -48,24 +37,28 @@ export const apiLoggingMiddleware = {
 
     try {
       // レスポンスタイムの計算
-      const responseTime = Date.now() - request.context.startTime;
+      const responseTime = Date.now() - (request.apiLoggingContext?.startTime || Date.now());
 
       // レスポンスサイズの計算
       const responseSize = calculatePayloadSize(payload);
 
       // エンドポイントの作成
-      const pathResult = APIPath.create(sanitizeEndpoint(request.url));
-      if (pathResult.isFailure) {
-        logger.warn({ path: request.url }, 'Invalid API path');
+      let apiPath: ApiPath;
+      try {
+        apiPath = new ApiPath(sanitizeEndpoint(request.url));
+      } catch (error) {
+        logger.warn({ path: request.url, error }, 'Invalid API path');
         return payload;
       }
 
-      const endpointResult = Endpoint.create({
-        method: request.method as HttpMethodType,
-        path: pathResult.getValue(),
-      });
-      if (endpointResult.isFailure) {
-        logger.warn({ method: request.method, path: request.url }, 'Invalid endpoint');
+      let endpoint: Endpoint;
+      try {
+        endpoint = new Endpoint(
+          request.method as HttpMethod,
+          apiPath
+        );
+      } catch (error) {
+        logger.warn({ method: request.method, path: request.url, error }, 'Invalid endpoint');
         return payload;
       }
 
@@ -89,8 +82,8 @@ export const apiLoggingMiddleware = {
       // APIログエントリの作成
       const logEntryResult = APILogEntry.create(
         {
-          userId: request.context.userId ? UserId.fromString(request.context.userId) : undefined,
-          endpoint: endpointResult.getValue(),
+          userId: request.apiLoggingContext?.userId ? UserId.fromString(request.apiLoggingContext.userId) : undefined,
+          endpoint,
           requestInfo,
           responseInfo,
           timestamp: new Date(),

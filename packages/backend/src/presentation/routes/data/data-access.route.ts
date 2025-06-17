@@ -4,6 +4,7 @@ import { container } from 'tsyringe';
 import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 // レスポンススキーマ
 const DataResponse = Type.Object({
@@ -27,7 +28,7 @@ const ErrorResponse = Type.Object({
   title: Type.String(),
   status: Type.Number(),
   detail: Type.Optional(Type.String()),
-  instance: Type.String(),
+  instance: Type.Optional(Type.String()),
 });
 
 type DataResponseType = Static<typeof DataResponse>;
@@ -93,22 +94,22 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
           userAgent: request.headers['user-agent'],
         });
 
-        if (!result.success) {
-          const error = result.error!;
+        if (!result.isSuccess) {
+          const error = result.getError();
           const problemDetails = toProblemDetails(error, request.url);
 
           // エラータイプに応じたステータスコード
           let statusCode = 500;
-          if (error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
             statusCode = 404;
-          } else if (error.type === 'VALIDATION' || error.type === 'SECURITY') {
+          } else if (error instanceof DomainError && (error.type === ErrorType.VALIDATION || error.type === ErrorType.UNAUTHORIZED)) {
             statusCode = 400;
-          } else if (error.type === 'FORBIDDEN') {
+          } else if (error instanceof DomainError && error.type === ErrorType.FORBIDDEN) {
             statusCode = 403;
-          } else if (error.type === 'RATE_LIMIT') {
+          } else if (error instanceof DomainError && error.type === ErrorType.RATE_LIMIT) {
             statusCode = 429;
             // レート制限情報をヘッダーに追加
-            const metadata = error.metadata as any;
+            const metadata = (error as any).metadata;
             if (metadata) {
               reply.header('Retry-After', String(metadata.retryAfter || 60));
               reply.header('X-RateLimit-Limit', String(metadata.limit));
@@ -119,7 +120,7 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
 
           request.log.warn(
             {
-              error: error.code,
+              error: error instanceof DomainError ? error.code : 'UNKNOWN_ERROR',
               message: error.message,
               statusCode,
             },
@@ -132,7 +133,7 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
             .send(problemDetails);
         }
 
-        const data = result.data!;
+        const data = result.getValue();
 
         // キャッシュ検証
         if (ifNoneMatch && ifNoneMatch === data.etag) {

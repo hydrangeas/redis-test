@@ -6,7 +6,7 @@ import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
 import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { rateLimitHits, rateLimitExceeded } from '@/monitoring/metrics';
 
@@ -24,9 +24,6 @@ export interface RateLimitPluginOptions {
 declare module 'fastify' {
   interface FastifyInstance {
     checkRateLimit: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
-  }
-  interface FastifyRequest {
-    rateLimitInfo?: any;
   }
 }
 
@@ -104,7 +101,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
         reply.headers({
           'X-RateLimit-Limit': rateLimitResult.limit.toString(),
           'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining).toString(),
-          'X-RateLimit-Reset': rateLimitResult.resetAt.toString(),
+          'X-RateLimit-Reset': Math.floor(rateLimitResult.resetAt.getTime() / 1000).toString(),
         });
 
         // 使用率が高い場合の警告
@@ -128,7 +125,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
           new DomainError(
             'RATE_LIMIT_EXCEEDED',
             `API rate limit exceeded for ${user.tier.level}`,
-            'RATE_LIMIT',
+            ErrorType.RATE_LIMIT,
             {
               limit: rateLimitResult.limit,
               window: `${user.tier.rateLimit.windowSeconds} seconds`,
@@ -139,7 +136,9 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
         );
 
         // Retry-Afterヘッダーの設定
-        reply.header('Retry-After', rateLimitResult.retryAfter.toString());
+        if (rateLimitResult.retryAfter) {
+          reply.header('Retry-After', rateLimitResult.retryAfter.toString());
+        }
 
         request.log.warn(
           {
@@ -147,7 +146,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
             tier: user.tier.level,
             limit: rateLimitResult.limit,
             remaining: rateLimitResult.remaining,
-            resetAt: new Date(rateLimitResult.resetAt * 1000).toISOString(),
+            resetAt: rateLimitResult.resetAt.toISOString(),
             endpoint: endpoint.toString(),
           },
           'Rate limit exceeded',
@@ -158,7 +157,13 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
       }
 
       // レート制限情報をリクエストに付加（後続処理で使用可能）
-      request.rateLimitInfo = rateLimitResult;
+      request.rateLimitStatus = {
+        allowed: rateLimitResult.allowed,
+        limit: rateLimitResult.limit,
+        remaining: rateLimitResult.remaining,
+        resetAt: Math.floor(rateLimitResult.resetAt.getTime() / 1000),
+        retryAfter: rateLimitResult.retryAfter,
+      };
 
       request.log.debug(
         {

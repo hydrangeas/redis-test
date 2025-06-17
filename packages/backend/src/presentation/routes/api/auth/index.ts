@@ -1,7 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Type, Static } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
@@ -31,11 +30,11 @@ const ErrorResponse = Type.Object({
   title: Type.String({ description: 'Error title' }),
   status: Type.Number({ description: 'HTTP status code' }),
   detail: Type.Optional(Type.String({ description: 'Error details' })),
-  instance: Type.String({ description: 'Instance URI' }),
+  instance: Type.Optional(Type.String({ description: 'Instance URI' })),
 });
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
-  const userRepository = container.resolve<IUserRepository>(DI_TOKENS.UserRepository);
+  // User repository is not needed in these routes
   const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
 
   // 現在のユーザー情報取得
@@ -66,8 +65,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
       preHandler: [fastify.authenticate, fastify.checkRateLimit],
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
+    async (_request, _reply) => {
+      const user = _request.user as AuthenticatedUser;
 
       try {
         return {
@@ -79,7 +78,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           },
         };
       } catch (error) {
-        request.log.error(
+        _request.log.error(
           {
             error: error instanceof Error ? error.message : 'Unknown error',
             userId: user.userId.toString(),
@@ -93,10 +92,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             message: 'Failed to get user information',
             type: 'INTERNAL' as const,
           },
-          request.url,
+          _request.url,
         );
 
-        return reply.code(500).send(problemDetails);
+        return _reply.code(500).send(problemDetails);
       }
     },
   );
@@ -129,8 +128,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
       preHandler: [fastify.authenticate, fastify.checkRateLimit],
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
+    async (_request, _reply) => {
+      const user = _request.user as AuthenticatedUser;
 
       try {
         // 使用状況を取得
@@ -138,8 +137,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         if (usageResult.isFailure) {
           const error = usageResult.getError();
-          const problemDetails = toProblemDetails(error, request.url);
-          return reply.code(500).send(problemDetails);
+          const problemDetails = toProblemDetails(error, _request.url);
+          return _reply.code(500).send(problemDetails);
         }
 
         const usage = usageResult.getValue();
@@ -155,7 +154,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           windowEnd: usage.windowEnd.toISOString(),
         };
       } catch (error) {
-        request.log.error(
+        _request.log.error(
           {
             error: error instanceof Error ? error.message : 'Unknown error',
             userId: user.userId.toString(),
@@ -169,10 +168,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             message: 'Failed to get usage status',
             type: 'INTERNAL' as const,
           },
-          request.url,
+          _request.url,
         );
 
-        return reply.code(500).send(problemDetails);
+        return _reply.code(500).send(problemDetails);
       }
     },
   );
@@ -205,7 +204,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request, reply) => {
+    async (_request, _reply) => {
       // ティア情報（設定から読み込むか、ハードコード）
       return {
         tiers: [
