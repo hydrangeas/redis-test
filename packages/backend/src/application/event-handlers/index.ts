@@ -9,23 +9,20 @@ export * from './data';
 
 // Event Handler Registration
 import { DependencyContainer } from 'tsyringe';
+
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { EventLogger } from '@/infrastructure/logging';
 
-// Auth Handlers
-import { UserAuthenticatedHandler } from './auth/user-authenticated.handler';
-import { TokenRefreshedHandler } from './auth/token-refreshed.handler';
-import { UserLoggedOutHandler } from './auth/user-logged-out.handler';
-import { AuthenticationFailedHandler } from './auth/authentication-failed.handler';
-
-// API Handlers
 import { APIAccessRequestedHandler } from './api/api-access-requested.handler';
-import { RateLimitExceededHandler } from './api/rate-limit-exceeded.handler';
-
-// Data Handlers
-import { DataRetrievedHandler } from './data/data-retrieved.handler';
+import { AuthenticationFailedHandler } from './auth/authentication-failed.handler';
 import { DataResourceNotFoundHandler } from './data/data-resource-not-found.handler';
+import { DataRetrievedHandler } from './data/data-retrieved.handler';
+import { RateLimitExceededHandler } from './api/rate-limit-exceeded.handler';
+import { TokenRefreshedHandler } from './auth/token-refreshed.handler';
+import { UserAuthenticatedHandler } from './auth/user-authenticated.handler';
+import { UserLoggedOutHandler } from './auth/user-logged-out.handler';
 
 /**
  * すべてのイベントハンドラーをEventBusに登録

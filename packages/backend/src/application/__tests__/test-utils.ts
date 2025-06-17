@@ -81,7 +81,8 @@ interface MockDependencies {
 export function setupDependencies(): MockDependencies {
   const mockEventBus = new EventEmitter();
   // EventEmitter uses emit, not publish
-  (mockEventBus as any).publish = vi.fn(() => Promise.resolve());
+  const eventBusWithPublish = mockEventBus as EventEmitter & { publish: ReturnType<typeof vi.fn> };
+  eventBusWithPublish.publish = vi.fn(() => Promise.resolve());
 
   const mockRepositories = {
     authentication: createMockAuthRepository(),
@@ -305,14 +306,24 @@ export function createMockAPILogRepository(): {
   findByUserId: ReturnType<typeof vi.fn>;
   findByEndpoint: ReturnType<typeof vi.fn>;
   findByDateRange: ReturnType<typeof vi.fn>;
+  findByTimeRange: ReturnType<typeof vi.fn>;
   countByStatusCode: ReturnType<typeof vi.fn>;
+  findById: ReturnType<typeof vi.fn>;
+  findErrors: ReturnType<typeof vi.fn>;
+  getStatistics: ReturnType<typeof vi.fn>;
+  deleteOldLogs: ReturnType<typeof vi.fn>;
 } {
   return {
     save: vi.fn(),
     findByUserId: vi.fn(),
     findByEndpoint: vi.fn(),
     findByDateRange: vi.fn(),
+    findByTimeRange: vi.fn(),
     countByStatusCode: vi.fn(),
+    findById: vi.fn(),
+    findErrors: vi.fn(),
+    getStatistics: vi.fn(),
+    deleteOldLogs: vi.fn(),
   };
 }
 
