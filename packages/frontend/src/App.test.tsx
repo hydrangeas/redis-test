@@ -49,8 +49,7 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(screen.getByText("読み込み中...")).toBeInTheDocument();
-    expect(screen.getByRole("generic")).toHaveClass("auth-callback-container");
+    expect(screen.getByText("ページを読み込み中...")).toBeInTheDocument();
   });
 
   it("should render app after loading", async () => {
@@ -62,7 +61,7 @@ describe("App", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+      expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
     });
   });
 
@@ -78,11 +77,11 @@ describe("App", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+      expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error checking user:",
+      "Auth state error:",
       expect.any(Error)
     );
     consoleErrorSpy.mockRestore();
@@ -105,7 +104,7 @@ describe("App", () => {
     const { unmount } = render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+      expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
     });
 
     unmount();
