@@ -161,10 +161,18 @@ export function setupDependencies(): MockDependencies {
     getLogsByEndpoint: vi.fn(),
   };
 
+  const mockRateLimitUseCase = {
+    checkRateLimit: vi.fn(),
+    getUserUsageStatus: vi.fn(),
+    incrementUsage: vi.fn(),
+    resetUserUsage: vi.fn(),
+  };
+
   container.registerInstance(DI_TOKENS.EventBus, mockEventBus);
   container.registerInstance(DI_TOKENS.AuthenticationService, mockAuthenticationService);
   container.registerInstance(DI_TOKENS.APIAccessControlService, mockAPIAccessControlService);
   container.registerInstance(DI_TOKENS.RateLimitService, mockRateLimitService);
+  container.registerInstance(DI_TOKENS.RateLimitUseCase, mockRateLimitUseCase);
   container.registerInstance(DI_TOKENS.DataAccessService, mockDataAccessService);
   container.registerInstance(DI_TOKENS.ApiLogService, mockApiLogService);
   container.registerInstance(DI_TOKENS.UserRepository, mockRepositories.authentication);
@@ -280,11 +288,13 @@ export function createMockOpenDataRepository(): {
   findByPath: ReturnType<typeof vi.fn>;
   listByDirectory: ReturnType<typeof vi.fn>;
   exists: ReturnType<typeof vi.fn>;
+  getContent: ReturnType<typeof vi.fn>;
 } {
   return {
     findByPath: vi.fn(),
     listByDirectory: vi.fn(),
     exists: vi.fn(),
+    getContent: vi.fn(),
   };
 }
 

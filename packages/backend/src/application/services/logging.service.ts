@@ -66,13 +66,13 @@ export class LoggingService {
       const userAgentResult = UserAgent.create(metadata?.userAgent || 'Unknown');
 
       if (providerResult.isFailure) {
-        return Result.fail(providerResult.getError();
+        return Result.fail(providerResult.getError());
       }
       if (ipAddressResult.isFailure) {
-        return Result.fail(ipAddressResult.getError();
+        return Result.fail(ipAddressResult.getError());
       }
       if (userAgentResult.isFailure) {
-        return Result.fail(userAgentResult.getError();
+        return Result.fail(userAgentResult.getError());
       }
 
       // Create auth event and result
@@ -80,7 +80,7 @@ export class LoggingService {
       const authResultValue = result === 'SUCCESS' ? AuthResult.SUCCESS : AuthResult.FAILED;
 
       if (authEventResult.isFailure) {
-        return Result.fail(authEventResult.getError();
+        return Result.fail(authEventResult.getError());
       }
 
       // Create auth log entry
@@ -96,13 +96,13 @@ export class LoggingService {
       });
 
       if (authLogEntryResult.isFailure) {
-        return Result.fail(authLogEntryResult.getError();
+        return Result.fail(authLogEntryResult.getError());
       }
 
       // Save to repository
-      const saveResult = await this.authLogRepository.save(authLogEntryResult.getValue();
+      const saveResult = await this.authLogRepository.save(authLogEntryResult.getValue());
       if (saveResult.isFailure) {
-        return Result.fail(saveResult.getError(), 'AUTH_LOG_SAVE_ERROR');
+        return Result.fail(saveResult.getError());
       }
 
       return Result.ok<void>(undefined);
@@ -170,9 +170,9 @@ export class LoggingService {
       
       // Convert from domain/shared/result to domain/errors/result
       if (result.isFailure) {
-        return Result.fail(result.getError(), 'AUTH_LOG_FETCH_ERROR');
+        return Result.fail(result.getError());
       }
-      return Result.ok(result.getValue();
+      return Result.ok(result.getValue());
     }
 
     if (timeRange) {
@@ -216,7 +216,7 @@ export class LoggingService {
       if (result.isFailure) {
         return Result.fail(result.getError());
       }
-      return Result.ok(result.getValue();
+      return Result.ok(result.getValue());
     }
 
     if (timeRange) {
@@ -228,7 +228,7 @@ export class LoggingService {
       if (result.isFailure) {
         return Result.fail(result.getError());
       }
-      return Result.ok(result.getValue();
+      return Result.ok(result.getValue());
     }
 
     return Result.ok([]);
@@ -240,9 +240,9 @@ export class LoggingService {
   async getErrorLogs(limit = 100): Promise<Result<APILogEntry[]>> {
     const result = await this.apiLogRepository.findErrors(undefined, limit);
     if (result.isFailure) {
-      return Result.fail(result.getError(), 'ERROR_LOG_FETCH_ERROR');
+      return Result.fail(result.getError());
     }
-    return Result.ok(result.getValue();
+    return Result.ok(result.getValue());
   }
 
   /**
@@ -264,7 +264,7 @@ export class LoggingService {
     if (ipAddress) {
       const ipAddressResult = IPAddress.create(ipAddress);
       if (ipAddressResult.isFailure) {
-        return Result.fail(ipAddressResult.getError(), 'IP_ADDRESS_ERROR');
+        return Result.fail(ipAddressResult.getError());
       }
 
       // Find failed login attempts from this IP
@@ -275,7 +275,7 @@ export class LoggingService {
       );
 
       if (failedLogins.isFailure) {
-        return Result.fail(failedLogins.getError(), 'SUSPICIOUS_ACTIVITY_DETECTION_ERROR');
+        return Result.fail(failedLogins.getError());
       }
 
       const failures = failedLogins
@@ -290,8 +290,8 @@ export class LoggingService {
     // Check for suspicious activities across all IPs
     const result = await this.authLogRepository.findSuspiciousActivities(timeRangeResult.getValue(), 100);
     if (result.isFailure) {
-      return Result.fail(result.getError(), 'SUSPICIOUS_ACTIVITY_DETECTION_ERROR');
+      return Result.fail(result.getError());
     }
-    return Result.ok(result.getValue();
+    return Result.ok(result.getValue());
   }
 }
