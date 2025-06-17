@@ -53,7 +53,7 @@ jobs:
 
       - name: Start Supabase
         run: |
-          supabase init
+          supabase init --force
           supabase start
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
