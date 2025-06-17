@@ -1,10 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import App from "./App";
-import { supabase } from "@/lib/supabase";
 
 // Set up mocks before component imports
-vi.mock("@/lib/supabase");
+const mockSupabase = {
+  auth: {
+    getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+    onAuthStateChange: vi.fn().mockReturnValue({
+      data: {
+        subscription: {
+          unsubscribe: vi.fn(),
+        },
+      },
+    }),
+    signInWithOAuth: vi.fn(),
+    signOut: vi.fn(),
+  },
+};
+
+vi.mock("@/lib/supabase", () => ({
+  supabase: mockSupabase,
+}));
 
 describe("App", () => {
   beforeEach(() => {
@@ -13,7 +30,7 @@ describe("App", () => {
 
   it("should show loading state initially", () => {
     // Mock getSession to never resolve
-    vi.mocked(supabase.auth.getSession).mockImplementation(
+    mockSupabase.auth.getSession.mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -24,21 +41,10 @@ describe("App", () => {
   });
 
   it("should render app after loading", async () => {
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+    mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: null },
       error: null,
     });
-
-    const mockAuthListener = {
-      data: {
-        subscription: {
-          unsubscribe: vi.fn(),
-        },
-      },
-    };
-    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as unknown as ReturnType<typeof supabase.auth.onAuthStateChange>
-    );
 
     render(<App />);
 
@@ -48,19 +54,8 @@ describe("App", () => {
   });
 
   it("should handle auth check error gracefully", async () => {
-    vi.mocked(supabase.auth.getSession).mockRejectedValue(
+    mockSupabase.auth.getSession.mockRejectedValue(
       new Error("Auth error")
-    );
-
-    const mockAuthListener = {
-      data: {
-        subscription: {
-          unsubscribe: vi.fn(),
-        },
-      },
-    };
-    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as unknown as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     const consoleErrorSpy = vi
@@ -74,29 +69,25 @@ describe("App", () => {
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Auth check error:",
+      "Error checking user:",
       expect.any(Error)
     );
     consoleErrorSpy.mockRestore();
   });
 
   it("should unsubscribe from auth listener on unmount", async () => {
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+    const unsubscribeSpy = vi.fn();
+    mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: null },
       error: null,
     });
-
-    const unsubscribeSpy = vi.fn();
-    const mockAuthListener = {
+    mockSupabase.auth.onAuthStateChange.mockReturnValue({
       data: {
         subscription: {
           unsubscribe: unsubscribeSpy,
         },
       },
-    };
-    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as unknown as ReturnType<typeof supabase.auth.onAuthStateChange>
-    );
+    });
 
     const { unmount } = render(<App />);
 
