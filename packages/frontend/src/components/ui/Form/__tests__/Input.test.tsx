@@ -40,18 +40,18 @@ describe("Input", () => {
   });
 
   it("shows helper text", () => {
-    render(<Input helperText="This is helper text" />);
+    render(<Input hint="This is helper text" />);
     expect(screen.getByText("This is helper text")).toBeInTheDocument();
   });
 
   it("shows error state with helper text", () => {
-    render(<Input error helperText="Error message" />);
+    render(<Input error="Error message" />);
     const input = screen.getByRole("textbox");
-    const helperText = screen.getByText("Error message");
+    const errorText = screen.getByText("Error message");
 
     expect(input).toHaveClass("border-red-500");
     expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(helperText).toHaveClass("text-red-600");
+    expect(errorText).toHaveClass("text-red-600");
   });
 
   it("handles different input types", () => {

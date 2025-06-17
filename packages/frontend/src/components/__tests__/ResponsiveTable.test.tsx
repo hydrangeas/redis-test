@@ -115,8 +115,10 @@ describe("ResponsiveTable", () => {
       expect(screen.queryByRole("table")).not.toBeInTheDocument();
 
       // Should render card-like structure
-      expect(screen.getByText("Name:")).toBeInTheDocument();
-      expect(screen.getByText("Email:")).toBeInTheDocument();
+      const nameLabels = screen.getAllByText("Name:");
+      expect(nameLabels).toHaveLength(3); // One for each row
+      const emailLabels = screen.getAllByText("Email:");
+      expect(emailLabels).toHaveLength(3); // One for each row
       expect(screen.queryByText("Status:")).not.toBeInTheDocument(); // hideOnMobile
     });
 
