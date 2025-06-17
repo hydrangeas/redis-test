@@ -2,26 +2,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import App from "./App";
 
-// Set up mocks before component imports
-const mockSupabase = {
-  auth: {
-    getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-    getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
-    onAuthStateChange: vi.fn().mockReturnValue({
-      data: {
-        subscription: {
-          unsubscribe: vi.fn(),
-        },
-      },
-    }),
-    signInWithOAuth: vi.fn(),
-    signOut: vi.fn(),
-  },
-};
-
+// Mock supabase module
 vi.mock("@/lib/supabase", () => ({
-  supabase: mockSupabase,
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+      }),
+      signInWithOAuth: vi.fn(),
+      signOut: vi.fn(),
+    },
+  },
 }));
+
+// Import supabase after mock
+import { supabase } from "@/lib/supabase";
+const mockSupabase = supabase as any;
 
 describe("App", () => {
   beforeEach(() => {

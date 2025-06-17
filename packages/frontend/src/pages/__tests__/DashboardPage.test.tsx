@@ -95,9 +95,9 @@ describe("DashboardPage", () => {
     renderDashboardPage();
 
     await waitFor(() => {
-      expect(screen.getByText("APIキー:")).toBeInTheDocument();
-      expect(screen.getByText(/test-api/)).toBeInTheDocument();
-      expect(screen.getByTestId("copy-api-key-button")).toBeInTheDocument();
+      expect(screen.getByText("APIキー")).toBeInTheDocument();
+      expect(screen.getByText(/sk_test/)).toBeInTheDocument();
+      expect(screen.getByLabelText("APIキーをコピー")).toBeInTheDocument();
     });
   });
 
@@ -128,19 +128,19 @@ describe("DashboardPage", () => {
     renderDashboardPage();
 
     await waitFor(() => {
-      expect(screen.getByTestId("copy-api-key-button")).toBeInTheDocument();
+      expect(screen.getByLabelText("APIキーをコピー")).toBeInTheDocument();
     });
 
-    const copyButton = screen.getByTestId("copy-api-key-button");
+    const copyButton = screen.getByLabelText("APIキーをコピー");
     await user.click(copyButton);
 
     expect(mockWriteText).toHaveBeenCalledWith(
-      expect.stringContaining("test-api-key")
+      expect.stringContaining("sk_test")
     );
 
     // Check for success message
     await waitFor(() => {
-      expect(screen.getByText("コピーしました！")).toBeInTheDocument();
+      expect(screen.getByText("APIキーをコピーしました")).toBeInTheDocument();
     });
   });
 
@@ -161,9 +161,9 @@ describe("DashboardPage", () => {
     renderDashboardPage();
 
     await waitFor(() => {
-      expect(screen.getByText("使用状況")).toBeInTheDocument();
+      expect(screen.getByText("API使用状況")).toBeInTheDocument();
+      expect(screen.getByText("/api/data/**")).toBeInTheDocument();
       expect(screen.getByText("45 / 60")).toBeInTheDocument();
-      expect(screen.getByText("リクエスト/分")).toBeInTheDocument();
       expect(screen.getByText("75%")).toBeInTheDocument();
     });
   });
@@ -284,7 +284,7 @@ describe("DashboardPage", () => {
 
     renderDashboardPage();
 
-    expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
+    expect(screen.getByText("読み込み中...")).toBeInTheDocument();
   });
 
   it("should redirect on auth error", async () => {

@@ -23,6 +23,18 @@ vi.mock("react-router-dom", async () => {
 describe("LandingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set up default mock behavior
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
+      data: {
+        subscription: {
+          unsubscribe: vi.fn(),
+        },
+      },
+    } as any);
   });
 
   it("should render the landing page with correct content", async () => {
