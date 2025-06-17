@@ -36,7 +36,7 @@ export interface ProblemDetails {
    * Problem type definitions may extend the problem details object
    * with additional members.
    */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -48,7 +48,7 @@ export function createProblemDetails(
   status: number,
   detail?: string,
   instance?: string,
-  extensions?: Record<string, any>,
+  extensions?: Record<string, unknown>,
 ): ProblemDetails {
   return {
     type,

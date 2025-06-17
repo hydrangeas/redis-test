@@ -23,7 +23,7 @@ export async function errorHandler(
       requestId: request.id,
       method: request.method,
       url: request.url,
-      userId: (request as any).user?.id,
+      userId: request.user?.userId?.value,
       ip: request.ip,
     },
     'Request error occurred',
@@ -35,7 +35,7 @@ export async function errorHandler(
   }
 
   // Content-Typeを設定
-  reply.header('Content-Type', 'application/problem+json');
+  void reply.header('Content-Type', 'application/problem+json');
 
   // Fastifyバリデーションエラー
   if ('validation' in error && error.validation) {
@@ -67,7 +67,7 @@ export default fp(
         instance: request.url,
       };
 
-      reply.status(404).header('Content-Type', 'application/problem+json').send(problemDetails);
+      void reply.status(404).header('Content-Type', 'application/problem+json').send(problemDetails);
     });
   },
   {

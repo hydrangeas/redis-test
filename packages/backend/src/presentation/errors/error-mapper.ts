@@ -91,17 +91,19 @@ export function toProblemDetails(
 
     // 特定の例外タイプに応じた拡張プロパティ
     if ('retryAfter' in error) {
-      problemDetails.retryAfter = (error as any).retryAfter;
+      problemDetails.retryAfter = (error as unknown as { retryAfter: number }).retryAfter;
     }
     if ('limit' in error && 'resetTime' in error) {
-      problemDetails.limit = (error as any).limit;
-      problemDetails.resetTime = (error as any).resetTime.toISOString();
+      const rateLimitError = error as unknown as { limit: number; resetTime: Date };
+      problemDetails.limit = rateLimitError.limit;
+      problemDetails.resetTime = rateLimitError.resetTime.toISOString();
     }
     if ('field' in error && 'constraints' in error) {
+      const validationError = error as unknown as { field: string; constraints: Record<string, string> };
       problemDetails.errors = [
         {
-          field: (error as any).field,
-          constraints: (error as any).constraints,
+          field: validationError.field,
+          constraints: validationError.constraints,
         },
       ];
     }
@@ -140,7 +142,14 @@ export function toProblemDetails(
 /**
  * Fastifyバリデーションエラーを変換
  */
-export function mapValidationError(validation: any[], instance: string): ProblemDetails {
+interface ValidationError {
+  instancePath?: string;
+  dataPath?: string;
+  message: string;
+  params?: Record<string, unknown>;
+}
+
+export function mapValidationError(validation: ValidationError[], instance: string): ProblemDetails {
   const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
   const baseUrl = config.API_BASE_URL;
 

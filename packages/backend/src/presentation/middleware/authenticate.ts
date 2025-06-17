@@ -4,7 +4,7 @@ import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 
 import type { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 
 /**
  * 認証ミドルウェア
@@ -25,7 +25,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
         request.url,
       );
 
-      reply
+      void reply
         .code(401)
         .header('content-type', 'application/problem+json')
         .header('www-authenticate', 'Bearer')
@@ -45,7 +45,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
         request.url,
       );
 
-      reply
+      void reply
         .code(401)
         .header('content-type', 'application/problem+json')
         .header('www-authenticate', 'Bearer')
@@ -70,7 +70,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
         'Authentication failed',
       );
 
-      reply
+      void reply
         .code(401)
         .header('content-type', 'application/problem+json')
         .header('www-authenticate', 'Bearer')
@@ -107,7 +107,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
       request.url,
     );
 
-    reply.code(500).header('content-type', 'application/problem+json').send(problemDetails);
+    void reply.code(500).header('content-type', 'application/problem+json').send(problemDetails);
   }
 }
 
@@ -115,7 +115,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
  * 認証デコレータプラグイン
  * Fastifyインスタンスに認証メソッドを追加
  */
-export function registerAuthDecorator(fastify: any): void {
+export function registerAuthDecorator(fastify: FastifyInstance): void {
   fastify.decorate('authenticate', authenticate);
 }
 

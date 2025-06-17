@@ -22,7 +22,7 @@ interface AuthLogEntryProps {
   timestamp: Date;
   result: AuthResult;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class AuthLogEntry extends Entity<AuthLogEntryProps> {

@@ -34,22 +34,22 @@ export class EventLogger implements IEventHandler<DomainEvent> {
   /**
    * イベントデータから機密情報を除去
    */
-  private sanitizeEventData(event: any): any {
+  private sanitizeEventData(event: unknown): unknown {
     const sensitiveKeys = ['password', 'token', 'secret', 'apikey', 'jwt'];
     const sanitized = { ...event };
 
-    const removeSensitive = (obj: any): any => {
+    const removeSensitive = (obj: unknown): unknown => {
       if (typeof obj !== 'object' || obj === null) return obj;
 
-      const result: any = Array.isArray(obj) ? [] : {};
+      const result: Record<string, unknown> | unknown[] = Array.isArray(obj) ? [] : {};
 
-      for (const key in obj) {
+      for (const key in obj as Record<string, unknown>) {
         if (sensitiveKeys.some((sk) => key.toLowerCase().includes(sk.toLowerCase()))) {
-          result[key] = '[REDACTED]';
-        } else if (typeof obj[key] === 'object') {
-          result[key] = removeSensitive(obj[key]);
+          (result as Record<string, unknown>)[key] = '[REDACTED]';
+        } else if (typeof (obj as Record<string, unknown>)[key] === 'object') {
+          (result as Record<string, unknown>)[key] = removeSensitive((obj as Record<string, unknown>)[key]);
         } else {
-          result[key] = obj[key];
+          (result as Record<string, unknown>)[key] = (obj as Record<string, unknown>)[key];
         }
       }
 

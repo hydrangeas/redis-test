@@ -41,7 +41,7 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
         const data = result.getValue();
 
         // v1では基本的なヘッダーのみ
-        _reply.headers({
+        void _reply.headers({
           'Cache-Control': 'public, max-age=3600',
           'Content-Type': 'application/json',
         });

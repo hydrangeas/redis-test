@@ -76,14 +76,14 @@ export async function apiAccessControlMiddleware(
       case 'rate_limit_exceeded':
         // レート制限ヘッダーの設定
         if (decision.rateLimitStatus) {
-          reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
-          reply.header(
+          void reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
+          void reply.header(
             'X-RateLimit-Remaining',
             decision.rateLimitStatus.remaining.toString(),
           );
-          reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
+          void reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
           if (decision.rateLimitStatus.retryAfter) {
-            reply.header('Retry-After', decision.rateLimitStatus.retryAfter.toString());
+            void reply.header('Retry-After', decision.rateLimitStatus.retryAfter.toString());
           }
         }
 
@@ -134,9 +134,9 @@ export async function apiAccessControlMiddleware(
 
   // アクセス許可の場合、レート制限ヘッダーを設定
   if (decision.rateLimitStatus) {
-    reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
-    reply.header('X-RateLimit-Remaining', decision.rateLimitStatus.remaining.toString());
-    reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
+    void reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
+    void reply.header('X-RateLimit-Remaining', decision.rateLimitStatus.remaining.toString());
+    void reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
   }
 
   // リクエストにレート制限情報を追加（後続の処理で使用可能）

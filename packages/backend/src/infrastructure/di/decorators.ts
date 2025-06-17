@@ -11,7 +11,7 @@ import { DI_TOKENS } from './tokens';
  * Decorator to mark a class as injectable with singleton lifecycle
  */
 export const Singleton = () => {
-  return (target: any) => {
+  return <T extends new (...args: unknown[]) => unknown>(target: T) => {
     singleton()(target);
     return target;
   };
@@ -21,8 +21,8 @@ export const Singleton = () => {
  * Decorator to mark a class as injectable with scoped lifecycle
  */
 export const Scoped = () => {
-  return (target: any) => {
-    scoped(undefined as any, undefined as any)(target);
+  return <T extends new (...args: unknown[]) => unknown>(target: T) => {
+    scoped(undefined, undefined)(target as any);
     return target;
   };
 };
@@ -82,9 +82,9 @@ export function createInjectionDecorator(token: symbol): () => ParameterDecorato
  * Batch registration decorator for multiple interfaces
  */
 export function RegisterInterfaces(
-  interfaces: { token: symbol; useClass?: any; useValue?: any }[],
+  interfaces: { token: symbol; useClass?: unknown; useValue?: unknown }[],
 ) {
-  return (target: any) => {
+  return <T extends new (...args: unknown[]) => unknown>(target: T) => {
     // This would be used with a custom container setup
     // For now, it serves as documentation
     Reflect.defineMetadata('di:interfaces', interfaces, target);
@@ -99,14 +99,14 @@ export class DIMetadata {
   /**
    * Get all registered interfaces for a class
    */
-  static getInterfaces(target: any): { token: symbol; useClass?: any; useValue?: any }[] {
+  static getInterfaces(target: unknown): { token: symbol; useClass?: unknown; useValue?: unknown }[] {
     return Reflect.getMetadata('di:interfaces', target) || [];
   }
 
   /**
    * Check if a class has a specific interface registered
    */
-  static hasInterface(target: any, token: symbol): boolean {
+  static hasInterface(target: unknown, token: symbol): boolean {
     const interfaces = this.getInterfaces(target);
     return interfaces.some((i) => i.token === token);
   }
@@ -117,7 +117,7 @@ export class DIMetadata {
  * Methods marked with this decorator will be called after injection
  */
 export function PostConstruct() {
-  return (target: any, propertyKey: string, _descriptor: PropertyDescriptor) => {
+  return (target: object, propertyKey: string, _descriptor: PropertyDescriptor) => {
     const existingMethods = Reflect.getMetadata('di:postconstruct', target.constructor) || [];
     existingMethods.push(propertyKey);
     Reflect.defineMetadata('di:postconstruct', existingMethods, target.constructor);
@@ -127,11 +127,11 @@ export function PostConstruct() {
 /**
  * Execute post-construction methods
  */
-export async function executePostConstruct(instance: any): Promise<void> {
+export async function executePostConstruct(instance: object): Promise<void> {
   const methods = Reflect.getMetadata('di:postconstruct', instance.constructor) || [];
   for (const method of methods) {
-    if (typeof instance[method] === 'function') {
-      await instance[method]();
+    if (typeof (instance as Record<string, any>)[method] === 'function') {
+      await (instance as Record<string, any>)[method]();
     }
   }
 }
@@ -141,8 +141,8 @@ export async function executePostConstruct(instance: any): Promise<void> {
  * The dependency is only resolved when first accessed
  */
 export function LazyInject(_token: symbol): PropertyDecorator {
-  return (target: any, propertyKey: string | symbol) => {
-    let instance: any;
+  return (target: object, propertyKey: string | symbol) => {
+    let instance: unknown;
 
     const getter = () => {
       if (!instance) {
@@ -153,7 +153,7 @@ export function LazyInject(_token: symbol): PropertyDecorator {
       return instance;
     };
 
-    const setter = (value: any) => {
+    const setter = (value: unknown) => {
       instance = value;
     };
 

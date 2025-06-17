@@ -14,7 +14,7 @@ interface EventHandlerEntry<T extends DomainEvent> {
 
 @injectable()
 export class EventBus implements IEventBus {
-  private handlers = new Map<string, EventHandlerEntry<any>[]>();
+  private handlers = new Map<string, EventHandlerEntry<DomainEvent>[]>();
   private pendingEvents: DomainEvent[] = [];
   private isDispatching = false;
   private processedEventIds = new Set<string>();

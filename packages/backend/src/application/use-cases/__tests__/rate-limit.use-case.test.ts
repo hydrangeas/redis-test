@@ -34,7 +34,7 @@ describe('RateLimitUseCase', () => {
       countInWindow: vi.fn(),
       deleteOlderThan: vi.fn(),
       deleteByUserId: vi.fn(),
-    } as any;
+    } as unknown as IRateLimitLogRepository;
 
     mockEventBus = {
       publish: vi.fn(),
@@ -49,7 +49,7 @@ describe('RateLimitUseCase', () => {
       debug: vi.fn(),
       fatal: vi.fn(),
       trace: vi.fn(),
-    } as any;
+    } as unknown as Logger;
 
     useCase = new RateLimitUseCase(mockRateLimitRepository, mockEventBus, mockLogger);
   });
@@ -72,10 +72,10 @@ describe('RateLimitUseCase', () => {
 
       // Mock findByUser to return 5 existing logs
       const mockLogs = new Array(5).fill(null); // 5 logs = 5 requests
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.ok(mockLogs),
       );
-      (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
+      (mockRateLimitRepository.save as MockedFunction<IRateLimitLogRepository['save']>).mockResolvedValue(Result.ok());
 
       // Act
       const result = await useCase.checkAndRecordAccess(user, endpoint, method);
@@ -91,17 +91,24 @@ describe('RateLimitUseCase', () => {
       // リポジトリが呼ばれたことを確認
       expect(mockRateLimitRepository.findByUser).toHaveBeenCalledWith(
         user.userId,
-        expect.any(Object), // RateLimitWindow
+        expect.objectContaining({
+          windowSizeSeconds: expect.any(Number),
+          startTime: expect.any(Date),
+          endTime: expect.any(Date),
+        }),
       );
       expect(mockRateLimitRepository.save).toHaveBeenCalled();
 
       // イベントが発行されたことを確認
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          getEventName: expect.any(Function),
+          eventId: expect.any(String),
+          aggregateId: expect.any(String),
+          eventVersion: expect.any(Number),
+          occurredAt: expect.any(Date),
         }),
       );
-      const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
+      const event = (mockEventBus.publish as MockedFunction<IEventBus['publish']>).mock.calls[0][0];
       expect(event.getEventName()).toBe('APIAccessRecorded');
     });
 
@@ -113,7 +120,7 @@ describe('RateLimitUseCase', () => {
 
       // Mock findByUser to return 10 existing logs (at the limit)
       const mockLogs = new Array(10).fill(null); // 10 logs = 10 requests
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.ok(mockLogs),
       );
 
@@ -135,10 +142,13 @@ describe('RateLimitUseCase', () => {
       // レート制限超過イベントが発行されたことを確認
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          getEventName: expect.any(Function),
+          eventId: expect.any(String),
+          aggregateId: expect.any(String),
+          eventVersion: expect.any(Number),
+          occurredAt: expect.any(Date),
         }),
       );
-      const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
+      const event = (mockEventBus.publish as MockedFunction<IEventBus['publish']>).mock.calls[0][0];
       expect(event.getEventName()).toBe('RateLimitExceeded');
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -160,10 +170,10 @@ describe('RateLimitUseCase', () => {
       const method = 'GET';
 
       // Mock findByUser to return empty for successful case
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.ok([]), // Return empty array
       );
-      (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
+      (mockRateLimitRepository.save as MockedFunction<IRateLimitLogRepository['save']>).mockResolvedValue(Result.ok());
 
       // Act
       const result = await useCase.checkAndRecordAccess(user, invalidEndpoint, method);
@@ -182,10 +192,10 @@ describe('RateLimitUseCase', () => {
       const invalidMethod = 'INVALID';
 
       // Mock findByUser to return empty for successful case
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.ok([]),
       );
-      (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(Result.ok());
+      (mockRateLimitRepository.save as MockedFunction<IRateLimitLogRepository['save']>).mockResolvedValue(Result.ok());
 
       // Act
       const result = await useCase.checkAndRecordAccess(user, endpoint, invalidMethod);
@@ -203,7 +213,7 @@ describe('RateLimitUseCase', () => {
       const endpoint = '/api/data/test.json';
       const method = 'GET';
 
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.fail(new DomainError('DB_ERROR', 'Database error', ErrorType.INTERNAL)),
       );
 
@@ -223,10 +233,10 @@ describe('RateLimitUseCase', () => {
       const endpoint = '/api/data/test.json';
       const method = 'GET';
 
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.ok(new Array(5).fill(null)), // 5 existing logs
       );
-      (mockRateLimitRepository.save as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.save as MockedFunction<IRateLimitLogRepository['save']>).mockResolvedValue(
         Result.fail(new DomainError('SAVE_ERROR', 'Save failed', ErrorType.INTERNAL)),
       );
 
@@ -247,7 +257,7 @@ describe('RateLimitUseCase', () => {
       const method = 'GET';
       const unexpectedError = new Error('Unexpected error');
 
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockRejectedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockRejectedValue(
         unexpectedError,
       );
 
@@ -278,7 +288,7 @@ describe('RateLimitUseCase', () => {
 
       // Mock findByUser to return 45 logs
       const mockLogs = new Array(45).fill(null); // 45 logs = 45 requests
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.ok(mockLogs),
       );
 
@@ -302,7 +312,7 @@ describe('RateLimitUseCase', () => {
       // Arrange
       const user = createTestUser(TierLevel.TIER1);
 
-      (mockRateLimitRepository.findByUser as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.findByUser as MockedFunction<IRateLimitLogRepository['findByUser']>).mockResolvedValue(
         Result.fail(new DomainError('DB_ERROR', 'Database error', ErrorType.INTERNAL)),
       );
 
@@ -320,7 +330,7 @@ describe('RateLimitUseCase', () => {
       // Arrange
       const userId = '123e4567-e89b-12d3-a456-426614174000';
 
-      (mockRateLimitRepository.deleteOldLogs as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.deleteOldLogs as MockedFunction<IRateLimitLogRepository['deleteOldLogs']>).mockResolvedValue(
         Result.ok(10), // 10 logs deleted
       );
 
@@ -351,7 +361,7 @@ describe('RateLimitUseCase', () => {
       // Arrange
       const userId = '123e4567-e89b-12d3-a456-426614174000';
 
-      (mockRateLimitRepository.deleteOldLogs as MockedFunction<any>).mockResolvedValue(
+      (mockRateLimitRepository.deleteOldLogs as MockedFunction<IRateLimitLogRepository['deleteOldLogs']>).mockResolvedValue(
         Result.fail(new DomainError('DELETE_ERROR', 'Delete failed', ErrorType.INTERNAL)),
       );
 

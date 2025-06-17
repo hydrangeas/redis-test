@@ -43,7 +43,7 @@ const start = async (): Promise<void> => {
 };
 
 // 環境変数の検証エラーをキャッチ
-start().catch((error) => {
+void start().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });

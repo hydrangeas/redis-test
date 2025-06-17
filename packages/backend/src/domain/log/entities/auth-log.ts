@@ -16,7 +16,7 @@ export interface AuthLogProps {
     ipAddress?: string;
     userAgent?: string;
     reason?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

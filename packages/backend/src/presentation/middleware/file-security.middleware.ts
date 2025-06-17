@@ -23,7 +23,7 @@ export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: Fa
   };
 
   // Set security headers
-  _reply.headers({
+  void _reply.headers({
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',

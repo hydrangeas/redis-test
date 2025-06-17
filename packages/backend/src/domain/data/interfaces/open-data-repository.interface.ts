@@ -25,7 +25,7 @@ export interface IOpenDataRepository {
    * データリソースのコンテンツを取得
    * @param resource データリソース
    */
-  getContent(resource: OpenDataResource): Promise<Result<any>>;
+  getContent(resource: OpenDataResource): Promise<Result<unknown>>;
 
   /**
    * ディレクトリ内のリソースをリスト
@@ -56,7 +56,7 @@ export interface IOpenDataRepository {
    * @param resource リソース
    * @param content コンテンツ
    */
-  cache(resource: OpenDataResource, content: any): Promise<void>;
+  cache(resource: OpenDataResource, content: unknown): Promise<void>;
 
   /**
    * キャッシュをクリア

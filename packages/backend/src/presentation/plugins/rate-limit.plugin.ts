@@ -100,7 +100,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
 
       // ヘッダーの設定（成功・失敗に関わらず）
       if (includeHeaders) {
-        reply.headers({
+        void reply.headers({
           'X-RateLimit-Limit': rateLimitResult.limit.toString(),
           'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining).toString(),
           'X-RateLimit-Reset': Math.floor(rateLimitResult.resetAt.getTime() / 1000).toString(),
@@ -111,7 +111,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
           ((rateLimitResult.limit - rateLimitResult.remaining) / rateLimitResult.limit) * 100;
 
         if (usagePercentage >= 80) {
-          reply.header('X-RateLimit-Warning', `${Math.round(usagePercentage)}% of rate limit used`);
+          void reply.header('X-RateLimit-Warning', `${Math.round(usagePercentage)}% of rate limit used`);
         }
       }
 
@@ -139,7 +139,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
 
         // Retry-Afterヘッダーの設定
         if (rateLimitResult.retryAfter) {
-          reply.header('Retry-After', rateLimitResult.retryAfter.toString());
+          void reply.header('Retry-After', rateLimitResult.retryAfter.toString());
         }
 
         request.log.warn(
@@ -189,7 +189,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
       // エラーが発生した場合でも、基本的なヘッダーは設定
       if (includeHeaders && request.user) {
         const tier = request.user.tier;
-        reply.headers({
+        void reply.headers({
           'X-RateLimit-Limit': tier.rateLimit.maxRequests.toString(),
           'X-RateLimit-Remaining': 'unknown',
           'X-RateLimit-Reset': 'unknown',

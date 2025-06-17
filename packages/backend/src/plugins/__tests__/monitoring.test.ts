@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import { container } from 'tsyringe';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
@@ -33,7 +33,7 @@ const mockLogger = {
 };
 
 describe('Monitoring Plugin', () => {
-  let fastify: any;
+  let fastify: FastifyInstance;
 
   beforeEach(async () => {
     // Clear all mocks
@@ -152,7 +152,7 @@ describe('Monitoring Plugin', () => {
   });
 
   describe('Request tracking', () => {
-    let testFastify: any;
+    let testFastify: FastifyInstance;
 
     beforeEach(async () => {
       // Create new instance for these tests
@@ -194,7 +194,7 @@ describe('Monitoring Plugin', () => {
 
     it('should track request with user info', async () => {
       // Add a test route that sets user
-      testFastify.get('/test-user', async (request: any) => {
+      testFastify.get('/test-user', async (request) => {
         request.user = {
           userId: { value: 'test-user-id' },
           tier: { level: 'tier2' },
@@ -219,7 +219,7 @@ describe('Monitoring Plugin', () => {
 
     it('should track rate limit exceeded', async () => {
       // Add a test route that returns 429
-      testFastify.get('/test-rate-limit', async (request: any, reply: any) => {
+      testFastify.get('/test-rate-limit', async (request, reply) => {
         request.user = {
           userId: { value: 'test-user-id' },
           tier: { level: 'tier1' },
@@ -245,7 +245,7 @@ describe('Monitoring Plugin', () => {
 
     it('should track data access requests', async () => {
       // Add a test route for data access
-      testFastify.get('/api/v1/data/test.json', async (request: any, reply: any) => {
+      testFastify.get('/api/v1/data/test.json', async (_request, reply) => {
         reply.header('content-length', '1024');
         return { data: 'test' };
       });
@@ -274,7 +274,7 @@ describe('Monitoring Plugin', () => {
   });
 
   describe('Error tracking', () => {
-    let testFastify: any;
+    let testFastify: FastifyInstance;
 
     beforeEach(async () => {
       // Create new instance for these tests
@@ -289,7 +289,7 @@ describe('Monitoring Plugin', () => {
     it('should track errors', async () => {
       // Add a route that throws an error
       testFastify.get('/test-error', async () => {
-        const error: any = new Error('Test error');
+        const error = new Error('Test error') as Error & { statusCode: number; code: string };
         error.statusCode = 500;
         error.code = 'TEST_ERROR';
         throw error;

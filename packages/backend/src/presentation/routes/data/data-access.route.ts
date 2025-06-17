@@ -112,12 +112,12 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
           } else if (error instanceof DomainError && error.type === ErrorType.RATE_LIMIT) {
             statusCode = 429;
             // レート制限情報をヘッダーに追加
-            const metadata = (error as any).metadata;
+            const metadata = (error as unknown as { metadata?: { retryAfter?: number; limit?: number; remaining?: number; reset?: number } }).metadata;
             if (metadata) {
-              reply.header('Retry-After', String(metadata.retryAfter || 60));
-              reply.header('X-RateLimit-Limit', String(metadata.limit));
-              reply.header('X-RateLimit-Remaining', String(metadata.remaining));
-              reply.header('X-RateLimit-Reset', String(metadata.reset));
+              void reply.header('Retry-After', String(metadata.retryAfter || 60));
+              void reply.header('X-RateLimit-Limit', String(metadata.limit));
+              void reply.header('X-RateLimit-Remaining', String(metadata.remaining));
+              void reply.header('X-RateLimit-Reset', String(metadata.reset));
             }
           }
 
@@ -161,9 +161,9 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
         };
 
         // キャッシュヘッダーの設定
-        reply.header('ETag', data.etag);
-        reply.header('Last-Modified', data.lastModified.toUTCString());
-        reply.header('Cache-Control', 'public, max-age=3600'); // 1時間キャッシュ
+        void reply.header('ETag', data.etag);
+        void reply.header('Last-Modified', data.lastModified.toUTCString());
+        void reply.header('Cache-Control', 'public, max-age=3600'); // 1時間キャッシュ
 
         request.log.info(
           {

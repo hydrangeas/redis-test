@@ -89,7 +89,7 @@ export async function setupDI(): Promise<DependencyContainer> {
   registerInfrastructureServices(container);
 
   // イベントハンドラーの登録
-  import('@/application/event-handlers').then((module) => {
+  void import('@/application/event-handlers').then((module) => {
     module.registerEventHandlers(container);
     logger.info('Event handlers registered');
   });
@@ -147,7 +147,7 @@ export function setupTestDI(): DependencyContainer {
       update: () => ({ data: null, error: null }),
       delete: () => ({ data: null, error: null }),
     }),
-  } as any;
+  } as unknown as SupabaseClient;
   container.register<SupabaseClient>(DI_TOKENS.SupabaseClient, {
     useValue: mockSupabaseClient,
   });

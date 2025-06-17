@@ -28,7 +28,7 @@ export class Result<T> {
   /**
    * 複数の結果を結合
    */
-  static combine(results: Result<any>[]): Result<any> {
+  static combine(results: Result<unknown>[]): Result<unknown> {
     for (const result of results) {
       if (result.isFailure) {
         return result;

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const isEntity = (v: any): v is Entity<any> => {
+const isEntity = (v: unknown): v is Entity<unknown> => {
   return v instanceof Entity;
 };
 

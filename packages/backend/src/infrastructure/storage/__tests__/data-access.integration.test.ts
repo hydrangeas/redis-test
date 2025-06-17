@@ -36,7 +36,7 @@ describe('Data Access Integration with FileStorageService', () => {
       info: () => {},
       warn: () => {},
       error: () => {},
-    } as any;
+    } as unknown as Logger;
 
     container.register(DI_TOKENS.Logger, { useValue: mockLogger });
     container.register(DI_TOKENS.DataDirectory, { useValue: dataDir });

@@ -196,7 +196,7 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
 
   // Metrics endpoint
   fastify.get('/metrics', async (_request, reply) => {
-    reply.type('text/plain');
+    void reply.type('text/plain');
     return register.metrics();
   });
 
@@ -233,7 +233,7 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
       (check) => check.status === 'healthy',
     );
 
-    reply.status(isHealthy ? 200 : 503).send(healthCheck);
+    void reply.status(isHealthy ? 200 : 503).send(healthCheck);
   });
 
   logger.info('Monitoring plugin loaded');

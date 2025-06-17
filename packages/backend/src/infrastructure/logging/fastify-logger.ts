@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { createLogger } from './logger';
 
 import type { EnvConfig } from '../config';
-import type { FastifyServerOptions } from 'fastify';
+import type { FastifyServerOptions, FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 
 /**
  * Fastify用のロガー設定を生成
@@ -15,16 +15,16 @@ export function createFastifyLoggerConfig(config: EnvConfig): FastifyServerOptio
     requestIdLogLabel: 'requestId',
     disableRequestLogging: false,
     requestIdHeader: 'x-request-id',
-    genReqId: (req: any) => req.headers['x-request-id'] || randomUUID(),
+    genReqId: (req: FastifyRequest) => (req.headers['x-request-id'] as string) || randomUUID(),
   };
 }
 
 /**
  * リクエスト/レスポンスのロギングフックを設定
  */
-export function setupRequestLogging(server: any): void {
+export function setupRequestLogging(server: FastifyInstance): void {
   // リクエスト開始時のログ
-  server.addHook('onRequest', async (request: any) => {
+  server.addHook('onRequest', async (request: FastifyRequest) => {
     request.log.info(
       {
         req: request,
@@ -35,7 +35,7 @@ export function setupRequestLogging(server: any): void {
   });
 
   // レスポンス送信時のログ
-  server.addHook('onResponse', async (request: any, reply: any) => {
+  server.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
     request.log.info(
       {
         req: request,
@@ -48,7 +48,7 @@ export function setupRequestLogging(server: any): void {
   });
 
   // エラー発生時のログ
-  server.addHook('onError', async (request: any, reply: any, error: Error) => {
+  server.addHook('onError', async (request: FastifyRequest, reply: FastifyReply, error: Error) => {
     request.log.error(
       {
         req: request,

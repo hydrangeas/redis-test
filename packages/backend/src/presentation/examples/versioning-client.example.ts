@@ -89,7 +89,7 @@ class ApiClient {
     this.apiVersion = apiVersion;
   }
 
-  async getData(path: string): Promise<any> {
+  async getData(path: string): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}/api/data/${path}`, {
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -107,20 +107,20 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`API Error: ${(error as any).title} - ${(error as any).detail}`);
+      throw new Error(`API Error: ${(error as { title: string; detail: string }).title} - ${(error as { title: string; detail: string }).detail}`);
     }
 
     return response.json();
   }
 
   // Get available API versions
-  async getVersions(): Promise<any> {
+  async getVersions(): Promise<{ current: string; supported: string[]; deprecated: string[] }> {
     const response = await fetch(`${this.baseUrl}/api/versions`);
     return response.json();
   }
 
   // Get features available in current version
-  async getFeatures(): Promise<any> {
+  async getFeatures(): Promise<{ base: string[]; advanced: string[] }> {
     const response = await fetch(`${this.baseUrl}/api/features`, {
       headers: {
         'Accept-Version': this.apiVersion,

@@ -172,7 +172,7 @@ export class UserTier {
       default:
         // 網羅性チェック
         // const _exhaustiveCheck: never = this._level;
-        throw new Error(`Unknown tier level: ${this._level}`);
+        throw new Error(`Unknown tier level: ${this._level as string}`);
     }
   }
 

@@ -19,7 +19,7 @@ export abstract class DomainEvent {
     return this.aggregateId;
   }
 
-  getMetadata(): Record<string, any> {
+  getMetadata(): Record<string, unknown> {
     return {
       eventId: this.eventId,
       eventName: this.getEventName(),

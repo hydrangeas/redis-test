@@ -23,7 +23,7 @@ const DataPathParams = Type.Object({
 });
 
 // レスポンススキーマ（動的なJSONデータ）
-const DataResponse = Type.Any();
+const DataResponse = Type.Unknown();
 
 // エラーレスポンス
 const ErrorResponse = Type.Object({
@@ -86,7 +86,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
   // ワイルドカードルートでデータアクセス
   fastify.get<{
     Params: DataPathParamsType;
-    Reply: any | Static<typeof ErrorResponse>;
+    Reply: unknown | Static<typeof ErrorResponse>;
   }>(
     '/*',
     {
@@ -215,7 +215,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
         const data = result.getValue();
 
         // キャッシュヘッダー
-        reply.headers({
+        void reply.headers({
           'Cache-Control': 'public, max-age=3600',
           ETag: `"${data.checksum}"`,
           'Last-Modified': data.lastModified.toUTCString(),

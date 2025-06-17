@@ -53,7 +53,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
         this.logger.warn({ path, userId: user.userId.value }, 'Invalid data path');
 
         // データアクセス拒否イベントを発行
-        this.eventBus.publish(
+        void this.eventBus.publish(
           new DataAccessDenied(
             user.userId.value,  // aggregateId
             user.userId.value,  // userId
@@ -99,7 +99,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
         );
 
         // データアクセス拒否イベントを発行
-        this.eventBus.publish(
+        void this.eventBus.publish(
           new DataAccessDenied(
             user.userId.value,
             user.userId.value,
@@ -138,7 +138,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
 
       // データアクセス要求イベントを発行
       // We don't have resource size and mime type yet, using placeholders
-      this.eventBus.publish(
+      void this.eventBus.publish(
         new DataAccessRequested(
           user.userId.value,  // aggregateId
           user.userId.value,  // userId
@@ -161,7 +161,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
         // リソースが見つからない場合のイベント発行
         const error = resourceResult.getError();
         if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
-          this.eventBus.publish(
+          void this.eventBus.publish(
             new DataResourceNotFound(
               user.userId.value,  // aggregateId
               user.userId.value,  // userId
@@ -190,7 +190,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      this.eventBus.publish(
+      void this.eventBus.publish(
         new DataRetrieved(
           resource.id.value,          // aggregateId
           1,                          // eventVersion
@@ -333,7 +333,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      this.eventBus.publish(
+      void this.eventBus.publish(
         new DataRetrieved(
           resource.id.value,          // aggregateId
           1,                          // eventVersion
@@ -416,7 +416,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      this.eventBus.publish(
+      void this.eventBus.publish(
         new DataRetrieved(
           resource.id.value,          // aggregateId
           1,                          // eventVersion

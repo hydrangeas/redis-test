@@ -17,7 +17,7 @@ export class UserLoggedOut extends DomainEvent {
     return 'UserLoggedOut';
   }
 
-  getData(): Record<string, any> {
+  getData(): Record<string, unknown> {
     return {
       userId: this.userId,
       reason: this.reason,

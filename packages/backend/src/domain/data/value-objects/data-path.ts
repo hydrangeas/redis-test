@@ -8,6 +8,7 @@ import { Result } from '@/domain/errors/result';
  * APIパスとファイルシステムパスのマッピングを管理
  */
 export class DataPath {
+  // eslint-disable-next-line no-control-regex
   private static readonly DANGEROUS_CHARS = /[<>:"|?*\x00-\x1f\x80-\x9f]/;
   private static readonly MAX_SEGMENT_LENGTH = 255;
   private static readonly MAX_PATH_LENGTH = 1024;

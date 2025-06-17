@@ -62,7 +62,7 @@ export class RateLimitException extends DomainException {
 export class ValidationException extends DomainException {
   constructor(
     public readonly field: string,
-    public readonly value: any,
+    public readonly value: unknown,
     public readonly constraints: string[],
   ) {
     super('VALIDATION_FAILED', `Validation failed for field '${field}'`, 400);
@@ -87,7 +87,7 @@ export class ResourceNotFoundException extends DomainException {
 export class BusinessRuleViolationException extends DomainException {
   constructor(
     public readonly rule: string,
-    public readonly context: Record<string, any>,
+    public readonly context: Record<string, unknown>,
   ) {
     super('BUSINESS_RULE_VIOLATION', `Business rule violation: ${rule}`, 422);
   }

@@ -21,7 +21,7 @@ import type { Logger } from 'pino';
 
 interface CacheEntry {
   resource: OpenDataResource;
-  content: any;
+  content: unknown;
   cachedAt: Date;
 }
 
@@ -98,8 +98,8 @@ export class OpenDataRepository implements IOpenDataRepository {
         this.logger.info({ path: dataPath.value, id: resourceId.value }, 'Resource found by path');
 
         return Result.ok(resource);
-      } catch (error: any) {
-        if (error.code === 'ENOENT') {
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
           return Result.fail(
             new DomainError(
               'RESOURCE_NOT_FOUND',
@@ -157,7 +157,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * データリソースのコンテンツを取得
    */
-  async getContent(resource: OpenDataResource): Promise<Result<any>> {
+  async getContent(resource: OpenDataResource): Promise<Result<unknown>> {
     try {
       const filePath = this.getFilePath(resource.path);
 
@@ -323,7 +323,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * リソースをキャッシュに保存
    */
-  async cache(resource: OpenDataResource, content: any): Promise<void> {
+  async cache(resource: OpenDataResource, content: unknown): Promise<void> {
     const cacheKey = this.getCacheKey(resource.path);
 
     this.cacheStore.set(cacheKey, {
@@ -368,7 +368,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     return dataPath.value;
   }
 
-  private async getCachedContent(dataPath: DataPath): Promise<any | null> {
+  private async getCachedContent(dataPath: DataPath): Promise<unknown | null> {
     const cacheKey = this.getCacheKey(dataPath);
     const cached = this.cacheStore.get(cacheKey);
 

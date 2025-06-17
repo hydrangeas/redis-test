@@ -2,15 +2,20 @@ import { DomainError } from '@/domain/errors/domain-error';
 import { Result } from '@/domain/shared/result';
 import { ValueObject } from '@/domain/shared/value-object';
 
+// JSON値の型定義
+export type JsonValue = string | number | boolean | null | JsonObjectType | JsonArray;
+export type JsonObjectType = { [key: string]: JsonValue };
+export type JsonArray = JsonValue[];
+
 export interface JsonObjectProps {
-  value: Record<string, any>;
+  value: JsonObjectType;
 }
 
 /**
  * JSONオブジェクトを型安全に扱うためのバリューオブジェクト
  */
 export class JsonObject extends ValueObject<JsonObjectProps> {
-  get value(): Record<string, any> {
+  get value(): JsonObjectType {
     return { ...this.props.value }; // Return a copy to maintain immutability
   }
 
@@ -18,13 +23,13 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
    * 指定されたパスの値を取得
    * @param path ドット記法のパス (例: "user.name")
    */
-  get<T = any>(path: string): T | undefined {
+  get<T = JsonValue>(path: string): T | undefined {
     const keys = path.split('.');
-    let current: any = this.props.value;
+    let current: unknown = this.props.value;
 
     for (const key of keys) {
-      if (current && typeof current === 'object' && key in current) {
-        current = current[key];
+      if (current && typeof current === 'object' && !Array.isArray(current) && key in current) {
+        current = (current as Record<string, unknown>)[key];
       } else {
         return undefined;
       }
@@ -36,7 +41,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   /**
    * 指定されたパスの値を取得（デフォルト値付き）
    */
-  getOrDefault<T = any>(path: string, defaultValue: T): T {
+  getOrDefault<T = JsonValue>(path: string, defaultValue: T): T {
     const value = this.get<T>(path);
     return value !== undefined ? value : defaultValue;
   }
@@ -51,19 +56,20 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   /**
    * 指定されたパスに値を設定した新しいインスタンスを返す
    */
-  set(path: string, value: any): Result<JsonObject> {
+  set(path: string, value: JsonValue): Result<JsonObject> {
     const keys = path.split('.');
     const newValue = { ...this.props.value };
-    let current: any = newValue;
+    let current: JsonObjectType = newValue;
 
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
-      if (!current[key] || typeof current[key] !== 'object') {
+      const currentValue = current[key];
+      if (!currentValue || typeof currentValue !== 'object' || Array.isArray(currentValue)) {
         current[key] = {};
       } else {
-        current[key] = { ...current[key] };
+        current[key] = { ...(currentValue as JsonObjectType) };
       }
-      current = current[key];
+      current = current[key] as JsonObjectType;
     }
 
     current[keys[keys.length - 1]] = value;
@@ -77,15 +83,16 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   remove(path: string): Result<JsonObject> {
     const keys = path.split('.');
     const newValue = { ...this.props.value };
-    let current: any = newValue;
+    let current: JsonObjectType = newValue;
 
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
-      if (!current[key] || typeof current[key] !== 'object') {
+      const currentValue = current[key];
+      if (!currentValue || typeof currentValue !== 'object' || Array.isArray(currentValue)) {
         return JsonObject.create(newValue); // Path doesn't exist, return as is
       }
-      current[key] = { ...current[key] };
-      current = current[key];
+      current[key] = { ...(currentValue as JsonObjectType) };
+      current = current[key] as JsonObjectType;
     }
 
     delete current[keys[keys.length - 1]];
@@ -104,22 +111,25 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   /**
    * オブジェクトを深くマージ
    */
-  private deepMerge(target: any, source: any): any {
-    const result = { ...target };
+  private deepMerge(target: JsonObjectType, source: JsonObjectType): JsonObjectType {
+    const result: JsonObjectType = { ...target };
 
     for (const key in source) {
-      if (source.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const sourceValue = source[key];
+        const targetValue = target[key];
+        
         if (
-          source[key] &&
-          typeof source[key] === 'object' &&
-          !Array.isArray(source[key]) &&
-          target[key] &&
-          typeof target[key] === 'object' &&
-          !Array.isArray(target[key])
+          sourceValue &&
+          typeof sourceValue === 'object' &&
+          !Array.isArray(sourceValue) &&
+          targetValue &&
+          typeof targetValue === 'object' &&
+          !Array.isArray(targetValue)
         ) {
-          result[key] = this.deepMerge(target[key], source[key]);
+          result[key] = this.deepMerge(targetValue as JsonObjectType, sourceValue as JsonObjectType);
         } else {
-          result[key] = source[key];
+          result[key] = sourceValue;
         }
       }
     }
@@ -144,14 +154,14 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   /**
    * 値の配列を取得
    */
-  values(): any[] {
+  values(): JsonValue[] {
     return Object.values(this.props.value);
   }
 
   /**
    * エントリーの配列を取得
    */
-  entries(): [string, any][] {
+  entries(): [string, JsonValue][] {
     return Object.entries(this.props.value);
   }
 
@@ -165,12 +175,42 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
   /**
    * ファクトリメソッド
    */
-  static create(value: Record<string, any>): Result<JsonObject> {
+  static create(value: unknown): Result<JsonObject> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return Result.fail(DomainError.validation('INVALID_JSON_OBJECT', 'Value must be a valid object'));
     }
 
-    return Result.ok(new JsonObject({ value }));
+    if (!this.isValidJsonObject(value)) {
+      return Result.fail(DomainError.validation('INVALID_JSON_OBJECT', 'Value must be a valid JSON object'));
+    }
+
+    return Result.ok(new JsonObject({ value: value as JsonObjectType }));
+  }
+
+  /**
+   * JSON値として有効かチェックする型ガード
+   */
+  private static isValidJsonValue(value: unknown): value is JsonValue {
+    if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return true;
+    }
+    if (Array.isArray(value)) {
+      return value.every(item => this.isValidJsonValue(item));
+    }
+    if (typeof value === 'object' && value !== null) {
+      return Object.values(value).every(val => this.isValidJsonValue(val));
+    }
+    return false;
+  }
+
+  /**
+   * JSONオブジェクトとして有効かチェックする型ガード
+   */
+  private static isValidJsonObject(value: unknown): value is JsonObjectType {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return false;
+    }
+    return Object.values(value).every(val => this.isValidJsonValue(val));
   }
 
   /**

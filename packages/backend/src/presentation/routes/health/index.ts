@@ -194,7 +194,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async () => {
+    () => {
       // アプリケーションが動作していれば常にOK
       return { status: 'ok' };
     },
@@ -256,7 +256,7 @@ async function performHealthChecks() {
   const checks = {
     database: await checkDatabase(),
     dataFiles: await checkDataFiles(),
-    cache: await checkCache(),
+    cache: checkCache(),
   };
 
   return checks;
@@ -330,7 +330,7 @@ async function checkDataFiles() {
 }
 
 // キャッシュステータスチェック
-async function checkCache() {
+function checkCache() {
   // 現在の実装では、キャッシュは常に利用可能
   // 将来的にRedisなどを使用する場合はここでチェック
   return {
@@ -339,8 +339,8 @@ async function checkCache() {
 }
 
 // 全体のステータスを決定
-function determineOverallStatus(checks: any): 'healthy' | 'degraded' | 'unhealthy' {
-  const statuses = Object.values(checks).map((check: any) => check.status);
+function determineOverallStatus(checks: Record<string, { status: string; message?: string }>): 'healthy' | 'degraded' | 'unhealthy' {
+  const statuses = Object.values(checks).map((check) => check.status);
 
   if (statuses.includes('unhealthy')) {
     return 'unhealthy';

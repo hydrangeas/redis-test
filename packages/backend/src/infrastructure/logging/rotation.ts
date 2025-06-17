@@ -30,7 +30,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
   } = options;
 
   // Ensure log directory exists
-  import('fs').then((fs) => {
+  void import('fs').then((fs) => {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
@@ -55,7 +55,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         maxFiles,
         size: maxSize,
         compress: compress ? 'gzip' : false,
-      }) as any,
+      }) as unknown as NodeJS.WritableStream,
     });
 
     // Error log with longer retention
@@ -67,7 +67,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         maxFiles: 90, // Keep error logs for 90 days
         size: maxSize,
         compress: compress ? 'gzip' : false,
-      }) as any,
+      }) as unknown as NodeJS.WritableStream,
     });
 
     // Audit log for security events
@@ -79,7 +79,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         maxFiles: 365, // Keep audit logs for 1 year
         size: maxSize,
         compress: compress ? 'gzip' : false,
-      }) as any,
+      }) as unknown as NodeJS.WritableStream,
     });
   }
 
@@ -135,7 +135,7 @@ export function getLogRotationConfig(): RotatingLoggerOptions {
  * Custom serializers for sensitive data
  */
 export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
-  req: (req: any) => ({
+  req: (req: Record<string, unknown>) => ({
     id: req.id,
     method: req.method,
     url: req.url,
@@ -150,7 +150,7 @@ export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
     userId: req.user?.userId?.value,
   }),
 
-  res: (res: any) => ({
+  res: (res: Record<string, unknown>) => ({
     statusCode: res.statusCode,
     headers: {
       'content-type': res.getHeader('content-type'),
@@ -160,13 +160,13 @@ export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
 
   err: pino.stdSerializers.err,
 
-  user: (user: any) => ({
+  user: (user: Record<string, unknown>) => ({
     id: user.userId?.value,
     tier: user.tier?.level,
   }),
 
   // Sanitize sensitive data
-  auth: (auth: any) => ({
+  auth: (auth: Record<string, unknown>) => ({
     provider: auth.provider,
     status: auth.status,
     // Don't log tokens or secrets
@@ -179,7 +179,7 @@ export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
 export function createContextLogger(
   logger: pino.Logger,
   context: string,
-  additionalContext?: Record<string, any>,
+  additionalContext?: Record<string, unknown>,
 ): pino.Logger {
   return logger.child({
     context,

@@ -16,7 +16,7 @@ import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 
 interface CacheEntry {
-  content: any;
+  content: unknown;
   metadata: FileMetadata;
   compressed?: Buffer;
 }
@@ -50,7 +50,7 @@ export class FileStorageService implements IFileStorage {
     this.initializeWatcher();
   }
 
-  async readFile(filePath: string): Promise<Result<any>> {
+  async readFile(filePath: string): Promise<Result<unknown>> {
     try {
       // Path validation
       const validationResult = await this.validatePath(filePath);
@@ -127,8 +127,8 @@ export class FileStorageService implements IFileStorage {
       };
 
       return Result.ok(metadata);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(
           new DomainError('FILE_NOT_FOUND', `File not found: ${filePath}`, ErrorType.NOT_FOUND),
         );
@@ -163,8 +163,8 @@ export class FileStorageService implements IFileStorage {
       });
 
       return Result.ok(stream);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', ErrorType.NOT_FOUND));
       }
 
@@ -198,8 +198,8 @@ export class FileStorageService implements IFileStorage {
       const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
       return Result.ok(jsonFiles);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(
           new DomainError('DIRECTORY_NOT_FOUND', `Directory not found: ${directory}`, ErrorType.NOT_FOUND),
         );
@@ -272,7 +272,7 @@ export class FileStorageService implements IFileStorage {
 
   private async readFileFromDisk(
     absolutePath: string,
-  ): Promise<Result<{ content: any; metadata: FileMetadata }>> {
+  ): Promise<Result<{ content: unknown; metadata: FileMetadata }>> {
     try {
       const [content, stats] = await Promise.all([
         fs.readFile(absolutePath, 'utf-8'),
@@ -280,7 +280,7 @@ export class FileStorageService implements IFileStorage {
       ]);
 
       // Parse JSON
-      let jsonData: any;
+      let jsonData: unknown;
       try {
         jsonData = JSON.parse(content);
       } catch (error) {
@@ -298,8 +298,8 @@ export class FileStorageService implements IFileStorage {
       };
 
       return Result.ok({ content: jsonData, metadata });
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', ErrorType.NOT_FOUND));
       }
 

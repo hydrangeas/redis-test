@@ -16,7 +16,7 @@ export function createLoggerConfig(config: EnvConfig): LoggerOptions {
     level: config.LOG_LEVEL,
     formatters: {
       level: (label: string) => ({ level: label }),
-      bindings: (bindings: any) => ({
+      bindings: (bindings: Record<string, unknown>) => ({
         pid: bindings.pid,
         hostname: bindings.hostname,
         node_version: process.version,
@@ -24,7 +24,7 @@ export function createLoggerConfig(config: EnvConfig): LoggerOptions {
       }),
     },
     serializers: {
-      req: (request: any) => ({
+      req: (request: Record<string, unknown>) => ({
         method: request.method,
         url: request.url,
         path: request.routerPath,
@@ -34,7 +34,7 @@ export function createLoggerConfig(config: EnvConfig): LoggerOptions {
         ip: request.ip,
         userAgent: request.headers?.['user-agent'],
       }),
-      res: (reply: any) => ({
+      res: (reply: Record<string, unknown>) => ({
         statusCode: reply.statusCode,
         responseTime: reply.getResponseTime?.(),
       }),
@@ -79,7 +79,7 @@ export function createLogger(config?: EnvConfig): PinoLogger {
 /**
  * 子ロガーを作成するユーティリティ
  */
-export function createChildLogger(logger: PinoLogger, bindings: Record<string, any>): PinoLogger {
+export function createChildLogger(logger: PinoLogger, bindings: Record<string, unknown>): PinoLogger {
   return logger.child(bindings);
 }
 

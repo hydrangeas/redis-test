@@ -3,7 +3,7 @@ export interface SecurityAlert {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   userId?: string;
   ipAddress?: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   message: string;
 }
 

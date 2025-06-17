@@ -70,8 +70,8 @@ async function start() {
     };
 
     // シグナルハンドラーの登録
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
 
     // 未処理のエラーハンドリング
     process.on('unhandledRejection', (reason, promise) => {
@@ -125,4 +125,4 @@ function validateEnvironment() {
 }
 
 // アプリケーション起動
-start();
+void start();

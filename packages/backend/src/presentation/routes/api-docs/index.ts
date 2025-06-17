@@ -30,7 +30,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, _reply) => {
-      _reply.type('text/yaml');
+      void _reply.type('text/yaml');
       const spec = fastify.swagger();
       return yaml.stringify(spec);
     },

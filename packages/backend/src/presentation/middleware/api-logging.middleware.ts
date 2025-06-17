@@ -20,7 +20,7 @@ import type { Logger } from 'pino';
 
 export const apiLoggingMiddleware = {
   // リクエスト開始時
-  onRequest: async (request: FastifyRequest, _reply: FastifyReply) => {
+  onRequest: (request: FastifyRequest, _reply: FastifyReply) => {
     request.apiLoggingContext = {
       startTime: Date.now(),
       requestId: request.id,
@@ -34,7 +34,7 @@ export const apiLoggingMiddleware = {
   },
 
   // レスポンス送信時
-  onSend: async (request: FastifyRequest, reply: FastifyReply, payload: any) => {
+  onSend: (request: FastifyRequest, reply: FastifyReply, payload: unknown) => {
     const apiLogService = container.resolve<IApiLogService>(DI_TOKENS.ApiLogService);
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
@@ -97,7 +97,7 @@ export const apiLoggingMiddleware = {
 
       if (logEntryResult.isSuccess) {
         // 非同期でログを保存
-        apiLogService.saveLog(logEntryResult.getValue()).catch((error) => {
+        void apiLogService.saveLog(logEntryResult.getValue()).catch((error) => {
           logger.error({ error }, 'Failed to save API log');
         });
       } else {
@@ -111,7 +111,7 @@ export const apiLoggingMiddleware = {
   },
 };
 
-function calculatePayloadSize(payload: any): number {
+function calculatePayloadSize(payload: unknown): number {
   if (!payload) return 0;
 
   if (typeof payload === 'string') {
@@ -154,7 +154,7 @@ function sanitizeEndpoint(url: string): string {
     .join('/');
 }
 
-function extractErrorMessage(payload: any): string | undefined {
+function extractErrorMessage(payload: unknown): string | undefined {
   if (typeof payload === 'string') {
     try {
       const parsed = JSON.parse(payload);
@@ -165,7 +165,8 @@ function extractErrorMessage(payload: any): string | undefined {
   }
 
   if (payload && typeof payload === 'object') {
-    return payload.error || payload.message || payload.detail;
+    const obj = payload as Record<string, unknown>;
+    return obj.error as string || obj.message as string || obj.detail as string;
   }
 
   return undefined;

@@ -129,7 +129,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
         };
 
         // クライアントへのヒント：トークンを削除するよう指示
-        reply.header('Clear-Site-Data', '"storage"');
+        void reply.header('Clear-Site-Data', '"storage"');
 
         return reply.send(response);
       } catch (error) {

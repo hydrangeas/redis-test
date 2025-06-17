@@ -71,9 +71,9 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
         // フィールド選択
         if (fields && fields.length > 0 && Array.isArray(processedContent)) {
-          processedContent = processedContent.map((item: any) => {
-            const filtered: any = {};
-            fields.forEach((field: any) => {
+          processedContent = processedContent.map((item: Record<string, unknown>) => {
+            const filtered: Record<string, unknown> = {};
+            fields.forEach((field: string) => {
               if (field in item) {
                 filtered[field] = item[field];
               }
@@ -104,7 +104,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
         }
 
         // v2では拡張ヘッダーを含む
-        _reply.headers({
+        void _reply.headers({
           'Cache-Control': 'public, max-age=3600',
           ETag: `"${data.checksum}"`,
           'Last-Modified': data.lastModified.toUTCString(),

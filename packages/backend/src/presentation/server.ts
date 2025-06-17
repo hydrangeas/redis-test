@@ -20,7 +20,13 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
-export async function buildServer(): Promise<FastifyInstance<any, any, any, any, TypeBoxTypeProvider>> {
+export async function buildServer(): Promise<FastifyInstance<
+  Record<string, unknown>,
+  Record<string, unknown>,
+  Record<string, unknown>,
+  Record<string, unknown>,
+  TypeBoxTypeProvider
+>> {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   const server = Fastify({
@@ -147,7 +153,7 @@ export async function buildServer(): Promise<FastifyInstance<any, any, any, any,
         },
       },
     },
-    async () => {
+    () => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -176,7 +182,7 @@ export async function buildServer(): Promise<FastifyInstance<any, any, any, any,
         },
       },
     },
-    async () => {
+    () => {
       return {
         name: 'Open Data API',
         version: process.env.API_VERSION || '1.0.0',

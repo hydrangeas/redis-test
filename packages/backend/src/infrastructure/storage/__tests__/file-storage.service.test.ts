@@ -48,7 +48,7 @@ describe('FileStorageService', () => {
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
-    } as any;
+    } as unknown as Logger;
 
     container.register(DI_TOKENS.Logger, { useValue: mockLogger });
     container.register(DI_TOKENS.DataDirectory, { useValue: testDataDir });
@@ -72,7 +72,7 @@ describe('FileStorageService', () => {
         isFile: () => true,
         size: 100,
         mtime: new Date('2024-01-01'),
-      } as any);
+      } as fs.Stats);
 
       const result = await service.readFile(filePath);
 
@@ -90,7 +90,7 @@ describe('FileStorageService', () => {
         isFile: () => true,
         size: 50,
         mtime: new Date(),
-      } as any);
+      } as fs.Stats);
 
       // First read
       await service.readFile(filePath);
@@ -131,7 +131,7 @@ describe('FileStorageService', () => {
         isFile: () => true,
         size: 20,
         mtime: new Date(),
-      } as any);
+      } as fs.Stats);
 
       const result = await service.readFile(filePath);
 
@@ -162,7 +162,7 @@ describe('FileStorageService', () => {
         mtime: new Date('2024-01-01'),
       };
 
-      vi.mocked(fs.stat).mockResolvedValueOnce(stats as any);
+      vi.mocked(fs.stat).mockResolvedValueOnce(stats as fs.Stats);
 
       const result = await service.getFileMetadata(filePath);
 
@@ -181,7 +181,7 @@ describe('FileStorageService', () => {
       vi.mocked(fs.stat).mockResolvedValueOnce({
         isFile: () => false,
         isDirectory: () => true,
-      } as any);
+      } as fs.Stats);
 
       const result = await service.getFileMetadata(dirPath);
 
@@ -196,7 +196,7 @@ describe('FileStorageService', () => {
       const mockStream = { pipe: vi.fn() };
 
       vi.mocked(fs.access).mockResolvedValueOnce(undefined);
-      vi.mocked(createReadStream).mockReturnValueOnce(mockStream as any);
+      vi.mocked(createReadStream).mockReturnValueOnce(mockStream as unknown as ReturnType<typeof createReadStream>);
 
       const result = await service.streamFile(filePath);
 
@@ -214,7 +214,7 @@ describe('FileStorageService', () => {
       const mockStream = { pipe: vi.fn() };
 
       vi.mocked(fs.access).mockResolvedValueOnce(undefined);
-      vi.mocked(createReadStream).mockReturnValueOnce(mockStream as any);
+      vi.mocked(createReadStream).mockReturnValueOnce(mockStream as unknown as ReturnType<typeof createReadStream>);
 
       const result = await service.streamFile(filePath, { start: 100, end: 200 });
 
@@ -233,17 +233,17 @@ describe('FileStorageService', () => {
 
       vi.mocked(fs.stat).mockResolvedValueOnce({
         isDirectory: () => true,
-      } as any);
+      } as fs.Stats);
 
       vi.mocked(fs.readdir)
         .mockResolvedValueOnce([
           { name: 'file1.json', isFile: () => true, isDirectory: () => false },
           { name: 'subdir', isFile: () => false, isDirectory: () => true },
           { name: 'file.txt', isFile: () => true, isDirectory: () => false },
-        ] as any)
+        ] as fs.Dirent[])
         .mockResolvedValueOnce([
           { name: 'file2.json', isFile: () => true, isDirectory: () => false },
-        ] as any);
+        ] as fs.Dirent[]);
 
       const result = await service.listFiles(directory);
 
@@ -259,7 +259,7 @@ describe('FileStorageService', () => {
       vi.mocked(fs.stat).mockResolvedValueOnce({
         isDirectory: () => false,
         isFile: () => true,
-      } as any);
+      } as fs.Stats);
 
       const result = await service.listFiles('file.json');
 

@@ -63,20 +63,20 @@ export default fp(
     });
 
     // カスタムセキュリティヘッダーの追加
-    fastify.addHook('onSend', async (request, reply) => {
+    void fastify.addHook('onSend', (request, reply) => {
       // API固有のセキュリティヘッダー
-      reply.header('X-API-Version', '1.0.0');
+      void reply.header('X-API-Version', '1.0.0');
 
       // キャッシュ制御（認証が必要なエンドポイント）
       if (request.url.startsWith('/api/') && request.url !== '/api/health') {
-        reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        reply.header('Pragma', 'no-cache');
-        reply.header('Expires', '0');
+        void reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        void reply.header('Pragma', 'no-cache');
+        void reply.header('Expires', '0');
       }
 
       // CORS補完ヘッダー
       if (request.method === 'OPTIONS') {
-        reply.header('Access-Control-Max-Age', '86400');
+        void reply.header('Access-Control-Max-Age', '86400');
       }
     });
 

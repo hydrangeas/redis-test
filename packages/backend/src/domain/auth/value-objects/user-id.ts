@@ -88,7 +88,8 @@ export class UserId {
       uuid = crypto.randomUUID();
     } else {
       // Node.js環境
-      const { randomUUID } = require('crypto');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { randomUUID } = require('crypto') as { randomUUID: () => string };
       uuid = randomUUID();
     }
 

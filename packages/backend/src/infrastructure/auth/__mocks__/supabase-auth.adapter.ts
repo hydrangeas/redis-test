@@ -1,4 +1,4 @@
-import type { IAuthAdapter, Session } from '../interfaces/auth-adapter.interface';
+import type { IAuthAdapter, Session, AuthUser, CreateUserData, UpdateUserData } from '../interfaces/auth-adapter.interface';
 import type { TokenPayload } from '@/domain/auth/types/token-payload';
 
 
@@ -6,7 +6,7 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
   private mockTokens = new Map<string, TokenPayload>();
   private mockSessions = new Map<string, Session>();
   private signedOutUsers = new Set<string>();
-  private mockUsers = new Map<string, any>();
+  private mockUsers = new Map<string, AuthUser>();
 
   async verifyToken(token: string): Promise<TokenPayload | null> {
     return this.mockTokens.get(token) || null;
@@ -26,11 +26,11 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
     }
   }
 
-  async getUserById(id: string): Promise<any | null> {
+  async getUserById(id: string): Promise<AuthUser | null> {
     return this.mockUsers.get(id) || null;
   }
 
-  async getUserByEmail(email: string): Promise<any | null> {
+  async getUserByEmail(email: string): Promise<AuthUser | null> {
     for (const user of this.mockUsers.values()) {
       if (user.email === email) {
         return user;
@@ -39,11 +39,11 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
     return null;
   }
 
-  async createUser(userData: any): Promise<any | null> {
+  async createUser(userData: CreateUserData): Promise<AuthUser | null> {
     const user = {
-      id: userData.id,
+      id: `user-${Date.now()}`,
       email: userData.email,
-      email_confirmed_at: userData.email_confirmed ? new Date().toISOString() : null,
+      email: userData.email,
       app_metadata: userData.app_metadata || {},
       user_metadata: userData.user_metadata || {},
       created_at: new Date().toISOString(),
@@ -53,7 +53,7 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
     return user;
   }
 
-  async updateUser(id: string, updates: any): Promise<any | null> {
+  async updateUser(id: string, updates: UpdateUserData): Promise<AuthUser | null> {
     const user = this.mockUsers.get(id);
     if (!user) return null;
 
@@ -83,7 +83,7 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
     return this.signedOutUsers.has(userId);
   }
 
-  setMockUser(id: string, user: any): void {
+  setMockUser(id: string, user: AuthUser): void {
     this.mockUsers.set(id, user);
   }
 

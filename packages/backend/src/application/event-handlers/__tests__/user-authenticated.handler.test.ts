@@ -30,7 +30,7 @@ describe('UserAuthenticatedHandler', () => {
       error: vi.fn(),
       warn: vi.fn(),
       debug: vi.fn(),
-    } as any;
+    } as unknown as Logger;
 
     handler = new UserAuthenticatedHandler(mockAuthLogRepository, mockLogger);
   });
@@ -50,7 +50,7 @@ describe('UserAuthenticatedHandler', () => {
       );
 
       const mockLogId = LogId.create().value!;
-      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
+      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined));
 
       // Act
       await handler.handle(event);
@@ -139,7 +139,7 @@ describe('UserAuthenticatedHandler', () => {
         '', // Invalid empty user agent
       );
 
-      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
+      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined));
 
       // Act
       await handler.handle(event);
