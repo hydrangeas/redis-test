@@ -11,7 +11,6 @@ import { APILogEntry } from '@/domain/log/entities/api-log-entry';
 import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
-
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**

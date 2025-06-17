@@ -1,17 +1,16 @@
 import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
 
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
-import { AuthResult } from '@/domain/log/value-objects';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
+import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
+import { UserId } from '@/domain/auth/value-objects/user-id';
 import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
+import { AuthResult } from '@/domain/log/value-objects';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
 import { Provider } from '@/domain/log/value-objects/provider';
-import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**

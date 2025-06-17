@@ -8,21 +8,21 @@ export * from './api';
 export * from './data';
 
 // Event Handler Registration
-import { DependencyContainer } from 'tsyringe';
-
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { EventLogger } from '@/infrastructure/logging';
 
 import { APIAccessRequestedHandler } from './api/api-access-requested.handler';
-import { AuthenticationFailedHandler } from './auth/authentication-failed.handler';
-import { DataResourceNotFoundHandler } from './data/data-resource-not-found.handler';
-import { DataRetrievedHandler } from './data/data-retrieved.handler';
 import { RateLimitExceededHandler } from './api/rate-limit-exceeded.handler';
+import { AuthenticationFailedHandler } from './auth/authentication-failed.handler';
 import { TokenRefreshedHandler } from './auth/token-refreshed.handler';
 import { UserAuthenticatedHandler } from './auth/user-authenticated.handler';
 import { UserLoggedOutHandler } from './auth/user-logged-out.handler';
+import { DataResourceNotFoundHandler } from './data/data-resource-not-found.handler';
+import { DataRetrievedHandler } from './data/data-retrieved.handler';
+
+import type { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import type { DependencyContainer } from 'tsyringe';
 
 /**
  * すべてのイベントハンドラーをEventBusに登録

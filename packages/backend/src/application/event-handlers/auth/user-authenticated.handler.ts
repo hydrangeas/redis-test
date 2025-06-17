@@ -1,18 +1,16 @@
 import { Logger } from 'pino';
-
 import { injectable, inject } from 'tsyringe';
 
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { AuthResult } from '@/domain/log/value-objects';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
+import { UserAuthenticated } from '@/domain/auth/events/user-authenticated.event';
+import { UserId } from '@/domain/auth/value-objects/user-id';
 import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
+import { AuthResult } from '@/domain/log/value-objects';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { IPAddress as IpAddress } from '@/domain/log/value-objects/ip-address';
 import { Provider } from '@/domain/log/value-objects/provider';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
-import { UserAuthenticated } from '@/domain/auth/events/user-authenticated.event';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
