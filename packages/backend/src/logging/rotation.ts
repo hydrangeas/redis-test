@@ -1,8 +1,9 @@
-import pino from 'pino';
-import { createStream } from 'rotating-file-stream';
+import { existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, mkdirSync } from 'fs';
+
+import pino from 'pino';
+import { createStream } from 'rotating-file-stream';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

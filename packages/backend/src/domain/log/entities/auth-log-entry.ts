@@ -1,5 +1,4 @@
 
-import type { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { ValidationError } from '@/domain/errors/validation-error';
 import { AuthResult } from '@/domain/log/value-objects';
 import { EventType } from '@/domain/log/value-objects/auth-event';
@@ -12,6 +11,7 @@ import type { UserId } from '@/domain/auth/value-objects/user-id';
 import type { AuthEvent} from '@/domain/log/value-objects/auth-event';
 import type { IPAddress } from '@/domain/log/value-objects/ip-address';
 import type { Provider } from '@/domain/log/value-objects/provider';
+import type { UserAgent } from '@/domain/log/value-objects/user-agent';
 
 interface AuthLogEntryProps {
   userId?: UserId;

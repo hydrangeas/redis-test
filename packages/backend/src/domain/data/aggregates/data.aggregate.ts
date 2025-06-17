@@ -10,7 +10,6 @@ import { DataResourceNotFound } from '../events/data-resource-not-found.event';
 
 import type { OpenDataResource } from '../entities/open-data-resource.entity';
 import type { DataPath } from '../value-objects/data-path';
-
 import type { ResourceId } from '../value-objects/resource-id';
 import type { ResourceMetadata } from '../value-objects/resource-metadata';
 

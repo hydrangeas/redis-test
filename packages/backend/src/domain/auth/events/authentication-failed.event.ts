@@ -18,7 +18,7 @@ export class AuthenticationFailed extends DomainEvent {
     return 'AuthenticationFailed';
   }
 
-  getData(): Record<string, any> {
+  getData(): Record<string, unknown> {
     return {
       provider: this.provider,
       reason: this.reason,

@@ -110,13 +110,13 @@ export class ConfigLoader {
       const path = join(projectRoot, file);
       if (existsSync(path)) {
         dotenvConfig({ path });
-        console.log(`Loaded environment from ${file}`);
+        // Loaded environment from ${file}
         break;
       }
     }
   }
 
-  private buildConfig(): any {
+  private buildConfig(): Config {
     const env = process.env.NODE_ENV || 'development';
 
     return {

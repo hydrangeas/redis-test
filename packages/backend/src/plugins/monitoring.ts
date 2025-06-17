@@ -1,9 +1,11 @@
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { Registry, Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client';
-import { Logger } from 'pino';
 import { container } from 'tsyringe';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import type { Logger } from 'pino';
 
 declare module 'fastify' {
   interface FastifyRequest {

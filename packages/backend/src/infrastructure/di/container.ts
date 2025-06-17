@@ -6,37 +6,38 @@ import { container } from 'tsyringe';
 
 import { APIAccessControlUseCase } from '@/application/use-cases/api-access-control.use-case';
 import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
+import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
+import { RateLimitUseCase } from '@/application/use-cases/rate-limit.use-case';
 import { APIAccessControlService } from '@/domain/api/services/api-access-control.service';
 import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { DataAccessService } from '@/domain/data/services/data-access.service';
+import { DomainError } from '@/domain/errors';
+import { Result } from '@/domain/errors/result';
+
 import { DI_TOKENS } from './tokens';
+import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
+import { JWTValidatorService } from '../auth/services/jwt-validator.service';
+import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 import { getEnvConfig, type EnvConfig } from '../config/env.config';
+import { EventBus } from '../events/event-bus';
 import { createLogger } from '../logging';
 
 import { OpenDataRepository } from '../repositories/open-data.repository';
 
 import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
 import type { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
-import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
-import { DataAccessService } from '@/domain/data/services/data-access.service';
-import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
-import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
-import { RateLimitUseCase } from '@/application/use-cases/rate-limit.use-case';
 
 import type { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
 import type { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
 import type { IEventBus } from '@/domain/interfaces/event-bus.interface';
 
-import { EventBus } from '../events/event-bus';
 
 import type { IEventStore } from '@/domain/interfaces/event-store.interface';
 
 import { InMemoryEventStore } from '../events/in-memory-event-store';
-import { JWTValidatorService } from '../auth/services/jwt-validator.service';
 
-import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors';
 
-import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Logger } from 'pino';

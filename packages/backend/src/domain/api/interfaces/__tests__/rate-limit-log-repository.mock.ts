@@ -52,7 +52,7 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 複数のログを一括保存
    */
-  async saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
+  saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
     this.saveManySpy(logs);
 
     try {
@@ -70,7 +70,7 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * ユーザーとエンドポイントの組み合わせでログを検索
    */
-  async findByUserAndEndpoint(
+  findByUserAndEndpoint(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
@@ -99,7 +99,7 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 特定のユーザーの全ログを取得
    */
-  async findByUser(
+  findByUser(
     userId: UserId,
     window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[]>> {
@@ -129,7 +129,7 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 特定のエンドポイントの全ログを取得
    */
-  async findByEndpoint(
+  findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[]>> {
@@ -159,7 +159,7 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 古いログを削除
    */
-  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
+  deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     this.deleteOldLogsSpy(beforeDate);
 
     try {
@@ -180,7 +180,7 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 特定期間のリクエスト数を集計
    */
-  async countRequests(
+  countRequests(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,

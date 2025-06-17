@@ -14,7 +14,7 @@ export class ApiPath {
    * 許可される文字のパターン
    * 英数字、ハイフン、アンダースコア、スラッシュ、ドット
    */
-  private static readonly VALID_PATH_PATTERN = /^[a-zA-Z0-9\-_\/.]+$/;
+  private static readonly VALID_PATH_PATTERN = /^[a-zA-Z0-9\-_/.]+$/;
 
   /**
    * @param value - APIパス

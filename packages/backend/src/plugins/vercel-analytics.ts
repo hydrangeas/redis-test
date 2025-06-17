@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin';
-import { FastifyInstance } from 'fastify';
+
+import type { FastifyInstance } from 'fastify';
 
 // startTime is already declared in monitoring.ts as bigint
 

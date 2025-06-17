@@ -1,4 +1,5 @@
 import pino from 'pino';
+
 import { config, isProduction } from '@/config/index.js';
 
 // カスタムシリアライザー

@@ -20,15 +20,15 @@ export class AuthenticationService {
    * アクセストークンを検証し、認証済みユーザーを取得する
    * 実際のトークン検証はインフラ層に委譲される
    */
-  async validateAccessToken(tokenPayload: TokenPayload | null): Promise<Result<AuthenticatedUser>> {
+  validateAccessToken(tokenPayload: TokenPayload | null): Promise<Result<AuthenticatedUser>> {
     if (!tokenPayload) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError(
           'INVALID_TOKEN',
           'Token payload is null or undefined',
           ErrorType.UNAUTHORIZED,
         ),
-      );
+      ));
     }
 
     // トークンの有効期限チェック
@@ -37,25 +37,25 @@ export class AuthenticationService {
         ? new Date(tokenPayload.exp * 1000).toISOString()
         : 'unknown';
 
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('TOKEN_EXPIRED', 'Access token has expired', ErrorType.UNAUTHORIZED, {
           expiredAt,
         }),
-      );
+      ));
     }
 
     // ユーザー情報の抽出
     try {
       const authenticatedUser = this.extractUserFromToken(tokenPayload);
-      return Result.ok(authenticatedUser);
+      return Promise.resolve(Result.ok(authenticatedUser));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError(
           'TOKEN_EXTRACTION_FAILED',
           error instanceof Error ? error.message : 'Failed to extract user from token',
           ErrorType.UNAUTHORIZED,
         ),
-      );
+      ));
     }
   }
 

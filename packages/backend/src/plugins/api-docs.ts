@@ -1,9 +1,11 @@
-import fp from 'fastify-plugin';
-import { FastifyInstance } from 'fastify';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+import fp from 'fastify-plugin';
 import yaml from 'js-yaml';
+
+import type { FastifyInstance } from 'fastify';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

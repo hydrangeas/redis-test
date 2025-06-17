@@ -1,8 +1,8 @@
 import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
 
-import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
+import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { DataAccessDenied } from '@/domain/data/events/data-access-denied.event';
 import { DataAccessRequested } from '@/domain/data/events/data-access-requested.event';

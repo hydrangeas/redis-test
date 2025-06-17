@@ -1,9 +1,11 @@
 import 'reflect-metadata';
-import { setupDI } from '@/infrastructure/di/container';
-import { buildServer } from '@/presentation/server';
-import { Logger } from 'pino';
 import { container } from 'tsyringe';
+
+import { setupDI } from '@/infrastructure/di/container';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { buildServer } from '@/presentation/server';
+
+import type { Logger } from 'pino';
 
 /**
  * アプリケーションのエントリーポイント
