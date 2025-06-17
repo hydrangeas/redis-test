@@ -192,7 +192,7 @@ export function setupDependencies(): MockDependencies {
   };
 }
 
-export function createMockUser(tier: TierLevel | string) {
+export function createMockUser(tier: TierLevel | string): User {
   const emailResult = Email.create('test@example.com');
   const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000'); // Valid UUID v4
   const tierLevel = typeof tier === 'string' ? (tier.toUpperCase() as TierLevel) : tier;

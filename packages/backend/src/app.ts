@@ -1,11 +1,10 @@
 import 'reflect-metadata';
 import fastify from 'fastify';
 import { container } from 'tsyringe';
+import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 
 import { setupDI, DI_TOKENS } from './infrastructure/di';
 import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
-
-import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 import type { EnvConfig } from './infrastructure/config';
 
 export default async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {

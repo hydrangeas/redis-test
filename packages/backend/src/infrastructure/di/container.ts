@@ -460,15 +460,15 @@ function registerInfrastructureServices(container: DependencyContainer): void {
  * テスト用インフラストラクチャサービスの登録
  */
 function registerTestInfrastructureServices(container: DependencyContainer): void {
-  // TransactionManagerのモック登録
-  container.register(DI_TOKENS.TransactionManager, {
-    useValue: {
-      transaction: async (fn: () => Promise<unknown>) => {
-        // テスト環境ではトランザクションなしで直接実行
-        return fn();
-      },
-    },
-  });
+  // TransactionManagerのモック登録（必要に応じて後で追加）
+  // container.register(DI_TOKENS.TransactionManager, {
+  //   useValue: {
+  //     transaction: async (fn: () => Promise<unknown>) => {
+  //       // テスト環境ではトランザクションなしで直接実行
+  //       return fn();
+  //     },
+  //   },
+  // });
 
   // RateLimitLogRepositoryの登録（InMemoryRateLimitServiceが依存）
   const { SupabaseRateLimitLogRepository } = require('../repositories/api/supabase-rate-limit-log.repository');

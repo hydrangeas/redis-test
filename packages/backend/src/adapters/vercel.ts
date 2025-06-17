@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 import type { FastifyInstance } from 'fastify';
 
 export class VercelAdapter {
