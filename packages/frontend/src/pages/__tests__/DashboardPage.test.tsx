@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "@/test/test-utils";
 import { DashboardPage } from "../DashboardPage";
 import { supabase } from "@/lib/supabase";
+import { AuthProvider } from "@/hooks/useAuth";
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -22,6 +23,15 @@ interface MockUser {
   created_at: string;
 }
 
+// Helper to render DashboardPage with AuthProvider
+const renderDashboardPage = () => {
+  return renderWithRouter(
+    <AuthProvider>
+      <DashboardPage />
+    </AuthProvider>
+  );
+};
+
 describe("DashboardPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -33,7 +43,7 @@ describe("DashboardPage", () => {
       error: null,
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith("/");
@@ -54,7 +64,7 @@ describe("DashboardPage", () => {
       error: null,
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByText("プラン:")).toBeInTheDocument();
@@ -77,7 +87,7 @@ describe("DashboardPage", () => {
       error: null,
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByText("APIキー:")).toBeInTheDocument();
@@ -109,7 +119,7 @@ describe("DashboardPage", () => {
       },
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByTestId("copy-api-key-button")).toBeInTheDocument();
@@ -142,7 +152,7 @@ describe("DashboardPage", () => {
       error: null,
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByText("使用状況")).toBeInTheDocument();
@@ -171,7 +181,7 @@ describe("DashboardPage", () => {
       error: null,
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByText("ログアウト")).toBeInTheDocument();
@@ -209,7 +219,7 @@ describe("DashboardPage", () => {
     // Mock window.alert
     window.alert = vi.fn();
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByText("ログアウト")).toBeInTheDocument();
@@ -247,7 +257,7 @@ describe("DashboardPage", () => {
     // Mock window.alert
     window.alert = vi.fn();
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(screen.getByText("ログアウト")).toBeInTheDocument();
@@ -266,7 +276,7 @@ describe("DashboardPage", () => {
       () => new Promise(() => {}) // Never resolves
     );
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
   });
@@ -277,7 +287,7 @@ describe("DashboardPage", () => {
       error: new Error("Auth error"),
     });
 
-    renderWithRouter(<DashboardPage />);
+    renderDashboardPage();
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith("/");

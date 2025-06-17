@@ -156,12 +156,12 @@ export const DashboardPage: React.FC = () => {
     {
       key: "count" as keyof UsageStats,
       header: "使用回数",
-      render: (_: any, item: UsageStats) => `${item.count} / ${item.limit}`,
+      render: (_: UsageStats["count"], item: UsageStats) => `${item.count} / ${item.limit}`,
     },
     {
       key: "resetAt" as keyof UsageStats,
       header: "リセット時刻",
-      render: (value: any) => new Date(value).toLocaleTimeString("ja-JP"),
+      render: (value: UsageStats["resetAt"]) => new Date(value).toLocaleTimeString("ja-JP"),
       hideOnMobile: true,
     },
   ];

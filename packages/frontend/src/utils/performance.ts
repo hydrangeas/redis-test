@@ -127,7 +127,6 @@ export const measure = (name: string, startMark: string, endMark?: string) => {
       const lastEntry = entries[entries.length - 1];
 
       if (lastEntry && import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
         console.log(
           `[Performance] ${name}: ${lastEntry.duration.toFixed(2)}ms`
         );
@@ -135,7 +134,6 @@ export const measure = (name: string, startMark: string, endMark?: string) => {
 
       return lastEntry?.duration;
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(`Failed to measure ${name}:`, error);
     }
   }
