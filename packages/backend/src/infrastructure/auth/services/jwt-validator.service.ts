@@ -1,10 +1,14 @@
-import { injectable, inject } from 'tsyringe';
 import { jwtDecode } from 'jwt-decode';
-import { IJWTValidator } from '../interfaces/jwt-validator.interface';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import { IJWTValidator } from '../interfaces/jwt-validator.interface';
+
 
 @injectable()
 export class JWTValidatorService implements IJWTValidator {

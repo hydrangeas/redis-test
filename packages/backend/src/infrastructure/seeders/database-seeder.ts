@@ -1,9 +1,13 @@
-import { injectable, inject } from 'tsyringe';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
-import { faker } from '@faker-js/faker/locale/ja';
 import { createHash } from 'crypto';
+
+import { faker } from '@faker-js/faker/locale/ja';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+
 
 @injectable()
 export class DatabaseSeeder {

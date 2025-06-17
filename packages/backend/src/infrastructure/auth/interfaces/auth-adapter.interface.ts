@@ -1,4 +1,4 @@
-import { TokenPayload } from '@/domain/auth/types/token-payload';
+import type { TokenPayload } from '@/domain/auth/types/token-payload';
 
 export interface IAuthAdapter {
   verifyToken(token: string): Promise<TokenPayload | null>;

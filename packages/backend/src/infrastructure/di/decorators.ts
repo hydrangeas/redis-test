@@ -4,6 +4,7 @@
  */
 
 import { inject, injectable, singleton, scoped } from 'tsyringe';
+
 import { DI_TOKENS } from './tokens';
 
 /**

@@ -1,4 +1,5 @@
 import { config as appConfig } from '../../config/index.js';
+
 import type { EnvConfig } from './env.config.js';
 
 /**

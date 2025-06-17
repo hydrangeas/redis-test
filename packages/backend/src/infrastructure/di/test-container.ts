@@ -4,14 +4,19 @@
  */
 
 import 'reflect-metadata';
-import { container, DependencyContainer } from 'tsyringe';
-import { DI_TOKENS } from './tokens';
-import { Logger } from 'pino';
-import { createLogger } from '../logging';
-import { EnvConfig } from '../config/env.config';
 import path from 'path';
-import { Result } from '@/domain/shared/result';
+
+import { container } from 'tsyringe';
 import { vi } from 'vitest';
+
+import { Result } from '@/domain/shared/result';
+
+import { DI_TOKENS } from './tokens';
+import { createLogger } from '../logging';
+
+import type { EnvConfig } from '../config/env.config';
+import type { Logger } from 'pino';
+import type { DependencyContainer } from 'tsyringe';
 
 /**
  * Default test environment configuration

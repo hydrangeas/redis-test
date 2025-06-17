@@ -1,12 +1,13 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
 import {
   IRateLimitService,
   RateLimitCheckResult,
 } from '@/domain/api/interfaces/rate-limit-service.interface';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
 import { metrics } from '@/plugins/monitoring';
 
 interface WindowEntry {

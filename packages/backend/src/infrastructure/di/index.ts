@@ -47,7 +47,9 @@ export {
 } from './decorators';
 
 // Re-export TSyringe utilities for convenience
-import { container, ValueProvider } from 'tsyringe';
+import type { ValueProvider } from 'tsyringe';
+
+import { container } from 'tsyringe';
 export { container };
 
 // Import setupDI for local use

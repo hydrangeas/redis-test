@@ -1,8 +1,11 @@
-import { injectable, inject } from 'tsyringe';
 import { Logger } from 'pino';
-import { DI_TOKENS } from '../di';
+import { injectable, inject } from 'tsyringe';
+
+
 import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
 import { DomainEvent } from '@/domain/shared/domain-event';
+
+import { DI_TOKENS } from '../di';
 
 /**
  * ドメインイベントのロギングを行うハンドラー

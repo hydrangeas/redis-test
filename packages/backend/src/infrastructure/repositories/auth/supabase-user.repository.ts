@@ -1,14 +1,15 @@
-import { injectable, inject } from 'tsyringe';
-import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
-import { User, UserProps } from '@/domain/auth/entities/user';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Email } from '@/domain/auth/value-objects/email';
-import { UserTier } from '@/domain/auth/value-objects/user-tier';
-import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { User, UserProps } from '@/domain/auth/entities/user';
+import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
+import { Email } from '@/domain/auth/value-objects/email';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**

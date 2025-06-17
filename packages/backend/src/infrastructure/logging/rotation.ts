@@ -1,9 +1,10 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 import pino, { type LoggerOptions } from 'pino';
 // @ts-ignore - pino-multi-stream doesn't have type declarations
 import pinoMultiStream from 'pino-multi-stream';
 import { createStream } from 'rotating-file-stream';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

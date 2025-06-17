@@ -1,14 +1,16 @@
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
 import { injectable, inject } from 'tsyringe';
+
 import {
   ISecureFileAccess,
   SecurityContext,
   ISecurityAuditService,
 } from '@/domain/data/interfaces/secure-file-access.interface';
-import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 
 interface FileAccessPolicy {
   allowedExtensions: string[];
@@ -124,7 +126,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
 
   private sanitizePath(inputPath: string): string {
     // Remove dangerous characters
-    let sanitized = inputPath
+    const sanitized = inputPath
       .trim()
       .replace(/[<>:"|?*\x00-\x1f\x80-\x9f]/g, '') // Control chars and dangerous chars
       .replace(/\\/g, '/') // Normalize backslashes to forward slashes

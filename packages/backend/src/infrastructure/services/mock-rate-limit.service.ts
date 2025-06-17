@@ -1,10 +1,11 @@
 import { injectable } from 'tsyringe';
+
 import {
   IRateLimitService,
   RateLimitCheckResult,
 } from '@/domain/api/interfaces/rate-limit-service.interface';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 /**
  * レート制限サービスのモック実装

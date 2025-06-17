@@ -1,10 +1,11 @@
-import { injectable, inject } from 'tsyringe';
 import jwt from 'jsonwebtoken';
+import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
 import { IJWTService, JWTPayload } from '@/application/interfaces/jwt.service.interface';
 import { Result } from '@/domain/shared/result';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { EnvConfig } from '@/infrastructure/config';
-import { Logger } from 'pino';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 @injectable()
 export class JWTService implements IJWTService {

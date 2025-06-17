@@ -1,5 +1,6 @@
-import { IAuthAdapter, Session } from '../interfaces/auth-adapter.interface';
-import { TokenPayload } from '@/domain/auth/types/token-payload';
+import type { IAuthAdapter, Session } from '../interfaces/auth-adapter.interface';
+import type { TokenPayload } from '@/domain/auth/types/token-payload';
+
 
 export class MockSupabaseAuthAdapter implements IAuthAdapter {
   private mockTokens = new Map<string, TokenPayload>();

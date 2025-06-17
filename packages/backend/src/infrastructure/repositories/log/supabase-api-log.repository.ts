@@ -1,19 +1,20 @@
-import { injectable, inject } from 'tsyringe';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
-import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
-import { Endpoint } from '@/domain/api/value-objects/endpoint';
+import { injectable, inject } from 'tsyringe';
+
 import { ApiPath } from '@/domain/api/value-objects/api-path';
+import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
+import { LogId } from '@/domain/log/value-objects/log-id';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface APILogRecord {
   id: string;

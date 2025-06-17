@@ -1,20 +1,20 @@
-import { injectable, inject } from 'tsyringe';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { EventType } from '@/domain/log/value-objects/auth-event';
-import { IPAddress } from '@/domain/log/value-objects/ip-address';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
-import { AuthEvent } from '@/domain/log/value-objects/auth-event';
-import { Provider } from '@/domain/log/value-objects/provider';
-import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { injectable, inject } from 'tsyringe';
+
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { AuthResult } from '@/domain/log/value-objects';
+import { EventType , AuthEvent } from '@/domain/log/value-objects/auth-event';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { LogId } from '@/domain/log/value-objects/log-id';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface AuthLogRecord {
   id: string;

@@ -1,7 +1,10 @@
-import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
+import pino from 'pino';
 import { container } from 'tsyringe';
+
 import { DI_TOKENS } from '../di';
+
 import type { EnvConfig } from '../config';
+import type { Logger as PinoLogger, LoggerOptions } from 'pino';
 
 /**
  * Pinoロガーのカスタム設定を作成

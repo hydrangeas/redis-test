@@ -1,7 +1,10 @@
-import { FastifyServerOptions } from 'fastify';
 import { randomUUID } from 'crypto';
+
+
 import { createLogger } from './logger';
+
 import type { EnvConfig } from '../config';
+import type { FastifyServerOptions } from 'fastify';
 
 /**
  * Fastify用のロガー設定を生成

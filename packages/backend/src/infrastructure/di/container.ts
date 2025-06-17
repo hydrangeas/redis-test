@@ -1,33 +1,46 @@
 import 'reflect-metadata';
-import { container, DependencyContainer } from 'tsyringe';
-import { Logger } from 'pino';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import path from 'path';
+
+import { createClient } from '@supabase/supabase-js';
+import { container } from 'tsyringe';
+
+import { APIAccessControlUseCase } from '@/application/use-cases/api-access-control.use-case';
+import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import { APIAccessControlService } from '@/domain/api/services/api-access-control.service';
+import { AuthenticationService } from '@/domain/auth/services/authentication.service';
 import { DI_TOKENS } from './tokens';
 import { getEnvConfig, type EnvConfig } from '../config/env.config';
 import { createLogger } from '../logging';
-import path from 'path';
-import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
-import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
-import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
-import { AuthenticationService } from '@/domain/auth/services/authentication.service';
-import { APIAccessControlService } from '@/domain/api/services/api-access-control.service';
-import { DataAccessService } from '@/domain/data/services/data-access.service';
+
+import { OpenDataRepository } from '../repositories/open-data.repository';
+
 import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
-import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import type { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
+import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
+import { DataAccessService } from '@/domain/data/services/data-access.service';
 import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
 import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
 import { RateLimitUseCase } from '@/application/use-cases/rate-limit.use-case';
-import { APIAccessControlUseCase } from '@/application/use-cases/api-access-control.use-case';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+
+import type { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
+import type { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import type { IEventBus } from '@/domain/interfaces/event-bus.interface';
+
 import { EventBus } from '../events/event-bus';
-import { IEventStore } from '@/domain/interfaces/event-store.interface';
+
+import type { IEventStore } from '@/domain/interfaces/event-store.interface';
+
 import { InMemoryEventStore } from '../events/in-memory-event-store';
-import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
-import { OpenDataRepository } from '../repositories/open-data.repository';
-import { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
 import { JWTValidatorService } from '../auth/services/jwt-validator.service';
+
 import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors';
+
+import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Logger } from 'pino';
+import type { DependencyContainer } from 'tsyringe';
 
 /**
  * DIコンテナのセットアップ

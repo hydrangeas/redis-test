@@ -1,13 +1,14 @@
-import { injectable, inject } from 'tsyringe';
-import { IApiLogService, ApiUsageStats } from '@/domain/log/interfaces/api-log-service.interface';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
-import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
+import { IApiLogService, ApiUsageStats } from '@/domain/log/interfaces/api-log-service.interface';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface QueueItem {
   entry: APILogEntry;

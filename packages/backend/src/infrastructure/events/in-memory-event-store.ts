@@ -1,4 +1,5 @@
 import { injectable } from 'tsyringe';
+
 import { IEventStore, DeadLetterEvent } from '@/domain/interfaces/event-store.interface';
 import { DomainEvent } from '@/domain/shared/domain-event';
 

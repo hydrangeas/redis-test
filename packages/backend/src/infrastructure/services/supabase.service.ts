@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { injectable, singleton } from 'tsyringe';
+
 import { EnvConfig } from '../config/env.config';
 
 @injectable()
