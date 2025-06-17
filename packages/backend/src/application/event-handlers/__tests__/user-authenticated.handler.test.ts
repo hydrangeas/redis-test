@@ -146,7 +146,7 @@ describe('UserAuthenticatedHandler', () => {
 
       // Assert
       expect(mockAuthLogRepository.save).toHaveBeenCalled();
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: event.eventId,

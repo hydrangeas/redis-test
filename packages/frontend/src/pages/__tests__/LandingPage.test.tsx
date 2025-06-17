@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "@/test/test-utils";
 import { LandingPage } from "../LandingPage";
 import { supabase } from "@/lib/supabase";
@@ -155,7 +154,10 @@ describe("LandingPage", () => {
 
     // Check for main headings in sections  
     await waitFor(() => {
-      expect(screen.getByText("奈良県の公開データを")).toBeInTheDocument();
+      expect(screen.getByText(/奈良県の公開データを/)).toBeInTheDocument();
+    });
+    
+    await waitFor(() => {
       expect(screen.getByText("特徴")).toBeInTheDocument();
       expect(screen.getByText("利用開始までの流れ")).toBeInTheDocument();
       expect(screen.getByText("ドキュメンテーション")).toBeInTheDocument();

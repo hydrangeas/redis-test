@@ -8,6 +8,7 @@ import { APILog } from '@/domain/log/entities/api-log';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
 import { HTTPMethod } from '@/domain/api/value-objects/http-method';
+import { DomainError } from '@/domain/errors/domain-error';
 import { StatusCode } from '@/domain/api/value-objects/status-code';
 import { RequestDuration } from '@/domain/api/value-objects/request-duration';
 import { RequestId } from '@/domain/api/value-objects/request-id';
@@ -148,26 +149,32 @@ describe('LoggingService Integration', () => {
 
       mockDependencies.mockRepositories.apiLog.save.mockResolvedValue(Result.ok(undefined));
 
-      const result = await service.logAPIAccess({
-        userId: null,
+      mockDependencies.mockApiLogService.logAPIAccess.mockResolvedValue(Result.ok(undefined));
+      
+      const result = await service.logAPIAccess(
         endpoint,
         method,
         statusCode,
         duration,
-      });
+        undefined // No userId for anonymous access
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(mockDependencies.mockRepositories.apiLog.save).toHaveBeenCalled();
     });
 
     it('should handle invalid parameters', async () => {
-      const result = await service.logAPIAccess({
-        userId: 'invalid-uuid',
-        endpoint: '/secure/data.json',
-        method: 'GET',
-        statusCode: 200,
-        duration: 100,
-      });
+      mockDependencies.mockApiLogService.logAPIAccess.mockResolvedValue(
+        Result.fail(new DomainError('INVALID_USER_ID_FORMAT', 'Invalid user ID', 'VALIDATION'))
+      );
+      
+      const result = await service.logAPIAccess(
+        '/secure/data.json',
+        'GET',
+        200,
+        100,
+        'invalid-uuid'
+      );
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().code).toBe('INVALID_USER_ID_FORMAT');

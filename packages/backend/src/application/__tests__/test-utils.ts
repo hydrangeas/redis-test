@@ -81,7 +81,7 @@ interface MockDependencies {
 export function setupDependencies(): MockDependencies {
   const mockEventBus = new EventEmitter();
   // EventEmitter uses emit, not publish
-  (mockEventBus as EventEmitter & { publish: ReturnType<typeof vi.fn> }).publish = vi.fn(() => Promise.resolve());
+  (mockEventBus as any).publish = vi.fn(() => Promise.resolve());
 
   const mockRepositories = {
     authentication: createMockAuthRepository(),
@@ -217,10 +217,10 @@ export function createMockUser(tier: TierLevel | string) {
 }
 
 export function createMockAuthRepository(): {
-  findByEmail: ReturnType<typeof vi.fn>;
-  findById: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
+  findByUserId: ReturnType<typeof vi.fn>;
+  updateLastActivity: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
 } {
   return {
