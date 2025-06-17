@@ -159,6 +159,14 @@ export const DashboardPage: React.FC = () => {
       render: (_: UsageStats["count"], item: UsageStats) => `${item.count} / ${item.limit}`,
     },
     {
+      key: "count" as keyof UsageStats,
+      header: "使用率",
+      render: (_: UsageStats["count"], item: UsageStats) => {
+        const percentage = Math.round((item.count / item.limit) * 100);
+        return `${percentage}%`;
+      },
+    },
+    {
       key: "resetAt" as keyof UsageStats,
       header: "リセット時刻",
       render: (value: UsageStats["resetAt"]) => new Date(value).toLocaleTimeString("ja-JP"),

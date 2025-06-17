@@ -11,19 +11,19 @@ export const handlers = [
   http.get("/api/secure/:id/:filename", ({ params }) => {
     const { id, filename } = params;
 
-    // Simulate rate limit exceeded
-    if (Math.random() < 0.1) {
-      return HttpResponse.json(
-        {
-          type: "https://example.com/errors/rate-limit-exceeded",
-          title: "Rate limit exceeded",
-          status: 429,
-          detail: "API rate limit exceeded. Please try again later.",
-          instance: `/secure/${id}/${filename}`,
-        },
-        { status: 429 }
-      );
-    }
+    // Simulate rate limit exceeded - disabled for tests
+    // if (Math.random() < 0.1) {
+    //   return HttpResponse.json(
+    //     {
+    //       type: "https://example.com/errors/rate-limit-exceeded",
+    //       title: "Rate limit exceeded",
+    //       status: 429,
+    //       detail: "API rate limit exceeded. Please try again later.",
+    //       instance: `/secure/${id}/${filename}`,
+    //     },
+    //     { status: 429 }
+    //   );
+    // }
 
     // Simulate not found
     if (id === "404" || filename === "notfound.json") {

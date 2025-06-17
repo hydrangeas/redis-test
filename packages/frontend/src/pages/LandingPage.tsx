@@ -52,7 +52,7 @@ export const LandingPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <ResponsiveHeader />
 
-      <main className="main">
+      <main className="main" role="main">
         <section className="hero py-12 md:py-20 px-responsive">
           <div className="container mx-auto max-w-6xl">
             <h2 className="heading-responsive font-bold text-gray-900 text-center mb-6">
