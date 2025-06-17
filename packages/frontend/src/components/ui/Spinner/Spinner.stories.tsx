@@ -148,7 +148,7 @@ export const LoadingCard: Story = {
 };
 
 export const OverlayDemo: Story = {
-  render: () => {
+  render: function OverlayDemoComponent() {
     const [isLoading, setIsLoading] = React.useState(false);
 
     const handleLoad = () => {
@@ -174,7 +174,7 @@ export const OverlayDemo: Story = {
 };
 
 export const FullScreenOverlay: Story = {
-  render: () => {
+  render: function FullScreenOverlayComponent() {
     const [isLoading, setIsLoading] = React.useState(false);
 
     const handleLoad = () => {
@@ -208,7 +208,7 @@ export const NoBlurOverlay: Story = {
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold mb-4">Content Area</h3>
           <p className="text-gray-600 dark:text-gray-400">
-            This overlay doesn't blur the background.
+            This overlay doesn&apos;t blur the background.
           </p>
         </CardContent>
       </Card>

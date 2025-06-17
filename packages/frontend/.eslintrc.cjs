@@ -30,7 +30,7 @@ module.exports = {
     }],
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "no-console": ["error", { allow: ["warn", "error"] }],
+    "no-console": ["warn", { allow: ["warn", "error", "log"] }],
   },
   settings: {
     react: {

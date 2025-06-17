@@ -3,7 +3,7 @@ import { useCallback } from "react";
 
 interface NavigationOptions {
   replace?: boolean;
-  state?: any;
+  state?: unknown;
   preserveQuery?: boolean;
 }
 

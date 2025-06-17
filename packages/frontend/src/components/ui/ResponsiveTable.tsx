@@ -4,7 +4,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 interface Column<T> {
   key: keyof T;
   header: string;
-  render?: (value: any, item: T) => React.ReactNode;
+  render?: (value: T[keyof T], item: T) => React.ReactNode;
   hideOnMobile?: boolean;
 }
 
