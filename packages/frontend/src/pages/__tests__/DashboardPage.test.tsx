@@ -7,6 +7,11 @@ import { supabase } from "@/lib/supabase";
 import { AuthProvider } from "@/hooks/useAuth";
 
 const mockNavigate = vi.fn();
+
+// Mock ResponsiveHeader to avoid useAuth context issues
+vi.mock("@/components/Header/ResponsiveHeader", () => ({
+  ResponsiveHeader: () => <div data-testid="header">Header</div>,
+}));
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
@@ -37,7 +42,7 @@ describe("DashboardPage", () => {
     vi.clearAllMocks();
   });
 
-  it("should redirect to home if user is not authenticated", async () => {
+  it("should redirect to login if user is not authenticated", async () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: null },
       error: null,
@@ -46,7 +51,7 @@ describe("DashboardPage", () => {
     renderDashboardPage();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
   });
 
@@ -113,10 +118,11 @@ describe("DashboardPage", () => {
 
     // Mock clipboard API
     const mockWriteText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
         writeText: mockWriteText,
       },
+      configurable: true,
     });
 
     renderDashboardPage();
@@ -290,7 +296,7 @@ describe("DashboardPage", () => {
     renderDashboardPage();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
   });
 });
