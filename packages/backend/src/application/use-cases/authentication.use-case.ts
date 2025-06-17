@@ -1,21 +1,22 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
+import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
+import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
+import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
+import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
+import { IJWTValidator } from '@/infrastructure/auth/interfaces/jwt-validator.interface';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import { ApplicationError } from '../errors/application-error';
+import { ApplicationResult , Result } from '../errors/result';
 import {
   IAuthenticationUseCase,
   TokenRefreshResult,
   TokenValidationResult,
 } from '../interfaces/authentication-use-case.interface';
-import { Result } from '../errors/result';
-import { ApplicationError } from '../errors/application-error';
-import { ApplicationResult } from '../errors/result';
-import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
-import { IJWTValidator } from '@/infrastructure/auth/interfaces/jwt-validator.interface';
-import { AuthenticationService } from '@/domain/auth/services/authentication.service';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
-import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
-import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
-import { Logger } from 'pino';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 @injectable()
 export class AuthenticationUseCase implements IAuthenticationUseCase {
@@ -58,7 +59,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           'JWT_VERIFICATION_FAILED',
           token.substring(0, 10) + '...',
         );
-        await this.eventBus.publish(failureEvent);
+        this.eventBus.publish(failureEvent);
 
         return ApplicationResult.fail(
           new ApplicationError(
@@ -85,7 +86,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           'unknown', // userAgent (TODO: get from request)
           tokenPayload.sub, // attemptedUserId
         );
-        await this.eventBus.publish(failureEvent);
+        this.eventBus.publish(failureEvent);
 
         return ApplicationResult.fail(
           new ApplicationError('TOKEN_VALIDATION_FAILED', error.message, 'UNAUTHORIZED'),
@@ -173,7 +174,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
         1, // First refresh
         refreshToken.substring(0, 10), // Session ID proxy
       );
-      await this.eventBus.publish(refreshEvent);
+      this.eventBus.publish(refreshEvent);
 
       this.logger.info(
         {
@@ -223,7 +224,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       // Publish user logged out event
       const logoutEvent = new UserLoggedOut(userId, 1, userId, 'user_initiated');
-      await this.eventBus.publish(logoutEvent);
+      this.eventBus.publish(logoutEvent);
 
       this.logger.info(
         {

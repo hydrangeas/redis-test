@@ -1,6 +1,7 @@
-import { Result } from '@/domain/shared/result';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { RateLimitCheckResult } from './rate-limit-use-case.interface';
+import type { RateLimitCheckResult } from './rate-limit-use-case.interface';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Result } from '@/domain/shared/result';
+
 
 /**
  * APIアクセス許可の結果

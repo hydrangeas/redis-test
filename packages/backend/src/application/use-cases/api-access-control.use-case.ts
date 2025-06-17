@@ -1,22 +1,23 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
 import {
   IAPIAccessControlUseCase,
   APIAccessDecision,
   APIAccessMetadata,
 } from '@/application/interfaces/api-access-control-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
 import { InvalidAPIAccess } from '@/domain/api/events/invalid-api-access.event';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
-import { UserId } from '@/domain/auth/value-objects/user-id';
+import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
 import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError } from '@/domain/errors/domain-error';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { Result } from '@/domain/shared/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
  * APIアクセス制御ユースケース
@@ -101,7 +102,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       );
 
       // 4. ドメインイベントの発行
-      await this.eventBus.publish(
+      this.eventBus.publish(
         new APIAccessRequested(
           user.userId.toString(), // aggregateId
           user.userId.toString(), // userId
@@ -115,7 +116,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
 
       // レート制限に引っかかった場合
       if (!rateLimitStatus.allowed) {
-        await this.eventBus.publish(
+        this.eventBus.publish(
           new InvalidAPIAccess(
             user.userId.toString(),
             endpoint,
@@ -174,7 +175,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       // 公開エンドポイントへのアクセスログを記録
       await this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
 
-      return Result.ok(undefined as any);
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error(
         {
@@ -235,7 +236,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   ): Promise<void> {
     await this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
 
-    await this.eventBus.publish(
+    this.eventBus.publish(
       new InvalidAPIAccess(userId.toString(), endpoint, method, 'unauthorized', new Date()),
     );
   }

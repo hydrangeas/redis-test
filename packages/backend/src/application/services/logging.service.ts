@@ -1,19 +1,20 @@
 import { injectable, inject } from 'tsyringe';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-import { Provider } from '@/domain/log/value-objects/provider';
-import { IPAddress } from '@/domain/log/value-objects/ip-address';
-import { UserAgent } from '@/domain/log/value-objects/user-agent';
+
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
-import { AuthResult } from '@/domain/log/value-objects/auth-result';
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { APILogService } from '@/domain/log/services/api-log.service';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
+import { AuthResult } from '@/domain/log/value-objects/auth-result';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 export interface LoggingMetadata {
   provider?: string;
@@ -21,14 +22,14 @@ export interface LoggingMetadata {
   userAgent?: string;
   reason?: string;
   attemptNumber?: number;
-  additionalInfo?: Record<string, any>;
+  additionalInfo?: Record<string, unknown>;
 }
 
 export interface APILogMetadata {
   correlationId?: string;
   traceId?: string;
   parentSpanId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -145,8 +146,8 @@ export class LoggingService {
       duration: responseTime,
       requestId: metadata?.correlationId,
       correlationId: metadata?.correlationId,
-      ipAddress: (metadata as any)?.ipAddress,
-      userAgent: (metadata as any)?.userAgent,
+      ipAddress: (metadata as APILogMetadata & { ipAddress?: string })?.ipAddress,
+      userAgent: (metadata as APILogMetadata & { userAgent?: string })?.userAgent,
     });
   }
 

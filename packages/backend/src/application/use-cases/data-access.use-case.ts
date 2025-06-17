@@ -1,19 +1,20 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
-import { Result } from '@/domain/shared/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+
 import { IRateLimitService } from '@/domain/api/interfaces/rate-limit-service.interface';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { DataPath } from '@/domain/data/value-objects/data-path';
+import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
-import { ApiPath } from '@/domain/api/value-objects/api-path';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import { DataPath } from '@/domain/data/value-objects/data-path';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
+import { Result } from '@/domain/shared/result';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
 
 interface DataAccessRequest {
   path: string;
@@ -92,7 +93,7 @@ export class DataAccessUseCase {
           endpoint,
           statusCode: 404,
           responseTime: Date.now() - startTime,
-          error: dataResult.getError() instanceof DomainError ? (dataResult.getError() as DomainError).code : 'UNKNOWN_ERROR',
+          error: dataResult.getError() instanceof DomainError ? (dataResult.getError()).code : 'UNKNOWN_ERROR',
         });
 
         return Result.fail(dataResult.getError());
@@ -124,7 +125,7 @@ export class DataAccessUseCase {
           endpoint,
           statusCode: 500,
           responseTime: Date.now() - startTime,
-          error: contentResult.getError() instanceof DomainError ? (contentResult.getError() as DomainError).code : 'UNKNOWN_ERROR',
+          error: contentResult.getError() instanceof DomainError ? (contentResult.getError()).code : 'UNKNOWN_ERROR',
         });
 
         return Result.fail(contentResult.getError());

@@ -1,5 +1,5 @@
-import { Result } from '@/domain/shared/result';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Result } from '@/domain/shared/result';
 
 /**
  * データ取得ユースケースのインターフェース
@@ -17,7 +17,7 @@ export interface IDataRetrievalUseCase {
     user: AuthenticatedUser,
   ): Promise<
     Result<{
-      content: any;
+      content: unknown;
       checksum: string;
       lastModified: Date;
     }>
@@ -48,7 +48,7 @@ export interface IDataRetrievalUseCase {
     etag: string,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       newEtag?: string;
     }>
@@ -65,7 +65,7 @@ export interface IDataRetrievalUseCase {
     ifModifiedSince: Date,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       lastModified?: Date;
     }>
