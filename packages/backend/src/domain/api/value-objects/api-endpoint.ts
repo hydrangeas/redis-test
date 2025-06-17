@@ -44,7 +44,7 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
     return this.props.type.isPublic();
   }
 
-  get requiredTier() {
+  get requiredTier(): string {
     return this.props.type.requiredTier;
   }
 

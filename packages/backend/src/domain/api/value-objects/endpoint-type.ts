@@ -78,7 +78,7 @@ export class EndpointType {
   /**
    * 指定されたティアがこのエンドポイントにアクセスできるかチェック
    */
-  public canBeAccessedByTier(userTier: any): boolean {
+  public canBeAccessedByTier(userTier: { level: string }): boolean {
     // For public endpoints, any tier can access
     if (this.isPublic()) {
       return true;

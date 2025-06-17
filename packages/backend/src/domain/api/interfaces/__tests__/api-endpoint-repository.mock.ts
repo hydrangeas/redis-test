@@ -72,45 +72,45 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
   /**
    * すべてのエンドポイントを取得
    */
-  async listAll(): Promise<Result<APIEndpoint[]>> {
+  listAll(): Promise<Result<APIEndpoint[]>> {
     this.listAllSpy();
 
     try {
       const allEndpoints = Array.from(this.endpoints.values());
-      return Result.ok(allEndpoints);
+      return Promise.resolve(Result.ok(allEndpoints));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('LIST_FAILED', 'Failed to list endpoints', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * アクティブなエンドポイントのみを取得
    */
-  async listActive(): Promise<Result<APIEndpoint[]>> {
+  listActive(): Promise<Result<APIEndpoint[]>> {
     this.listActiveSpy();
 
     try {
       const activeEndpoints = Array.from(this.endpoints.values()).filter(
         (endpoint) => endpoint.isActive,
       );
-      return Result.ok(activeEndpoints);
+      return Promise.resolve(Result.ok(activeEndpoints));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('LIST_FAILED', 'Failed to list active endpoints', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * エンドポイントを削除
    */
-  async delete(path: EndpointPath, method: HttpMethod): Promise<Result<void>> {
+  delete(path: EndpointPath, method: HttpMethod): Promise<Result<void>> {
     this.deleteSpy(path, method);
 
     try {
@@ -118,22 +118,22 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
       const existed = this.endpoints.has(key);
 
       if (!existed) {
-        return Result.fail(
+        return Promise.resolve(Result.fail(
           new DomainError('NOT_FOUND', 'Endpoint not found', ErrorType.NOT_FOUND, {
             path: path.value,
             method: method,
           }),
-        );
+        ));
       }
 
       this.endpoints.delete(key);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('DELETE_FAILED', 'Failed to delete endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 

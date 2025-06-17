@@ -61,7 +61,7 @@ export class Endpoint {
    * @param pathPattern - パスパターン（ワイルドカード可）
    */
   matches(methodPattern: string, pathPattern: string): boolean {
-    const methodMatches = methodPattern === '*' || this.method === methodPattern.toUpperCase();
+    const methodMatches = methodPattern === '*' || (this.method as string) === methodPattern.toUpperCase();
     const pathMatches = this.path.matches(pathPattern);
     return methodMatches && pathMatches;
   }

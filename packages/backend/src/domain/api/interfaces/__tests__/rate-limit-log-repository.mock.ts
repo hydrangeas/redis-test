@@ -34,18 +34,18 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * レート制限ログを保存
    */
-  async save(log: RateLimitLog): Promise<Result<void>> {
+  save(log: RateLimitLog): Promise<Result<void>> {
     this.saveSpy(log);
 
     try {
       this.logs.push(log);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('SAVE_FAILED', 'Failed to save rate limit log', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
