@@ -1,20 +1,82 @@
-import { vi } from 'vitest';
-import { container } from 'tsyringe';
 import { EventEmitter } from 'events';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import { container } from 'tsyringe';
+import { vi } from 'vitest';
+
 import { User } from '@/domain/auth/entities/user';
 import { Email } from '@/domain/auth/value-objects/email';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { AuthResult } from '@/domain/log/value-objects/auth-result';
-import { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
-export function setupDependencies() {
+import type { TierLevel } from '@/domain/auth/value-objects/tier-level';
+
+interface MockDependencies {
+  mockEventBus: EventEmitter;
+  mockRepositories: {
+    authentication: ReturnType<typeof createMockAuthRepository>;
+    apiEndpoint: ReturnType<typeof createMockAPIEndpointRepository>;
+    rateLimitLog: ReturnType<typeof createMockRateLimitLogRepository>;
+    openData: ReturnType<typeof createMockOpenDataRepository>;
+    authLog: ReturnType<typeof createMockAuthLogRepository>;
+    apiLog: ReturnType<typeof createMockAPILogRepository>;
+  };
+  mockFileSystem: {
+    readFile: ReturnType<typeof vi.fn>;
+    stat: ReturnType<typeof vi.fn>;
+    access: ReturnType<typeof vi.fn>;
+  };
+  mockSupabaseClient: {
+    auth: {
+      getUser: ReturnType<typeof vi.fn>;
+      getSession: ReturnType<typeof vi.fn>;
+      signOut: ReturnType<typeof vi.fn>;
+      refreshSession: ReturnType<typeof vi.fn>;
+    };
+  };
+  mockLogger: {
+    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+    debug: ReturnType<typeof vi.fn>;
+    fatal: ReturnType<typeof vi.fn>;
+    trace: ReturnType<typeof vi.fn>;
+    child: ReturnType<typeof vi.fn>;
+  };
+  mockAuthAdapter: {
+    getUserFromToken: ReturnType<typeof vi.fn>;
+    verifyToken: ReturnType<typeof vi.fn>;
+    refreshToken: ReturnType<typeof vi.fn>;
+    refreshAccessToken: ReturnType<typeof vi.fn>;
+    signOut: ReturnType<typeof vi.fn>;
+  };
+  mockJWTValidator: {
+    validateToken: ReturnType<typeof vi.fn>;
+  };
+  mockAuthenticationService: {
+    validateToken: ReturnType<typeof vi.fn>;
+    validateAccessToken: ReturnType<typeof vi.fn>;
+  };
+  mockAPIAccessControlService: {
+    checkAccess: ReturnType<typeof vi.fn>;
+    validateEndpointAccess: ReturnType<typeof vi.fn>;
+  };
+  mockRateLimitService: {
+    checkLimit: ReturnType<typeof vi.fn>;
+    recordUsage: ReturnType<typeof vi.fn>;
+    getUsageStatus: ReturnType<typeof vi.fn>;
+  };
+  mockDataAccessService: {
+    checkAccess: ReturnType<typeof vi.fn>;
+    getResourceMetadata: ReturnType<typeof vi.fn>;
+  };
+}
+
+export function setupDependencies(): MockDependencies {
   const mockEventBus = new EventEmitter();
   // EventEmitter uses emit, not publish
-  (mockEventBus as any).emit = vi.fn((eventType: string, eventData: any) => {
-    EventEmitter.prototype.emit.call(mockEventBus, eventType, eventData);
-  });
+  (mockEventBus as EventEmitter & { publish: ReturnType<typeof vi.fn> }).publish = vi.fn(() => Promise.resolve());
 
   const mockRepositories = {
     authentication: createMockAuthRepository(),
@@ -40,15 +102,18 @@ export function setupDependencies() {
     },
   };
 
-  const mockLogger: any = {
+  const mockLogger = {
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
     debug: vi.fn(),
     fatal: vi.fn(),
     trace: vi.fn(),
-    child: vi.fn(() => mockLogger) as any,
+    child: vi.fn(),
   };
+  
+  // Self-reference for child method
+  mockLogger.child.mockReturnValue(mockLogger);
 
   const mockAuthAdapter = {
     getUserFromToken: vi.fn(),
@@ -138,7 +203,13 @@ export function createMockUser(tier: TierLevel | string) {
   return userResult.getValue();
 }
 
-export function createMockAuthRepository() {
+export function createMockAuthRepository(): {
+  findByEmail: ReturnType<typeof vi.fn>;
+  findById: ReturnType<typeof vi.fn>;
+  save: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+} {
   return {
     save: vi.fn(),
     update: vi.fn(),

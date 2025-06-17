@@ -1,11 +1,14 @@
 import 'reflect-metadata';
-import fastify, { FastifyServerOptions } from 'fastify';
+import fastify from 'fastify';
 import { container } from 'tsyringe';
+
 import { setupDI, DI_TOKENS } from './infrastructure/di';
 import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
+
+import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 import type { EnvConfig } from './infrastructure/config';
 
-export default async function buildApp(opts: FastifyServerOptions = {}) {
+export default async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
   // DIコンテナをセットアップ
   await setupDI();
 
@@ -48,7 +51,7 @@ export default async function buildApp(opts: FastifyServerOptions = {}) {
   // APIルートの登録
   await server.register(import('./presentation/routes'), { prefix: '/api/v1' });
 
-  server.get('/health', async () => {
+  server.get('/health', () => {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
