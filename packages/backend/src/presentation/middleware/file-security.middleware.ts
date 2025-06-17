@@ -1,5 +1,6 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { SecurityContext } from '@/domain/data/interfaces/secure-file-access.interface';
+import type { SecurityContext } from '@/domain/data/interfaces/secure-file-access.interface';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+
 
 // Extend FastifyRequest type to include security context
 declare module 'fastify' {

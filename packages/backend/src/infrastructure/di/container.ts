@@ -264,6 +264,26 @@ export function setupTestDI(): DependencyContainer {
     },
   });
 
+  // テスト用にSecureFileAccessServiceのモックを登録
+  container.register(DI_TOKENS.SecureFileAccessService, {
+    useValue: {
+      validatePath: () => Result.ok({ safe: true, normalized: '/test/path' }),
+      checkAccess: () => Promise.resolve(Result.ok(true)),
+      readFile: () => Promise.resolve(Result.ok({ content: Buffer.from('test'), metadata: { size: 4, mimeType: 'text/plain' } })),
+      listDirectory: () => Promise.resolve(Result.ok([])),
+    },
+  });
+
+  // テスト用にSecurityAuditServiceのモックを登録
+  container.register(DI_TOKENS.SecurityAuditService, {
+    useValue: {
+      logSecurityEvent: () => Promise.resolve(),
+      logAuthEvent: () => Promise.resolve(),
+      logAccessEvent: () => Promise.resolve(),
+      getAuditLogs: () => Promise.resolve([]),
+    },
+  });
+
   return container;
 }
 

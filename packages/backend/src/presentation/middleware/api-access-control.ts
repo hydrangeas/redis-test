@@ -1,10 +1,13 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
-import { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 // AuthenticatedUser import removed - using from request.user directly
 import { toProblemDetails } from '../errors/error-mapper';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+
+import type { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 /**
  * APIアクセス制御ミドルウェア

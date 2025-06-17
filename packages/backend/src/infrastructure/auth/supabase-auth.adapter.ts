@@ -1,10 +1,12 @@
-import { injectable } from 'tsyringe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { jwtDecode } from 'jwt-decode';
-import { IAuthAdapter, Session } from './interfaces/auth-adapter.interface';
+import { Logger } from 'pino';
+import { injectable } from 'tsyringe';
+
 import { TokenPayload } from '@/domain/auth/types/token-payload';
 import { getEnvConfig } from '@/infrastructure/config/env.config';
-import { Logger } from 'pino';
+
+import { IAuthAdapter, Session } from './interfaces/auth-adapter.interface';
 
 @injectable()
 export class SupabaseAuthAdapter implements IAuthAdapter {

@@ -1,17 +1,21 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { Stream } from 'stream';
+
 import { container } from 'tsyringe';
-import { IApiLogService } from '@/domain/log/interfaces/api-log-service.interface';
-import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Endpoint } from '@/domain/api/value-objects/endpoint';
+
 import { ApiPath } from '@/domain/api/value-objects/api-path';
-import { HttpMethod } from '@/domain/api/value-objects/http-method';
+import { Endpoint } from '@/domain/api/value-objects/endpoint';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+
+import { LogId } from '@/domain/log/value-objects/log-id';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
-import { Stream } from 'stream';
+
+import type { HttpMethod } from '@/domain/api/value-objects/http-method';
+import type { IApiLogService } from '@/domain/log/interfaces/api-log-service.interface';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { Logger } from 'pino';
 
 // ApiLoggingContext interface removed - defined in fastify.d.ts
 
@@ -25,8 +29,8 @@ export const apiLoggingMiddleware = {
 
     // ユーザー情報の取得（認証済みの場合）
     if (request.user) {
-      request.apiLoggingContext!.userId = request.user.userId.value;
-      request.apiLoggingContext!.userTier = request.user.tier.level.toString();
+      request.apiLoggingContext.userId = request.user.userId.value;
+      request.apiLoggingContext.userTier = request.user.tier.level.toString();
     }
   },
 

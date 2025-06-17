@@ -1,8 +1,10 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
-import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
-import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
+import type { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 /**
  * 認証ミドルウェア

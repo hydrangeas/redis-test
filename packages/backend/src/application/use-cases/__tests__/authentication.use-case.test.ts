@@ -31,6 +31,7 @@ describe('AuthenticationUseCase', () => {
 
     mockJWTValidator = {
       validateToken: vi.fn(),
+      decodeToken: vi.fn().mockReturnValue({ jti: 'token-id-123' }),
     };
 
     mockAuthService = {
@@ -160,8 +161,9 @@ describe('AuthenticationUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           aggregateId: validUuid,
-          provider: validUuid,
+          provider: 'jwt',
           reason: 'Token expired',
+          attemptedUserId: validUuid,
         }),
       );
     });
