@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 
-import fastify from 'fastify';
+import Fastify from 'fastify';
 import { container } from 'tsyringe';
 
 import { setupDI, DI_TOKENS } from './infrastructure/di';
 import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
 
-import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 import type { EnvConfig } from './infrastructure/config';
+import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 
 export default async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
   // DIコンテナをセットアップ
@@ -18,7 +18,7 @@ export default async function buildApp(opts: FastifyServerOptions = {}): Promise
 
   // Fastifyサーバーの作成（ロガー設定を含む）
   const loggerConfig = createFastifyLoggerConfig(config);
-  const server = fastify({ ...loggerConfig, ...opts });
+  const server = Fastify({ ...loggerConfig, ...opts });
 
   // リクエストロギングの設定
   setupRequestLogging(server);

@@ -3,8 +3,8 @@ import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 import { container } from 'tsyringe';
 
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { setupDI } from '@/infrastructure/di/container';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { DatabaseSeeder } from '@/infrastructure/seeders/database-seeder';
 
 import type { Logger } from 'pino';

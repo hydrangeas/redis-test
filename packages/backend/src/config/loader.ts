@@ -1,8 +1,9 @@
-import { config as dotenvConfig } from 'dotenv';
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+
+import { config as dotenvConfig } from 'dotenv';
+
 import { developmentConfigSchema, stagingConfigSchema, productionConfigSchema } from './schema.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -96,7 +97,7 @@ export class ConfigLoader {
     return ConfigLoader.instance;
   }
 
-  private loadEnvironmentVariables() {
+  private loadEnvironmentVariables(): void {
     const env = process.env.NODE_ENV || 'development';
 
     // 環境別の.envファイルを読み込む
@@ -115,7 +116,7 @@ export class ConfigLoader {
     }
   }
 
-  private buildConfig() {
+  private buildConfig(): any {
     const env = process.env.NODE_ENV || 'development';
 
     return {
@@ -206,7 +207,7 @@ export class ConfigLoader {
     };
   }
 
-  private validateConfig() {
+  private validateConfig(): void {
     const env = this.config.app.env;
     let schema;
 

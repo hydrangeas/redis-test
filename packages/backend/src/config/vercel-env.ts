@@ -20,7 +20,29 @@ const vercelEnvSchema = z.object({
   RATE_LIMIT_REDIS_URL: z.string().optional(),
 });
 
-export function loadVercelEnv() {
+export function loadVercelEnv(): {
+  supabase: {
+    url: string;
+    serviceRoleKey: string;
+    anonKey: string;
+  };
+  vercel: {
+    region?: string;
+    url?: string;
+    env?: 'production' | 'preview' | 'development';
+  };
+  features: {
+    enableRateLimit: boolean;
+  };
+  redis?: {
+    url: string;
+  };
+  environment: {
+    isProduction: boolean;
+    isPreview: boolean;
+    isDevelopment: boolean;
+  };
+} {
   const env = vercelEnvSchema.parse(process.env);
 
   // Vercel環境に応じた設定
