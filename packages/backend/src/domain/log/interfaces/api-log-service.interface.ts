@@ -1,5 +1,4 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 import { APILogEntry } from '../entities/api-log-entry';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 
@@ -15,20 +14,20 @@ export interface ApiUsageStats {
 }
 
 export interface IApiLogService {
-  saveLog(entry: APILogEntry): Promise<Result<void, DomainError>>;
+  saveLog(entry: APILogEntry): Promise<Result<void>>;
 
   getUsageStats(
     userId: UserId,
     timeRange: { start: Date; end: Date },
-  ): Promise<Result<ApiUsageStats, DomainError>>;
+  ): Promise<Result<ApiUsageStats>>;
 
   getErrorLogs(options?: {
     userId?: UserId;
     limit?: number;
     offset?: number;
-  }): Promise<Result<APILogEntry[], DomainError>>;
+  }): Promise<Result<APILogEntry[]>>;
 
-  getSlowRequests(thresholdMs: number, limit?: number): Promise<Result<APILogEntry[], DomainError>>;
+  getSlowRequests(thresholdMs: number, limit?: number): Promise<Result<APILogEntry[]>>;
 
   cleanup(): Promise<void>;
 }

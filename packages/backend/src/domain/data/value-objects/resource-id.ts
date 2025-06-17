@@ -1,23 +1,19 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { UniqueEntityId } from '@/domain/shared/entity';
 import * as crypto from 'crypto';
 
 /**
  * リソースID値オブジェクト
  * オープンデータリソースの一意識別子
  */
-export class ResourceId {
+export class ResourceId extends UniqueEntityId {
   private static readonly ID_PREFIX = 'resource';
   private static readonly ID_FORMAT = /^resource_[a-f0-9]{32}$/;
-  private readonly _value: string;
 
   private constructor(value: string) {
-    this._value = value;
+    super(value);
     Object.freeze(this);
-  }
-
-  get value(): string {
-    return this._value;
   }
 
   /**
@@ -46,7 +42,7 @@ export class ResourceId {
   static create(value?: string): Result<ResourceId> {
     if (!value || value === null || value === undefined) {
       return Result.fail(
-        new DomainError('INVALID_RESOURCE_ID', 'Resource ID is required', 'VALIDATION'),
+        new DomainError('INVALID_RESOURCE_ID', 'Resource ID is required', ErrorType.VALIDATION),
       );
     }
 
@@ -55,7 +51,7 @@ export class ResourceId {
         new DomainError(
           'INVALID_RESOURCE_ID_FORMAT',
           `Resource ID must match format: ${this.ID_FORMAT}`,
-          'VALIDATION',
+          ErrorType.VALIDATION,
         ),
       );
     }
@@ -68,20 +64,20 @@ export class ResourceId {
    */
   equals(other: ResourceId): boolean {
     if (!other) return false;
-    return this._value === other._value;
+    return this.value === other.value;
   }
 
   /**
    * 文字列表現を返す
    */
   toString(): string {
-    return this._value;
+    return this.value;
   }
 
   /**
    * JSONシリアライズ用
    */
   toJSON(): string {
-    return this._value;
+    return this.value;
   }
 }

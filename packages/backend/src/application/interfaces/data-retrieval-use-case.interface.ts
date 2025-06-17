@@ -1,5 +1,4 @@
 import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 /**
@@ -17,14 +16,11 @@ export interface IDataRetrievalUseCase {
     path: string,
     user: AuthenticatedUser,
   ): Promise<
-    Result<
-      {
-        content: any;
-        checksum: string;
-        lastModified: Date;
-      },
-      DomainError
-    >
+    Result<{
+      content: any;
+      checksum: string;
+      lastModified: Date;
+    }>
   >;
 
   /**
@@ -33,15 +29,12 @@ export interface IDataRetrievalUseCase {
    * @returns データのメタデータ（サイズ、更新日時、ETag等）
    */
   retrieveMetadata(path: string): Promise<
-    Result<
-      {
-        size: number;
-        lastModified: Date;
-        etag: string;
-        contentType: string;
-      },
-      DomainError
-    >
+    Result<{
+      size: number;
+      lastModified: Date;
+      etag: string;
+      contentType: string;
+    }>
   >;
 
   /**
@@ -54,14 +47,11 @@ export interface IDataRetrievalUseCase {
     path: string,
     etag: string,
   ): Promise<
-    Result<
-      {
-        data?: any;
-        notModified: boolean;
-        newEtag?: string;
-      },
-      DomainError
-    >
+    Result<{
+      data?: any;
+      notModified: boolean;
+      newEtag?: string;
+    }>
   >;
 
   /**
@@ -74,13 +64,10 @@ export interface IDataRetrievalUseCase {
     path: string,
     ifModifiedSince: Date,
   ): Promise<
-    Result<
-      {
-        data?: any;
-        notModified: boolean;
-        lastModified?: Date;
-      },
-      DomainError
-    >
+    Result<{
+      data?: any;
+      notModified: boolean;
+      lastModified?: Date;
+    }>
   >;
 }

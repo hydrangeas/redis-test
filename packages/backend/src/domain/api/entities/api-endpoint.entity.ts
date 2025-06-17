@@ -115,7 +115,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     userId: UserId,
     requestId: string,
     currentTime: Date = new Date(),
-  ): Result<void, DomainError> {
+  ): Result<void> {
     const userLogs = this.props.rateLimitLogs.get(userId.value) || [];
 
     // 新しいログエントリを作成
@@ -127,7 +127,13 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
     });
 
     if (newLogResult.isFailure) {
-      return Result.fail(newLogResult.getError());
+      return Result.fail(
+        new DomainError(
+          'FAILED_TO_CREATE_LOG',
+          'Failed to create rate limit log',
+          ErrorType.INTERNAL,
+        ),
+      );
     }
 
     // ログを追加（新しいものを後ろに）
@@ -192,7 +198,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   /**
    * APIEndpointを作成
    */
-  static create(props: CreateAPIEndpointProps, id?: EndpointId): Result<APIEndpoint, DomainError> {
+  static create(props: CreateAPIEndpointProps, id?: EndpointId): Result<APIEndpoint> {
     // EndpointPathの作成
     const pathResult = EndpointPath.create(props.path);
     if (pathResult.isFailure) {
@@ -223,7 +229,7 @@ export class APIEndpoint extends Entity<APIEndpointProps> {
   /**
    * 既存のデータから再構築
    */
-  static reconstruct(props: APIEndpointProps & { id: string }): Result<APIEndpoint, DomainError> {
+  static reconstruct(props: APIEndpointProps & { id: string }): Result<APIEndpoint> {
     const idResult = EndpointId.create(props.id);
     if (idResult.isFailure) {
       return Result.fail(

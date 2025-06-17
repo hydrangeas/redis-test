@@ -1,5 +1,4 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 
 /**
  * File storage interface for data persistence
@@ -11,14 +10,14 @@ export interface IFileStorage {
    * @param path - Relative path to the file
    * @returns Parsed JSON content or error
    */
-  readFile(path: string): Promise<Result<any, DomainError>>;
+  readFile(path: string): Promise<Result<any>>;
 
   /**
    * Get file metadata without reading content
    * @param path - Relative path to the file
    * @returns File metadata or error
    */
-  getFileMetadata(path: string): Promise<Result<FileMetadata, DomainError>>;
+  getFileMetadata(path: string): Promise<Result<FileMetadata>>;
 
   /**
    * Stream file content for large files
@@ -29,14 +28,14 @@ export interface IFileStorage {
   streamFile(
     path: string,
     options?: { start?: number; end?: number },
-  ): Promise<Result<NodeJS.ReadableStream, DomainError>>;
+  ): Promise<Result<NodeJS.ReadableStream>>;
 
   /**
    * List files in a directory
    * @param directory - Relative path to directory
    * @returns Array of file paths or error
    */
-  listFiles(directory: string): Promise<Result<string[], DomainError>>;
+  listFiles(directory: string): Promise<Result<string[]>>;
 
   /**
    * Check if file exists

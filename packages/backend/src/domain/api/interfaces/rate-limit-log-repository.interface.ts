@@ -3,7 +3,6 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { EndpointId } from '../value-objects/endpoint-id';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';
 import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors/domain-error';
 
 /**
  * レート制限ログリポジトリインターフェース
@@ -13,12 +12,12 @@ export interface IRateLimitLogRepository {
   /**
    * レート制限ログを保存
    */
-  save(log: RateLimitLog): Promise<Result<void, DomainError>>;
+  save(log: RateLimitLog): Promise<Result<void>>;
 
   /**
    * 複数のログを一括保存
    */
-  saveMany(logs: RateLimitLog[]): Promise<Result<void, DomainError>>;
+  saveMany(logs: RateLimitLog[]): Promise<Result<void>>;
 
   /**
    * ユーザーとエンドポイントの組み合わせでログを検索
@@ -27,7 +26,7 @@ export interface IRateLimitLogRepository {
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>>;
+  ): Promise<Result<RateLimitLog[]>>;
 
   /**
    * 特定のユーザーの全ログを取得
@@ -35,7 +34,7 @@ export interface IRateLimitLogRepository {
   findByUser(
     userId: UserId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>>;
+  ): Promise<Result<RateLimitLog[]>>;
 
   /**
    * 特定のエンドポイントの全ログを取得
@@ -43,12 +42,12 @@ export interface IRateLimitLogRepository {
   findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>>;
+  ): Promise<Result<RateLimitLog[]>>;
 
   /**
    * 古いログを削除
    */
-  deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>>;
+  deleteOldLogs(beforeDate: Date): Promise<Result<number>>;
 
   /**
    * 特定期間のリクエスト数を集計
@@ -57,5 +56,5 @@ export interface IRateLimitLogRepository {
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<number, DomainError>>;
+  ): Promise<Result<number>>;
 }

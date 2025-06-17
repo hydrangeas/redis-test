@@ -4,10 +4,10 @@ import { EndpointPath } from '../value-objects/endpoint-path';
 import { EndpointType } from '../value-objects/endpoint-type';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';
 import { RequestCount } from '../value-objects/request-count';
-import { DomainError, ErrorType } from '../../shared/errors/domain-error';
-import { Result } from '../../shared/result';
-import { ValidationError } from '../../shared/errors/validation-error';
-import { RateLimitException } from '../../shared/errors/exceptions';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/shared/result';
+import { ValidationError } from '@/domain/errors/validation-error';
+import { RateLimitException } from '@/domain/errors/exceptions';
 
 export interface RateLimitStatus {
   allowed: boolean;
@@ -63,7 +63,8 @@ export class APIAccessControlService implements IAPIAccessControlService {
       }
 
       // Check if user's tier meets the endpoint requirements
-      const canAccess = user.canAccessEndpoint(endpointType.requiredTier);
+      // endpointType.requiredTier returns a string like 'tier1', need to convert to TierLevel
+      const canAccess = endpointType.canBeAccessedByTier(user.tier);
 
       if (!canAccess) {
         return Result.fail(

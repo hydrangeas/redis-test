@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * IPアドレスを表すバリューオブジェクト
@@ -20,14 +21,14 @@ export class IPAddress {
    */
   static create(value: string): Result<IPAddress> {
     if (!value || value.trim().length === 0) {
-      return Result.fail<IPAddress>('IPアドレスは空にできません');
+      return Result.fail<IPAddress>(new DomainError('EMPTY_IP_ADDRESS', 'IPアドレスは空にできません', ErrorType.VALIDATION));
     }
 
     const trimmedValue = value.trim();
 
     // IPv4またはIPv6の検証
     if (!this.isValidIPv4(trimmedValue) && !this.isValidIPv6(trimmedValue)) {
-      return Result.fail<IPAddress>('無効なIPアドレス形式です');
+      return Result.fail<IPAddress>(new DomainError('INVALID_IP_FORMAT', '無効なIPアドレス形式です', ErrorType.VALIDATION));
     }
 
     return Result.ok(new IPAddress(trimmedValue));

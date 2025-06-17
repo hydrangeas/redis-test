@@ -1,4 +1,6 @@
 import { ValidationError } from '../../errors/validation-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError } from '@/domain/errors/domain-error';
 
 /**
  * ファイルサイズを表すバリューオブジェクト
@@ -13,10 +15,13 @@ export class FileSize {
   static readonly MEGABYTE = 1024 * 1024;
   static readonly GIGABYTE = 1024 * 1024 * 1024;
 
+  private readonly _bytes: number;
+
   /**
    * @param bytes - ファイルサイズ（バイト単位）
    */
-  constructor(public readonly bytes: number) {
+  constructor(bytes: number) {
+    this._bytes = bytes;
     if (!Number.isInteger(bytes)) {
       throw new ValidationError('File size must be an integer', {
         bytes,
@@ -39,6 +44,20 @@ export class FileSize {
     }
 
     Object.freeze(this);
+  }
+
+  /**
+   * バイト値を取得
+   */
+  get bytes(): number {
+    return this._bytes;
+  }
+
+  /**
+   * valueプロパティ（バイト値を返す）
+   */
+  get value(): number {
+    return this._bytes;
   }
 
   /**
@@ -124,6 +143,24 @@ export class FileSize {
    */
   static fromJSON(bytes: number): FileSize {
     return new FileSize(bytes);
+  }
+
+  /**
+   * 値からFileSizeを作成（Result型を返す）
+   */
+  static create(bytes: number): Result<FileSize> {
+    try {
+      return Result.ok(new FileSize(bytes));
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return Result.fail(
+          DomainError.validation('INVALID_FILE_SIZE', error.message, error.details),
+        );
+      }
+      return Result.fail(
+        DomainError.internal('FILE_SIZE_ERROR', 'Failed to create FileSize'),
+      );
+    }
   }
 
   /**

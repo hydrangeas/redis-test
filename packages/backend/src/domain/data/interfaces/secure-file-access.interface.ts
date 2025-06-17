@@ -1,5 +1,4 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/shared/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 
 export interface SecurityContext {
   userId: string;
@@ -15,12 +14,12 @@ export interface ISecureFileAccess {
   validateAndSanitizePath(
     requestedPath: string,
     context: SecurityContext,
-  ): Promise<Result<string, DomainError>>;
+  ): Promise<Result<string>>;
 
   /**
    * Checks if the user has access to the file
    */
-  checkAccess(filePath: string, context: SecurityContext): Promise<Result<void, DomainError>>;
+  checkAccess(filePath: string, context: SecurityContext): Promise<Result<void>>;
 }
 
 export interface ISecurityAuditService {

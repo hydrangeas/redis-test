@@ -10,12 +10,10 @@ import { ApplicationResult } from '../errors/result';
 import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { IJWTValidator } from '@/infrastructure/auth/interfaces/jwt-validator.interface';
 import { AuthenticationService } from '@/domain/auth/services/authentication.service';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
 import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
 import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
-import { CorrelationId } from '@/domain/shared/value-objects/correlation-id';
 import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
@@ -72,17 +70,20 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
       }
 
       // Validate with domain service
-      const validationResult = this.authService.validateToken(tokenPayload);
+      const validationResult = await this.authService.validateAccessToken(tokenPayload);
 
       if (validationResult.isFailure) {
         const error = validationResult.getError();
 
         // Log authentication failure event
         const failureEvent = new AuthenticationFailed(
-          tokenPayload.sub || 'unknown',
-          1,
-          tokenPayload.sub || 'unknown',
-          error.message,
+          tokenPayload.sub || 'unknown', // aggregateId
+          1, // eventVersion
+          'jwt', // provider
+          error.message, // reason
+          'unknown', // ipAddress (TODO: get from request)
+          'unknown', // userAgent (TODO: get from request)
+          tokenPayload.sub, // attemptedUserId
         );
         await this.eventBus.publish(failureEvent);
 
@@ -103,7 +104,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       return ApplicationResult.ok({
         user: authenticatedUser,
-        tokenId: tokenPayload.jti,
+        tokenId: tokenPayload.sub, // Use sub as tokenId since jti is not available
       });
     } catch (error) {
       this.logger.error(

@@ -1,8 +1,8 @@
 import { ValueObject } from '@/domain/shared/value-object';
 import { DataPath } from './data-path';
 import { ResourceMetadata } from './resource-metadata';
-import { ValidationError } from '@/domain/errors/validation-error';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
+import { DomainError } from '@/domain/errors/domain-error';
 
 export interface OpenDataResourceProps {
   path: DataPath;
@@ -69,9 +69,9 @@ export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
 
   /**
    * アクセス権限のチェック（将来の拡張用）
-   * @param userTier ユーザーのティア
+   * @param _userTier ユーザーのティア
    */
-  canAccessByTier(userTier: string): boolean {
+  canAccessByTier(_userTier: string): boolean {
     // 現在はすべての認証済みユーザーがアクセス可能
     // 将来的にリソースレベルのアクセス制御を実装する場合はここに追加
     return true;
@@ -124,15 +124,15 @@ export class OpenDataResource extends ValueObject<OpenDataResourceProps> {
     accessedAt?: Date,
   ): Result<OpenDataResource> {
     if (!path) {
-      return Result.fail(new ValidationError('Path is required'));
+      return Result.fail(DomainError.validation('INVALID_PATH', 'Path is required'));
     }
 
     if (!metadata) {
-      return Result.fail(new ValidationError('Metadata is required'));
+      return Result.fail(DomainError.validation('INVALID_METADATA', 'Metadata is required'));
     }
 
     if (!createdAt) {
-      return Result.fail(new ValidationError('CreatedAt is required'));
+      return Result.fail(DomainError.validation('INVALID_CREATED_AT', 'CreatedAt is required'));
     }
 
     const props: OpenDataResourceProps = {

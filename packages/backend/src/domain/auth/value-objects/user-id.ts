@@ -33,9 +33,9 @@ export class UserId {
    * @param value - UUID形式の文字列
    * @returns 成功時はUserId、失敗時はDomainError
    */
-  static create(value: string): Result<UserId, DomainError> {
+  static create(value: string): Result<UserId> {
     const guardResult = Guard.againstNullOrUndefined(value, 'UserId');
-    if (guardResult.isFailure || value === null || value === undefined) {
+    if (!guardResult.succeeded || value === null || value === undefined) {
       return Result.fail(
         DomainError.validation('INVALID_USER_ID', 'User ID cannot be null or undefined'),
       );

@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
 import { IRateLimitService } from '@/domain/api/interfaces/rate-limit-service.interface';
 import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
@@ -10,7 +10,6 @@ import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
 import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
@@ -43,7 +42,7 @@ export class DataAccessUseCase {
     private readonly logger: Logger,
   ) {}
 
-  async getData(request: DataAccessRequest): Promise<Result<DataAccessResponse, DomainError>> {
+  async getData(request: DataAccessRequest): Promise<Result<DataAccessResponse>> {
     const startTime = Date.now();
 
     try {
@@ -73,7 +72,7 @@ export class DataAccessUseCase {
           new DomainError(
             'RATE_LIMIT_EXCEEDED',
             `API rate limit exceeded for ${request.user.tier.level}`,
-            'RATE_LIMIT',
+            ErrorType.RATE_LIMIT,
             {
               limit: rateLimitResult.limit,
               remaining: rateLimitResult.remaining,
@@ -93,7 +92,7 @@ export class DataAccessUseCase {
           endpoint,
           statusCode: 404,
           responseTime: Date.now() - startTime,
-          error: dataResult.getError().code,
+          error: dataResult.getError() instanceof DomainError ? (dataResult.getError() as DomainError).code : 'UNKNOWN_ERROR',
         });
 
         return Result.fail(dataResult.getError());
@@ -112,7 +111,7 @@ export class DataAccessUseCase {
         });
 
         return Result.fail(
-          new DomainError('ACCESS_DENIED', 'Access denied to this resource', 'FORBIDDEN'),
+          new DomainError('ACCESS_DENIED', 'Access denied to this resource', ErrorType.FORBIDDEN),
         );
       }
 
@@ -125,7 +124,7 @@ export class DataAccessUseCase {
           endpoint,
           statusCode: 500,
           responseTime: Date.now() - startTime,
-          error: contentResult.getError().code,
+          error: contentResult.getError() instanceof DomainError ? (contentResult.getError() as DomainError).code : 'UNKNOWN_ERROR',
         });
 
         return Result.fail(contentResult.getError());
@@ -183,12 +182,12 @@ export class DataAccessUseCase {
       });
 
       return Result.fail(
-        new DomainError('INTERNAL_ERROR', 'An unexpected error occurred', 'INTERNAL'),
+        new DomainError('INTERNAL_ERROR', 'An unexpected error occurred', ErrorType.INTERNAL),
       );
     }
   }
 
-  private canAccessResource(user: AuthenticatedUser, resource: any): boolean {
+  private canAccessResource(_user: AuthenticatedUser, _resource: any): boolean {
     // 将来的にリソースレベルのアクセス制御を実装
     // 現在はすべての認証済みユーザーがアクセス可能
     return true;
@@ -203,27 +202,34 @@ export class DataAccessUseCase {
     error?: string;
   }): Promise<void> {
     try {
-      const logEntry = new APILogEntry(
-        LogId.generate(),
-        params.request.user.userId,
-        params.endpoint,
-        new RequestInfo({
+      const logEntryResult = APILogEntry.create({
+        userId: params.request.user.userId,
+        endpoint: params.endpoint,
+        requestInfo: new RequestInfo({
           ipAddress: params.request.ipAddress,
           userAgent: params.request.userAgent || 'Unknown',
           headers: {},
           body: null,
         }),
-        new ResponseInfo({
+        responseInfo: new ResponseInfo({
           statusCode: params.statusCode,
           responseTime: params.responseTime,
           size: params.responseSize || 0,
           headers: {},
         }),
-        new Date(),
-        params.error,
-      );
+        timestamp: new Date(),
+        error: params.error,
+      });
 
-      await this.apiLogRepository.save(logEntry);
+      if (logEntryResult.isFailure) {
+        this.logger.error(
+          { error: logEntryResult.getError() },
+          'Failed to create API log entry',
+        );
+        return;
+      }
+
+      await this.apiLogRepository.save(logEntryResult.getValue());
     } catch (error) {
       // ログ記録の失敗はメイン処理に影響させない
       this.logger.error(

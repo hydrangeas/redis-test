@@ -6,7 +6,7 @@ import {
 import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { Result } from '@/domain/errors';
+import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
 import { APIAccessRecorded } from '@/domain/api/events/api-access-recorded.event';
@@ -15,8 +15,8 @@ import { Logger } from 'pino';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { RateLimitLog } from '@/domain/api/entities/rate-limit-log.entity';
 import { EndpointId } from '@/domain/api/value-objects/endpoint-id';
-import { RequestCount } from '@/domain/api/value-objects/request-count';
 import { RateLimitWindow } from '@/domain/api/value-objects/rate-limit-window';
+import { RequestId } from '@/domain/api/value-objects/request-id';
 
 /**
  * レート制限ユースケースの実装
@@ -42,7 +42,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
     user: AuthenticatedUser,
     endpoint: string,
     method: string,
-  ): Promise<Result<RateLimitCheckResult, DomainError>> {
+  ): Promise<Result<RateLimitCheckResult>> {
     try {
       // EndpointIdを生成
       const endpointId = EndpointId.generate();
@@ -54,7 +54,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       // 現在時刻とウィンドウ開始時刻を計算
       const now = new Date();
-      const windowStart = new Date(now.getTime() - windowSizeSeconds * 1000);
+      // const windowStart = new Date(now.getTime() - windowSizeSeconds * 1000); // Not used
       const windowEnd = new Date(now.getTime() + windowSizeSeconds * 1000);
 
       // スライディングウィンドウ内のアクセス数をカウント
@@ -67,10 +67,10 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       if (countResult.isFailure) {
         this.logger.error(
-          { userId: user.userId.value, error: countResult.error },
+          { userId: user.userId.value, error: countResult.getError() },
           'Failed to count rate limit logs',
         );
-        return Result.fail(countResult.error!);
+        return Result.fail(countResult.getError());
       }
 
       const currentCount = countResult.getValue();
@@ -115,17 +115,12 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       }
 
       // アクセスを記録
-      const requestCount = new RequestCount(1); // 1回のリクエスト
       const logResult = RateLimitLog.create({
-        userId: user.userId,
-        endpointId,
-        requestCount,
-        requestedAt: now,
-        requestMetadata: {
-          method,
-          ip: 'unknown', // TODO: 実際のIPアドレスを取得
-          userAgent: 'unknown', // TODO: 実際のUser-Agentを取得
-        },
+        userId: user.userId.value,
+        endpointId: endpointId.value,
+        requestId: RequestId.generate().value, // Generate a request ID
+        timestamp: now,
+        exceeded: false, // This is in the allowed path
       });
 
       if (logResult.isFailure) {
@@ -137,15 +132,15 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       if (saveResult.isFailure) {
         this.logger.error(
-          { userId: user.userId.value, error: saveResult.error },
+          { userId: user.userId.value, error: saveResult.getError() },
           'Failed to save rate limit log',
         );
-        return Result.fail(saveResult.error!);
+        return Result.fail(saveResult.getError());
       }
 
       // APIアクセス記録イベントを発行
       await this.eventBus.publish(
-        new APIAccessRecorded(user.userId.value, 1, endpoint, method, new Date()),
+        new APIAccessRecorded(user.userId.value, 1, endpoint, method),
       );
 
       // 成功レスポンス
@@ -195,15 +190,12 @@ export class RateLimitUseCase implements IRateLimitUseCase {
    * ユーザーの現在の使用状況を取得
    */
   async getUserUsageStatus(user: AuthenticatedUser): Promise<
-    Result<
-      {
-        currentCount: number;
-        limit: number;
-        windowStart: Date;
-        windowEnd: Date;
-      },
-      DomainError
-    >
+    Result<{
+      currentCount: number;
+      limit: number;
+      windowStart: Date;
+      windowEnd: Date;
+    }>
   > {
     try {
       const limit = user.tier.rateLimit.maxRequests;
@@ -221,11 +213,11 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       const logsResult = await this.rateLimitRepository.findByUser(user.userId, window);
 
       if (logsResult.isFailure) {
-        return Result.fail(logsResult.error!);
+        return Result.fail(logsResult.getError());
       }
 
       const logs = logsResult.getValue();
-      const currentCount = logs.reduce((sum, log) => sum + log.requestCount.value, 0);
+      const currentCount = logs.reduce((sum: number, _log: RateLimitLog) => sum + 1, 0); // Each log represents one request
 
       return Result.ok({
         currentCount,
@@ -245,26 +237,26 @@ export class RateLimitUseCase implements IRateLimitUseCase {
   /**
    * レート制限をリセット（管理用）
    */
-  async resetUserLimit(userId: string): Promise<Result<void, DomainError>> {
+  async resetUserLimit(userId: string): Promise<Result<void>> {
     try {
       // UserId値オブジェクトの作成
       const userIdResult = UserId.create(userId);
       if (userIdResult.isFailure) {
-        return Result.fail(userIdResult.error!);
+        return Result.fail(userIdResult.getError());
       }
-      const userIdObj = userIdResult.getValue();
+      // const userIdObj = userIdResult.getValue(); // Not used in current implementation
 
       // ユーザーのレート制限ログを削除（古いログを削除することでリセット）
       const now = new Date();
       const deleteResult = await this.rateLimitRepository.deleteOldLogs(now);
 
       if (deleteResult.isFailure) {
-        return Result.fail(deleteResult.error!);
+        return Result.fail(deleteResult.getError());
       }
 
       this.logger.info({ userId }, 'Rate limit reset successfully');
 
-      return Result.ok();
+      return Result.ok<void>();
     } catch (error) {
       return Result.fail(
         new DomainError(

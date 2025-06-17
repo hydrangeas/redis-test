@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * ログレベルを表すバリューオブジェクト
@@ -57,7 +58,7 @@ export class LogLevel {
       case 'ERROR':
         return Result.ok(LogLevel.ERROR);
       default:
-        return Result.fail<LogLevel>(`無効なログレベル: ${level}`);
+        return Result.fail<LogLevel>(new DomainError('INVALID_LOG_LEVEL', `無効なログレベル: ${level}`, ErrorType.VALIDATION));
     }
   }
 

@@ -24,9 +24,9 @@ export class UserTier {
    * @param customRateLimit - カスタムレート制限（省略時はデフォルト値を使用）
    * @returns 成功時はUserTier、失敗時はDomainError
    */
-  static create(level: TierLevel, customRateLimit?: RateLimit): Result<UserTier, DomainError> {
+  static create(level: TierLevel, customRateLimit?: RateLimit): Result<UserTier> {
     const guardResult = Guard.againstNullOrUndefined(level, 'TierLevel');
-    if (guardResult.isFailure) {
+    if (!guardResult.succeeded) {
       return Result.fail(
         DomainError.validation('INVALID_TIER_LEVEL', 'Tier level cannot be null or undefined'),
       );
@@ -170,7 +170,7 @@ export class UserTier {
         return null; // 最上位ティア
       default:
         // 網羅性チェック
-        const _exhaustiveCheck: never = this._level;
+        // const _exhaustiveCheck: never = this._level;
         throw new Error(`Unknown tier level: ${this._level}`);
     }
   }
@@ -179,7 +179,7 @@ export class UserTier {
    * ティアをアップグレード
    * @returns アップグレード後のティア、最上位の場合は現在のティア
    */
-  upgrade(): Result<UserTier, DomainError> {
+  upgrade(): Result<UserTier> {
     const nextLevel = this.getNextTier();
     if (!nextLevel) {
       return Result.fail(

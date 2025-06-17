@@ -1,6 +1,6 @@
 import { ValueObject } from '@/domain/shared/value-object';
-import { ValidationError } from '@/domain/errors/validation-error';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
+import { DomainError } from '@/domain/errors/domain-error';
 
 export interface JsonObjectProps {
   value: Record<string, any>;
@@ -167,7 +167,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
    */
   static create(value: Record<string, any>): Result<JsonObject> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      return Result.fail(new ValidationError('Value must be a valid object'));
+      return Result.fail(DomainError.validation('INVALID_JSON_OBJECT', 'Value must be a valid object'));
     }
 
     return Result.ok(new JsonObject({ value }));
@@ -181,7 +181,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       const parsed = JSON.parse(jsonString);
       return JsonObject.create(parsed);
     } catch (error) {
-      return Result.fail(new ValidationError('Invalid JSON string'));
+      return Result.fail(DomainError.validation('INVALID_JSON_STRING', 'Invalid JSON string'));
     }
   }
 

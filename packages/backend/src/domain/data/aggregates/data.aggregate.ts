@@ -1,4 +1,5 @@
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
+import { UniqueEntityId } from '@/domain/shared/entity';
 import { OpenDataResource } from '../entities/open-data-resource.entity';
 import { ResourceId } from '../value-objects/resource-id';
 import { DataPath } from '../value-objects/data-path';
@@ -23,7 +24,7 @@ export interface DataAggregateProps {
  * オープンデータリソースを管理し、アクセス制御とキャッシュ管理を行う
  */
 export class DataAggregate extends AggregateRoot<DataAggregateProps> {
-  private constructor(props: DataAggregateProps, id?: string) {
+  private constructor(props: DataAggregateProps, id?: UniqueEntityId) {
     super(props, id);
   }
 
@@ -144,7 +145,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
     const resourceResult = this.findResourceByPath(path);
     if (resourceResult.isFailure) {
       // リソースが見つからないイベントを発行
-      this.addDomainEvent(new DataResourceNotFound(this._id, 1, userId, path.value, requestTime));
+      this.addDomainEvent(new DataResourceNotFound(this._id.toString(), userId, path.value, requestTime));
       return Result.fail(resourceResult.getError());
     }
 
@@ -154,8 +155,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
     if (!resource.canAccessByTier(userTier)) {
       this.addDomainEvent(
         new DataAccessDenied(
-          this._id,
-          1,
+          this._id.toString(),
           userId,
           resource.id.value,
           path.value,
@@ -175,8 +175,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
     // データアクセスイベントを発行
     this.addDomainEvent(
       new DataAccessRequested(
-        this._id,
-        1,
+        this._id.toString(),
         userId,
         resource.id.value,
         path.value,
@@ -331,13 +330,13 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
       ...props,
     };
 
-    return Result.ok(new DataAggregate(aggregateProps, id));
+    return Result.ok(new DataAggregate(aggregateProps, id ? new UniqueEntityId(id) : undefined));
   }
 
   /**
    * 既存のデータから再構築
    */
   static reconstitute(props: DataAggregateProps, id: string): DataAggregate {
-    return new DataAggregate(props, id);
+    return new DataAggregate(props, new UniqueEntityId(id));
   }
 }

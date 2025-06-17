@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * User-Agent情報を表すバリューオブジェクト
@@ -20,13 +21,17 @@ export class UserAgent {
    */
   static create(value: string): Result<UserAgent> {
     if (!value || value.trim().length === 0) {
-      return Result.fail<UserAgent>('User-Agentは空にできません');
+      return Result.fail<UserAgent>(
+        new DomainError('EMPTY_USER_AGENT', 'User-Agentは空にできません', ErrorType.VALIDATION)
+      );
     }
 
     const trimmedValue = value.trim();
 
     if (trimmedValue.length > 500) {
-      return Result.fail<UserAgent>('User-Agentは500文字以内である必要があります');
+      return Result.fail<UserAgent>(
+        new DomainError('USER_AGENT_TOO_LONG', 'User-Agentは500文字以内である必要があります', ErrorType.VALIDATION)
+      );
     }
 
     return Result.ok(new UserAgent(trimmedValue));

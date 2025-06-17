@@ -5,7 +5,6 @@ import {
   APIAccessMetadata,
 } from '@/application/interfaces/api-access-control-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
@@ -30,8 +29,6 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     private readonly accessControlService: IAPIAccessControlService,
     @inject(DI_TOKENS.RateLimitUseCase)
     private readonly rateLimitUseCase: IRateLimitUseCase,
-    @inject(DI_TOKENS.APILogRepository)
-    private readonly apiLogRepository: IAPILogRepository,
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
@@ -46,7 +43,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
-  ): Promise<Result<APIAccessDecision, DomainError>> {
+  ): Promise<Result<APIAccessDecision>> {
     const startTime = Date.now();
 
     try {
@@ -88,7 +85,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       );
 
       if (rateLimitResult.isFailure) {
-        return Result.fail(rateLimitResult.error);
+        return Result.fail(rateLimitResult.error!);
       }
 
       const rateLimitStatus = rateLimitResult.getValue();
@@ -106,11 +103,13 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       // 4. ドメインイベントの発行
       await this.eventBus.publish(
         new APIAccessRequested(
-          user.userId.toString(),
-          endpoint,
-          method,
-          new Date(),
-          rateLimitStatus.allowed,
+          user.userId.toString(), // aggregateId
+          user.userId.toString(), // userId
+          endpoint,               // endpointId
+          endpoint,               // path
+          method,                 // method
+          'data',                 // endpointType
+          new Date(),             // requestTime
         ),
       );
 
@@ -168,7 +167,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
-  ): Promise<Result<void, DomainError>> {
+  ): Promise<Result<void>> {
     const startTime = Date.now();
 
     try {

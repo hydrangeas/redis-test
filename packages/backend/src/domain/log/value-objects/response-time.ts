@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * レスポンス時間を表すバリューオブジェクト
@@ -20,16 +21,16 @@ export class ResponseTime {
    */
   static create(milliseconds: number): Result<ResponseTime> {
     if (!Number.isFinite(milliseconds)) {
-      return Result.fail<ResponseTime>('レスポンス時間は有限な数値である必要があります');
+      return Result.fail<ResponseTime>(new DomainError('RESPONSE_TIME_ERROR', 'レスポンス時間は有限な数値である必要があります', ErrorType.VALIDATION));
     }
 
     if (milliseconds < 0) {
-      return Result.fail<ResponseTime>('レスポンス時間は0以上である必要があります');
+      return Result.fail<ResponseTime>(new DomainError('RESPONSE_TIME_ERROR', 'レスポンス時間は0以上である必要があります', ErrorType.VALIDATION));
     }
 
     // 実用的な上限（1時間）
     if (milliseconds > 3600000) {
-      return Result.fail<ResponseTime>('レスポンス時間が大きすぎます（最大1時間）');
+      return Result.fail<ResponseTime>(new DomainError('RESPONSE_TIME_ERROR', 'レスポンス時間が大きすぎます（最大1時間）', ErrorType.VALIDATION));
     }
 
     return Result.ok(new ResponseTime(Math.round(milliseconds)));

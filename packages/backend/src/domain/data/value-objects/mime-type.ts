@@ -1,4 +1,6 @@
 import { ValidationError } from '../../errors/validation-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError } from '@/domain/errors/domain-error';
 
 /**
  * MIMEタイプを表すバリューオブジェクト
@@ -90,6 +92,24 @@ export class MimeType {
    */
   get subtype(): string {
     return this._subtype;
+  }
+
+  /**
+   * 値からMIMEタイプを作成（Result型を返す）
+   */
+  static create(value: string): Result<MimeType> {
+    try {
+      return Result.ok(new MimeType(value));
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return Result.fail(
+          DomainError.validation('INVALID_MIME_TYPE', error.message, error.details),
+        );
+      }
+      return Result.fail(
+        DomainError.internal('MIME_TYPE_ERROR', 'Failed to create MimeType'),
+      );
+    }
   }
 
   /**

@@ -1,19 +1,27 @@
 import { inject, injectable } from 'tsyringe';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
-import { IEventBus } from '@/domain/shared/interfaces/event-bus.interface';
-import { APILog } from '@/domain/log/entities/api-log';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { SimpleApiLogEntry } from '@/domain/log/entities/simple-api-log-entry';
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
-import { HTTPMethod } from '@/domain/api/value-objects/http-method';
-import { StatusCode } from '@/domain/api/value-objects/status-code';
-import { RequestDuration } from '@/domain/api/value-objects/request-duration';
-import { RequestId } from '@/domain/api/value-objects/request-id';
+import { LogId } from '@/domain/log/value-objects/log-id';
+import { HttpMethod } from '@/domain/log/value-objects/http-method';
+import { StatusCode } from '@/domain/log/value-objects/status-code';
+import { ResponseTime } from '@/domain/log/value-objects/response-time';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
 
 @injectable()
 export class APILogService {
+  private toDomainError(error: Error | DomainError, code: string): DomainError {
+    return error instanceof DomainError
+      ? error
+      : new DomainError(code, error.message, ErrorType.INTERNAL);
+  }
   constructor(
     @inject(DI_TOKENS.APILogRepository) private apiLogRepository: IAPILogRepository,
     @inject(DI_TOKENS.EventBus) private eventBus: IEventBus,
@@ -32,77 +40,82 @@ export class APILogService {
   }): Promise<Result<void>> {
     try {
       // Create value objects
-      const userIdResult =
-        params.userId === 'anonymous'
-          ? Result.ok(null)
-          : UserId.create(params.userId).map((id) => id);
-
-      const endpointResult = APIEndpoint.create(params.endpoint);
-      const methodResult = HTTPMethod.create(params.method);
+      const userIdResult = params.userId === 'anonymous' ? undefined : UserId.create(params.userId);
+      const httpMethodResult = HttpMethod.create(params.method);
       const statusCodeResult = StatusCode.create(params.statusCode);
-      const durationResult = RequestDuration.create(params.duration);
-      const requestIdResult = params.requestId
-        ? RequestId.create(params.requestId)
-        : Result.ok(RequestId.generate());
+      const responseTimeResult = ResponseTime.create(params.duration);
+      const ipAddressResult = params.ipAddress ? IPAddress.create(params.ipAddress) : IPAddress.create('0.0.0.0');
+      const userAgentResult = params.userAgent ? UserAgent.create(params.userAgent) : UserAgent.unknown();
 
       // Check if any value object creation failed
-      if (endpointResult.isFailure) {
-        return Result.fail(endpointResult.getError());
+      if (userIdResult && userIdResult.isFailure) {
+        return Result.fail(this.toDomainError(userIdResult.getError(), 'USER_ID_ERROR'));
       }
-      if (methodResult.isFailure) {
-        return Result.fail(methodResult.getError());
+      if (httpMethodResult.isFailure) {
+        return Result.fail(this.toDomainError(httpMethodResult.getError(), 'HTTP_METHOD_ERROR'));
       }
       if (statusCodeResult.isFailure) {
-        return Result.fail(statusCodeResult.getError());
+        return Result.fail(this.toDomainError(statusCodeResult.getError(), 'STATUS_CODE_ERROR'));
       }
-      if (durationResult.isFailure) {
-        return Result.fail(durationResult.getError());
+      if (responseTimeResult.isFailure) {
+        return Result.fail(this.toDomainError(responseTimeResult.getError(), 'RESPONSE_TIME_ERROR'));
       }
-      if (requestIdResult.isFailure) {
-        return Result.fail(requestIdResult.getError());
+      if (ipAddressResult.isFailure) {
+        return Result.fail(this.toDomainError(ipAddressResult.getError(), 'IP_ADDRESS_ERROR'));
+      }
+      if (userAgentResult.isFailure) {
+        return Result.fail(this.toDomainError(userAgentResult.getError(), 'USER_AGENT_ERROR'));
       }
 
-      // Create APILog entity
-      const apiLogResult = APILog.create({
-        userId: userIdResult.getValue(),
-        endpoint: endpointResult.getValue(),
-        method: methodResult.getValue(),
-        statusCode: statusCodeResult.getValue(),
-        duration: durationResult.getValue(),
-        requestId: requestIdResult.getValue(),
-        timestamp: new Date(),
-        metadata: {
-          correlationId: params.correlationId,
-          ipAddress: params.ipAddress,
-          userAgent: params.userAgent,
+      // Create SimpleApiLogEntry
+      const logEntryResult = SimpleApiLogEntry.create(
+        LogId.generate(),
+        {
+          userId: userIdResult && !userIdResult.isFailure ? userIdResult.getValue() : undefined,
+          endpoint: params.endpoint,
+          method: httpMethodResult.getValue(),
+          statusCode: statusCodeResult.getValue(),
+          responseTime: responseTimeResult.getValue().milliseconds,
+          ipAddress: ipAddressResult.getValue(),
+          userAgent: userAgentResult.getValue(),
+          timestamp: new Date(),
+          errorMessage: undefined,
+          responseSize: undefined,
         },
-      });
+      );
 
-      if (apiLogResult.isFailure) {
-        return Result.fail(apiLogResult.getError());
+      if (logEntryResult.isFailure) {
+        return Result.fail(this.toDomainError(logEntryResult.getError(), 'LOG_ENTRY_ERROR'));
       }
 
-      const apiLog = apiLogResult.getValue();
+      const logEntry = logEntryResult.getValue();
 
-      // Save to repository
-      await this.apiLogRepository.save(apiLog);
+      // Save to repository - cast to APILogEntry as SimpleApiLogEntry implements the interface
+      await this.apiLogRepository.save(logEntry as unknown as APILogEntry);
 
       // Publish event
+      // Generate a unique aggregate ID for the event
+      const aggregateId = LogId.generate().value;
       const event = new APIAccessRequested(
-        params.userId === 'anonymous' ? null : params.userId,
-        params.endpoint,
+        aggregateId,
+        params.userId === 'anonymous' ? 'anonymous' : params.userId,
+        params.endpoint, // endpointId
+        params.endpoint, // path
         params.method,
-        params.statusCode,
+        'API', // endpointType
         new Date(),
       );
       await this.eventBus.publish(event);
 
-      return Result.ok();
+      return Result.ok<void>(undefined);
     } catch (error) {
-      return Result.fail({
-        code: 'API_LOG_FAILED',
-        message: `Failed to log API access: ${error.message}`,
-      });
+      return Result.fail(
+        new DomainError(
+          'API_LOG_FAILED',
+          `Failed to log API access: ${(error as Error).message}`,
+          ErrorType.INTERNAL,
+        ),
+      );
     }
   }
 }

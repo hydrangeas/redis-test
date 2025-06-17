@@ -1,5 +1,4 @@
 import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { RateLimitCheckResult } from './rate-limit-use-case.interface';
 
@@ -42,7 +41,7 @@ export interface IAPIAccessControlUseCase {
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
-  ): Promise<Result<APIAccessDecision, DomainError>>;
+  ): Promise<Result<APIAccessDecision>>;
 
   /**
    * 公開エンドポイントへのアクセスを記録
@@ -56,5 +55,5 @@ export interface IAPIAccessControlUseCase {
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
-  ): Promise<Result<void, DomainError>>;
+  ): Promise<Result<void>>;
 }

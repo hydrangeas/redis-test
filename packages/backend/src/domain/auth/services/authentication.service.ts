@@ -132,10 +132,4 @@ export class AuthenticationService {
     return payload.exp < now;
   }
 
-  /**
-   * トークンの発行者を検証（オプション）
-   */
-  private isValidIssuer(payload: TokenPayload, expectedIssuer: string): boolean {
-    return payload.iss === expectedIssuer;
-  }
 }

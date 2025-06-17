@@ -1,10 +1,8 @@
 import { injectable } from 'tsyringe';
 import { AuthenticatedUser } from '../../auth/value-objects/authenticated-user';
 import { DataPath } from '../value-objects/data-path';
-import { Result } from '../../errors/result';
-import { ValidationError } from '../../errors/validation-error';
+import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '../../errors/domain-error';
-import { ResourceNotFoundException } from '../../errors/exceptions';
 
 export interface DataAccessValidationResult {
   allowed: boolean;
@@ -34,11 +32,11 @@ export class DataAccessService implements IDataAccessService {
   validateAccess(user: AuthenticatedUser, path: DataPath): Result<DataAccessValidationResult> {
     try {
       if (!user) {
-        return Result.fail(new ValidationError('User is required'));
+        return Result.fail(DomainError.validation('USER_REQUIRED', 'User is required'));
       }
 
       if (!path) {
-        return Result.fail(new ValidationError('Path is required'));
+        return Result.fail(DomainError.validation('PATH_REQUIRED', 'Path is required'));
       }
 
       // Check if path is safe

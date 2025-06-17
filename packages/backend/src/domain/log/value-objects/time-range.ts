@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * 時間範囲を表すバリューオブジェクト
@@ -30,25 +31,35 @@ export class TimeRange {
    */
   static create(start: Date, end: Date): Result<TimeRange> {
     if (!start || !end) {
-      return Result.fail<TimeRange>('開始日時と終了日時は必須です');
+      return Result.fail<TimeRange>(
+        new DomainError('MISSING_DATE', '開始日時と終了日時は必須です', ErrorType.VALIDATION)
+      );
     }
 
     if (!(start instanceof Date) || !(end instanceof Date)) {
-      return Result.fail<TimeRange>('開始日時と終了日時はDate型である必要があります');
+      return Result.fail<TimeRange>(
+        new DomainError('INVALID_DATE_TYPE', '開始日時と終了日時はDate型である必要があります', ErrorType.VALIDATION)
+      );
     }
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return Result.fail<TimeRange>('無効な日時が指定されました');
+      return Result.fail<TimeRange>(
+        new DomainError('INVALID_DATE', '無効な日時が指定されました', ErrorType.VALIDATION)
+      );
     }
 
     if (start > end) {
-      return Result.fail<TimeRange>('開始日時は終了日時より前である必要があります');
+      return Result.fail<TimeRange>(
+        new DomainError('INVALID_DATE_RANGE', '開始日時は終了日時より前である必要があります', ErrorType.VALIDATION)
+      );
     }
 
     // 最大範囲を1年に制限
     const maxRangeMs = 365 * 24 * 60 * 60 * 1000; // 1年
     if (end.getTime() - start.getTime() > maxRangeMs) {
-      return Result.fail<TimeRange>('時間範囲は最大1年までです');
+      return Result.fail<TimeRange>(
+        new DomainError('DATE_RANGE_TOO_LARGE', '時間範囲は最大1年までです', ErrorType.VALIDATION)
+      );
     }
 
     return Result.ok(new TimeRange(new Date(start), new Date(end)));
@@ -62,9 +73,9 @@ export class TimeRange {
     const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
     const result = TimeRange.create(start, end);
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw new Error(result.getError().message);
     }
-    return result.value;
+    return result.getValue();
   }
 
   /**
@@ -75,9 +86,9 @@ export class TimeRange {
     const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
     const result = TimeRange.create(start, end);
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw new Error(result.getError().message);
     }
-    return result.value;
+    return result.getValue();
   }
 
   /**
@@ -93,9 +104,9 @@ export class TimeRange {
     );
     const result = TimeRange.create(start, end);
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw new Error(result.getError().message);
     }
-    return result.value;
+    return result.getValue();
   }
 
   /**
@@ -107,9 +118,9 @@ export class TimeRange {
     const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
     const result = TimeRange.create(start, end);
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw new Error(result.getError().message);
     }
-    return result.value;
+    return result.getValue();
   }
 
   /**

@@ -1,5 +1,5 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import * as path from 'path';
 
 /**
@@ -23,16 +23,16 @@ export class DataPath {
    * パス文字列からDataPathを作成
    * @param pathString パス文字列
    */
-  static create(pathString: string): Result<DataPath, DomainError> {
+  static create(pathString: string): Result<DataPath> {
     // 基本的な検証
     if (!pathString || pathString.trim().length === 0) {
-      return Result.fail(new DomainError('INVALID_PATH', 'Path cannot be empty', 'VALIDATION'));
+      return Result.fail(new DomainError('INVALID_PATH', 'Path cannot be empty', ErrorType.VALIDATION));
     }
 
     // .jsonで終わることを確認
     if (!pathString.endsWith('.json')) {
       return Result.fail(
-        new DomainError('INVALID_PATH_FORMAT', 'Path must end with .json', 'VALIDATION'),
+        new DomainError('INVALID_PATH_FORMAT', 'Path must end with .json', ErrorType.VALIDATION),
       );
     }
 
@@ -42,7 +42,7 @@ export class DataPath {
         new DomainError(
           'PATH_TOO_LONG',
           `Path exceeds maximum length of ${this.MAX_PATH_LENGTH} characters`,
-          'VALIDATION',
+          ErrorType.VALIDATION,
         ),
       );
     }
@@ -64,14 +64,14 @@ export class DataPath {
 
     for (const pattern of dangerousPatterns) {
       if (lowerPath.includes(pattern)) {
-        return Result.fail(new DomainError('INVALID_PATH', 'Path traversal detected', 'SECURITY'));
+        return Result.fail(new DomainError('INVALID_PATH', 'Path traversal detected', ErrorType.FORBIDDEN));
       }
     }
 
     // path.normalizeを使った追加チェック
     const normalizedPath = path.normalize(pathString);
     if (normalizedPath !== pathString || normalizedPath.includes('..')) {
-      return Result.fail(new DomainError('INVALID_PATH', 'Path traversal detected', 'SECURITY'));
+      return Result.fail(new DomainError('INVALID_PATH', 'Path traversal detected', ErrorType.FORBIDDEN));
     }
 
     // 危険な文字のチェック
@@ -80,7 +80,7 @@ export class DataPath {
         new DomainError(
           'INVALID_PATH_CHARACTERS',
           'Path contains invalid characters',
-          'VALIDATION',
+          ErrorType.VALIDATION,
         ),
       );
     }
@@ -89,7 +89,7 @@ export class DataPath {
     const segments = pathString.split('/').filter((s) => s.length > 0);
     if (segments.length === 0) {
       return Result.fail(
-        new DomainError('INVALID_PATH', 'Path must have at least one segment', 'VALIDATION'),
+        new DomainError('INVALID_PATH', 'Path must have at least one segment', ErrorType.VALIDATION),
       );
     }
 
@@ -100,7 +100,7 @@ export class DataPath {
           new DomainError(
             'PATH_SEGMENT_TOO_LONG',
             `Path segment "${segment}" exceeds maximum length of ${this.MAX_SEGMENT_LENGTH} characters`,
-            'VALIDATION',
+            ErrorType.VALIDATION,
           ),
         );
       }
@@ -111,7 +111,7 @@ export class DataPath {
           new DomainError(
             'INVALID_SEGMENT_CHARACTERS',
             `Path segment "${segment}" contains invalid characters`,
-            'VALIDATION',
+            ErrorType.VALIDATION,
           ),
         );
       }

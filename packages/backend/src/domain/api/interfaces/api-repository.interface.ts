@@ -3,7 +3,6 @@ import { EndpointId } from '../value-objects/endpoint-id';
 import { HttpMethod } from '../value-objects/http-method';
 import { EndpointPath } from '../value-objects/endpoint-path';
 import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors/domain-error';
 
 /**
  * APIリポジトリインターフェース
@@ -13,17 +12,17 @@ export interface IAPIRepository {
   /**
    * API集約を保存
    */
-  save(aggregate: APIAggregate): Promise<Result<void, DomainError>>;
+  save(aggregate: APIAggregate): Promise<Result<void>>;
 
   /**
    * API集約を取得（単一のインスタンスのみ存在）
    */
-  getAggregate(): Promise<Result<APIAggregate, DomainError>>;
+  getAggregate(): Promise<Result<APIAggregate>>;
 
   /**
    * エンドポイントIDで特定のエンドポイントを持つ集約を取得
    */
-  findByEndpointId(endpointId: EndpointId): Promise<Result<APIAggregate | null, DomainError>>;
+  findByEndpointId(endpointId: EndpointId): Promise<Result<APIAggregate | null>>;
 
   /**
    * パスとメソッドでエンドポイントを検索
@@ -31,10 +30,10 @@ export interface IAPIRepository {
   findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
-  ): Promise<Result<APIAggregate | null, DomainError>>;
+  ): Promise<Result<APIAggregate | null>>;
 
   /**
    * API集約が存在するか確認
    */
-  exists(): Promise<Result<boolean, DomainError>>;
+  exists(): Promise<Result<boolean>>;
 }

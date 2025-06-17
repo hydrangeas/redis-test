@@ -1,5 +1,4 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 import { APILogEntry } from '../entities/api-log-entry';
 import { LogId } from '../value-objects/log-id';
 import { TimeRange } from '../value-objects/time-range';
@@ -14,13 +13,13 @@ export interface IAPILogRepository {
    * APIログエントリを保存
    * @param logEntry ログエントリ
    */
-  save(logEntry: APILogEntry): Promise<Result<void, DomainError>>;
+  save(logEntry: APILogEntry): Promise<Result<void>>;
 
   /**
    * IDでログエントリを検索
    * @param id ログID
    */
-  findById(id: LogId): Promise<Result<APILogEntry | null, DomainError>>;
+  findById(id: LogId): Promise<Result<APILogEntry | null>>;
 
   /**
    * ユーザーIDでログエントリを検索
@@ -32,7 +31,7 @@ export interface IAPILogRepository {
     userId: UserId,
     timeRange?: TimeRange,
     limit?: number,
-  ): Promise<Result<APILogEntry[], DomainError>>;
+  ): Promise<Result<APILogEntry[]>>;
 
   /**
    * 時間範囲でログエントリを検索
@@ -42,14 +41,14 @@ export interface IAPILogRepository {
   findByTimeRange(
     timeRange: TimeRange,
     limit?: number,
-  ): Promise<Result<APILogEntry[], DomainError>>;
+  ): Promise<Result<APILogEntry[]>>;
 
   /**
    * エラーログのみを検索
    * @param timeRange 時間範囲
    * @param limit 取得件数上限
    */
-  findErrors(timeRange?: TimeRange, limit?: number): Promise<Result<APILogEntry[], DomainError>>;
+  findErrors(timeRange?: TimeRange, limit?: number): Promise<Result<APILogEntry[]>>;
 
   /**
    * 統計情報を取得
@@ -64,8 +63,7 @@ export interface IAPILogRepository {
         averageResponseTime: number;
         requestsByEndpoint: Map<string, number>;
         requestsByStatus: Map<number, number>;
-      },
-      DomainError
+      }
     >
   >;
 
@@ -73,13 +71,13 @@ export interface IAPILogRepository {
    * 古いログエントリを削除
    * @param beforeDate この日付より前のログを削除
    */
-  deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>>;
+  deleteOldLogs(beforeDate: Date): Promise<Result<number>>;
 
   /**
    * 複数のログエントリを一括保存
    * @param logEntries ログエントリの配列
    */
-  saveMany(logEntries: APILogEntry[]): Promise<Result<void, DomainError>>;
+  saveMany(logEntries: APILogEntry[]): Promise<Result<void>>;
 
   /**
    * 遅いリクエストを検索
@@ -89,7 +87,7 @@ export interface IAPILogRepository {
   findSlowRequests(
     thresholdMs: number,
     limit?: number,
-  ): Promise<Result<APILogEntry[], DomainError>>;
+  ): Promise<Result<APILogEntry[]>>;
 
   /**
    * エラーログを検索（オプション付き）
@@ -99,5 +97,5 @@ export interface IAPILogRepository {
     userId?: UserId;
     limit?: number;
     offset?: number;
-  }): Promise<Result<APILogEntry[], DomainError>>;
+  }): Promise<Result<APILogEntry[]>>;
 }

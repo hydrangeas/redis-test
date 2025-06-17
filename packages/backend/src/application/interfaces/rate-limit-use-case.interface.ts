@@ -1,5 +1,4 @@
 import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 /**
@@ -34,7 +33,7 @@ export interface IRateLimitUseCase {
     user: AuthenticatedUser,
     endpoint: string,
     method: string,
-  ): Promise<Result<RateLimitCheckResult, DomainError>>;
+  ): Promise<Result<RateLimitCheckResult>>;
 
   /**
    * ユーザーの現在の使用状況を取得
@@ -42,15 +41,12 @@ export interface IRateLimitUseCase {
    * @returns 使用状況情報
    */
   getUserUsageStatus(user: AuthenticatedUser): Promise<
-    Result<
-      {
-        currentCount: number;
-        limit: number;
-        windowStart: Date;
-        windowEnd: Date;
-      },
-      DomainError
-    >
+    Result<{
+      currentCount: number;
+      limit: number;
+      windowStart: Date;
+      windowEnd: Date;
+    }>
   >;
 
   /**
@@ -58,5 +54,5 @@ export interface IRateLimitUseCase {
    * @param userId ユーザーID
    * @returns 成功または失敗の結果
    */
-  resetUserLimit(userId: string): Promise<Result<void, DomainError>>;
+  resetUserLimit(userId: string): Promise<Result<void>>;
 }

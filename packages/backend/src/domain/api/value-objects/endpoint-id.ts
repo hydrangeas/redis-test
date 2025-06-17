@@ -1,4 +1,3 @@
-import { ValidationError } from '@/domain/errors/validation-error';
 import { UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/shared/result';
 

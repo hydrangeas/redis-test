@@ -1,12 +1,11 @@
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
-import { UniqueEntityId } from '@/domain/shared/unique-entity-id';
+import { UniqueEntityId } from '@/domain/shared/entity';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { EndpointPath } from '../value-objects/endpoint-path';
-import { EndpointId } from '../value-objects/endpoint-id';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';
 import { RequestCount } from '../value-objects/request-count';
 import { RateLimitLog } from '../entities/rate-limit-log.entity';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { ValidationError } from '@/domain/errors/validation-error';
 
@@ -52,7 +51,7 @@ export class RateLimiting extends AggregateRoot<RateLimitingProps> {
     const window = new RateLimitWindow(this.props.windowSeconds, currentTime);
 
     // ウィンドウ内のリクエストをカウント
-    const requestsInWindow = this.props.logs.filter((log) => window.contains(log.requestedAt));
+    const requestsInWindow = this.props.logs.filter((log) => window.contains(log.timestamp));
 
     const currentCount = requestsInWindow.length;
     const isExceeded = currentCount >= maxRequests;
@@ -73,10 +72,11 @@ export class RateLimiting extends AggregateRoot<RateLimitingProps> {
   recordRequest(timestamp: Date = new Date()): Result<void> {
     try {
       const newLogResult = RateLimitLog.create({
-        userId: this.userId,
-        endpointId: EndpointId.generate(), // Temporary ID, will be replaced by repository
-        requestCount: RequestCount.create(1).getValue(),
-        requestedAt: timestamp,
+        userId: this.userId.value,
+        endpointId: this.endpointPath.value,
+        requestId: new UniqueEntityId().toString(),
+        timestamp: timestamp,
+        exceeded: false,
       });
 
       if (newLogResult.isFailure) {
@@ -87,7 +87,7 @@ export class RateLimiting extends AggregateRoot<RateLimitingProps> {
       this.props.logs.push(newLog);
 
       // ログを時系列でソート
-      this.props.logs.sort((a, b) => a.requestedAt.getTime() - b.requestedAt.getTime());
+      this.props.logs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
       // 古いログをクリーンアップ
       this.cleanupOldLogs(timestamp);
@@ -110,7 +110,7 @@ export class RateLimiting extends AggregateRoot<RateLimitingProps> {
     const beforeCount = this.props.logs.length;
 
     this.props.logs = this.props.logs.filter(
-      (log) => log.requestedAt.getTime() > cutoffTime.getTime(),
+      (log) => log.timestamp.getTime() > cutoffTime.getTime(),
     );
 
     return beforeCount - this.props.logs.length;
@@ -119,14 +119,14 @@ export class RateLimiting extends AggregateRoot<RateLimitingProps> {
   /**
    * リセット時刻を計算
    */
-  private calculateResetTime(window: RateLimitWindow, requestsInWindow: RateLimitLog[]): Date {
+  private calculateResetTime(_window: RateLimitWindow, requestsInWindow: RateLimitLog[]): Date {
     if (requestsInWindow.length === 0) {
       return new Date(Date.now() + this.props.windowSeconds * 1000);
     }
 
     // 最も古いリクエストがウィンドウから出る時刻
     const oldestRequest = requestsInWindow[0];
-    const oldestRequestTime = oldestRequest.requestedAt.getTime();
+    const oldestRequestTime = oldestRequest.timestamp.getTime();
     const windowEndTime = oldestRequestTime + this.props.windowSeconds * 1000;
 
     return new Date(windowEndTime);
@@ -137,7 +137,7 @@ export class RateLimiting extends AggregateRoot<RateLimitingProps> {
    */
   getCurrentRequestCount(currentTime: Date = new Date()): RequestCount {
     const window = new RateLimitWindow(this.props.windowSeconds, currentTime);
-    const requestsInWindow = this.props.logs.filter((log) => window.contains(log.requestedAt));
+    const requestsInWindow = this.props.logs.filter((log) => window.contains(log.timestamp));
 
     return RequestCount.create(requestsInWindow.length).getValue();
   }

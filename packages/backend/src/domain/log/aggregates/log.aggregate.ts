@@ -1,13 +1,12 @@
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
 import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
-import { Guard } from '@/domain/shared/guard';
 import { LogId } from '../value-objects/log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { APILogEntry } from '../entities/api-log-entry';
 import { AuthLogEntry } from '../entities/auth-log-entry';
 import { AuthResult } from '../value-objects';
-import { AuthEvent, EventType } from '../value-objects/auth-event';
+import { AuthEvent } from '../value-objects/auth-event';
 import { Provider } from '../value-objects/provider';
 import { IPAddress } from '../value-objects/ip-address';
 import { UserAgent } from '../value-objects/user-agent';
@@ -66,7 +65,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
   /**
    * ログ集約を作成
    */
-  public static create(retentionDays?: number, id?: LogId): Result<LogAggregate, DomainError> {
+  public static create(retentionDays?: number, id?: LogId): Result<LogAggregate> {
     const days = retentionDays !== undefined ? retentionDays : this.DEFAULT_RETENTION_DAYS;
 
     if (days < 1 || days > 365) {
@@ -99,7 +98,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     requestInfo: RequestInfo,
     responseInfo: ResponseInfo,
     error?: string,
-  ): Result<void, DomainError> {
+  ): Result<void> {
     // ログ数の上限チェック
     if (this.props.apiLogs.length >= LogAggregate.MAX_LOGS_PER_TYPE) {
       return Result.fail(
@@ -167,7 +166,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     userId?: UserId,
     errorMessage?: string,
     metadata?: Record<string, any>,
-  ): Result<void, DomainError> {
+  ): Result<void> {
     // ログ数の上限チェック
     if (this.props.authLogs.length >= LogAggregate.MAX_LOGS_PER_TYPE) {
       return Result.fail(
@@ -254,7 +253,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
   /**
    * 古いログをクリーンアップ
    */
-  public cleanupOldLogs(): Result<number, DomainError> {
+  public cleanupOldLogs(): Result<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.props.retentionDays);
 
@@ -445,7 +444,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     authLogs: AuthLogEntry[],
     retentionDays: number,
     lastCleanedAt?: Date,
-  ): Result<LogAggregate, DomainError> {
+  ): Result<LogAggregate> {
     if (retentionDays < 1 || retentionDays > 365) {
       return Result.fail(
         DomainError.validation(

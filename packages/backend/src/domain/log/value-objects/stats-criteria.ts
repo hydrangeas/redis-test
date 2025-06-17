@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { TimeRange } from './time-range';
 
 /**
@@ -60,7 +61,7 @@ export class StatsCriteria {
     const { timeRange, groupBy, filters, metrics } = params;
 
     if (!timeRange) {
-      return Result.fail<StatsCriteria>('時間範囲は必須です');
+      return Result.fail<StatsCriteria>(new DomainError('STATS_CRITERIA_ERROR', '時間範囲は必須です', ErrorType.VALIDATION));
     }
 
     // グループ化キーの検証
@@ -75,7 +76,7 @@ export class StatsCriteria {
         'month',
       ];
       if (!validGroupByKeys.includes(groupBy)) {
-        return Result.fail<StatsCriteria>(`無効なグループ化キー: ${groupBy}`);
+        return Result.fail<StatsCriteria>(new DomainError('INVALID_GROUP_BY', `無効なグループ化キー: ${groupBy}`, ErrorType.VALIDATION));
       }
     }
 
@@ -92,7 +93,7 @@ export class StatsCriteria {
       ];
       const invalidMetrics = metrics.filter((m) => !validMetrics.includes(m));
       if (invalidMetrics.length > 0) {
-        return Result.fail<StatsCriteria>(`無効なメトリクス: ${invalidMetrics.join(', ')}`);
+        return Result.fail<StatsCriteria>(new DomainError('INVALID_METRICS', `無効なメトリクス: ${invalidMetrics.join(', ')}`, ErrorType.VALIDATION));
       }
     }
 
@@ -112,9 +113,9 @@ export class StatsCriteria {
       metrics: ['count', 'uniqueUsers', 'successRate'],
     });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
   }
 
   /**
@@ -127,9 +128,9 @@ export class StatsCriteria {
       metrics: ['count', 'averageResponseTime', 'errorRate', 'p95ResponseTime'],
     });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
   }
 
   /**

@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * HTTPステータスコードを表すバリューオブジェクト
@@ -27,11 +28,15 @@ export class StatusCode {
    */
   static create(code: number): Result<StatusCode> {
     if (!Number.isInteger(code)) {
-      return Result.fail<StatusCode>('ステータスコードは整数である必要があります');
+      return Result.fail<StatusCode>(
+        new DomainError('INVALID_STATUS_CODE', 'ステータスコードは整数である必要があります', ErrorType.VALIDATION)
+      );
     }
 
     if (code < 100 || code > 599) {
-      return Result.fail<StatusCode>('ステータスコードは100から599の間である必要があります');
+      return Result.fail<StatusCode>(
+        new DomainError('INVALID_STATUS_CODE_RANGE', 'ステータスコードは100から599の間である必要があります', ErrorType.VALIDATION)
+      );
     }
 
     return Result.ok(new StatusCode(code));

@@ -35,14 +35,11 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     path: string,
     user: AuthenticatedUser,
   ): Promise<
-    Result<
-      {
-        content: any;
-        checksum: string;
-        lastModified: Date;
-      },
-      DomainError
-    >
+    Result<{
+      content: any;
+      checksum: string;
+      lastModified: Date;
+    }>
   > {
     try {
       // DataPath値オブジェクトの作成
@@ -52,35 +49,58 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
 
         // データアクセス拒否イベントを発行
         await this.eventBus.publish(
-          new DataAccessDenied(user.userId.value, 1, path, 'INVALID_PATH', new Date()),
+          new DataAccessDenied(
+            user.userId.value,  // aggregateId
+            user.userId.value,  // userId
+            path,               // resourceId  
+            path,               // resourcePath
+            user.tier.level.toString(), // userTier
+            'INVALID_PATH',     // reason
+            new Date(),         // requestTime
+          ),
         );
 
-        return Result.fail(dataPathResult.error!);
+        return Result.fail(dataPathResult.getError());
       }
 
       const dataPath = dataPathResult.getValue();
 
       // データアクセス要求イベントを発行
+      // We don't have resource size and mime type yet, using placeholders
       await this.eventBus.publish(
-        new DataAccessRequested(user.userId.value, 1, dataPath.value, new Date()),
+        new DataAccessRequested(
+          user.userId.value,  // aggregateId
+          user.userId.value,  // userId
+          dataPath.value,     // resourceId
+          dataPath.value,     // resourcePath
+          0,                  // resourceSize (will be updated later)
+          'application/json', // mimeType (default)
+          new Date(),         // requestTime
+        ),
       );
 
       // リポジトリからリソースを検索
       const resourceResult = await this.dataRepository.findByPath(dataPath);
       if (resourceResult.isFailure) {
         this.logger.error(
-          { path: dataPath.value, error: resourceResult.error, userId: user.userId.value },
+          { path: dataPath.value, error: resourceResult.getError(), userId: user.userId.value },
           'Failed to find resource',
         );
 
         // リソースが見つからない場合のイベント発行
-        if (resourceResult.error!.type === ErrorType.NOT_FOUND) {
+        const error = resourceResult.getError();
+        if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
           await this.eventBus.publish(
-            new DataResourceNotFound(user.userId.value, 1, dataPath.value, new Date()),
+            new DataResourceNotFound(
+              user.userId.value,  // aggregateId
+              user.userId.value,  // userId
+              dataPath.value,     // requestedPath
+              new Date(),         // requestTime
+            ),
           );
         }
 
-        return Result.fail(resourceResult.error!);
+        return Result.fail(resourceResult.getError());
       }
 
       const resource = resourceResult.getValue();
@@ -89,10 +109,10 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       const contentResult = await this.dataRepository.getContent(resource);
       if (contentResult.isFailure) {
         this.logger.error(
-          { path: dataPath.value, error: contentResult.error, userId: user.userId.value },
+          { path: dataPath.value, error: contentResult.getError(), userId: user.userId.value },
           'Failed to get resource content',
         );
-        return Result.fail(contentResult.error!);
+        return Result.fail(contentResult.getError());
       }
 
       // アクセス記録を更新
@@ -101,12 +121,14 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // データ取得成功イベントを発行
       await this.eventBus.publish(
         new DataRetrieved(
-          resource.id.value,
-          1,
-          resource.path.value,
-          resource.metadata.size,
-          resource.metadata.contentType,
-          new Date(),
+          resource.id.value,          // aggregateId
+          1,                          // eventVersion
+          user.userId.value,          // userId
+          resource.path.value,        // dataPath
+          resource.metadata.size,     // resourceSize
+          resource.metadata.contentType, // mimeType
+          false,                      // cached (for now, always false)
+          100,                        // responseTime in ms (placeholder)
         ),
       );
 
@@ -148,21 +170,18 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
    * 指定されたパスのデータメタデータを取得
    */
   async retrieveMetadata(path: string): Promise<
-    Result<
-      {
-        size: number;
-        lastModified: Date;
-        etag: string;
-        contentType: string;
-      },
-      DomainError
-    >
+    Result<{
+      size: number;
+      lastModified: Date;
+      etag: string;
+      contentType: string;
+    }>
   > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
       if (dataPathResult.isFailure) {
-        return Result.fail(dataPathResult.error!);
+        return Result.fail(dataPathResult.getError());
       }
 
       const dataPath = dataPathResult.getValue();
@@ -170,7 +189,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // リポジトリからリソースを検索
       const resourceResult = await this.dataRepository.findByPath(dataPath);
       if (resourceResult.isFailure) {
-        return Result.fail(resourceResult.error!);
+        return Result.fail(resourceResult.getError());
       }
 
       const resource = resourceResult.getValue();
@@ -200,20 +219,17 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     path: string,
     etag: string,
   ): Promise<
-    Result<
-      {
-        data?: any;
-        notModified: boolean;
-        newEtag?: string;
-      },
-      DomainError
-    >
+    Result<{
+      data?: any;
+      notModified: boolean;
+      newEtag?: string;
+    }>
   > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
       if (dataPathResult.isFailure) {
-        return Result.fail(dataPathResult.error!);
+        return Result.fail(dataPathResult.getError());
       }
 
       const dataPath = dataPathResult.getValue();
@@ -221,7 +237,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // リポジトリからリソースを検索
       const resourceResult = await this.dataRepository.findByPath(dataPath);
       if (resourceResult.isFailure) {
-        return Result.fail(resourceResult.error!);
+        return Result.fail(resourceResult.getError());
       }
 
       const resource = resourceResult.getValue();
@@ -239,7 +255,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // ETagが一致しない場合は新しいデータを返す
       const contentResult = await this.dataRepository.getContent(resource);
       if (contentResult.isFailure) {
-        return Result.fail(contentResult.error!);
+        return Result.fail(contentResult.getError());
       }
 
       // アクセス記録を更新
@@ -248,12 +264,14 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // データ取得成功イベントを発行
       await this.eventBus.publish(
         new DataRetrieved(
-          resource.id.value,
-          1,
-          resource.path.value,
-          resource.metadata.size,
-          resource.metadata.contentType,
-          new Date(),
+          resource.id.value,          // aggregateId
+          1,                          // eventVersion
+          'anonymous',          // userId
+          resource.path.value,        // dataPath
+          resource.metadata.size,     // resourceSize
+          resource.metadata.contentType, // mimeType
+          false,                      // cached (for now, always false)
+          100,                        // responseTime in ms (placeholder)
         ),
       );
 
@@ -281,20 +299,17 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     path: string,
     ifModifiedSince: Date,
   ): Promise<
-    Result<
-      {
-        data?: any;
-        notModified: boolean;
-        lastModified?: Date;
-      },
-      DomainError
-    >
+    Result<{
+      data?: any;
+      notModified: boolean;
+      lastModified?: Date;
+    }>
   > {
     try {
       // DataPath値オブジェクトの作成
       const dataPathResult = DataPath.create(path);
       if (dataPathResult.isFailure) {
-        return Result.fail(dataPathResult.error!);
+        return Result.fail(dataPathResult.getError());
       }
 
       const dataPath = dataPathResult.getValue();
@@ -302,7 +317,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // リポジトリからリソースを検索
       const resourceResult = await this.dataRepository.findByPath(dataPath);
       if (resourceResult.isFailure) {
-        return Result.fail(resourceResult.error!);
+        return Result.fail(resourceResult.getError());
       }
 
       const resource = resourceResult.getValue();
@@ -323,7 +338,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // 更新されている場合は新しいデータを返す
       const contentResult = await this.dataRepository.getContent(resource);
       if (contentResult.isFailure) {
-        return Result.fail(contentResult.error!);
+        return Result.fail(contentResult.getError());
       }
 
       // アクセス記録を更新
@@ -332,12 +347,14 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       // データ取得成功イベントを発行
       await this.eventBus.publish(
         new DataRetrieved(
-          resource.id.value,
-          1,
-          resource.path.value,
-          resource.metadata.size,
-          resource.metadata.contentType,
-          new Date(),
+          resource.id.value,          // aggregateId
+          1,                          // eventVersion
+          'anonymous',          // userId
+          resource.path.value,        // dataPath
+          resource.metadata.size,     // resourceSize
+          resource.metadata.contentType, // mimeType
+          false,                      // cached (for now, always false)
+          100,                        // responseTime in ms (placeholder)
         ),
       );
 

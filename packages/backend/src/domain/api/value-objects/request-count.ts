@@ -1,5 +1,4 @@
 import { ValidationError } from '@/domain/errors/validation-error';
-import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors/domain-error';
 

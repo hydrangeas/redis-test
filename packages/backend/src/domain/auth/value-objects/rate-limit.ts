@@ -22,17 +22,17 @@ export class RateLimit {
    * @param windowSeconds - ウィンドウ期間（秒）
    * @returns 成功時はRateLimit、失敗時はDomainError
    */
-  static create(maxRequests: number, windowSeconds: number): Result<RateLimit, DomainError> {
+  static create(maxRequests: number, windowSeconds: number): Result<RateLimit> {
     // null/undefinedチェック
     const maxRequestsGuard = Guard.againstNullOrUndefined(maxRequests, 'maxRequests');
-    if (maxRequestsGuard.isFailure) {
+    if (!maxRequestsGuard.succeeded) {
       return Result.fail(
         DomainError.validation('INVALID_MAX_REQUESTS', 'Max requests cannot be null or undefined'),
       );
     }
 
     const windowSecondsGuard = Guard.againstNullOrUndefined(windowSeconds, 'windowSeconds');
-    if (windowSecondsGuard.isFailure) {
+    if (!windowSecondsGuard.succeeded) {
       return Result.fail(
         DomainError.validation(
           'INVALID_WINDOW_SECONDS',

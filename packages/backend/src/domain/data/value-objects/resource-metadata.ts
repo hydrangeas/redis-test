@@ -1,6 +1,6 @@
 import { Guard } from '@/domain/shared/guard';
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * リソースメタデータ値オブジェクト
@@ -63,15 +63,15 @@ export class ResourceMetadata {
     lastModified: Date | string;
     etag?: string;
     contentType?: string;
-  }): Result<ResourceMetadata, DomainError> {
+  }): Result<ResourceMetadata> {
     // サイズの検証
     const sizeGuard = Guard.againstNullOrUndefined(params.size, 'size');
     if (!sizeGuard.succeeded) {
-      return Result.fail(new DomainError('INVALID_SIZE', 'Size is required', 'VALIDATION'));
+      return Result.fail(new DomainError('INVALID_SIZE', 'Size is required', ErrorType.VALIDATION));
     }
 
     if (params.size < 0) {
-      return Result.fail(new DomainError('INVALID_SIZE', 'Size cannot be negative', 'VALIDATION'));
+      return Result.fail(new DomainError('INVALID_SIZE', 'Size cannot be negative', ErrorType.VALIDATION));
     }
 
     // 最終更新日時の検証と変換
@@ -80,7 +80,7 @@ export class ResourceMetadata {
       lastModified = new Date(params.lastModified);
       if (isNaN(lastModified.getTime())) {
         return Result.fail(
-          new DomainError('INVALID_DATE', 'Invalid last modified date', 'VALIDATION'),
+          new DomainError('INVALID_DATE', 'Invalid last modified date', ErrorType.VALIDATION),
         );
       }
     } else {
@@ -112,7 +112,7 @@ export class ResourceMetadata {
         new DomainError(
           'METADATA_CREATION_ERROR',
           error instanceof Error ? error.message : 'Failed to create metadata',
-          'VALIDATION',
+          ErrorType.VALIDATION,
         ),
       );
     }

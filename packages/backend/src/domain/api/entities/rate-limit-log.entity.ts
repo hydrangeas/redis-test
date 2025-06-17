@@ -1,5 +1,5 @@
 import { Entity, UniqueEntityId } from '@/domain/shared/entity';
-import { Result } from '@/domain/errors/result';
+import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 export interface RateLimitLogProps {
@@ -75,7 +75,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
   static create(
     props: CreateRateLimitLogProps,
     id?: UniqueEntityId,
-  ): Result<RateLimitLog, DomainError> {
+  ): Result<RateLimitLog> {
     // Validate userId
     if (!props.userId || typeof props.userId !== 'string') {
       return Result.fail(
@@ -123,7 +123,7 @@ export class RateLimitLog extends Entity<RateLimitLogProps> {
   /**
    * 既存のデータから再構築
    */
-  static reconstruct(props: RateLimitLogProps & { id: string }): Result<RateLimitLog, DomainError> {
+  static reconstruct(props: RateLimitLogProps & { id: string }): Result<RateLimitLog> {
     const { id, ...logProps } = props;
     return Result.ok(new RateLimitLog(logProps, new UniqueEntityId(id)));
   }

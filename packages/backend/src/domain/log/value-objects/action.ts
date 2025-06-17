@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 /**
  * アクションタイプの列挙
@@ -16,6 +17,9 @@ export enum ActionType {
   API_ACCESS = 'API_ACCESS',
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
   UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
+  
+  // システム関連
+  SYSTEM_ACTION = 'SYSTEM_ACTION',
 }
 
 /**
@@ -66,7 +70,7 @@ export class Action {
    */
   static create(type: ActionType, metadata?: Record<string, any>): Result<Action> {
     if (!Object.values(ActionType).includes(type)) {
-      return Result.fail<Action>('無効なアクションタイプです');
+      return Result.fail<Action>(new DomainError('INVALID_ACTION_TYPE', '無効なアクションタイプです', ErrorType.VALIDATION));
     }
 
     // メタデータの検証
@@ -74,21 +78,21 @@ export class Action {
       // 認証アクションの場合
       if ([ActionType.LOGIN, ActionType.LOGIN_FAILED].includes(type)) {
         if (type === ActionType.LOGIN && !metadata.userId) {
-          return Result.fail<Action>('ログイン成功時はuserIdが必要です');
+          return Result.fail<Action>(new DomainError('MISSING_USER_ID', 'ログイン成功時はuserIdが必要です', ErrorType.VALIDATION));
         }
       }
 
       // APIアクセスアクションの場合
       if (type === ActionType.API_ACCESS) {
         if (!metadata.endpoint || !metadata.method) {
-          return Result.fail<Action>('APIアクセスにはendpointとmethodが必要です');
+          return Result.fail<Action>(new DomainError('MISSING_API_INFO', 'APIアクセスにはendpointとmethodが必要です', ErrorType.VALIDATION));
         }
       }
 
       // レート制限アクションの場合
       if (type === ActionType.RATE_LIMIT_EXCEEDED) {
         if (!metadata.userId || !metadata.limit || !metadata.window) {
-          return Result.fail<Action>('レート制限超過にはuserId、limit、windowが必要です');
+          return Result.fail<Action>(new DomainError('MISSING_RATE_LIMIT_INFO', 'レート制限超過にはuserId、limit、windowが必要です', ErrorType.VALIDATION));
         }
       }
     }
@@ -102,25 +106,25 @@ export class Action {
   static login(userId: string, provider: string): Action {
     const result = Action.create(ActionType.LOGIN, { userId, provider });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
   }
 
   static loginFailed(email?: string, reason?: string): Action {
     const result = Action.create(ActionType.LOGIN_FAILED, { email, reason });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
   }
 
   static logout(userId: string): Action {
     const result = Action.create(ActionType.LOGOUT, { userId });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
   }
 
   static apiAccess(endpoint: string, method: string, responseCode: number): Action {
@@ -130,9 +134,9 @@ export class Action {
       responseCode,
     });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
   }
 
   static rateLimitExceeded(userId: string, limit: number, window: number): Action {
@@ -142,9 +146,25 @@ export class Action {
       window,
     });
     if (result.isFailure) {
-      throw new Error(result.error);
+      throw result.getError();
     }
-    return result.value;
+    return result.getValue();
+  }
+
+  static tokenRefresh(userId: string): Action {
+    const result = Action.create(ActionType.TOKEN_REFRESH, { userId });
+    if (result.isFailure) {
+      throw result.getError();
+    }
+    return result.getValue();
+  }
+
+  static systemEvent(eventType: string, metadata?: Record<string, any>): Action {
+    const result = Action.create(ActionType.SYSTEM_ACTION, { eventType, ...metadata });
+    if (result.isFailure) {
+      throw result.getError();
+    }
+    return result.getValue();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Entity } from '@/domain/shared/entity';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
 import { ResourceId } from '../value-objects/resource-id';
 import { DataPath } from '../value-objects/data-path';
 import { ResourceMetadata } from '../value-objects/resource-metadata';
@@ -28,14 +28,15 @@ export class OpenDataResource extends Entity<OpenDataResourceProps> {
       createdAt,
       accessedAt: accessedAt || createdAt,
     };
-    super(props, id);
+    super(props, id as UniqueEntityId);
   }
 
   /**
    * エンティティID
    */
   get id(): ResourceId {
-    return this._id as ResourceId;
+    // Since ResourceId extends UniqueEntityId, we need to reconstruct it
+    return ResourceId.create(this._id.toString()).getValue();
   }
 
   /**
@@ -109,9 +110,9 @@ export class OpenDataResource extends Entity<OpenDataResourceProps> {
 
   /**
    * アクセス権限のチェック（将来の拡張用）
-   * @param userTier ユーザーのティア
+   * @param _userTier ユーザーのティア
    */
-  canAccessByTier(userTier: string): boolean {
+  canAccessByTier(_userTier: string): boolean {
     // 現在はすべての認証済みユーザーがアクセス可能
     // 将来的にリソースレベルのアクセス制御を実装する場合はここに追加
     return true;

@@ -2,8 +2,8 @@ import { ValueObject } from '@/domain/shared/value-object';
 import { EndpointPath } from './endpoint-path';
 import { HttpMethod } from './http-method';
 import { EndpointType } from './endpoint-type';
-import { ValidationError } from '@/domain/errors/validation-error';
 import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 export interface APIEndpointProps {
   path: EndpointPath;
@@ -57,7 +57,7 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
    * HTTPメソッドとパスの両方がマッチするかチェック
    */
   matches(method: HttpMethod, path: EndpointPath): boolean {
-    return this.props.method.equals(method) && this.matchesPath(path);
+    return this.props.method === method && this.matchesPath(path);
   }
 
   /**
@@ -65,15 +65,15 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
    */
   static create(props: APIEndpointProps): Result<APIEndpoint> {
     if (!props.path) {
-      return Result.fail(new ValidationError('Path is required'));
+      return Result.fail(new DomainError('INVALID_PATH', 'Path is required', ErrorType.VALIDATION));
     }
 
     if (!props.method) {
-      return Result.fail(new ValidationError('Method is required'));
+      return Result.fail(new DomainError('INVALID_METHOD', 'Method is required', ErrorType.VALIDATION));
     }
 
     if (!props.type) {
-      return Result.fail(new ValidationError('Type is required'));
+      return Result.fail(new DomainError('INVALID_TYPE', 'Type is required', ErrorType.VALIDATION));
     }
 
     return Result.ok(new APIEndpoint(props));
@@ -157,6 +157,6 @@ export class APIEndpoint extends ValueObject<APIEndpointProps> {
    * 文字列表現
    */
   toString(): string {
-    return `${this.props.method.value} ${this.props.path.value} (${this.props.type.value})`;
+    return `${this.props.method} ${this.props.path.value} (${this.props.type.value})`;
   }
 }

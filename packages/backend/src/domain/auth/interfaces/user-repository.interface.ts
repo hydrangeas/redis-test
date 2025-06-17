@@ -1,4 +1,4 @@
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
 import { User } from '../entities/user';
 import { UserId } from '../value-objects/user-id';
 import { Email } from '../value-objects/email';

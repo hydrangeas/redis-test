@@ -1,5 +1,4 @@
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 import { AuthLogEntry } from '../entities/auth-log-entry';
 import { LogId } from '../value-objects/log-id';
 import { TimeRange } from '../value-objects/time-range';
@@ -16,13 +15,13 @@ export interface IAuthLogRepository {
    * 認証ログエントリを保存
    * @param logEntry ログエントリ
    */
-  save(logEntry: AuthLogEntry): Promise<Result<void, DomainError>>;
+  save(logEntry: AuthLogEntry): Promise<Result<void>>;
 
   /**
    * IDでログエントリを検索
    * @param id ログID
    */
-  findById(id: LogId): Promise<Result<AuthLogEntry | null, DomainError>>;
+  findById(id: LogId): Promise<Result<AuthLogEntry | null>>;
 
   /**
    * ユーザーIDでログエントリを検索
@@ -34,7 +33,7 @@ export interface IAuthLogRepository {
     userId: UserId,
     timeRange?: TimeRange,
     limit?: number,
-  ): Promise<Result<AuthLogEntry[], DomainError>>;
+  ): Promise<Result<AuthLogEntry[]>>;
 
   /**
    * イベントタイプでログエントリを検索
@@ -46,7 +45,7 @@ export interface IAuthLogRepository {
     eventType: EventType,
     timeRange?: TimeRange,
     limit?: number,
-  ): Promise<Result<AuthLogEntry[], DomainError>>;
+  ): Promise<Result<AuthLogEntry[]>>;
 
   /**
    * IPアドレスでログエントリを検索
@@ -58,14 +57,14 @@ export interface IAuthLogRepository {
     ipAddress: IPAddress,
     timeRange?: TimeRange,
     limit?: number,
-  ): Promise<Result<AuthLogEntry[], DomainError>>;
+  ): Promise<Result<AuthLogEntry[]>>;
 
   /**
    * 失敗ログのみを検索
    * @param timeRange 時間範囲
    * @param limit 取得件数上限
    */
-  findFailures(timeRange?: TimeRange, limit?: number): Promise<Result<AuthLogEntry[], DomainError>>;
+  findFailures(timeRange?: TimeRange, limit?: number): Promise<Result<AuthLogEntry[]>>;
 
   /**
    * 疑わしい活動のログを検索
@@ -75,7 +74,7 @@ export interface IAuthLogRepository {
   findSuspiciousActivities(
     timeRange?: TimeRange,
     limit?: number,
-  ): Promise<Result<AuthLogEntry[], DomainError>>;
+  ): Promise<Result<AuthLogEntry[]>>;
 
   /**
    * 統計情報を取得
@@ -91,8 +90,7 @@ export interface IAuthLogRepository {
         suspiciousActivities: number;
         loginsByProvider: Map<string, number>;
         tokenRefreshCount: number;
-      },
-      DomainError
+      }
     >
   >;
 
@@ -100,5 +98,5 @@ export interface IAuthLogRepository {
    * 古いログエントリを削除
    * @param beforeDate この日付より前のログを削除
    */
-  deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>>;
+  deleteOldLogs(beforeDate: Date): Promise<Result<number>>;
 }

@@ -1,4 +1,5 @@
 import { Result } from '@/domain/errors';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { randomUUID } from 'crypto';
 
 /**
@@ -29,7 +30,7 @@ export class RequestId {
    */
   static create(value: string): Result<RequestId> {
     if (!value || value.trim().length === 0) {
-      return Result.fail<RequestId>('リクエストIDは空にできません');
+      return Result.fail<RequestId>(new DomainError('REQUEST_ID_ERROR', 'リクエストIDは空にできません', ErrorType.VALIDATION));
     }
 
     const trimmedValue = value.trim();
@@ -37,11 +38,11 @@ export class RequestId {
     // UUID形式またはカスタム形式（英数字とハイフン）を許可
     const validPattern = /^[a-zA-Z0-9-]+$/;
     if (!validPattern.test(trimmedValue)) {
-      return Result.fail<RequestId>('リクエストIDは英数字とハイフンのみ使用できます');
+      return Result.fail<RequestId>(new DomainError('REQUEST_ID_ERROR', 'リクエストIDは英数字とハイフンのみ使用できます', ErrorType.VALIDATION));
     }
 
     if (trimmedValue.length > 128) {
-      return Result.fail<RequestId>('リクエストIDは128文字以内である必要があります');
+      return Result.fail<RequestId>(new DomainError('REQUEST_ID_ERROR', 'リクエストIDは128文字以内である必要があります', ErrorType.VALIDATION));
     }
 
     return Result.ok(new RequestId(trimmedValue));
