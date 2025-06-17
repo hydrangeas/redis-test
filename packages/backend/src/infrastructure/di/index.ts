@@ -47,7 +47,7 @@ export {
 } from './decorators';
 
 // Re-export TSyringe utilities for convenience
-import { container } from 'tsyringe';
+import { container, ValueProvider } from 'tsyringe';
 export { container };
 
 // Import setupDI for local use
@@ -79,9 +79,9 @@ export function isServiceRegistered(token: symbol): boolean {
  */
 export function registerService<T>(
   token: symbol,
-  provider: { useClass?: any; useValue?: T; useFactory?: () => T },
+  provider: { useClass?: new (...args: unknown[]) => T; useValue?: T; useFactory?: () => T },
 ): void {
-  container.register(token, provider as any);
+  container.register(token, provider as ValueProvider<T>);
 }
 
 /**
