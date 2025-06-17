@@ -18,6 +18,7 @@ export function renderWithRouter(
 // Mock navigation hook
 export const createMockNavigate = () => {
   const navigate = vi.fn();
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   vi.mocked(require("react-router-dom").useNavigate).mockReturnValue(navigate);
   return navigate;
 };

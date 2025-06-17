@@ -15,7 +15,6 @@ export const AuthCallbackPage: React.FC = () => {
         );
 
         if (error) {
-          // eslint-disable-next-line no-console
           console.error("Auth callback error:", error);
           navigate("/login?error=auth_failed");
           return;
@@ -24,7 +23,6 @@ export const AuthCallbackPage: React.FC = () => {
         // 認証成功
         navigate("/dashboard");
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error("Unexpected error:", error);
         navigate("/login?error=unexpected");
       }

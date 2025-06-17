@@ -2,7 +2,6 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter, Routes, Route, Outlet } from "react-router-dom";
-import App from "../App";
 
 // Mock Supabase
 vi.mock("@/lib/supabase", () => ({
@@ -31,7 +30,10 @@ vi.mock("@/components/Layout", () => ({
 // Mock Guards
 vi.mock("@/router/guards/AuthGuard", () => ({
   AuthGuard: () => {
+    // These modules are dynamically required to avoid circular dependencies in test mocks
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Navigate, Outlet, useLocation } = require("react-router-dom");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useAuth } = require("@/hooks/useAuth");
     const { user } = useAuth();
     const location = useLocation();
@@ -45,7 +47,10 @@ vi.mock("@/router/guards/AuthGuard", () => ({
 
 vi.mock("@/router/guards/GuestGuard", () => ({
   GuestGuard: () => {
+    // These modules are dynamically required to avoid circular dependencies in test mocks
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Navigate, Outlet } = require("react-router-dom");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useAuth } = require("@/hooks/useAuth");
     const { user } = useAuth();
     

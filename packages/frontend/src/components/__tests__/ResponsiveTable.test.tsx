@@ -47,7 +47,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -72,7 +72,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -87,7 +87,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -107,7 +107,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -127,7 +127,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -145,7 +145,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={testData}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -166,7 +166,7 @@ describe("ResponsiveTable", () => {
         <ResponsiveTable
           data={[]}
           columns={columns}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
@@ -187,7 +187,7 @@ describe("ResponsiveTable", () => {
             { key: "name" as keyof TestData, header: "Name" },
             { key: "id" as keyof TestData, header: "ID" },
           ]}
-          keyExtractor={(item: any) => item.id}
+          keyExtractor={(item) => item.id}
         />
       );
 
