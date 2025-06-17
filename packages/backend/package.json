@@ -50,7 +50,7 @@
     "chokidar": "^4.0.3",
     "dotenv": "^16.5.0",
     "fastify": "^4.27.0",
-    "fastify-plugin": "^4.5.1",
+    "fastify-plugin": "^5.0.1",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
