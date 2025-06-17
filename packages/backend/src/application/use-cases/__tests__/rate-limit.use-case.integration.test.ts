@@ -83,11 +83,9 @@ describe('RateLimitUseCase Integration', () => {
       expect(rateLimitResult.limit).toBe(60);
 
       // Verify rate limit log was saved
-      expect(mockDependencies.mockRepositories.rateLimitLog.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          userId: expect.objectContaining({ value: userId }),
-        }),
-      );
+      expect(mockDependencies.mockRepositories.rateLimitLog.save).toHaveBeenCalled();
+      const savedLog = mockDependencies.mockRepositories.rateLimitLog.save.mock.calls[0][0];
+      expect(savedLog.userId).toBe(userId);
     });
 
     it('should deny access when rate limit exceeded', async () => {
