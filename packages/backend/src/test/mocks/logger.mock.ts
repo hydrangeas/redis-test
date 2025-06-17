@@ -1,5 +1,6 @@
-import { Logger } from 'pino';
 import { vi } from 'vitest';
+
+import type { Logger } from 'pino';
 
 /**
  * テスト用のモックロガーを作成

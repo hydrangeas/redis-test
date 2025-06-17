@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker/locale/ja';
+
 import type { User } from '@supabase/supabase-js';
 
 export class UserFactory {

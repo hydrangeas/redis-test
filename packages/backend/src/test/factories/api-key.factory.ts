@@ -1,5 +1,6 @@
-import { faker } from '@faker-js/faker/locale/ja';
 import { createHash } from 'crypto';
+
+import { faker } from '@faker-js/faker/locale/ja';
 
 export interface ApiKey {
   id: string;

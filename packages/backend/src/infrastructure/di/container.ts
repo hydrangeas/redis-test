@@ -170,10 +170,15 @@ export function setupTestDI(): DependencyContainer {
     },
   });
 
-  // テスト用にSupabaseUserRepositoryを登録
-  const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
+  // テスト用にUserRepositoryのモックを登録
   container.register(DI_TOKENS.UserRepository, {
-    useClass: SupabaseUserRepository,
+    useValue: {
+      save: () => Promise.resolve(Result.ok(undefined)),
+      update: () => Promise.resolve(Result.ok(undefined)),
+      findByUserId: () => Promise.resolve(Result.ok(null)),
+      updateLastActivity: () => Promise.resolve(Result.ok(undefined)),
+      delete: () => Promise.resolve(Result.ok(undefined)),
+    },
   });
 
   // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
