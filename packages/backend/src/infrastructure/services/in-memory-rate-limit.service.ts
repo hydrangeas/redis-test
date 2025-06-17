@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import {
   IRateLimitService,
-  RateLimitResult,
+  RateLimitCheckResult,
 } from '@/domain/api/interfaces/rate-limit-service.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
@@ -17,7 +17,7 @@ interface WindowEntry {
 @injectable()
 export class InMemoryRateLimitService implements IRateLimitService {
   private windows = new Map<string, WindowEntry[]>();
-  private cleanupInterval: NodeJS.Timer;
+  private cleanupInterval: NodeJS.Timeout;
 
   constructor(
     @inject(DI_TOKENS.Logger)
@@ -29,7 +29,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     }, 60000); // 1分ごと
   }
 
-  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitResult> {
+  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000; // ミリ秒に変換
@@ -47,12 +47,12 @@ export class InMemoryRateLimitService implements IRateLimitService {
     const allowed = currentCount < limit;
 
     // リセット時刻の計算（最も古いエントリから）
-    let resetAt: number;
+    let resetAt: Date;
     if (entries.length > 0) {
       const oldestEntry = entries[0];
-      resetAt = Math.floor((oldestEntry.timestamp + windowSize) / 1000);
+      resetAt = new Date(oldestEntry.timestamp + windowSize);
     } else {
-      resetAt = Math.floor((now + windowSize) / 1000);
+      resetAt = new Date(now + windowSize);
     }
 
     // Retry-Afterの計算
@@ -131,51 +131,50 @@ export class InMemoryRateLimitService implements IRateLimitService {
 
   async getUsageStatus(
     user: AuthenticatedUser,
-    endpoint: APIEndpoint,
   ): Promise<{
     currentCount: number;
     limit: number;
     windowStart: Date;
     windowEnd: Date;
   }> {
-    const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
     const limit = user.tier.rateLimit.maxRequests;
 
-    let entries = this.windows.get(key) || [];
-    entries = entries.filter((entry) => now - entry.timestamp < windowSize);
+    // Aggregate usage across all endpoints for this user
+    let totalCount = 0;
+    const prefix = `${user.userId.value}:`;
+    
+    for (const [key, entries] of this.windows.entries()) {
+      if (key.startsWith(prefix)) {
+        const validEntries = entries.filter((entry) => now - entry.timestamp < windowSize);
+        totalCount += validEntries.reduce((sum, entry) => sum + entry.count, 0);
+      }
+    }
 
-    const currentCount = entries.reduce((sum, entry) => sum + entry.count, 0);
     const windowStart = new Date(now - windowSize);
     const windowEnd = new Date(now);
 
     return {
-      currentCount,
+      currentCount: totalCount,
       limit,
       windowStart,
       windowEnd,
     };
   }
 
-  async resetLimit(user: AuthenticatedUser, endpoint?: APIEndpoint): Promise<void> {
-    if (endpoint) {
-      const key = this.generateKey(user, endpoint);
-      this.windows.delete(key);
-    } else {
-      // Reset all endpoints for the user
-      const prefix = `${user.userId.value}:`;
-      for (const key of this.windows.keys()) {
-        if (key.startsWith(prefix)) {
-          this.windows.delete(key);
-        }
+  async resetLimit(userId: string): Promise<void> {
+    // Reset all endpoints for the user
+    const prefix = `${userId}:`;
+    for (const key of this.windows.keys()) {
+      if (key.startsWith(prefix)) {
+        this.windows.delete(key);
       }
     }
 
     this.logger.info(
       {
-        userId: user.userId.value,
-        endpoint: endpoint?.toString(),
+        userId,
       },
       'Rate limit reset',
     );

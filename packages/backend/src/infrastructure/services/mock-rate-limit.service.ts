@@ -53,7 +53,6 @@ export class MockRateLimitService implements IRateLimitService {
     windowStart: Date;
     windowEnd: Date;
   }> {
-    const key = `${user.userId.value}:*`;
     let totalCount = 0;
 
     // Sum all endpoints for this user

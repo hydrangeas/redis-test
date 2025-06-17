@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { IFileStorage, FileMetadata } from '@/domain/data/interfaces/file-storage.interface';
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
 import * as fs from 'fs/promises';
@@ -47,7 +47,7 @@ export class FileStorageService implements IFileStorage {
     this.initializeWatcher();
   }
 
-  async readFile(filePath: string): Promise<Result<any, DomainError>> {
+  async readFile(filePath: string): Promise<Result<any>> {
     try {
       // Path validation
       const validationResult = await this.validatePath(filePath);
@@ -88,11 +88,11 @@ export class FileStorageService implements IFileStorage {
         'Failed to read file',
       );
 
-      return Result.fail(new DomainError('FILE_READ_ERROR', 'Failed to read file', 'INTERNAL'));
+      return Result.fail(new DomainError('FILE_READ_ERROR', 'Failed to read file', ErrorType.INTERNAL));
     }
   }
 
-  async getFileMetadata(filePath: string): Promise<Result<FileMetadata, DomainError>> {
+  async getFileMetadata(filePath: string): Promise<Result<FileMetadata>> {
     try {
       const validationResult = await this.validatePath(filePath);
       if (validationResult.isFailure) {
@@ -111,7 +111,7 @@ export class FileStorageService implements IFileStorage {
       const stats = await fs.stat(absolutePath);
       if (!stats.isFile()) {
         return Result.fail(
-          new DomainError('NOT_A_FILE', 'Path does not point to a file', 'NOT_FOUND'),
+          new DomainError('NOT_A_FILE', 'Path does not point to a file', ErrorType.NOT_FOUND),
         );
       }
 
@@ -127,12 +127,12 @@ export class FileStorageService implements IFileStorage {
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         return Result.fail(
-          new DomainError('FILE_NOT_FOUND', `File not found: ${filePath}`, 'NOT_FOUND'),
+          new DomainError('FILE_NOT_FOUND', `File not found: ${filePath}`, ErrorType.NOT_FOUND),
         );
       }
 
       return Result.fail(
-        new DomainError('METADATA_READ_ERROR', 'Failed to read file metadata', 'INTERNAL'),
+        new DomainError('METADATA_READ_ERROR', 'Failed to read file metadata', ErrorType.INTERNAL),
       );
     }
   }
@@ -140,7 +140,7 @@ export class FileStorageService implements IFileStorage {
   async streamFile(
     filePath: string,
     options?: { start?: number; end?: number },
-  ): Promise<Result<NodeJS.ReadableStream, DomainError>> {
+  ): Promise<Result<NodeJS.ReadableStream>> {
     try {
       const validationResult = await this.validatePath(filePath);
       if (validationResult.isFailure) {
@@ -162,16 +162,16 @@ export class FileStorageService implements IFileStorage {
       return Result.ok(stream);
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', 'NOT_FOUND'));
+        return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', ErrorType.NOT_FOUND));
       }
 
       return Result.fail(
-        new DomainError('STREAM_ERROR', 'Failed to create file stream', 'INTERNAL'),
+        new DomainError('STREAM_ERROR', 'Failed to create file stream', ErrorType.INTERNAL),
       );
     }
   }
 
-  async listFiles(directory: string): Promise<Result<string[], DomainError>> {
+  async listFiles(directory: string): Promise<Result<string[]>> {
     try {
       const validationResult = await this.validatePath(directory);
       if (validationResult.isFailure) {
@@ -184,7 +184,7 @@ export class FileStorageService implements IFileStorage {
       const stats = await fs.stat(absolutePath);
       if (!stats.isDirectory()) {
         return Result.fail(
-          new DomainError('NOT_A_DIRECTORY', 'Path does not point to a directory', 'NOT_FOUND'),
+          new DomainError('NOT_A_DIRECTORY', 'Path does not point to a directory', ErrorType.NOT_FOUND),
         );
       }
 
@@ -198,12 +198,12 @@ export class FileStorageService implements IFileStorage {
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         return Result.fail(
-          new DomainError('DIRECTORY_NOT_FOUND', `Directory not found: ${directory}`, 'NOT_FOUND'),
+          new DomainError('DIRECTORY_NOT_FOUND', `Directory not found: ${directory}`, ErrorType.NOT_FOUND),
         );
       }
 
       return Result.fail(
-        new DomainError('DIRECTORY_READ_ERROR', 'Failed to read directory', 'INTERNAL'),
+        new DomainError('DIRECTORY_READ_ERROR', 'Failed to read directory', ErrorType.INTERNAL),
       );
     }
   }
@@ -230,11 +230,11 @@ export class FileStorageService implements IFileStorage {
     this.cache.clear();
   }
 
-  private async validatePath(filePath: string): Promise<Result<void, DomainError>> {
+  private async validatePath(filePath: string): Promise<Result<void>> {
     // Basic validation
     if (!filePath || filePath.trim().length === 0) {
       return Result.fail(
-        new DomainError('INVALID_PATH', 'File path cannot be empty', 'VALIDATION'),
+        new DomainError('INVALID_PATH', 'File path cannot be empty', ErrorType.VALIDATION),
       );
     }
 
@@ -253,14 +253,14 @@ export class FileStorageService implements IFileStorage {
         'Path traversal attempt detected',
       );
 
-      return Result.fail(new DomainError('PATH_TRAVERSAL', 'Invalid file path', 'SECURITY'));
+      return Result.fail(new DomainError('PATH_TRAVERSAL', 'Invalid file path', ErrorType.FORBIDDEN));
     }
 
     // Check for dangerous characters
     const dangerousChars = /[<>:"|?*\x00-\x1f\x80-\x9f]/;
     if (dangerousChars.test(filePath)) {
       return Result.fail(
-        new DomainError('INVALID_CHARACTERS', 'Path contains invalid characters', 'VALIDATION'),
+        new DomainError('INVALID_CHARACTERS', 'Path contains invalid characters', ErrorType.VALIDATION),
       );
     }
 
@@ -269,7 +269,7 @@ export class FileStorageService implements IFileStorage {
 
   private async readFileFromDisk(
     absolutePath: string,
-  ): Promise<Result<{ content: any; metadata: FileMetadata }, DomainError>> {
+  ): Promise<Result<{ content: any; metadata: FileMetadata }>> {
     try {
       const [content, stats] = await Promise.all([
         fs.readFile(absolutePath, 'utf-8'),
@@ -282,7 +282,7 @@ export class FileStorageService implements IFileStorage {
         jsonData = JSON.parse(content);
       } catch (error) {
         return Result.fail(
-          new DomainError('INVALID_JSON', 'File contains invalid JSON', 'DATA_ERROR'),
+          new DomainError('INVALID_JSON', 'File contains invalid JSON', ErrorType.INTERNAL),
         );
       }
 
@@ -297,7 +297,7 @@ export class FileStorageService implements IFileStorage {
       return Result.ok({ content: jsonData, metadata });
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', 'NOT_FOUND'));
+        return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', ErrorType.NOT_FOUND));
       }
 
       throw error;
@@ -328,7 +328,7 @@ export class FileStorageService implements IFileStorage {
     return files;
   }
 
-  private async generateETag(filePath: string, stats: fs.Stats): Promise<string> {
+  private async generateETag(filePath: string, stats: Awaited<ReturnType<typeof fs.stat>>): Promise<string> {
     const hash = crypto.createHash('md5');
     hash.update(`${filePath}-${stats.size}-${stats.mtime.getTime()}`);
     return `"${hash.digest('hex')}"`;

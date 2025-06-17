@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 export function createSupabaseMock() {
-  const methods = {
+  const methods: Record<string, any> = {
     from: vi.fn(),
     insert: vi.fn(),
     select: vi.fn(),
@@ -16,7 +16,7 @@ export function createSupabaseMock() {
   };
 
   // Create a chainable mock
-  const chainableObject = Object.create(null);
+  const chainableObject: Record<string, any> = Object.create(null);
 
   // Add all methods to the chainable object
   Object.keys(methods).forEach((key) => {
@@ -26,14 +26,14 @@ export function createSupabaseMock() {
   });
 
   // Special handling for select with options
-  methods.select.mockImplementation((fields?: string, options?: any) => {
+  methods.select.mockImplementation((_fields?: string, _options?: any) => {
     // Still return the chainable object
     return chainableObject;
   });
 
   // Create the main mock client
   const mockClient = {
-    from: vi.fn((tableName: string) => {
+    from: vi.fn((_tableName: string) => {
       // Return the chainable object when from is called
       return chainableObject;
     }),

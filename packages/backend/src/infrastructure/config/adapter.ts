@@ -1,4 +1,4 @@
-import { config as appConfig, getEnvConfig as getNewEnvConfig } from '../../config/index.js';
+import { config as appConfig } from '../../config/index.js';
 import type { EnvConfig } from './env.config.js';
 
 /**
@@ -31,6 +31,9 @@ export function adaptConfigToEnv(): EnvConfig {
     RATE_LIMIT_TIER2: appConfig.rateLimit.tiers.tier2.max,
     RATE_LIMIT_TIER3: appConfig.rateLimit.tiers.tier3.max,
     RATE_LIMIT_WINDOW: appConfig.rateLimit.tiers.tier1.window,
+    
+    // Data Directory
+    DATA_DIRECTORY: process.env.DATA_DIRECTORY || './data',
   };
 }
 

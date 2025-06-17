@@ -4,7 +4,7 @@
  */
 
 import { inject, injectable, singleton, scoped } from 'tsyringe';
-import { DI_TOKENS, DIToken } from './tokens';
+import { DI_TOKENS } from './tokens';
 
 /**
  * Decorator to mark a class as injectable with singleton lifecycle
@@ -21,7 +21,7 @@ export const Singleton = () => {
  */
 export const Scoped = () => {
   return (target: any) => {
-    scoped()(target);
+    scoped(undefined as any, undefined as any)(target);
     return target;
   };
 };
@@ -42,7 +42,7 @@ export const InjectSupabaseClient = () => inject(DI_TOKENS.SupabaseClient);
 /**
  * Generic type-safe injection decorator
  */
-export function Inject<T>(token: symbol): ParameterDecorator {
+export function Inject(token: symbol): ParameterDecorator {
   return inject(token);
 }
 
@@ -116,7 +116,7 @@ export class DIMetadata {
  * Methods marked with this decorator will be called after injection
  */
 export function PostConstruct() {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (target: any, propertyKey: string, _descriptor: PropertyDescriptor) => {
     const existingMethods = Reflect.getMetadata('di:postconstruct', target.constructor) || [];
     existingMethods.push(propertyKey);
     Reflect.defineMetadata('di:postconstruct', existingMethods, target.constructor);
@@ -139,7 +139,7 @@ export async function executePostConstruct(instance: any): Promise<void> {
  * Decorator for lazy injection
  * The dependency is only resolved when first accessed
  */
-export function LazyInject(token: symbol): PropertyDecorator {
+export function LazyInject(_token: symbol): PropertyDecorator {
   return (target: any, propertyKey: string | symbol) => {
     let instance: any;
 

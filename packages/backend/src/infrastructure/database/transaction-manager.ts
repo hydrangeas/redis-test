@@ -1,7 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { Logger } from 'pino';
 
 /**
@@ -11,8 +10,6 @@ import { Logger } from 'pino';
 @injectable()
 export class TransactionManager {
   constructor(
-    @inject(DI_TOKENS.SupabaseClient)
-    private readonly supabase: SupabaseClient,
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)

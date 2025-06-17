@@ -20,7 +20,7 @@ import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-reposito
 import { OpenDataRepository } from '../repositories/open-data.repository';
 import { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
 import { JWTValidatorService } from '../auth/services/jwt-validator.service';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors';
 
 /**
@@ -101,6 +101,7 @@ export function setupTestDI(): DependencyContainer {
     RATE_LIMIT_TIER2: 120,
     RATE_LIMIT_TIER3: 300,
     RATE_LIMIT_WINDOW: 60,
+    DATA_DIRECTORY: './test-data',
   };
   container.register<EnvConfig>(DI_TOKENS.EnvConfig, {
     useValue: testEnvConfig,
@@ -171,18 +172,18 @@ export function setupTestDI(): DependencyContainer {
   // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
   container.register(DI_TOKENS.RateLimitLogRepository, {
     useValue: {
-      save: () => Promise.resolve(Result.ok()),
+      save: () => Promise.resolve(Result.ok(undefined)),
       findByUserId: () => Promise.resolve(Result.ok([])),
       countInWindow: () => Promise.resolve(Result.ok(0)),
-      deleteOlderThan: () => Promise.resolve(Result.ok()),
-      deleteByUserId: () => Promise.resolve(Result.ok()),
+      deleteOlderThan: () => Promise.resolve(Result.ok(undefined)),
+      deleteByUserId: () => Promise.resolve(Result.ok(undefined)),
     },
   });
 
   // テスト用にAuthLogRepositoryのモックを登録
   container.register(DI_TOKENS.AuthLogRepository, {
     useValue: {
-      save: () => Promise.resolve(Result.ok()),
+      save: () => Promise.resolve(Result.ok(undefined)),
       findById: () => Promise.resolve(Result.ok(null)),
       findByUserId: () => Promise.resolve(Result.ok([])),
       findByEventType: () => Promise.resolve(Result.ok([])),
@@ -208,7 +209,7 @@ export function setupTestDI(): DependencyContainer {
   // テスト用にAPILogRepositoryのモックを登録
   container.register(DI_TOKENS.APILogRepository, {
     useValue: {
-      save: () => Promise.resolve(Result.ok()),
+      save: () => Promise.resolve(Result.ok(undefined)),
       findById: () => Promise.resolve(Result.ok(null)),
       findByUserId: () => Promise.resolve(Result.ok([])),
       findByTimeRange: () => Promise.resolve(Result.ok([])),
@@ -259,7 +260,7 @@ export function setupTestDI(): DependencyContainer {
  */
 function registerRepositories(container: DependencyContainer): void {
   // OpenDataRepositoryの登録
-  container.register<IOpenDataRepository>(DI_TOKENS.OpenDataRepository, {
+  container.register(DI_TOKENS.OpenDataRepository, {
     useClass: OpenDataRepository,
   });
 
@@ -358,14 +359,19 @@ function registerApplicationServices(container: DependencyContainer): void {
  */
 function registerTestRepositories(container: DependencyContainer): void {
   // InMemoryOpenDataRepositoryモックの登録
-  container.register<IOpenDataRepository>(DI_TOKENS.OpenDataRepository, {
-    useValue: {
-      exists: () => Promise.resolve(Result.ok(false)),
-      getResource: () => Promise.resolve(Result.fail(DomainError.notFound('FILE_NOT_FOUND', 'File not found'))),
-      getResourceSize: () => Promise.resolve(Result.ok(0)),
-      getMimeType: () => Promise.resolve(Result.ok('application/json')),
-    },
-  });
+  const mockOpenDataRepository: IOpenDataRepository = {
+    findByPath: () => Promise.resolve(Result.fail(DomainError.notFound('FILE_NOT_FOUND', 'File not found'))),
+    findById: () => Promise.resolve(Result.fail(DomainError.notFound('FILE_NOT_FOUND', 'File not found'))),
+    getContent: () => Promise.resolve(Result.fail(DomainError.notFound('FILE_NOT_FOUND', 'File not found'))),
+    listByDirectory: () => Promise.resolve(Result.ok([])),
+    exists: () => Promise.resolve(false),
+    updateMetadata: () => Promise.resolve(Result.ok(undefined)),
+    getCached: () => Promise.resolve(null),
+    cache: () => Promise.resolve(),
+    clearCache: () => Promise.resolve(),
+  };
+  
+  container.registerInstance(DI_TOKENS.OpenDataRepository, mockOpenDataRepository);
 }
 
 /**

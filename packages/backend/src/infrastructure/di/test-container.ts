@@ -212,7 +212,7 @@ export class TestContainerFactory {
   /**
    * Register mock use cases
    */
-  private static registerMockUseCases(container: DependencyContainer): void {
+  private static registerMockUseCases(_container: DependencyContainer): void {
     // These can be overridden in specific tests as needed
     // The default behavior is to return successful results
   }
@@ -279,7 +279,7 @@ export class MockFactory {
   /**
    * Create a mock repository with common methods
    */
-  static createMockRepository<T>() {
+  static createMockRepository() {
     return {
       save: vi.fn().mockResolvedValue(Result.ok(undefined)),
       findById: vi.fn().mockResolvedValue(Result.ok(null)),

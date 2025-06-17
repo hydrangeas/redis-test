@@ -47,7 +47,11 @@ export {
 } from './decorators';
 
 // Re-export TSyringe utilities for convenience
-export { container } from 'tsyringe';
+import { container } from 'tsyringe';
+export { container };
+
+// Import setupDI for local use
+import { setupDI } from './container';
 
 /**
  * Initialize the DI container for the application

@@ -4,10 +4,9 @@ import {
   SecurityContext,
   ISecurityAuditService,
 } from '@/domain/data/interfaces/secure-file-access.interface';
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import type { Logger } from 'pino';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
@@ -25,8 +24,6 @@ export class SecureFileAccessService implements ISecureFileAccess {
   private readonly accessAttempts = new Map<string, number>();
 
   constructor(
-    @inject(DI_TOKENS.Logger)
-    private readonly logger: Logger,
     @inject(DI_TOKENS.DataDirectory)
     dataDirectory: string,
     @inject(DI_TOKENS.SecurityAuditService)
@@ -52,12 +49,12 @@ export class SecureFileAccessService implements ISecureFileAccess {
   async validateAndSanitizePath(
     requestedPath: string,
     context: SecurityContext,
-  ): Promise<Result<string, DomainError>> {
+  ): Promise<Result<string>> {
     try {
       // Basic validation
       if (!requestedPath || typeof requestedPath !== 'string') {
         await this.logSecurityEvent('INVALID_PATH_FORMAT', context, { requestedPath });
-        return Result.fail(new DomainError('INVALID_PATH', 'Invalid path format', 'VALIDATION'));
+        return Result.fail(new DomainError('INVALID_PATH', 'Invalid path format', ErrorType.VALIDATION));
       }
 
       // Path normalization and sanitization
@@ -74,7 +71,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
       const exists = await this.checkFileExists(absolutePath);
       if (!exists) {
         return Result.fail(
-          new DomainError('FILE_NOT_FOUND', 'Requested file does not exist', 'NOT_FOUND'),
+          new DomainError('FILE_NOT_FOUND', 'Requested file does not exist', ErrorType.NOT_FOUND),
         );
       }
 
@@ -86,7 +83,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
       });
 
       return Result.fail(
-        new DomainError('SECURITY_ERROR', 'Security validation failed', 'SECURITY'),
+        new DomainError('SECURITY_ERROR', 'Security validation failed', ErrorType.FORBIDDEN),
       );
     }
   }
@@ -94,14 +91,14 @@ export class SecureFileAccessService implements ISecureFileAccess {
   async checkAccess(
     filePath: string,
     context: SecurityContext,
-  ): Promise<Result<void, DomainError>> {
+  ): Promise<Result<void>> {
     try {
       // Rate limit check
       const rateLimitCheck = this.checkRateLimit(context.ipAddress);
       if (!rateLimitCheck) {
         await this.logSecurityEvent('RATE_LIMIT_EXCEEDED', context, { filePath });
         return Result.fail(
-          new DomainError('TOO_MANY_ATTEMPTS', 'Too many access attempts', 'SECURITY'),
+          new DomainError('TOO_MANY_ATTEMPTS', 'Too many access attempts', ErrorType.FORBIDDEN),
         );
       }
 
@@ -110,7 +107,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
       if (!hasAccess) {
         await this.logSecurityEvent('ACCESS_DENIED', context, { filePath });
         return Result.fail(
-          new DomainError('ACCESS_DENIED', 'Access to this resource is denied', 'FORBIDDEN'),
+          new DomainError('ACCESS_DENIED', 'Access to this resource is denied', ErrorType.FORBIDDEN),
         );
       }
 
@@ -120,7 +117,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
       return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        new DomainError('ACCESS_CHECK_ERROR', 'Failed to check access permissions', 'INTERNAL'),
+        new DomainError('ACCESS_CHECK_ERROR', 'Failed to check access permissions', ErrorType.INTERNAL),
       );
     }
   }
@@ -147,7 +144,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
   private async performSecurityChecks(
     sanitizedPath: string,
     context: SecurityContext,
-  ): Promise<Result<void, DomainError>> {
+  ): Promise<Result<void>> {
     // Check denied path patterns
     for (const deniedPattern of this.policy.deniedPaths) {
       if (deniedPattern.test(sanitizedPath)) {
@@ -156,7 +153,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
           pattern: deniedPattern.toString(),
         });
         return Result.fail(
-          new DomainError('FORBIDDEN_PATH', 'Access to this path is forbidden', 'SECURITY'),
+          new DomainError('FORBIDDEN_PATH', 'Access to this path is forbidden', ErrorType.FORBIDDEN),
         );
       }
     }
@@ -169,7 +166,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
         path: sanitizedPath,
       });
       return Result.fail(
-        new DomainError('UNAUTHORIZED_PATH', 'Path is not in allowed list', 'SECURITY'),
+        new DomainError('UNAUTHORIZED_PATH', 'Path is not in allowed list', ErrorType.FORBIDDEN),
       );
     }
 
@@ -180,7 +177,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
         path: sanitizedPath,
         extension: ext,
       });
-      return Result.fail(new DomainError('INVALID_FILE_TYPE', 'File type not allowed', 'SECURITY'));
+      return Result.fail(new DomainError('INVALID_FILE_TYPE', 'File type not allowed', ErrorType.FORBIDDEN));
     }
 
     // Path traversal final check
@@ -191,7 +188,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
         resolvedPath: absolutePath,
         dataDirectory: this.dataDirectory,
       });
-      return Result.fail(new DomainError('PATH_TRAVERSAL', 'Path traversal detected', 'SECURITY'));
+      return Result.fail(new DomainError('PATH_TRAVERSAL', 'Path traversal detected', ErrorType.FORBIDDEN));
     }
 
     return Result.ok(undefined);

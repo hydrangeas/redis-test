@@ -15,7 +15,14 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
     const env = getEnvConfig();
 
     // 通常のクライアント（anonキー使用）
-    this.supabaseClient = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, {
+    const supabaseUrl = env.PUBLIC_SUPABASE_URL || env.SUPABASE_URL;
+    const supabaseAnonKey = env.PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase URL and Anon Key are required');
+    }
+    
+    this.supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -23,7 +30,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
     });
 
     // 管理者クライアント（サービスロールキー使用）
-    this.adminClient = createClient(env.PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    this.adminClient = createClient(supabaseUrl, env.SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -58,7 +65,10 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         ...decoded,
         sub: user.user.id,
         email: user.user.email,
-        app_metadata: user.user.app_metadata || {},
+        app_metadata: {
+          tier: user.user.app_metadata?.tier || 'tier1',
+          ...user.user.app_metadata,
+        },
         user_metadata: user.user.user_metadata || {},
       };
     } catch (error) {
@@ -268,10 +278,10 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
    */
   async deleteUser(id: string): Promise<boolean> {
     try {
-      const { error } = await this.adminClient.auth.admin.deleteUser(id);
+      const { error: deleteError } = await this.adminClient.auth.admin.deleteUser(id);
 
-      if (error) {
-        this.logger.error({ error: error.message }, 'Failed to delete user');
+      if (deleteError) {
+        this.logger.error({ error: deleteError.message }, 'Failed to delete user');
         return false;
       }
 
@@ -294,7 +304,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   async validateCustomClaimsHook(): Promise<boolean> {
     try {
       // テスト用のトークンを作成して、カスタムクレームが含まれているか検証
-      const { data, error } = await this.supabaseClient.auth.signInWithPassword({
+      const { data } = await this.supabaseClient.auth.signInWithPassword({
         email: process.env.TEST_USER_EMAIL || 'test@example.com',
         password: process.env.TEST_USER_PASSWORD || 'testpassword',
       });

@@ -19,7 +19,7 @@ export class SecurityMonitorHandler
   private readonly FAILED_AUTH_THRESHOLD = 5; // 5回/15分
 
   constructor(
-    @inject(DI_TOKENS.SecurityAlertService)
+    @inject(DI_TOKENS.SecurityAuditService)
     private readonly alertService: ISecurityAlertService,
     @inject(DI_TOKENS.AuthLogRepository)
     private readonly authLogRepository: IAuthLogRepository,
@@ -111,7 +111,11 @@ export class SecurityMonitorHandler
   }
 
   private async countRecentRefreshes(userId: string, minutes: number): Promise<number> {
-    const timeRange = new TimeRange(new Date(Date.now() - minutes * 60 * 1000), new Date());
+    const timeRangeResult = TimeRange.create(new Date(Date.now() - minutes * 60 * 1000), new Date());
+    if (timeRangeResult.isFailure) {
+      throw new Error(`Failed to create time range: ${timeRangeResult.getError().message}`);
+    }
+    const timeRange = timeRangeResult.getValue();
 
     const userIdResult = UserId.create(userId);
     if (userIdResult.isFailure) {
@@ -132,7 +136,11 @@ export class SecurityMonitorHandler
   }
 
   private async countRecentFailures(ipAddress: string, minutes: number): Promise<number> {
-    const timeRange = new TimeRange(new Date(Date.now() - minutes * 60 * 1000), new Date());
+    const timeRangeResult = TimeRange.create(new Date(Date.now() - minutes * 60 * 1000), new Date());
+    if (timeRangeResult.isFailure) {
+      throw new Error(`Failed to create time range: ${timeRangeResult.getError().message}`);
+    }
+    const timeRange = timeRangeResult.getValue();
 
     const ipAddressResult = IPAddress.create(ipAddress);
     if (ipAddressResult.isFailure) {

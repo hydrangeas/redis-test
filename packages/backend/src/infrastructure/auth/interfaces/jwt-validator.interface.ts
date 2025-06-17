@@ -1,5 +1,4 @@
 import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors/domain-error';
 
 export interface IJWTValidator {
   /**

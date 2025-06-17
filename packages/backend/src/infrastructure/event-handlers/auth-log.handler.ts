@@ -2,8 +2,8 @@ import { injectable, inject } from 'tsyringe';
 import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
 import { UserAuthenticated } from '@/domain/auth/events/user-authenticated.event';
 import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { AuthLogEntry, AuthResult } from '@/domain/log/entities/auth-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { AuthResult } from '@/domain/log/value-objects/auth-result';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { Provider } from '@/domain/log/value-objects/provider';
@@ -34,7 +34,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (authEventResult.isFailure) {
         this.logger.error(
           {
-            error: authEventResult.error,
+            error: authEventResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to create auth event',
@@ -47,7 +47,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (userIdResult.isFailure) {
         this.logger.error(
           {
-            error: userIdResult.error,
+            error: userIdResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to create user id',
@@ -60,7 +60,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (providerResult.isFailure) {
         this.logger.error(
           {
-            error: providerResult.error,
+            error: providerResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to create provider',
@@ -75,7 +75,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (ipAddressResult.isFailure) {
         this.logger.error(
           {
-            error: ipAddressResult.error,
+            error: ipAddressResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to create IP address',
@@ -90,7 +90,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (userAgentResult.isFailure) {
         this.logger.error(
           {
-            error: userAgentResult.error,
+            error: userAgentResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to create user agent',
@@ -117,7 +117,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (logEntryResult.isFailure) {
         this.logger.error(
           {
-            error: logEntryResult.error,
+            error: logEntryResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to create log entry',
@@ -131,7 +131,7 @@ export class AuthLogHandler implements IEventHandler<UserAuthenticated> {
       if (saveResult.isFailure) {
         this.logger.error(
           {
-            error: saveResult.error,
+            error: saveResult.getError(),
             event: event.getMetadata(),
           },
           'Failed to save authentication log',

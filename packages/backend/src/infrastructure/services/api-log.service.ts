@@ -4,8 +4,8 @@ import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.in
 import { APILogEntry } from '@/domain/log/entities/api-log-entry';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
 
@@ -31,7 +31,7 @@ export class ApiLogService implements IApiLogService {
     this.startBufferFlush();
   }
 
-  async saveLog(entry: APILogEntry): Promise<Result<void, DomainError>> {
+  async saveLog(entry: APILogEntry): Promise<Result<void>> {
     try {
       // バッファに追加
       this.buffer.push({
@@ -47,14 +47,14 @@ export class ApiLogService implements IApiLogService {
       return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error }, 'Failed to save log to buffer');
-      return Result.fail(new DomainError('LOG_SAVE_ERROR', 'Failed to save API log', 'INTERNAL'));
+      return Result.fail(new DomainError('LOG_SAVE_ERROR', 'Failed to save API log', ErrorType.INTERNAL));
     }
   }
 
   async getUsageStats(
     userId: UserId,
     timeRange: { start: Date; end: Date },
-  ): Promise<Result<ApiUsageStats, DomainError>> {
+  ): Promise<Result<ApiUsageStats>> {
     try {
       const timeRangeResult = TimeRange.create(timeRange.start, timeRange.end);
       if (timeRangeResult.isFailure) {
@@ -91,7 +91,7 @@ export class ApiLogService implements IApiLogService {
       this.logger.error({ error, userId: userId.value }, 'Failed to calculate usage stats');
 
       return Result.fail(
-        new DomainError('STATS_ERROR', 'Failed to calculate usage statistics', 'INTERNAL'),
+        new DomainError('STATS_ERROR', 'Failed to calculate usage statistics', ErrorType.INTERNAL),
       );
     }
   }
@@ -100,14 +100,14 @@ export class ApiLogService implements IApiLogService {
     userId?: UserId;
     limit?: number;
     offset?: number;
-  }): Promise<Result<APILogEntry[], DomainError>> {
+  }): Promise<Result<APILogEntry[]>> {
     return this.apiLogRepository.findErrors(options);
   }
 
   async getSlowRequests(
     thresholdMs: number,
     limit: number = 100,
-  ): Promise<Result<APILogEntry[], DomainError>> {
+  ): Promise<Result<APILogEntry[]>> {
     return this.apiLogRepository.findSlowRequests(thresholdMs, limit);
   }
 

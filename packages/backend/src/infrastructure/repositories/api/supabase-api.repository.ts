@@ -12,6 +12,7 @@ import { Logger } from 'pino';
 import { APIEndpoint } from '@/domain/api/entities/api-endpoint.entity';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 
 interface EndpointRecord {
   id: string;
@@ -49,14 +50,14 @@ export class SupabaseAPIRepository implements IAPIRepository {
     private readonly logger: Logger,
   ) {}
 
-  async save(aggregate: APIAggregate): Promise<Result<void, DomainError>> {
+  async save(aggregate: APIAggregate): Promise<Result<void>> {
     try {
       // トランザクション内で保存
       const { error: txError } = await this.supabase.rpc('begin_transaction');
       if (txError) {
         this.logger.error({ error: txError }, 'Failed to begin transaction');
         return Result.fail(
-          DomainError.unexpected('TRANSACTION_FAILED', 'Failed to begin transaction'),
+          DomainError.internal('TRANSACTION_FAILED', 'Failed to begin transaction'),
         );
       }
 
@@ -70,7 +71,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
         await this.supabase.rpc('rollback_transaction');
         this.logger.error({ error: deleteError }, 'Failed to delete existing endpoints');
         return Result.fail(
-          DomainError.unexpected('DELETE_FAILED', 'Failed to delete existing endpoints'),
+          DomainError.internal('DELETE_FAILED', 'Failed to delete existing endpoints'),
         );
       }
 
@@ -82,18 +83,14 @@ export class SupabaseAPIRepository implements IAPIRepository {
           path: endpoint.path.value,
           method: endpoint.method,
           type: endpoint.type.value,
-          description: endpoint.description,
-          requires_auth: endpoint.requiresAuth,
+          description: endpoint.description || '',
+          requires_auth: !endpoint.isPublic, // Public endpoints don't require auth
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
 
-        if (endpoint.rateLimitOverride) {
-          record.rate_limit_override = {
-            max_requests: endpoint.rateLimitOverride.maxRequests,
-            window_seconds: endpoint.rateLimitOverride.windowSeconds,
-          };
-        }
+        // Note: rate_limit_override is not currently supported in the domain model
+        // If needed, this should be added to the APIEndpoint entity
 
         endpointRecords.push(record);
       }
@@ -106,7 +103,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
         if (insertError) {
           await this.supabase.rpc('rollback_transaction');
           this.logger.error({ error: insertError }, 'Failed to insert endpoints');
-          return Result.fail(DomainError.unexpected('INSERT_FAILED', 'Failed to insert endpoints'));
+          return Result.fail(DomainError.internal('INSERT_FAILED', 'Failed to insert endpoints'));
         }
       }
 
@@ -131,7 +128,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       if (deleteRateLimitError) {
         await this.supabase.rpc('rollback_transaction');
         this.logger.error({ error: deleteRateLimitError }, 'Failed to delete rate limits');
-        return Result.fail(DomainError.unexpected('DELETE_FAILED', 'Failed to delete rate limits'));
+        return Result.fail(DomainError.internal('DELETE_FAILED', 'Failed to delete rate limits'));
       }
 
       if (rateLimitRecords.length > 0) {
@@ -143,7 +140,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           await this.supabase.rpc('rollback_transaction');
           this.logger.error({ error: insertRateLimitError }, 'Failed to insert rate limits');
           return Result.fail(
-            DomainError.unexpected('INSERT_FAILED', 'Failed to insert rate limits'),
+            DomainError.internal('INSERT_FAILED', 'Failed to insert rate limits'),
           );
         }
       }
@@ -153,7 +150,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       if (commitError) {
         await this.supabase.rpc('rollback_transaction');
         this.logger.error({ error: commitError }, 'Failed to commit transaction');
-        return Result.fail(DomainError.unexpected('COMMIT_FAILED', 'Failed to commit transaction'));
+        return Result.fail(DomainError.internal('COMMIT_FAILED', 'Failed to commit transaction'));
       }
 
       this.logger.info(
@@ -161,11 +158,11 @@ export class SupabaseAPIRepository implements IAPIRepository {
         'API aggregate saved successfully',
       );
 
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error saving API aggregate');
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'SAVE_FAILED',
           'Failed to save API aggregate',
           error instanceof Error ? error : undefined,
@@ -174,7 +171,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
     }
   }
 
-  async getAggregate(): Promise<Result<APIAggregate, DomainError>> {
+  async getAggregate(): Promise<Result<APIAggregate>> {
     try {
       // デフォルトレート制限を取得
       const { data: rateLimits, error: rateLimitError } = await this.supabase
@@ -183,7 +180,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
       if (rateLimitError) {
         this.logger.error({ error: rateLimitError }, 'Failed to fetch rate limits');
-        return Result.fail(DomainError.unexpected('FETCH_FAILED', 'Failed to fetch rate limits'));
+        return Result.fail(DomainError.internal('FETCH_FAILED', 'Failed to fetch rate limits'));
       }
 
       const defaultRateLimits = new Map<string, RateLimit>();
@@ -195,12 +192,21 @@ export class SupabaseAPIRepository implements IAPIRepository {
       }
 
       // API集約を作成
-      const aggregateResult = APIAggregate.create(defaultRateLimits);
+      const aggregateResult = APIAggregate.create({
+        defaultRateLimits: defaultRateLimits as Map<TierLevel, RateLimit>,
+      });
       if (aggregateResult.isFailure) {
-        return Result.fail(aggregateResult.error!);
+        const error = aggregateResult.getError();
+        if (error instanceof DomainError) {
+          return Result.fail(error);
+        } else {
+          return Result.fail(
+            DomainError.internal('AGGREGATE_CREATE_FAILED', error.message || 'Failed to create aggregate')
+          );
+        }
       }
 
-      const aggregate = aggregateResult.getValue()!;
+      const aggregate = aggregateResult.getValue();
 
       // エンドポイントを取得
       const { data: endpoints, error: endpointError } = await this.supabase
@@ -210,7 +216,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
       if (endpointError) {
         this.logger.error({ error: endpointError }, 'Failed to fetch endpoints');
-        return Result.fail(DomainError.unexpected('FETCH_FAILED', 'Failed to fetch endpoints'));
+        return Result.fail(DomainError.internal('FETCH_FAILED', 'Failed to fetch endpoints'));
       }
 
       // エンドポイントを集約に追加
@@ -219,24 +225,15 @@ export class SupabaseAPIRepository implements IAPIRepository {
         const typeResult = EndpointType.create(record.type);
 
         if (pathResult.isSuccess && typeResult.isSuccess) {
-          let rateLimitOverride: RateLimit | undefined;
-          if (record.rate_limit_override) {
-            const overrideResult = RateLimit.create(
-              record.rate_limit_override.max_requests,
-              record.rate_limit_override.window_seconds,
-            );
-            if (overrideResult.isSuccess) {
-              rateLimitOverride = overrideResult.getValue();
-            }
-          }
-
+          // Note: rate_limit_override from database is not currently used
+          // If needed in the future, it should be added to the APIEndpoint entity
+          
           const endpointResult = APIEndpoint.create({
-            path: pathResult.getValue()!,
+            path: record.path, // The create method expects a string
             method: record.method as HttpMethod,
             type: typeResult.getValue()!,
             description: record.description,
-            requiresAuth: record.requires_auth,
-            rateLimitOverride,
+            isActive: true,
           });
 
           if (endpointResult.isSuccess) {
@@ -249,7 +246,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error fetching API aggregate');
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'FETCH_FAILED',
           'Failed to fetch API aggregate',
           error instanceof Error ? error : undefined,
@@ -260,7 +257,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
   async findByEndpointId(
     endpointId: EndpointId,
-  ): Promise<Result<APIAggregate | null, DomainError>> {
+  ): Promise<Result<APIAggregate | null>> {
     try {
       const { data, error } = await this.supabase
         .from('api_endpoints')
@@ -274,7 +271,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           return Result.ok(null);
         }
         this.logger.error({ error }, 'Failed to find endpoint');
-        return Result.fail(DomainError.unexpected('FIND_FAILED', 'Failed to find endpoint'));
+        return Result.fail(DomainError.internal('FIND_FAILED', 'Failed to find endpoint'));
       }
 
       if (!data) {
@@ -286,7 +283,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding endpoint');
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'FIND_FAILED',
           'Failed to find endpoint',
           error instanceof Error ? error : undefined,
@@ -298,7 +295,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
   async findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
-  ): Promise<Result<APIAggregate | null, DomainError>> {
+  ): Promise<Result<APIAggregate | null>> {
     try {
       const { data, error } = await this.supabase
         .from('api_endpoints')
@@ -313,7 +310,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
           return Result.ok(null);
         }
         this.logger.error({ error }, 'Failed to find endpoint by path and method');
-        return Result.fail(DomainError.unexpected('FIND_FAILED', 'Failed to find endpoint'));
+        return Result.fail(DomainError.internal('FIND_FAILED', 'Failed to find endpoint'));
       }
 
       if (!data) {
@@ -325,7 +322,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding endpoint');
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'FIND_FAILED',
           'Failed to find endpoint',
           error instanceof Error ? error : undefined,
@@ -334,7 +331,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
     }
   }
 
-  async exists(): Promise<Result<boolean, DomainError>> {
+  async exists(): Promise<Result<boolean>> {
     try {
       const { count, error } = await this.supabase
         .from('api_endpoints')
@@ -342,14 +339,14 @@ export class SupabaseAPIRepository implements IAPIRepository {
 
       if (error) {
         this.logger.error({ error }, 'Failed to check if aggregate exists');
-        return Result.fail(DomainError.unexpected('CHECK_FAILED', 'Failed to check existence'));
+        return Result.fail(DomainError.internal('CHECK_FAILED', 'Failed to check existence'));
       }
 
       return Result.ok((count ?? 0) > 0);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error checking existence');
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'CHECK_FAILED',
           'Failed to check existence',
           error instanceof Error ? error : undefined,

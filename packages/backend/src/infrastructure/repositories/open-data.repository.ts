@@ -6,9 +6,8 @@ import { ResourceId } from '@/domain/data/value-objects/resource-id';
 import { MimeType } from '@/domain/data/value-objects/mime-type';
 import { FileSize } from '@/domain/data/value-objects/file-size';
 import { ResourceMetadata } from '@/domain/data/value-objects/resource-metadata';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { IFileStorage } from '@/domain/data/interfaces/file-storage.interface';
 import type { Logger } from 'pino';
 import { DI_TOKENS } from '../di/tokens';
 import * as fs from 'fs/promises';
@@ -29,8 +28,6 @@ export class OpenDataRepository implements IOpenDataRepository {
   constructor(
     @inject(DI_TOKENS.Logger)
     private readonly logger: Logger,
-    @inject(DI_TOKENS.FileStorage)
-    private readonly fileStorage: IFileStorage,
     @inject(DI_TOKENS.DataDirectory)
     private readonly dataDirectory: string,
   ) {}
@@ -38,7 +35,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * パスからデータリソースを検索
    */
-  async findByPath(dataPath: DataPath): Promise<Result<OpenDataResource, DomainError>> {
+  async findByPath(dataPath: DataPath): Promise<Result<OpenDataResource>> {
     try {
       const filePath = this.getFilePath(dataPath);
 
@@ -57,14 +54,13 @@ export class OpenDataRepository implements IOpenDataRepository {
 
         const mimeTypeResult = this.detectMimeType(dataPath.value);
         if (mimeTypeResult.isFailure) {
-          return Result.fail(mimeTypeResult.error!);
+          return Result.fail(mimeTypeResult.getError());
         }
 
         const resourceId = this.generateResourceId(dataPath.value);
 
-        let fileSize: FileSize;
         try {
-          fileSize = new FileSize(stats.size);
+          new FileSize(stats.size); // Validate file size
         } catch (error) {
           return Result.fail(
             new DomainError(
@@ -83,7 +79,7 @@ export class OpenDataRepository implements IOpenDataRepository {
         });
 
         if (metadataResult.isFailure) {
-          return Result.fail(metadataResult.error!);
+          return Result.fail(metadataResult.getError());
         }
 
         const resource = new OpenDataResource(
@@ -97,7 +93,7 @@ export class OpenDataRepository implements IOpenDataRepository {
         this.logger.info({ path: dataPath.value, id: resourceId.value }, 'Resource found by path');
 
         return Result.ok(resource);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 'ENOENT') {
           return Result.fail(
             new DomainError(
@@ -123,7 +119,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * IDからデータリソースを検索
    */
-  async findById(id: ResourceId): Promise<Result<OpenDataResource, DomainError>> {
+  async findById(id: ResourceId): Promise<Result<OpenDataResource>> {
     try {
       // IDからパスを逆引き（簡易実装）
       // 実際の実装では、IDとパスのマッピングを別途管理する必要がある
@@ -156,7 +152,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * データリソースのコンテンツを取得
    */
-  async getContent(resource: OpenDataResource): Promise<Result<any, DomainError>> {
+  async getContent(resource: OpenDataResource): Promise<Result<any>> {
     try {
       const filePath = this.getFilePath(resource.path);
 
@@ -206,7 +202,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * ディレクトリ内のリソースをリスト
    */
-  async listByDirectory(directoryPath: string): Promise<Result<OpenDataResource[], DomainError>> {
+  async listByDirectory(directoryPath: string): Promise<Result<OpenDataResource[]>> {
     try {
       const fullPath = path.join(this.dataDirectory, directoryPath);
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
@@ -235,7 +231,7 @@ export class OpenDataRepository implements IOpenDataRepository {
       );
 
       return Result.ok(resources);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === 'ENOENT') {
         return Result.fail(
           new DomainError(
@@ -272,7 +268,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * リソースのメタデータを更新
    */
-  async updateMetadata(resource: OpenDataResource): Promise<Result<void, DomainError>> {
+  async updateMetadata(resource: OpenDataResource): Promise<Result<void>> {
     try {
       // ファイルシステムベースの実装では、メタデータは自動的に更新される
       // この実装では、キャッシュの更新のみ行う
@@ -284,7 +280,7 @@ export class OpenDataRepository implements IOpenDataRepository {
         this.logger.debug({ path: resource.path.value }, 'Updated cached resource metadata');
       }
 
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error, path: resource.path.value }, 'Failed to update metadata');
 

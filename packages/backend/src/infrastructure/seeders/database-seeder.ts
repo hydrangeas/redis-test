@@ -95,7 +95,7 @@ export class DatabaseSeeder {
         app_metadata: { tier: 'tier3' },
       },
       // 追加のランダムユーザー
-      ...Array.from({ length: 5 }, (_, i) => ({
+      ...Array.from({ length: 5 }, () => ({
         email: faker.internet.email({ provider: 'example.com' }),
         password: 'password123',
         user_metadata: { name: faker.person.fullName() },

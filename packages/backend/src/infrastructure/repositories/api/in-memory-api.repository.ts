@@ -6,7 +6,7 @@ import { HttpMethod } from '@/domain/api/value-objects/http-method';
 import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors/domain-error';
-import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
+import { APIEndpoint } from '@/domain/api/entities/api-endpoint.entity';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
@@ -26,7 +26,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
 
   private initializeDefaultAggregate(): void {
     // デフォルトのレート制限設定
-    const defaultRateLimits = new Map<string, RateLimit>();
+    const defaultRateLimits = new Map<TierLevel, RateLimit>();
 
     // Tier1: 1分間に60リクエスト
     const tier1Limit = RateLimit.create(60, 60);
@@ -65,7 +65,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
       const publicType = EndpointType.create('public');
       if (publicType.isSuccess) {
         const dataEndpoint = APIEndpoint.create({
-          path: dataPath.getValue()!,
+          path: dataPath.getValue()!.toString(),
           method: HttpMethod.GET,
           type: publicType.getValue()!,
           description: 'Access open data resources',
@@ -84,7 +84,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
       const internalType = EndpointType.create('internal');
       if (internalType.isSuccess) {
         const healthEndpoint = APIEndpoint.create({
-          path: healthPath.getValue()!,
+          path: healthPath.getValue()!.toString(),
           method: HttpMethod.GET,
           type: internalType.getValue()!,
           description: 'Health check endpoint',
@@ -98,13 +98,13 @@ export class InMemoryAPIRepository implements IAPIRepository {
     }
   }
 
-  async save(aggregate: APIAggregate): Promise<Result<void, DomainError>> {
+  async save(aggregate: APIAggregate): Promise<Result<void>> {
     try {
       this.aggregate = aggregate;
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'SAVE_FAILED',
           'Failed to save API aggregate',
           error instanceof Error ? error : undefined,
@@ -113,7 +113,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     }
   }
 
-  async getAggregate(): Promise<Result<APIAggregate, DomainError>> {
+  async getAggregate(): Promise<Result<APIAggregate>> {
     if (!this.aggregate) {
       return Result.fail(DomainError.notFound('AGGREGATE_NOT_FOUND', 'API aggregate not found'));
     }
@@ -122,8 +122,8 @@ export class InMemoryAPIRepository implements IAPIRepository {
   }
 
   async findByEndpointId(
-    endpointId: EndpointId,
-  ): Promise<Result<APIAggregate | null, DomainError>> {
+    _endpointId: EndpointId,
+  ): Promise<Result<APIAggregate | null>> {
     // APIEndpointはvalue objectになりidを持たないため、この検索方法は使用できません
     // 常にnullを返します
     return Result.ok(null);
@@ -132,12 +132,12 @@ export class InMemoryAPIRepository implements IAPIRepository {
   async findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
-  ): Promise<Result<APIAggregate | null, DomainError>> {
+  ): Promise<Result<APIAggregate | null>> {
     if (!this.aggregate) {
       return Result.ok(null);
     }
 
-    const endpoint = this.aggregate.findMatchingEndpoint(path, method);
+    const endpoint = this.aggregate.findEndpointByPathAndMethod(path, method);
     if (endpoint.isFailure) {
       return Result.ok(null);
     }
@@ -145,7 +145,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     return Result.ok(this.aggregate);
   }
 
-  async exists(): Promise<Result<boolean, DomainError>> {
+  async exists(): Promise<Result<boolean>> {
     return Result.ok(this.aggregate !== null);
   }
 

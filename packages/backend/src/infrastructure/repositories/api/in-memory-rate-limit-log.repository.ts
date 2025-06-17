@@ -15,13 +15,13 @@ import { DomainError } from '@/domain/errors/domain-error';
 export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
   private logs: Map<string, RateLimitLog> = new Map();
 
-  async save(log: RateLimitLog): Promise<Result<void, DomainError>> {
+  async save(log: RateLimitLog): Promise<Result<void>> {
     try {
       this.logs.set(log.id.value, log);
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'SAVE_FAILED',
           'Failed to save rate limit log',
           error instanceof Error ? error : undefined,
@@ -30,15 +30,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async saveMany(logs: RateLimitLog[]): Promise<Result<void, DomainError>> {
+  async saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
     try {
       for (const log of logs) {
         this.logs.set(log.id.value, log);
       }
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'SAVE_MANY_FAILED',
           'Failed to save rate limit logs',
           error instanceof Error ? error : undefined,
@@ -51,24 +51,24 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>> {
+  ): Promise<Result<RateLimitLog[]>> {
     try {
       const now = new Date();
       const windowStart = new Date(now.getTime() - window.windowMilliseconds);
 
       const matchingLogs = Array.from(this.logs.values()).filter((log) => {
         return (
-          log.userId.equals(userId) &&
-          log.endpointId.value === endpointId.value &&
-          log.requestedAt >= windowStart &&
-          log.requestedAt <= now
+          log.userId === userId.value &&
+          log.endpointId === endpointId.value &&
+          log.timestamp >= windowStart &&
+          log.timestamp <= now
         );
       });
 
       return Result.ok(matchingLogs);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'FIND_FAILED',
           'Failed to find rate limit logs',
           error instanceof Error ? error : undefined,
@@ -80,22 +80,22 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
   async findByUser(
     userId: UserId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>> {
+  ): Promise<Result<RateLimitLog[]>> {
     try {
-      let matchingLogs = Array.from(this.logs.values()).filter((log) => log.userId.equals(userId));
+      let matchingLogs = Array.from(this.logs.values()).filter((log) => log.userId === userId.value);
 
       if (window) {
         const now = new Date();
         const windowStart = new Date(now.getTime() - window.windowMilliseconds);
         matchingLogs = matchingLogs.filter(
-          (log) => log.requestedAt >= windowStart && log.requestedAt <= now,
+          (log) => log.timestamp >= windowStart && log.timestamp <= now,
         );
       }
 
       return Result.ok(matchingLogs);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'FIND_BY_USER_FAILED',
           'Failed to find user rate limit logs',
           error instanceof Error ? error : undefined,
@@ -107,24 +107,24 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
   async findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>> {
+  ): Promise<Result<RateLimitLog[]>> {
     try {
       let matchingLogs = Array.from(this.logs.values()).filter(
-        (log) => log.endpointId.value === endpointId.value,
+        (log) => log.endpointId === endpointId.value,
       );
 
       if (window) {
         const now = new Date();
         const windowStart = new Date(now.getTime() - window.windowMilliseconds);
         matchingLogs = matchingLogs.filter(
-          (log) => log.requestedAt >= windowStart && log.requestedAt <= now,
+          (log) => log.timestamp >= windowStart && log.timestamp <= now,
         );
       }
 
       return Result.ok(matchingLogs);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'FIND_BY_ENDPOINT_FAILED',
           'Failed to find endpoint rate limit logs',
           error instanceof Error ? error : undefined,
@@ -133,13 +133,13 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>> {
+  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     try {
       const initialSize = this.logs.size;
 
       // 古いログを削除
       for (const [id, log] of this.logs.entries()) {
-        if (log.requestedAt < beforeDate) {
+        if (log.timestamp < beforeDate) {
           this.logs.delete(id);
         }
       }
@@ -148,7 +148,7 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
       return Result.ok(deletedCount);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'DELETE_FAILED',
           'Failed to delete old logs',
           error instanceof Error ? error : undefined,
@@ -161,7 +161,7 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<number, DomainError>> {
+  ): Promise<Result<number>> {
     try {
       const now = new Date();
       const windowStart = new Date(now.getTime() - window.windowMilliseconds);
@@ -169,18 +169,18 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
       const count = Array.from(this.logs.values())
         .filter((log) => {
           return (
-            log.userId.equals(userId) &&
-            log.endpointId.value === endpointId.value &&
-            log.requestedAt >= windowStart &&
-            log.requestedAt <= now
+            log.userId === userId.value &&
+            log.endpointId === endpointId.value &&
+            log.timestamp >= windowStart &&
+            log.timestamp <= now
           );
         })
-        .reduce((sum, log) => sum + log.requestCount.value, 0);
+        .length; // Count the number of logs
 
       return Result.ok(count);
     } catch (error) {
       return Result.fail(
-        DomainError.unexpected(
+        DomainError.internal(
           'COUNT_FAILED',
           'Failed to count requests',
           error instanceof Error ? error : undefined,

@@ -46,7 +46,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   /**
    * APIログエントリを保存
    */
-  async save(logEntry: APILogEntry): Promise<Result<void, DomainError>> {
+  async save(logEntry: APILogEntry): Promise<Result<void>> {
     try {
       const record: APILogRecord = {
         id: logEntry.id.value,
@@ -94,7 +94,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   /**
    * IDでログエントリを検索
    */
-  async findById(id: LogId): Promise<Result<APILogEntry | null, DomainError>> {
+  async findById(id: LogId): Promise<Result<APILogEntry | null>> {
     try {
       const { data, error } = await this.supabase
         .from('api_logs')
@@ -135,7 +135,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
     userId: UserId,
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<APILogEntry[], DomainError>> {
+  ): Promise<Result<APILogEntry[]>> {
     try {
       let query = this.supabase
         .from('api_logs')
@@ -183,7 +183,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   async findByTimeRange(
     timeRange: TimeRange,
     limit: number = 100,
-  ): Promise<Result<APILogEntry[], DomainError>> {
+  ): Promise<Result<APILogEntry[]>> {
     try {
       const { data, error } = await this.supabase
         .from('api_logs')
@@ -224,7 +224,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   async findErrorsByTimeRange(
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<APILogEntry[], DomainError>> {
+  ): Promise<Result<APILogEntry[]>> {
     try {
       let query = this.supabase
         .from('api_logs')
@@ -270,17 +270,14 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
    * 統計情報を取得
    */
   async getStatistics(timeRange: TimeRange): Promise<
-    Result<
-      {
-        totalRequests: number;
-        uniqueUsers: number;
-        errorCount: number;
-        averageResponseTime: number;
-        requestsByEndpoint: Map<string, number>;
-        requestsByStatus: Map<number, number>;
-      },
-      DomainError
-    >
+    Result<{
+      totalRequests: number;
+      uniqueUsers: number;
+      errorCount: number;
+      averageResponseTime: number;
+      requestsByEndpoint: Map<string, number>;
+      requestsByStatus: Map<number, number>;
+    }>
   > {
     try {
       const { data, error } = await this.supabase
@@ -356,7 +353,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   /**
    * 古いログエントリを削除
    */
-  async deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>> {
+  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     try {
       // まず削除対象の件数を取得
       const { count, error: countError } = await this.supabase
@@ -485,7 +482,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   /**
    * 複数のログエントリを一括保存
    */
-  async saveMany(logEntries: APILogEntry[]): Promise<Result<void, DomainError>> {
+  async saveMany(logEntries: APILogEntry[]): Promise<Result<void>> {
     try {
       const records: APILogRecord[] = logEntries.map((logEntry) => ({
         id: logEntry.id.value,
@@ -540,7 +537,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   async findSlowRequests(
     thresholdMs: number,
     limit: number = 100,
-  ): Promise<Result<APILogEntry[], DomainError>> {
+  ): Promise<Result<APILogEntry[]>> {
     try {
       const { data, error } = await this.supabase
         .from('api_logs')
@@ -575,13 +572,31 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   }
 
   /**
-   * エラーログを検索（新しいオプション付きメソッド）
+   * エラーログを検索（オーバーロード実装）
    */
-  async findErrors(options?: {
+  async findErrors(timeRangeOrOptions?: TimeRange | {
     userId?: UserId;
     limit?: number;
     offset?: number;
-  }): Promise<Result<APILogEntry[], DomainError>> {
+  }, limit?: number): Promise<Result<APILogEntry[]>> {
+    // Handle overloaded signatures
+    if (timeRangeOrOptions instanceof TimeRange) {
+      // First signature: findErrors(timeRange?: TimeRange, limit?: number)
+      return this.findErrorsByTimeRange(timeRangeOrOptions, limit);
+    } else {
+      // Second signature: findErrors(options?: {...})
+      return this.findErrorsWithOptions(timeRangeOrOptions);
+    }
+  }
+
+  /**
+   * オプション付きでエラーログを検索
+   */
+  private async findErrorsWithOptions(options?: {
+    userId?: UserId;
+    limit?: number;
+    offset?: number;
+  }): Promise<Result<APILogEntry[]>> {
     try {
       let query = this.supabase
         .from('api_logs')

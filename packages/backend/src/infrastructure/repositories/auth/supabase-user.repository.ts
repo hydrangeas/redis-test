@@ -5,7 +5,7 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { Email } from '@/domain/auth/value-objects/email';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { Logger } from 'pino';
@@ -148,7 +148,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       this.logger.info({ userId: user.id.value }, 'User saved successfully');
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error(
         {
@@ -192,7 +192,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       this.logger.info({ userId: user.id.value }, 'User updated successfully');
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error(
         {
@@ -229,7 +229,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       this.logger.info({ userId: id.value }, 'User deleted successfully');
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error(
         {

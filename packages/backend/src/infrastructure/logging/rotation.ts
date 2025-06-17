@@ -1,4 +1,5 @@
 import pino from 'pino';
+// @ts-ignore - pino-multi-stream doesn't have type declarations
 import pinoMultiStream from 'pino-multi-stream';
 import { createStream } from 'rotating-file-stream';
 import path from 'path';

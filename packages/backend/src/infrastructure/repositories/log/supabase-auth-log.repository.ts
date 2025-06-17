@@ -45,7 +45,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   /**
    * 認証ログエントリを保存
    */
-  async save(logEntry: AuthLogEntry): Promise<Result<void, DomainError>> {
+  async save(logEntry: AuthLogEntry): Promise<Result<void>> {
     try {
       const record: AuthLogRecord = {
         id: logEntry.id.value,
@@ -91,7 +91,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   /**
    * IDでログエントリを検索
    */
-  async findById(id: LogId): Promise<Result<AuthLogEntry | null, DomainError>> {
+  async findById(id: LogId): Promise<Result<AuthLogEntry | null>> {
     try {
       const { data, error } = await this.supabase
         .from('auth_logs')
@@ -136,7 +136,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
     userId: UserId,
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<AuthLogEntry[], DomainError>> {
+  ): Promise<Result<AuthLogEntry[]>> {
     try {
       let query = this.supabase
         .from('auth_logs')
@@ -185,7 +185,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
     eventType: EventType,
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<AuthLogEntry[], DomainError>> {
+  ): Promise<Result<AuthLogEntry[]>> {
     try {
       let query = this.supabase
         .from('auth_logs')
@@ -234,7 +234,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
     ipAddress: IPAddress,
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<AuthLogEntry[], DomainError>> {
+  ): Promise<Result<AuthLogEntry[]>> {
     try {
       let query = this.supabase
         .from('auth_logs')
@@ -282,7 +282,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   async findFailures(
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<AuthLogEntry[], DomainError>> {
+  ): Promise<Result<AuthLogEntry[]>> {
     try {
       let query = this.supabase
         .from('auth_logs')
@@ -330,7 +330,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   async findSuspiciousActivities(
     timeRange?: TimeRange,
     limit: number = 100,
-  ): Promise<Result<AuthLogEntry[], DomainError>> {
+  ): Promise<Result<AuthLogEntry[]>> {
     try {
       let query = this.supabase
         .from('auth_logs')
@@ -376,18 +376,15 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
    * 統計情報を取得
    */
   async getStatistics(timeRange: TimeRange): Promise<
-    Result<
-      {
-        totalAttempts: number;
-        successfulLogins: number;
-        failedLogins: number;
-        uniqueUsers: number;
-        suspiciousActivities: number;
-        loginsByProvider: Map<string, number>;
-        tokenRefreshCount: number;
-      },
-      DomainError
-    >
+    Result<{
+      totalAttempts: number;
+      successfulLogins: number;
+      failedLogins: number;
+      uniqueUsers: number;
+      suspiciousActivities: number;
+      loginsByProvider: Map<string, number>;
+      tokenRefreshCount: number;
+    }>
   > {
     try {
       const { data, error } = await this.supabase
@@ -468,7 +465,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   /**
    * 古いログエントリを削除
    */
-  async deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>> {
+  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     try {
       // まず削除対象の件数を取得
       const { count, error: countError } = await this.supabase
@@ -534,15 +531,53 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
       }
       const logId = logIdResult.getValue();
       const event = new AuthEvent(record.event_type as EventType, record.metadata?.description);
-      const provider = Provider.create(record.provider || 'unknown').getValue();
+      const providerResult = Provider.create(record.provider || 'unknown');
+      if (providerResult.isFailure) {
+        throw new Error(`Failed to create Provider: ${providerResult.getError().message}`);
+      }
+      const provider = providerResult.getValue();
+      
       const ipAddress = record.ip_address
-        ? IPAddress.create(record.ip_address).getValue()
-        : IPAddress.unknown();
+        ? (() => {
+            const result = IPAddress.create(record.ip_address);
+            if (result.isFailure) {
+              throw new Error(`Failed to create IPAddress: ${result.getError().message}`);
+            }
+            return result.getValue();
+          })()
+        : (() => {
+            const result = IPAddress.unknown();
+            if (result.isFailure) {
+              throw new Error(`Failed to create unknown IPAddress: ${result.getError().message}`);
+            }
+            return result.getValue();
+          })();
+        
       const userAgent = record.user_agent
-        ? UserAgent.create(record.user_agent).getValue()
-        : UserAgent.unknown();
+        ? (() => {
+            const result = UserAgent.create(record.user_agent);
+            if (result.isFailure) {
+              throw new Error(`Failed to create UserAgent: ${result.getError().message}`);
+            }
+            return result.getValue();
+          })()
+        : (() => {
+            const result = UserAgent.unknown();
+            if (result.isFailure) {
+              throw new Error(`Failed to create unknown UserAgent: ${result.getError().message}`);
+            }
+            return result.getValue();
+          })();
 
-      const userId = record.user_id ? UserId.create(record.user_id).getValue() : undefined;
+      const userId = record.user_id 
+        ? (() => {
+            const result = UserId.create(record.user_id);
+            if (result.isFailure) {
+              throw new Error(`Failed to create UserId: ${result.getError().message}`);
+            }
+            return result.getValue();
+          })()
+        : undefined;
 
       const logEntryResult = AuthLogEntry.create(
         {
