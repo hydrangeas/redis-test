@@ -193,13 +193,13 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
   });
 
   // Metrics endpoint
-  fastify.get('/metrics', async (request, reply) => {
+  fastify.get('/metrics', async (_request, reply) => {
     reply.type('text/plain');
     return register.metrics();
   });
 
   // Detailed health check endpoint
-  fastify.get('/health/detailed', async (request, reply) => {
+  fastify.get('/health/detailed', async (_request, reply) => {
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
 
@@ -241,7 +241,7 @@ async function checkDatabase(): Promise<{ status: string; latency?: number; erro
   try {
     const start = Date.now();
     // For now, we'll assume the database is healthy if we can resolve the Supabase client
-    const supabaseClient = container.resolve(DI_TOKENS.SupabaseClient);
+    container.resolve(DI_TOKENS.SupabaseClient);
     const latency = Date.now() - start;
 
     return { status: 'healthy', latency };

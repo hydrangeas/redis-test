@@ -1,9 +1,9 @@
-import { Entity } from '@/domain/shared/entity';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
-import { HTTPMethod } from '@/domain/api/value-objects/http-method';
+import { HttpMethod } from '@/domain/log/value-objects/http-method';
 import { StatusCode } from '@/domain/api/value-objects/status-code';
 import { RequestDuration } from '@/domain/api/value-objects/request-duration';
 import { RequestId } from '@/domain/api/value-objects/request-id';
@@ -12,7 +12,7 @@ import { APILogId } from '@/domain/log/value-objects/api-log-id';
 export interface APILogProps {
   userId: UserId | null; // null for anonymous requests
   endpoint: APIEndpoint;
-  method: HTTPMethod;
+  method: HttpMethod;
   statusCode: StatusCode;
   duration: RequestDuration;
   requestId: RequestId;
@@ -33,7 +33,7 @@ export class APILog extends Entity<APILogProps> {
     return this.props.endpoint;
   }
 
-  get method(): HTTPMethod {
+  get method(): HttpMethod {
     return this.props.method;
   }
 
@@ -58,7 +58,7 @@ export class APILog extends Entity<APILogProps> {
   }
 
   private constructor(props: APILogProps, id?: APILogId) {
-    super(props, id);
+    super(props, id ? new UniqueEntityId(id.value) : undefined);
   }
 
   public static create(props: APILogProps, id?: APILogId): Result<APILog> {
@@ -121,6 +121,6 @@ export class APILog extends Entity<APILogProps> {
    */
   getSummary(): string {
     const user = this.isAnonymous() ? 'anonymous' : this.userId!.value;
-    return `${user} ${this.method.value} ${this.endpoint.value} ${this.statusCode.value} ${this.duration.value}ms`;
+    return `${user} ${this.method.value} ${this.endpoint.path.value} ${this.statusCode.value} ${this.duration.value}ms`;
   }
 }

@@ -1,5 +1,6 @@
 import { IUserRepository } from '../user-repository.interface';
-import { Result } from '@/domain/shared/result';
+import { Result } from '@/domain/errors/result';
+import { DomainError } from '@/domain/errors';
 import { User } from '../../entities/user';
 import { UserId } from '../../value-objects/user-id';
 import { Email } from '../../value-objects/email';
@@ -34,25 +35,25 @@ export class MockUserRepository implements IUserRepository {
   async save(user: User): Promise<Result<void>> {
     this.saveSpy(user);
     this.users.set(user.id.value, user);
-    return Result.ok();
+    return Result.ok(undefined);
   }
 
   async update(user: User): Promise<Result<void>> {
     this.updateSpy(user);
     if (!this.users.has(user.id.value)) {
-      return Result.fail(new Error('User not found'));
+      return Result.fail(DomainError.notFound('USER_NOT_FOUND', 'User not found'));
     }
     this.users.set(user.id.value, user);
-    return Result.ok();
+    return Result.ok(undefined);
   }
 
   async delete(id: UserId): Promise<Result<void>> {
     this.deleteSpy(id);
     const deleted = this.users.delete(id.value);
     if (!deleted) {
-      return Result.fail(new Error('User not found'));
+      return Result.fail(DomainError.notFound('USER_NOT_FOUND', 'User not found'));
     }
-    return Result.ok();
+    return Result.ok(undefined);
   }
 
   // テストヘルパーメソッド

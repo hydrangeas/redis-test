@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { config, isDevelopment, isProduction } from '@/config/index.js';
+import { config, isProduction } from '@/config/index.js';
 
 // カスタムシリアライザー
 const serializers = {

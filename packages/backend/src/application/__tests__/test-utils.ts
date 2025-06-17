@@ -7,12 +7,13 @@ import { Email } from '@/domain/auth/value-objects/email';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { AuthResult } from '@/domain/log/value-objects/auth-result';
-import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 
 export function setupDependencies() {
   const mockEventBus = new EventEmitter();
-  mockEventBus.publish = vi.fn((event) => {
-    mockEventBus.emit(event.type, event);
+  // EventEmitter uses emit, not publish
+  (mockEventBus as any).emit = vi.fn((eventType: string, eventData: any) => {
+    EventEmitter.prototype.emit.call(mockEventBus, eventType, eventData);
   });
 
   const mockRepositories = {
@@ -39,14 +40,14 @@ export function setupDependencies() {
     },
   };
 
-  const mockLogger = {
+  const mockLogger: any = {
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
     debug: vi.fn(),
     fatal: vi.fn(),
     trace: vi.fn(),
-    child: vi.fn(() => mockLogger),
+    child: vi.fn(() => mockLogger) as any,
   };
 
   const mockAuthAdapter = {
@@ -68,13 +69,12 @@ export function setupDependencies() {
 
   container.registerInstance(DI_TOKENS.EventBus, mockEventBus);
   container.registerInstance(DI_TOKENS.AuthenticationService, mockAuthenticationService);
-  container.registerInstance(DI_TOKENS.AuthenticationRepository, mockRepositories.authentication);
-  container.registerInstance(DI_TOKENS.APIEndpointRepository, mockRepositories.apiEndpoint);
+  container.registerInstance(DI_TOKENS.UserRepository, mockRepositories.authentication);
   container.registerInstance(DI_TOKENS.RateLimitLogRepository, mockRepositories.rateLimitLog);
   container.registerInstance(DI_TOKENS.OpenDataRepository, mockRepositories.openData);
   container.registerInstance(DI_TOKENS.AuthLogRepository, mockRepositories.authLog);
   container.registerInstance(DI_TOKENS.APILogRepository, mockRepositories.apiLog);
-  container.registerInstance(DI_TOKENS.FileSystem, mockFileSystem);
+  container.registerInstance(DI_TOKENS.FileStorage, mockFileSystem);
   container.registerInstance(DI_TOKENS.SupabaseClient, mockSupabaseClient);
   container.registerInstance(DI_TOKENS.Logger, mockLogger);
   container.registerInstance(DI_TOKENS.AuthAdapter, mockAuthAdapter);
@@ -92,10 +92,11 @@ export function setupDependencies() {
   };
 }
 
-export function createMockUser(tier: string) {
+export function createMockUser(tier: TierLevel | string) {
   const emailResult = Email.create('test@example.com');
   const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000'); // Valid UUID v4
-  const userTierResult = UserTier.create(tier.toUpperCase());
+  const tierLevel = typeof tier === 'string' ? (tier.toUpperCase() as TierLevel) : tier;
+  const userTierResult = UserTier.create(tierLevel);
 
   if (emailResult.isFailure || userIdResult.isFailure || userTierResult.isFailure) {
     throw new Error('Failed to create mock user components');
@@ -105,7 +106,7 @@ export function createMockUser(tier: string) {
     id: userIdResult.getValue(),
     email: emailResult.getValue(),
     tier: userTierResult.getValue(),
-    lastActivityAt: new Date(),
+    emailVerified: true,
   });
 
   if (userResult.isFailure) {

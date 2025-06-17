@@ -3,7 +3,7 @@ import { APIEndpoint } from '../../value-objects/api-endpoint';
 import { EndpointPath } from '../../value-objects/endpoint-path';
 import { HttpMethod } from '../../value-objects/http-method';
 import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { vi } from 'vitest';
 
 /**
@@ -33,10 +33,10 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
     try {
       const key = this.createKey(endpoint.path, endpoint.method);
       this.endpoints.set(key, endpoint);
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        new DomainError('SAVE_FAILED', 'Failed to save endpoint', 'INTERNAL', {
+        new DomainError('SAVE_FAILED', 'Failed to save endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -58,7 +58,7 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
       return Result.ok(endpoint);
     } catch (error) {
       return Result.fail(
-        new DomainError('FIND_FAILED', 'Failed to find endpoint', 'INTERNAL', {
+        new DomainError('FIND_FAILED', 'Failed to find endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -76,7 +76,7 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
       return Result.ok(allEndpoints);
     } catch (error) {
       return Result.fail(
-        new DomainError('LIST_FAILED', 'Failed to list endpoints', 'INTERNAL', {
+        new DomainError('LIST_FAILED', 'Failed to list endpoints', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -96,7 +96,7 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
       return Result.ok(activeEndpoints);
     } catch (error) {
       return Result.fail(
-        new DomainError('LIST_FAILED', 'Failed to list active endpoints', 'INTERNAL', {
+        new DomainError('LIST_FAILED', 'Failed to list active endpoints', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -115,18 +115,18 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
 
       if (!existed) {
         return Result.fail(
-          new DomainError('NOT_FOUND', 'Endpoint not found', 'NOT_FOUND', {
+          new DomainError('NOT_FOUND', 'Endpoint not found', ErrorType.NOT_FOUND, {
             path: path.value,
-            method: method.value,
+            method: method,
           }),
         );
       }
 
       this.endpoints.delete(key);
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        new DomainError('DELETE_FAILED', 'Failed to delete endpoint', 'INTERNAL', {
+        new DomainError('DELETE_FAILED', 'Failed to delete endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );

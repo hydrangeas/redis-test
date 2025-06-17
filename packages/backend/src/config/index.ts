@@ -7,7 +7,6 @@ export { productionConfig } from './environments/production.js';
 
 // 既存のEnvConfigとの互換性を保つためのエクスポート
 import { config } from './loader.js';
-import type { Config } from './schema.js';
 
 // 既存のEnvConfig型との互換性を保つ
 export interface EnvConfig {

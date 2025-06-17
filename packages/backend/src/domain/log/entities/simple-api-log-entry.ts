@@ -1,6 +1,6 @@
 import { Entity } from '@/domain/shared/entity';
 import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { LogId } from '../value-objects/log-id';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { HttpMethod } from '../value-objects/http-method';
@@ -74,25 +74,25 @@ export class SimpleApiLogEntry extends Entity<SimpleApiLogEntryProps> {
   public static create(
     id: LogId,
     props: SimpleApiLogEntryProps,
-  ): Result<SimpleApiLogEntry, DomainError> {
+  ): Result<SimpleApiLogEntry> {
     // Validate response time
     if (props.responseTime < 0) {
       return Result.fail(
-        new DomainError('INVALID_RESPONSE_TIME', 'Response time cannot be negative', 'VALIDATION'),
+        new DomainError('INVALID_RESPONSE_TIME', 'Response time cannot be negative', ErrorType.VALIDATION),
       );
     }
 
     // Validate response size
     if (props.responseSize !== undefined && props.responseSize < 0) {
       return Result.fail(
-        new DomainError('INVALID_RESPONSE_SIZE', 'Response size cannot be negative', 'VALIDATION'),
+        new DomainError('INVALID_RESPONSE_SIZE', 'Response size cannot be negative', ErrorType.VALIDATION),
       );
     }
 
     // Validate endpoint
     if (!props.endpoint || props.endpoint.trim().length === 0) {
       return Result.fail(
-        new DomainError('INVALID_ENDPOINT', 'Endpoint cannot be empty', 'VALIDATION'),
+        new DomainError('INVALID_ENDPOINT', 'Endpoint cannot be empty', ErrorType.VALIDATION),
       );
     }
 
@@ -102,7 +102,7 @@ export class SimpleApiLogEntry extends Entity<SimpleApiLogEntryProps> {
         new DomainError(
           'ERROR_MESSAGE_TOO_LONG',
           'Error message exceeds maximum length',
-          'VALIDATION',
+          ErrorType.VALIDATION,
         ),
       );
     }

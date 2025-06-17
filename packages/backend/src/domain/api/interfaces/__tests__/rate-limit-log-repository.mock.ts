@@ -4,7 +4,7 @@ import { UserId } from '@/domain/auth/value-objects/user-id';
 import { EndpointId } from '../../value-objects/endpoint-id';
 import { RateLimitWindow } from '../../value-objects/rate-limit-window';
 import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { vi } from 'vitest';
 
 /**
@@ -30,15 +30,15 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * レート制限ログを保存
    */
-  async save(log: RateLimitLog): Promise<Result<void, DomainError>> {
+  async save(log: RateLimitLog): Promise<Result<void>> {
     this.saveSpy(log);
 
     try {
       this.logs.push(log);
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        new DomainError('SAVE_FAILED', 'Failed to save rate limit log', 'INTERNAL', {
+        new DomainError('SAVE_FAILED', 'Failed to save rate limit log', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -48,15 +48,15 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 複数のログを一括保存
    */
-  async saveMany(logs: RateLimitLog[]): Promise<Result<void, DomainError>> {
+  async saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
     this.saveManySpy(logs);
 
     try {
       this.logs.push(...logs);
-      return Result.ok();
+      return Result.ok(undefined);
     } catch (error) {
       return Result.fail(
-        new DomainError('SAVE_FAILED', 'Failed to save rate limit logs', 'INTERNAL', {
+        new DomainError('SAVE_FAILED', 'Failed to save rate limit logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -70,22 +70,22 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>> {
+  ): Promise<Result<RateLimitLog[]>> {
     this.findByUserAndEndpointSpy(userId, endpointId, window);
 
     try {
       const filteredLogs = this.logs.filter(
         (log) =>
-          log.userId.equals(userId) &&
-          log.endpointId.equals(endpointId) &&
-          log.requestedAt >= window.startTime &&
-          log.requestedAt <= new Date(window.startTime.getTime() + window.durationSeconds * 1000),
+          log.userId === userId.value &&
+          log.endpointId === endpointId.value &&
+          log.timestamp >= window.startTime &&
+          log.timestamp <= window.endTime,
       );
 
       return Result.ok(filteredLogs);
     } catch (error) {
       return Result.fail(
-        new DomainError('FIND_FAILED', 'Failed to find rate limit logs', 'INTERNAL', {
+        new DomainError('FIND_FAILED', 'Failed to find rate limit logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -98,24 +98,24 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   async findByUser(
     userId: UserId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>> {
+  ): Promise<Result<RateLimitLog[]>> {
     this.findByUserSpy(userId, window);
 
     try {
-      let filteredLogs = this.logs.filter((log) => log.userId.equals(userId));
+      let filteredLogs = this.logs.filter((log) => log.userId === userId.value);
 
       if (window) {
         filteredLogs = filteredLogs.filter(
           (log) =>
-            log.requestedAt >= window.startTime &&
-            log.requestedAt <= new Date(window.startTime.getTime() + window.durationSeconds * 1000),
+            log.timestamp >= window.startTime &&
+            log.timestamp <= window.endTime,
         );
       }
 
       return Result.ok(filteredLogs);
     } catch (error) {
       return Result.fail(
-        new DomainError('FIND_FAILED', 'Failed to find user logs', 'INTERNAL', {
+        new DomainError('FIND_FAILED', 'Failed to find user logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -128,24 +128,24 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   async findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[], DomainError>> {
+  ): Promise<Result<RateLimitLog[]>> {
     this.findByEndpointSpy(endpointId, window);
 
     try {
-      let filteredLogs = this.logs.filter((log) => log.endpointId.equals(endpointId));
+      let filteredLogs = this.logs.filter((log) => log.endpointId === endpointId.value);
 
       if (window) {
         filteredLogs = filteredLogs.filter(
           (log) =>
-            log.requestedAt >= window.startTime &&
-            log.requestedAt <= new Date(window.startTime.getTime() + window.durationSeconds * 1000),
+            log.timestamp >= window.startTime &&
+            log.timestamp <= window.endTime,
         );
       }
 
       return Result.ok(filteredLogs);
     } catch (error) {
       return Result.fail(
-        new DomainError('FIND_FAILED', 'Failed to find endpoint logs', 'INTERNAL', {
+        new DomainError('FIND_FAILED', 'Failed to find endpoint logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -155,18 +155,18 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 古いログを削除
    */
-  async deleteOldLogs(beforeDate: Date): Promise<Result<number, DomainError>> {
+  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     this.deleteOldLogsSpy(beforeDate);
 
     try {
       const originalCount = this.logs.length;
-      this.logs = this.logs.filter((log) => log.requestedAt >= beforeDate);
+      this.logs = this.logs.filter((log) => log.timestamp >= beforeDate);
       const deletedCount = originalCount - this.logs.length;
 
       return Result.ok(deletedCount);
     } catch (error) {
       return Result.fail(
-        new DomainError('DELETE_FAILED', 'Failed to delete old logs', 'INTERNAL', {
+        new DomainError('DELETE_FAILED', 'Failed to delete old logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );
@@ -180,22 +180,22 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<number, DomainError>> {
+  ): Promise<Result<number>> {
     this.countRequestsSpy(userId, endpointId, window);
 
     try {
       const count = this.logs.filter(
         (log) =>
-          log.userId.equals(userId) &&
-          log.endpointId.equals(endpointId) &&
-          log.requestedAt >= window.startTime &&
-          log.requestedAt <= new Date(window.startTime.getTime() + window.durationSeconds * 1000),
+          log.userId === userId.value &&
+          log.endpointId === endpointId.value &&
+          log.timestamp >= window.startTime &&
+          log.timestamp <= window.endTime,
       ).length;
 
       return Result.ok(count);
     } catch (error) {
       return Result.fail(
-        new DomainError('COUNT_FAILED', 'Failed to count requests', 'INTERNAL', {
+        new DomainError('COUNT_FAILED', 'Failed to count requests', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
       );

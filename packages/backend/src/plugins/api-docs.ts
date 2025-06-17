@@ -97,30 +97,30 @@ export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
   `;
 
   // APIドキュメントページ
-  fastify.get('/api-docs', async (request, reply) => {
+  fastify.get('/api-docs', async (_request, reply) => {
     reply.type('text/html');
     return scalarHtml;
   });
 
   // リダイレクト（ルートからドキュメントへ）
-  fastify.get('/docs', async (request, reply) => {
+  fastify.get('/docs', async (_request, reply) => {
     reply.redirect('/api-docs');
   });
 
   // OpenAPI JSON エンドポイント
-  fastify.get('/api/v1/openapi.json', async (request, reply) => {
+  fastify.get('/api/v1/openapi.json', async (_request, reply) => {
     reply.type('application/json');
     return openapiSpec;
   });
 
   // OpenAPI YAML エンドポイント
-  fastify.get('/api/v1/openapi.yaml', async (request, reply) => {
+  fastify.get('/api/v1/openapi.yaml', async (_request, reply) => {
     reply.type('text/yaml');
     return yaml.dump(openapiSpec);
   });
 
   // OpenAPI仕様を別パスでも提供（互換性のため）
-  fastify.get('/openapi.json', async (request, reply) => {
+  fastify.get('/openapi.json', async (_request, reply) => {
     reply.redirect('/api/v1/openapi.json');
   });
 

@@ -1,4 +1,4 @@
-import { Entity } from '@/domain/shared/entity';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { UserId } from '@/domain/auth/value-objects/user-id';
@@ -41,7 +41,7 @@ export class AuthLog extends Entity<AuthLogProps> {
   }
 
   private constructor(props: AuthLogProps, id?: AuthLogId) {
-    super(props, id);
+    super(props, id ? new UniqueEntityId(id.value) : undefined);
   }
 
   public static create(props: AuthLogProps, id?: AuthLogId): Result<AuthLog> {
