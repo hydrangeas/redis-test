@@ -66,8 +66,8 @@ describe('DataRetrievalUseCase Integration', () => {
         },
       });
 
-      // Mock access control
-      vi.spyOn(apiAccessControlUseCase, 'checkAndRecordAccess').mockResolvedValue(
+      // Mock access control from test dependencies
+      mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess.mockResolvedValue(
         Result.ok({
           allowed: true,
           reason: 'authenticated',
@@ -103,6 +103,7 @@ describe('DataRetrievalUseCase Integration', () => {
       const result = await useCase.retrieveData(
         filePath,
         authenticatedUser,
+        { ipAddress },
       );
 
       expect(result.isSuccess).toBe(true);
@@ -115,7 +116,7 @@ describe('DataRetrievalUseCase Integration', () => {
       // expect(authUseCase.validateToken).toHaveBeenCalledWith(token);
 
       // Verify access control was called
-      expect(apiAccessControlUseCase.checkAndRecordAccess).toHaveBeenCalledWith(
+      expect(mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess).toHaveBeenCalledWith(
         authenticatedUser,
         filePath,
         'GET',
@@ -155,7 +156,7 @@ describe('DataRetrievalUseCase Integration', () => {
       });
 
       // Mock access control
-      vi.spyOn(apiAccessControlUseCase, 'checkAndRecordAccess').mockResolvedValue(
+      mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess.mockResolvedValue(
         Result.ok({
           allowed: true,
           reason: 'authenticated',
@@ -170,6 +171,7 @@ describe('DataRetrievalUseCase Integration', () => {
       const result = await useCase.retrieveData(
         filePath,
         authenticatedUser,
+        { ipAddress },
       );
 
       expect(result.isFailure).toBe(true);
@@ -212,7 +214,7 @@ describe('DataRetrievalUseCase Integration', () => {
       });
 
       // Mock rate limit exceeded
-      vi.spyOn(apiAccessControlUseCase, 'checkAndRecordAccess').mockResolvedValue(
+      mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess.mockResolvedValue(
         Result.ok({
           allowed: false,
           reason: 'rate_limit_exceeded',
@@ -232,6 +234,7 @@ describe('DataRetrievalUseCase Integration', () => {
       const result = await useCase.retrieveData(
         filePath,
         authenticatedUser,
+        { ipAddress },
       );
 
       expect(result.isFailure).toBe(true);
@@ -286,7 +289,7 @@ describe('DataRetrievalUseCase Integration', () => {
         },
       });
 
-      vi.spyOn(apiAccessControlUseCase, 'checkAndRecordAccess').mockResolvedValue(
+      mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess.mockResolvedValue(
         Result.ok({
           allowed: true,
           reason: 'authenticated',
@@ -319,6 +322,7 @@ describe('DataRetrievalUseCase Integration', () => {
       const result = await useCase.retrieveData(
         filePath,
         authenticatedUser,
+        { ipAddress },
       );
 
       expect(result.isSuccess).toBe(true);
@@ -329,7 +333,7 @@ describe('DataRetrievalUseCase Integration', () => {
 
       // Authentication is not called in retrieveData anymore
       // expect(authUseCase.validateToken).toHaveBeenCalled();
-      expect(apiAccessControlUseCase.checkAndRecordAccess).toHaveBeenCalled();
+      expect(mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess).toHaveBeenCalled();
     });
 
     it('should handle caching headers correctly', async () => {
@@ -365,7 +369,7 @@ describe('DataRetrievalUseCase Integration', () => {
         },
       });
 
-      vi.spyOn(apiAccessControlUseCase, 'checkAndRecordAccess').mockResolvedValue(
+      mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess.mockResolvedValue(
         Result.ok({
           allowed: true,
           reason: 'authenticated',
@@ -391,6 +395,7 @@ describe('DataRetrievalUseCase Integration', () => {
       const result = await useCase.retrieveData(
         filePath,
         authenticatedUser,
+        { ipAddress },
       );
 
       expect(result.isSuccess).toBe(true);
@@ -434,6 +439,7 @@ describe('DataRetrievalUseCase Integration', () => {
       const result = await useCase.retrieveData(
         maliciousPath,
         authenticatedUser,
+        { ipAddress },
       );
 
       expect(result.isFailure).toBe(true);
@@ -442,7 +448,7 @@ describe('DataRetrievalUseCase Integration', () => {
       expect(error.type).toBe(ErrorType.VALIDATION);
 
       // Verify access control was not called for invalid path
-      expect(apiAccessControlUseCase.checkAndRecordAccess).not.toHaveBeenCalled();
+      expect(mockDependencies.mockAPIAccessControlUseCase.checkAndRecordAccess).not.toHaveBeenCalled();
     });
   });
 });

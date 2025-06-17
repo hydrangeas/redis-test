@@ -76,6 +76,10 @@ interface MockDependencies {
     getLogsByUserId: ReturnType<typeof vi.fn>;
     getLogsByEndpoint: ReturnType<typeof vi.fn>;
   };
+  mockAPIAccessControlUseCase: {
+    checkAndRecordAccess: ReturnType<typeof vi.fn>;
+    recordPublicAccess: ReturnType<typeof vi.fn>;
+  };
 }
 
 export function setupDependencies(): MockDependencies {
@@ -168,11 +172,17 @@ export function setupDependencies(): MockDependencies {
     resetUserUsage: vi.fn(),
   };
 
+  const mockAPIAccessControlUseCase = {
+    checkAndRecordAccess: vi.fn(),
+    recordPublicAccess: vi.fn(),
+  };
+
   container.registerInstance(DI_TOKENS.EventBus, mockEventBus);
   container.registerInstance(DI_TOKENS.AuthenticationService, mockAuthenticationService);
   container.registerInstance(DI_TOKENS.APIAccessControlService, mockAPIAccessControlService);
   container.registerInstance(DI_TOKENS.RateLimitService, mockRateLimitService);
   container.registerInstance(DI_TOKENS.RateLimitUseCase, mockRateLimitUseCase);
+  container.registerInstance(DI_TOKENS.APIAccessControlUseCase, mockAPIAccessControlUseCase);
   container.registerInstance(DI_TOKENS.DataAccessService, mockDataAccessService);
   container.registerInstance(DI_TOKENS.ApiLogService, mockApiLogService);
   container.registerInstance(DI_TOKENS.UserRepository, mockRepositories.authentication);
@@ -199,6 +209,7 @@ export function setupDependencies(): MockDependencies {
     mockRateLimitService,
     mockDataAccessService,
     mockApiLogService,
+    mockAPIAccessControlUseCase,
   };
 }
 

@@ -2,6 +2,7 @@ import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import { DomainError } from '@/domain/errors/domain-error';
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
+import { UniqueEntityId } from '@/domain/shared/entity';
 import { Guard } from '@/domain/shared/guard';
 import { Result } from '@/domain/shared/result';
 
@@ -16,7 +17,6 @@ import type { EndpointPath } from '../value-objects/endpoint-path';
 import type { HttpMethod } from '../value-objects/http-method';
 import type { UserId } from '@/domain/auth/value-objects/user-id';
 import type { UserTier } from '@/domain/auth/value-objects/user-tier';
-import type { UniqueEntityId } from '@/domain/shared/entity';
 
 export interface APIAggregateProps {
   endpoints: Map<string, APIEndpoint>; // endpointId -> APIEndpoint

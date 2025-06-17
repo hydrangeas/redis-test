@@ -10,11 +10,13 @@ export interface IDataRetrievalUseCase {
    * 指定されたパスのデータを取得
    * @param path データパス（例: "secure/319985/r5.json"）
    * @param user 認証済みユーザー
+   * @param metadata APIアクセスのメタデータ（オプション）
    * @returns データ内容とメタデータ
    */
   retrieveData(
     path: string,
     user: AuthenticatedUser,
+    metadata?: { ipAddress?: string },
   ): Promise<
     Result<{
       content: unknown;

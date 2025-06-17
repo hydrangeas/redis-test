@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, MockedFunction } from 'vitest';
 import { DataRetrievalUseCase } from '../data-retrieval.use-case';
 import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { DataPath } from '@/domain/data/value-objects/data-path';
 import { OpenDataResource } from '@/domain/data/entities/open-data-resource.entity';
@@ -21,6 +22,7 @@ import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 describe('DataRetrievalUseCase', () => {
   let useCase: DataRetrievalUseCase;
   let mockDataRepository: IOpenDataRepository;
+  let mockAccessControlUseCase: IAPIAccessControlUseCase;
   let mockEventBus: IEventBus;
   let mockLogger: Logger;
   let authenticatedUser: AuthenticatedUser;
@@ -39,6 +41,11 @@ describe('DataRetrievalUseCase', () => {
       clearCache: vi.fn(),
     };
 
+    mockAccessControlUseCase = {
+      checkAndRecordAccess: vi.fn(),
+      recordPublicAccess: vi.fn(),
+    };
+
     mockEventBus = {
       publish: vi.fn(),
       subscribe: vi.fn(),
@@ -54,7 +61,7 @@ describe('DataRetrievalUseCase', () => {
       trace: vi.fn(),
     } as any;
 
-    useCase = new DataRetrievalUseCase(mockDataRepository, mockEventBus, mockLogger);
+    useCase = new DataRetrievalUseCase(mockDataRepository, mockAccessControlUseCase, mockEventBus, mockLogger);
 
     // 認証済みユーザーのセットアップ
     const userIdResult = UserId.create('550e8400-e29b-41d4-a716-446655440000');
@@ -85,6 +92,14 @@ describe('DataRetrievalUseCase', () => {
       const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
       const content = { test: 'data' };
 
+      // Mock access control to allow access
+      (mockAccessControlUseCase.checkAndRecordAccess as MockedFunction<any>).mockResolvedValue(
+        Result.ok({
+          allowed: true,
+          reason: 'authenticated',
+        }),
+      );
+
       (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
       (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(Result.ok(content));
 
@@ -105,13 +120,11 @@ describe('DataRetrievalUseCase', () => {
         }),
       );
 
-      // Check that the first event is DataAccessRequested
-      const firstCall = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
-      expect(firstCall.getEventName()).toBe('DataAccessRequested');
-
-      // Check that the second event is DataRetrieved
-      const secondCall = (mockEventBus.publish as MockedFunction<any>).mock.calls[1][0];
-      expect(secondCall.getEventName()).toBe('DataRetrieved');
+      // Check that the events are published correctly
+      const calls = (mockEventBus.publish as MockedFunction<any>).mock.calls;
+      expect(calls.length).toBe(2);
+      expect(calls[0][0].getEventName()).toBe('DataAccessRequested');
+      expect(calls[1][0].getEventName()).toBe('DataRetrieved');
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -157,6 +170,14 @@ describe('DataRetrievalUseCase', () => {
         ErrorType.NOT_FOUND,
       );
 
+      // Mock access control to allow access
+      (mockAccessControlUseCase.checkAndRecordAccess as MockedFunction<any>).mockResolvedValue(
+        Result.ok({
+          allowed: true,
+          reason: 'authenticated',
+        }),
+      );
+
       (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(
         Result.fail(notFoundError),
       );
@@ -168,8 +189,9 @@ describe('DataRetrievalUseCase', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error!.code).toBe('RESOURCE_NOT_FOUND');
 
-      // Verify events
+      // Verify events - after access control check, we publish DataAccessRequested and DataResourceNotFound
       const calls = (mockEventBus.publish as MockedFunction<any>).mock.calls;
+      expect(calls.length).toBe(2);
       expect(calls[0][0].getEventName()).toBe('DataAccessRequested');
       expect(calls[1][0].getEventName()).toBe('DataResourceNotFound');
 
@@ -189,6 +211,14 @@ describe('DataRetrievalUseCase', () => {
       }).getValue();
       const resource = new OpenDataResource(resourceId, dataPath, metadata, new Date(), new Date());
 
+      // Mock access control to allow access
+      (mockAccessControlUseCase.checkAndRecordAccess as MockedFunction<any>).mockResolvedValue(
+        Result.ok({
+          allowed: true,
+          reason: 'authenticated',
+        }),
+      );
+
       (mockDataRepository.findByPath as MockedFunction<any>).mockResolvedValue(Result.ok(resource));
       (mockDataRepository.getContent as MockedFunction<any>).mockResolvedValue(
         Result.fail(new DomainError('READ_ERROR', 'Failed to read file', ErrorType.INTERNAL)),
@@ -207,6 +237,14 @@ describe('DataRetrievalUseCase', () => {
       const path = 'secure/319985/r5.json';
       const unexpectedError = new Error('Unexpected error');
 
+      // Mock access control to allow access
+      (mockAccessControlUseCase.checkAndRecordAccess as MockedFunction<any>).mockResolvedValue(
+        Result.ok({
+          allowed: true,
+          reason: 'authenticated',
+        }),
+      );
+
       (mockDataRepository.findByPath as MockedFunction<any>).mockRejectedValue(unexpectedError);
 
       // Act
@@ -223,6 +261,79 @@ describe('DataRetrievalUseCase', () => {
           error: 'Unexpected error',
         }),
         'Unexpected error in data retrieval',
+      );
+    });
+
+    it('should handle access denied due to rate limit', async () => {
+      // Arrange
+      const path = 'secure/319985/r5.json';
+
+      // Mock access control to deny access due to rate limit
+      (mockAccessControlUseCase.checkAndRecordAccess as MockedFunction<any>).mockResolvedValue(
+        Result.ok({
+          allowed: false,
+          reason: 'rate_limit_exceeded',
+          rateLimitStatus: {
+            allowed: false,
+            currentCount: 60,
+            limit: 60,
+            remainingRequests: 0,
+            resetTime: new Date(Date.now() + 45000),
+            windowStart: new Date(Date.now() - 15000),
+            windowEnd: new Date(Date.now() + 45000),
+            retryAfter: 45,
+          },
+        }),
+      );
+
+      // Act
+      const result = await useCase.retrieveData(path, authenticatedUser);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error!.code).toBe('ACCESS_DENIED');
+      expect(result.error!.type).toBe(ErrorType.FORBIDDEN);
+      expect(result.error!.message).toBe('Rate limit exceeded');
+
+      // Verify DataAccessDenied event was published
+      expect(mockEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getEventName: expect.any(Function),
+        }),
+      );
+
+      const event = (mockEventBus.publish as MockedFunction<any>).mock.calls[0][0];
+      expect(event.getEventName()).toBe('DataAccessDenied');
+    });
+
+    it('should handle access control check failure', async () => {
+      // Arrange
+      const path = 'secure/319985/r5.json';
+      const accessControlError = new DomainError(
+        'ACCESS_CONTROL_ERROR',
+        'Access control check failed',
+        ErrorType.INTERNAL,
+      );
+
+      // Mock access control to fail
+      (mockAccessControlUseCase.checkAndRecordAccess as MockedFunction<any>).mockResolvedValue(
+        Result.fail(accessControlError),
+      );
+
+      // Act
+      const result = await useCase.retrieveData(path, authenticatedUser);
+
+      // Assert
+      expect(result.isFailure).toBe(true);
+      expect(result.error!.code).toBe('ACCESS_CONTROL_ERROR');
+      expect(result.error!.type).toBe(ErrorType.INTERNAL);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path,
+          error: accessControlError,
+        }),
+        'Access control check failed',
       );
     });
   });

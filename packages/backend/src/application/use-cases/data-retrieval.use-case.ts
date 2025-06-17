@@ -2,6 +2,7 @@ import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
 
 import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
+import { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { DataAccessDenied } from '@/domain/data/events/data-access-denied.event';
 import { DataAccessRequested } from '@/domain/data/events/data-access-requested.event';
@@ -23,6 +24,8 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   constructor(
     @inject(DI_TOKENS.OpenDataRepository)
     private readonly dataRepository: IOpenDataRepository,
+    @inject(DI_TOKENS.APIAccessControlUseCase)
+    private readonly accessControlUseCase: IAPIAccessControlUseCase,
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
@@ -35,6 +38,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   async retrieveData(
     path: string,
     user: AuthenticatedUser,
+    metadata?: { ipAddress?: string },
   ): Promise<
     Result<{
       content: unknown;
@@ -65,6 +69,72 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       }
 
       const dataPath = dataPathResult.getValue();
+
+      // アクセス制御チェック
+      const accessCheckResult = await this.accessControlUseCase.checkAndRecordAccess(
+        user,
+        path,
+        'GET',
+        metadata,
+      );
+
+      if (accessCheckResult.isFailure) {
+        this.logger.error(
+          { path, userId: user.userId.value, error: accessCheckResult.getError() },
+          'Access control check failed',
+        );
+        return Result.fail(accessCheckResult.getError());
+      }
+
+      const accessDecision = accessCheckResult.getValue();
+      if (!accessDecision.allowed) {
+        this.logger.warn(
+          { 
+            path, 
+            userId: user.userId.value, 
+            reason: accessDecision.reason,
+            rateLimitStatus: accessDecision.rateLimitStatus,
+          },
+          'Access denied',
+        );
+
+        // データアクセス拒否イベントを発行
+        this.eventBus.publish(
+          new DataAccessDenied(
+            user.userId.value,
+            user.userId.value,
+            path,
+            path,
+            user.tier.level.toString(),
+            accessDecision.reason || 'ACCESS_DENIED',
+            new Date(),
+          ),
+        );
+
+        // レート制限超過の場合は特別なエラーを返す
+        if (accessDecision.reason === 'rate_limit_exceeded') {
+          return Result.fail(
+            new DomainError(
+              'ACCESS_DENIED',
+              'Rate limit exceeded',
+              ErrorType.FORBIDDEN,
+              {
+                reason: accessDecision.reason,
+                rateLimitStatus: accessDecision.rateLimitStatus,
+              },
+            ),
+          );
+        }
+
+        return Result.fail(
+          new DomainError(
+            'ACCESS_DENIED',
+            accessDecision.message || 'Access denied',
+            ErrorType.FORBIDDEN,
+            { reason: accessDecision.reason },
+          ),
+        );
+      }
 
       // データアクセス要求イベントを発行
       // We don't have resource size and mime type yet, using placeholders
