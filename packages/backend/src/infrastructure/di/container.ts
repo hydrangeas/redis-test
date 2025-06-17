@@ -471,9 +471,20 @@ function registerTestInfrastructureServices(container: DependencyContainer): voi
   // });
 
   // RateLimitLogRepositoryの登録（InMemoryRateLimitServiceが依存）
-  // Use the in-memory version for tests to avoid module resolution issues
-  const { InMemoryRateLimitLogRepository } = require('../repositories/api/in-memory-rate-limit-log.repository');
+  // Use mock for tests to avoid module resolution issues with require
   container.register(DI_TOKENS.RateLimitLogRepository, {
-    useClass: InMemoryRateLimitLogRepository,
+    useValue: {
+      save: () => Promise.resolve(Result.ok(undefined)),
+      findByUserId: () => Promise.resolve(Result.ok([])),
+      countInWindow: () => Promise.resolve(Result.ok(0)),
+      deleteOlderThan: () => Promise.resolve(Result.ok(undefined)),
+      deleteByUserId: () => Promise.resolve(Result.ok(undefined)),
+      saveMany: () => Promise.resolve(Result.ok(undefined)),
+      findByUserAndEndpoint: () => Promise.resolve(Result.ok([])),
+      findByUser: () => Promise.resolve(Result.ok([])),
+      findByEndpoint: () => Promise.resolve(Result.ok([])),
+      deleteOldLogs: () => Promise.resolve(Result.ok(0)),
+      countRequests: () => Promise.resolve(Result.ok(0)),
+    },
   });
 }

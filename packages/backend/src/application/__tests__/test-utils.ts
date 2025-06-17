@@ -156,6 +156,7 @@ export function setupDependencies(): MockDependencies {
 
   const mockApiLogService = {
     logRequest: vi.fn(),
+    logAPIAccess: vi.fn(),
     getLogsByUserId: vi.fn(),
     getLogsByEndpoint: vi.fn(),
   };

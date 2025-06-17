@@ -2,15 +2,15 @@ import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
 
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
-import { APILogEntry } from '@/domain/log/entities/api-log-entry';
 import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod as ApiHttpMethod } from '@/domain/api/value-objects/http-method';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
+import { UserId } from '@/domain/auth/value-objects/user-id';
 import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
-import { UserId } from '@/domain/auth/value-objects/user-id';
 
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 

@@ -62,7 +62,7 @@ describe('DataRetrievedHandler', () => {
         expect(savedLog).toBeInstanceOf(APILogEntry);
         expect(savedLog.userId.value).toBe('550e8400-e29b-41d4-a716-446655440000');
         expect(savedLog.endpoint.path.value).toBe('/secure/data.json');
-        expect(savedLog.endpoint.method.value).toBe('GET');
+        expect(savedLog.endpoint.method).toBe('GET');
         expect(savedLog.responseInfo.statusCode).toBe(200);
         expect(savedLog.responseInfo.responseTime).toBe(150);
         // APILogEntry doesn't have metadata property

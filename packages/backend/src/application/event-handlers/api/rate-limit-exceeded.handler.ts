@@ -1,9 +1,8 @@
 import { Logger } from 'pino';
-
 import { injectable, inject } from 'tsyringe';
 
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { AuthResult } from '@/domain/log/value-objects';
 import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
