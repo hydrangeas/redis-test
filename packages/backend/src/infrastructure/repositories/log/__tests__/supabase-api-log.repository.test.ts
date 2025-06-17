@@ -296,7 +296,9 @@ describe('SupabaseAPILogRepository', () => {
         },
       ];
 
-      mockChain.limit.mockResolvedValue({ data: mockRecords, error: null });
+      // When findErrors() is called without options, it doesn't call limit()
+      // The final method in the chain is order()
+      mockChain.order.mockResolvedValue({ data: mockRecords, error: null });
 
       const result = await repository.findErrors();
 

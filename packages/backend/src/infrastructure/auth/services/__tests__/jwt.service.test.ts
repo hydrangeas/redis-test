@@ -278,7 +278,7 @@ describe('JWTService', () => {
       const result = await jwtService.verifyRefreshToken(token);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Invalid token type');
+      expect(result.getError().message).toBe('Invalid token type');
     });
   });
 
