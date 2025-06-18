@@ -21,7 +21,7 @@ const DataQueryParams = Type.Object({
 
 type DataQueryParamsType = Static<typeof DataQueryParams>;
 
-const dataRoutesV2: FastifyPluginAsync = (fastify) => {
+const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );
