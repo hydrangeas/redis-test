@@ -8,7 +8,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
  */
 export default fp(
   function pathValidationPlugin(fastify: FastifyInstance) {
-    fastify.addHook('preHandler', (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
       // ヘルスチェックとドキュメントエンドポイントは除外
       if (request.url === '/health' || request.url.startsWith('/api-docs')) {
         return;

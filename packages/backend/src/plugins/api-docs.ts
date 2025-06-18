@@ -39,7 +39,7 @@ export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
       url: `${baseUrl}/api/v1`,
       description: 'Current environment',
     },
-    ...(openapiSpec.servers || []),
+    ...((openapiSpec as any).servers || []),
   ];
 
   // Scalar UIのHTMLを生成
@@ -47,7 +47,7 @@ export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>${openapiSpec.info.title} - API Documentation</title>
+  <title>${(openapiSpec as any).info?.title || 'API'} - API Documentation</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>

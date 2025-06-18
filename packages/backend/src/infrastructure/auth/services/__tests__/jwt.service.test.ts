@@ -110,7 +110,7 @@ describe('JWTService', () => {
       const result = await jwtService.generateAccessToken(userId, tier);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Failed to generate access token');
+      expect(result.getError().message).toBe('Failed to generate access token');
       expect(mockLogger.error).toHaveBeenCalledWith(
         { error, userId },
         'Failed to generate access token',
@@ -155,7 +155,7 @@ describe('JWTService', () => {
       const result = await jwtService.generateRefreshToken(userId);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Failed to generate refresh token');
+      expect(result.getError().message).toBe('Failed to generate refresh token');
       expect(mockLogger.error).toHaveBeenCalledWith(
         { error, userId },
         'Failed to generate refresh token',
@@ -199,7 +199,7 @@ describe('JWTService', () => {
       const result = await jwtService.verifyAccessToken(token);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Invalid token type');
+      expect(result.getError().message).toBe('Invalid token type');
     });
 
     it('should handle expired tokens', async () => {
@@ -213,7 +213,7 @@ describe('JWTService', () => {
       const result = await jwtService.verifyAccessToken(token);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Token expired');
+      expect(result.getError().message).toBe('Token expired');
       expect(mockLogger.debug).toHaveBeenCalledWith('Token expired');
     });
 
@@ -228,7 +228,7 @@ describe('JWTService', () => {
       const result = await jwtService.verifyAccessToken(token);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Invalid token');
+      expect(result.getError().message).toBe('Invalid token');
       expect(mockLogger.debug).toHaveBeenCalledWith(
         { error: 'invalid signature' },
         'Invalid token',
@@ -246,7 +246,7 @@ describe('JWTService', () => {
       const result = await jwtService.verifyAccessToken(token);
 
       expect(result.isFailure).toBe(true);
-      expect(result.getError()).toBe('Failed to verify token');
+      expect(result.getError().message).toBe('Failed to verify token');
       expect(mockLogger.error).toHaveBeenCalledWith({ error }, 'Failed to verify access token');
     });
   });

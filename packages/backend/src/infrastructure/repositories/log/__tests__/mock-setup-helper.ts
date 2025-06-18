@@ -34,7 +34,7 @@ export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi
 
   // Add all methods to the chainable object
   Object.keys(methods).forEach((key) => {
-    (chainableObject as Record<string, unknown>)[key] = methods[key as keyof SupabaseMockMethods];
+    (chainableObject as any)[key] = methods[key as keyof SupabaseMockMethods];
     // Make each method return the chainable object by default
     (methods[key as keyof SupabaseMockMethods]).mockReturnValue(chainableObject);
   });
@@ -53,5 +53,5 @@ export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi
     }),
   };
 
-  return { mockClient, methods: chainableObject };
+  return { mockClient: mockClient as any, methods: chainableObject };
 }

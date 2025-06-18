@@ -1,4 +1,3 @@
-import { DomainError } from '@/domain/errors/domain-error';
 import { ValidationError } from '@/domain/errors/validation-error';
 import { Result } from '@/domain/shared/result';
 import { ValueObject } from '@/domain/shared/value-object';

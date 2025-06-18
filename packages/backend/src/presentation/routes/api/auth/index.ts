@@ -36,7 +36,7 @@ const ErrorResponse = Type.Object({
   instance: Type.Optional(Type.String({ description: 'Instance URI' })),
 });
 
-const authRoutes: FastifyPluginAsync = (fastify) => {
+const authRoutes: FastifyPluginAsync = async (fastify) => {
   // User repository is not needed in these routes
   const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
 

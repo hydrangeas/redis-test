@@ -136,17 +136,17 @@ async function _main(): Promise<void> {
 
   try {
     // Get version information
-    const versions = await client.getVersions();
+    await client.getVersions();
     // Available versions: { current: '2', supported: ['1', '2', '2.1'], deprecated: ['1'] }
     // Output: { current: '2', supported: ['1', '2', '2.1'], deprecated: ['1'] }
 
     // Get features for current version
-    const features = await client.getFeatures();
+    await client.getFeatures();
     // Features: { base: ['data_access', 'rate_limiting'], advanced: ['filtering', 'sorting'] }
     // Output: { base: ['data_access', 'rate_limiting'], advanced: ['filtering', 'sorting'] }
 
     // Get data
-    const data = await client.getData('secure/319985/r5.json');
+    await client.getData('secure/319985/r5.json');
     // Data: [JSON data from the API]
   } catch (error) {
     // Error handling

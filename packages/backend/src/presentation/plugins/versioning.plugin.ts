@@ -16,7 +16,7 @@ export interface VersioningOptions {
   enableFallback?: boolean;
 }
 
-const versioningPlugin: FastifyPluginAsync<VersioningOptions> = (fastify, options) => {
+const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, options) => {
   const {
     defaultVersion,
     supportedVersions,
@@ -88,7 +88,7 @@ const versioningPlugin: FastifyPluginAsync<VersioningOptions> = (fastify, option
   };
 
   // リクエストフックでバージョンを設定
-  fastify.addHook('preHandler', (request, reply) => {
+  fastify.addHook('preHandler', async (request, reply) => {
     const extractedVersion = versionExtractor(request) || defaultVersion;
 
     // バージョンの検証
