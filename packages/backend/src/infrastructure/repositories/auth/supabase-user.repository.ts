@@ -143,7 +143,6 @@ export class SupabaseUserRepository implements IUserRepository {
 
       // Supabase Authでユーザーを作成
       const result = await this.authAdapter.createUser({
-        id: user.id.value,
         email: user.email.value,
         email_confirmed: user.emailVerified,
         app_metadata: {
@@ -323,8 +322,8 @@ export class SupabaseUserRepository implements IUserRepository {
         id: userId,
         email: email,
         tier: tier,
-        createdAt: new Date(supabaseUser.created_at),
-        updatedAt: new Date(supabaseUser.updated_at || supabaseUser.created_at),
+        createdAt: new Date(supabaseUser.created_at || Date.now()),
+        updatedAt: new Date(supabaseUser.updated_at || supabaseUser.created_at || Date.now()),
         lastAuthenticatedAt: supabaseUser.last_sign_in_at
           ? new Date(supabaseUser.last_sign_in_at)
           : undefined,

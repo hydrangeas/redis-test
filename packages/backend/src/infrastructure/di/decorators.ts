@@ -22,7 +22,7 @@ export const Singleton = (): (<T extends new (...args: unknown[]) => unknown>(ta
  */
 export const Scoped = (): (<T extends new (...args: unknown[]) => unknown>(target: T) => T) => {
   return <T extends new (...args: unknown[]) => unknown>(target: T): T => {
-    scoped(undefined, undefined)(target as new (...args: unknown[]) => unknown);
+    scoped(Lifecycle.ContainerScoped)(target as new (...args: unknown[]) => unknown);
     return target;
   };
 };
@@ -100,7 +100,7 @@ export class DIMetadata {
    * Get all registered interfaces for a class
    */
   static getInterfaces(target: unknown): { token: symbol; useClass?: unknown; useValue?: unknown }[] {
-    return (Reflect.getMetadata('di:interfaces', target) || []) as { token: symbol; useClass?: unknown; useValue?: unknown }[];
+    return (Reflect.getMetadata('di:interfaces', target as object) || []) as { token: symbol; useClass?: unknown; useValue?: unknown }[];
   }
 
   /**
