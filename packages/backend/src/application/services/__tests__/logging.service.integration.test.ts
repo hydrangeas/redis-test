@@ -37,7 +37,7 @@ describe('LoggingService Integration', () => {
       // Mock repository
       mockDependencies.mockRepositories.authLog.save.mockResolvedValue(Result.ok());
 
-      const result = await service.logAuthEvent(userId, eventType, metadata);
+      const result = await service.logAuthEvent(eventType, 'SUCCESS', userId, metadata);
 
       expect(result.isSuccess).toBe(true);
       expect(mockDependencies.mockRepositories.authLog.save).toHaveBeenCalledWith(
@@ -61,7 +61,7 @@ describe('LoggingService Integration', () => {
 
       mockDependencies.mockRepositories.authLog.save.mockResolvedValue(Result.ok());
 
-      const result = await service.logAuthEvent(userId, eventType, metadata);
+      const result = await service.logAuthEvent(eventType, 'FAILURE', userId, metadata);
 
       expect(result.isSuccess).toBe(true);
       expect(mockDependencies.mockRepositories.authLog.save).toHaveBeenCalled();
@@ -73,7 +73,7 @@ describe('LoggingService Integration', () => {
 
       mockDependencies.mockRepositories.authLog.save.mockRejectedValue(new Error('Database error'));
 
-      const result = await service.logAuthEvent(userId, eventType, {});
+      const result = await service.logAuthEvent(eventType, 'SUCCESS', userId, {});
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().code).toBe('AUTH_LOG_FAILED');
@@ -182,7 +182,7 @@ describe('LoggingService Integration', () => {
 
       mockDependencies.mockRepositories.authLog.findByUserId.mockResolvedValue(Result.ok(mockLogs));
 
-      const result = await service.getAuthLogs(userId, limit);
+      const result = await service.getAuthLogs(userId, undefined, limit);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual(mockLogs);

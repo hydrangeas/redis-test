@@ -30,7 +30,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     }, 60000); // 1分ごと
   }
 
-  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
+  checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000; // ミリ秒に変換
@@ -93,16 +93,16 @@ export class InMemoryRateLimitService implements IRateLimitService {
       'Rate limit check',
     );
 
-    return {
+    return Promise.resolve({
       allowed,
       limit,
       remaining,
       resetAt,
       retryAfter,
-    };
+    });
   }
 
-  async recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
+  recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
@@ -128,9 +128,11 @@ export class InMemoryRateLimitService implements IRateLimitService {
       },
       'Rate limit usage recorded',
     );
+
+    return Promise.resolve();
   }
 
-  async getUsageStatus(
+  getUsageStatus(
     user: AuthenticatedUser,
   ): Promise<{
     currentCount: number;
@@ -156,15 +158,15 @@ export class InMemoryRateLimitService implements IRateLimitService {
     const windowStart = new Date(now - windowSize);
     const windowEnd = new Date(now);
 
-    return {
+    return Promise.resolve({
       currentCount: totalCount,
       limit,
       windowStart,
       windowEnd,
-    };
+    });
   }
 
-  async resetLimit(userId: string): Promise<void> {
+  resetLimit(userId: string): Promise<void> {
     // Reset all endpoints for the user
     const prefix = `${userId}:`;
     for (const key of this.windows.keys()) {
@@ -179,6 +181,8 @@ export class InMemoryRateLimitService implements IRateLimitService {
       },
       'Rate limit reset',
     );
+
+    return Promise.resolve();
   }
 
   private generateKey(user: AuthenticatedUser, endpoint: APIEndpoint): string {

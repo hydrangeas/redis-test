@@ -15,7 +15,7 @@ export function createFastifyLoggerConfig(config: EnvConfig): FastifyServerOptio
     requestIdLogLabel: 'requestId',
     disableRequestLogging: false,
     requestIdHeader: 'x-request-id',
-    genReqId: (req) => {
+    genReqId: (req): string => {
       const fastifyReq = req as unknown as FastifyRequest;
       return (fastifyReq.headers?.['x-request-id'] as string) || randomUUID();
     },

@@ -71,4 +71,54 @@ export class AuthNotificationHandler implements IEventHandler<UserAuthenticated>
 */
 
 // Temporary export to avoid compilation errors
-export class AuthNotificationHandler {}
+export class AuthNotificationHandler {
+  constructor(
+    private readonly notificationService: any,
+    private readonly logger: any,
+  ) {}
+
+  async handle(event: any): Promise<void> {
+    // Stub implementation for tests
+    try {
+      if (await this.isNewDevice(event)) {
+        await this.notificationService.sendNewDeviceAlert({
+          userId: event.userId,
+          device: event.userAgent || 'Unknown device',
+          location: 'Unknown location',
+          timestamp: event.occurredAt,
+        });
+        
+        this.logger.info({
+          userId: event.userId,
+          userAgent: event.userAgent,
+        }, 'New device login alert sent');
+      }
+
+      if (await this.isSuspiciousLogin(event)) {
+        await this.notificationService.sendSecurityAlert({
+          userId: event.userId,
+          reason: 'Suspicious login pattern detected',
+          details: event.getData(),
+        });
+        
+        this.logger.warn({
+          userId: event.userId,
+          eventData: event.getData(),
+        }, 'Suspicious login alert sent');
+      }
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : error,
+        event: event.getMetadata(),
+      }, 'Failed to send authentication notification');
+    }
+  }
+
+  private async isNewDevice(_event: any): Promise<boolean> {
+    return false;
+  }
+
+  private async isSuspiciousLogin(_event: any): Promise<boolean> {
+    return false;
+  }
+}

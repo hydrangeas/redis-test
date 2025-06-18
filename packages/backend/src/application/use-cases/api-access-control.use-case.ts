@@ -117,11 +117,13 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       // レート制限に引っかかった場合
       if (!rateLimitStatus.allowed) {
         this.eventBus.publish(
-          new InvalidAPIAccess(
+          new RateLimitExceeded(
+            user.userId.toString(),
+            1,
             user.userId.toString(),
             endpoint,
-            method,
-            'rate_limit_exceeded',
+            rateLimitStatus.limit - rateLimitStatus.remaining,
+            rateLimitStatus.limit,
             new Date(),
           ),
         );

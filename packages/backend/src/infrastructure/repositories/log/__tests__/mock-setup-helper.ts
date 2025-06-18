@@ -33,10 +33,10 @@ export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi
   const chainableObject = Object.create(null) as SupabaseMockMethods;
 
   // Add all methods to the chainable object
-  Object.keys(methods).forEach((key) => {
-    (chainableObject as any)[key] = methods[key as keyof SupabaseMockMethods];
+  (Object.keys(methods) as Array<keyof SupabaseMockMethods>).forEach((key) => {
+    chainableObject[key] = methods[key];
     // Make each method return the chainable object by default
-    (methods[key as keyof SupabaseMockMethods]).mockReturnValue(chainableObject);
+    methods[key].mockReturnValue(chainableObject);
   });
 
   // Special handling for select with options
@@ -53,5 +53,5 @@ export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi
     }),
   };
 
-  return { mockClient: mockClient as any, methods: chainableObject };
+  return { mockClient, methods: chainableObject };
 }
