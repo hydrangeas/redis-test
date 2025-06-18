@@ -1,31 +1,35 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import jwt from 'jsonwebtoken';
+import { sign, verify, decode, TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken';
 import { JWTService } from '../jwt.service';
 import { EnvConfig } from '@/infrastructure/config';
 import { Logger } from 'pino';
 
 // Mock jwt module
-vi.mock('jsonwebtoken', () => ({
-  default: {
+vi.mock('jsonwebtoken', () => {
+  class TokenExpiredError extends Error {
+    constructor(message: string, expiredAt: Date) {
+      super(message);
+      this.name = 'TokenExpiredError';
+      this.expiredAt = expiredAt;
+    }
+    expiredAt: Date;
+  }
+  
+  class JsonWebTokenError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'JsonWebTokenError';
+    }
+  }
+  
+  return {
     sign: vi.fn(),
     verify: vi.fn(),
     decode: vi.fn(),
-    TokenExpiredError: class TokenExpiredError extends Error {
-      constructor(message: string, expiredAt: Date) {
-        super(message);
-        this.name = 'TokenExpiredError';
-        this.expiredAt = expiredAt;
-      }
-      expiredAt: Date;
-    },
-    JsonWebTokenError: class JsonWebTokenError extends Error {
-      constructor(message: string) {
-        super(message);
-        this.name = 'JsonWebTokenError';
-      }
-    },
-  },
-}));
+    TokenExpiredError,
+    JsonWebTokenError,
+  };
+});
 
 describe('JWTService', () => {
   let jwtService: JWTService;
@@ -72,13 +76,13 @@ describe('JWTService', () => {
       const tier = 'tier2';
       const mockToken = 'mock.access.token';
 
-      vi.mocked(jwt.sign).mockReturnValue(mockToken as any);
+      vi.mocked(sign).mockReturnValue(mockToken as any);
 
       const result = await jwtService.generateAccessToken(userId, tier);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(mockToken);
-      expect(jwt.sign).toHaveBeenCalledWith(
+      expect(sign).toHaveBeenCalledWith(
         {
           sub: userId,
           tier,
@@ -99,7 +103,7 @@ describe('JWTService', () => {
       const tier = 'tier1';
       const error = new Error('Sign error');
 
-      vi.mocked(jwt.sign).mockImplementation(() => {
+      vi.mocked(sign).mockImplementation(() => {
         throw error;
       });
 
@@ -119,13 +123,13 @@ describe('JWTService', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';
       const mockToken = 'mock.refresh.token';
 
-      vi.mocked(jwt.sign).mockReturnValue(mockToken as any);
+      vi.mocked(sign).mockReturnValue(mockToken as any);
 
       const result = await jwtService.generateRefreshToken(userId);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBe(mockToken);
-      expect(jwt.sign).toHaveBeenCalledWith(
+      expect(sign).toHaveBeenCalledWith(
         {
           sub: userId,
           type: 'refresh',
@@ -144,7 +148,7 @@ describe('JWTService', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000';
       const error = new Error('Sign error');
 
-      vi.mocked(jwt.sign).mockImplementation(() => {
+      vi.mocked(sign).mockImplementation(() => {
         throw error;
       });
 
@@ -170,13 +174,13 @@ describe('JWTService', () => {
         exp: 1234571490,
       };
 
-      vi.mocked(jwt.verify).mockReturnValue(payload as any);
+      vi.mocked(verify).mockReturnValue(payload as any);
 
       const result = await jwtService.verifyAccessToken(token);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toEqual(payload);
-      expect(jwt.verify).toHaveBeenCalledWith(token, mockConfig.JWT_SECRET, {
+      expect(verify).toHaveBeenCalledWith(token, mockConfig.JWT_SECRET, {
         issuer: mockConfig.API_BASE_URL,
         audience: mockConfig.API_BASE_URL,
       });
@@ -190,7 +194,7 @@ describe('JWTService', () => {
         type: 'refresh', // Wrong type
       };
 
-      vi.mocked(jwt.verify).mockReturnValue(payload as any);
+      vi.mocked(verify).mockReturnValue(payload as any);
 
       const result = await jwtService.verifyAccessToken(token);
 
@@ -200,9 +204,9 @@ describe('JWTService', () => {
 
     it('should handle expired tokens', async () => {
       const token = 'expired.token';
-      const error = new (jwt as any).TokenExpiredError('jwt expired', new Date());
+      const error = new TokenExpiredError('jwt expired', new Date());
 
-      vi.mocked(jwt.verify).mockImplementation(() => {
+      vi.mocked(verify).mockImplementation(() => {
         throw error;
       });
 
@@ -215,9 +219,9 @@ describe('JWTService', () => {
 
     it('should handle invalid tokens', async () => {
       const token = 'invalid.token';
-      const error = new (jwt as any).JsonWebTokenError('invalid signature');
+      const error = new JsonWebTokenError('invalid signature');
 
-      vi.mocked(jwt.verify).mockImplementation(() => {
+      vi.mocked(verify).mockImplementation(() => {
         throw error;
       });
 
@@ -235,7 +239,7 @@ describe('JWTService', () => {
       const token = 'error.token';
       const error = new Error('Verification error');
 
-      vi.mocked(jwt.verify).mockImplementation(() => {
+      vi.mocked(verify).mockImplementation(() => {
         throw error;
       });
 
@@ -257,7 +261,7 @@ describe('JWTService', () => {
         exp: 1237159890,
       };
 
-      vi.mocked(jwt.verify).mockReturnValue(payload as any);
+      vi.mocked(verify).mockReturnValue(payload as any);
 
       const result = await jwtService.verifyRefreshToken(token);
 
@@ -273,7 +277,7 @@ describe('JWTService', () => {
         type: 'access', // Wrong type
       };
 
-      vi.mocked(jwt.verify).mockReturnValue(payload as any);
+      vi.mocked(verify).mockReturnValue(payload as any);
 
       const result = await jwtService.verifyRefreshToken(token);
 
@@ -290,19 +294,19 @@ describe('JWTService', () => {
         tier: 'tier1',
       };
 
-      vi.mocked(jwt.decode).mockReturnValue(payload as any);
+      vi.mocked(decode).mockReturnValue(payload as any);
 
       const result = jwtService.decodeToken(token);
 
       expect(result).toEqual(payload);
-      expect(jwt.decode).toHaveBeenCalledWith(token);
+      expect(decode).toHaveBeenCalledWith(token);
     });
 
     it('should return null on decode error', () => {
       const token = 'invalid.token';
       const error = new Error('Decode error');
 
-      vi.mocked(jwt.decode).mockImplementation(() => {
+      vi.mocked(decode).mockImplementation(() => {
         throw error;
       });
 

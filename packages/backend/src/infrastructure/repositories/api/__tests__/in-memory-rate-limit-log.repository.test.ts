@@ -27,28 +27,29 @@ describe('InMemoryRateLimitLogRepository', () => {
   ): RateLimitLog => {
     const userIdResult = UserId.create(userId || uuidv4());
     if (userIdResult.isFailure) {
-      throw new Error(`Failed to create UserId: ${userIdResult.error?.message}`);
+      throw new Error(`Failed to create UserId: ${userIdResult.getError().message}`);
     }
 
     const endpointIdResult = EndpointId.create(endpointId);
     if (endpointIdResult.isFailure) {
-      throw new Error(`Failed to create EndpointId: ${endpointIdResult.error?.message}`);
+      throw new Error(`Failed to create EndpointId: ${endpointIdResult.getError().message}`);
     }
 
     const requestCountResult = RequestCount.create(requestCount);
     if (requestCountResult.isFailure) {
-      throw new Error(`Failed to create RequestCount: ${requestCountResult.error?.message}`);
+      throw new Error(`Failed to create RequestCount: ${requestCountResult.getError().message}`);
     }
 
     const logResult = RateLimitLog.create({
-      userId: userIdResult.getValue()!,
-      endpointId: endpointIdResult.getValue()!,
-      requestCount: requestCountResult.getValue()!,
-      requestedAt,
+      userId: userIdResult.getValue()!.value,
+      endpointId: endpointIdResult.getValue()!.value,
+      requestId: uuidv4(),
+      timestamp: requestedAt,
+      exceeded: false,
     });
 
     if (logResult.isFailure) {
-      throw new Error(`Failed to create RateLimitLog: ${logResult.error?.message}`);
+      throw new Error(`Failed to create RateLimitLog: ${logResult.getError().message}`);
     }
 
     return logResult.getValue()!;
