@@ -11,7 +11,7 @@ import type { FastifyServerOptions, FastifyInstance } from 'fastify';
 
 export default async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
   // DIコンテナをセットアップ
-  await setupDI();
+  setupDI();
 
   // DIコンテナから依存性を取得
   const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);

@@ -8,7 +8,7 @@
  */
 
 // Example 1: Using URL path versioning
-async function _getDataWithUrlVersion() {
+async function _getDataWithUrlVersion(): Promise<unknown> {
   const response = await fetch('/api/v1/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -23,7 +23,7 @@ async function _getDataWithUrlVersion() {
 }
 
 // Example 2: Using Accept-Version header
-async function _getDataWithHeaderVersion() {
+async function _getDataWithHeaderVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -38,7 +38,7 @@ async function _getDataWithHeaderVersion() {
 }
 
 // Example 3: Using X-API-Version header
-async function _getDataWithXApiVersion() {
+async function _getDataWithXApiVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -50,7 +50,7 @@ async function _getDataWithXApiVersion() {
 }
 
 // Example 4: Using query parameter
-async function _getDataWithQueryVersion() {
+async function _getDataWithQueryVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json?version=1', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -61,7 +61,7 @@ async function _getDataWithQueryVersion() {
 }
 
 // Example 5: Handling version fallback
-async function _getDataWithUnsupportedVersion() {
+async function _getDataWithUnsupportedVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -116,7 +116,7 @@ class ApiClient {
   // Get available API versions
   async getVersions(): Promise<{ current: string; supported: string[]; deprecated: string[] }> {
     const response = await fetch(`${this.baseUrl}/api/versions`);
-    return response.json();
+    return response.json() as Promise<{ current: string; supported: string[]; deprecated: string[] }>;
   }
 
   // Get features available in current version
@@ -126,12 +126,12 @@ class ApiClient {
         'Accept-Version': this.apiVersion,
       },
     });
-    return response.json();
+    return response.json() as Promise<{ base: string[]; advanced: string[] }>;
   }
 }
 
 // Usage example
-async function _main() {
+async function _main(): Promise<void> {
   const client = new ApiClient('https://api.example.com', 'YOUR_TOKEN', '2');
 
   try {

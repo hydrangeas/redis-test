@@ -9,13 +9,14 @@ import buildApp from '@/app';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { setupTestDI } from '@/infrastructure/di';
 
 let app: FastifyInstance;
-let supabase: SupabaseClient;
+let supabase: SupabaseClient | null = null;
 
 /**
  * Set up the test environment
- * - Initializes Supabase test client
+ * - Initializes Supabase test client or mocks
  * - Cleans up test data
  * - Starts Fastify application
  */
@@ -24,18 +25,39 @@ export async function setupTestEnvironment() {
   process.env.NODE_ENV = 'development';
   process.env.LOG_LEVEL = 'error';
   process.env.DATA_DIRECTORY = path.join(process.cwd(), 'test-data');
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-at-least-32-characters-long';
 
-  // Create Supabase test client
-  supabase = createClient(
-    process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'http://localhost:54321',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-key',
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    },
-  );
+  // Use mock setup if Supabase is not available
+  const useMockSetup = process.env.CI === 'true' || process.env.USE_MOCK_SETUP === 'true';
+  
+  if (useMockSetup) {
+    // Setup test DI container with mocks
+    setupTestDI();
+    
+    // Mock supabase client will be null - cleanupTestData will handle this
+    supabase = null;
+  } else {
+    // Create Supabase test client
+    try {
+      supabase = createClient(
+        process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'http://localhost:54321',
+        process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-key',
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        },
+      );
+      
+      // Test connection
+      await supabase.auth.admin.listUsers();
+    } catch (error) {
+      console.warn('Supabase not available, using mock setup');
+      setupTestDI();
+      supabase = null;
+    }
+  }
 
   // Clean up test data before starting
   await cleanupTestData();
@@ -77,6 +99,11 @@ export async function teardownTestEnvironment() {
  * Clean up test data from the database
  */
 async function cleanupTestData() {
+  if (!supabase) {
+    // Mock mode - no cleanup needed
+    return;
+  }
+  
   try {
     // Clean up test users (those with email starting with 'test-')
     const { data: testUsers } = await supabase.auth.admin.listUsers();
@@ -110,6 +137,21 @@ async function cleanupTestData() {
 export async function createTestUser(tier: string = 'tier1') {
   const email = `test-${Date.now()}-${uuidv4()}@example.com`;
   const password = 'test-password-123';
+
+  if (!supabase) {
+    // Mock mode - return mock user data
+    return {
+      user: {
+        id: uuidv4(),
+        email,
+        app_metadata: { tier },
+      },
+      email,
+      password,
+      token: 'mock-jwt-token',
+      refreshToken: 'mock-refresh-token',
+    };
+  }
 
   // Create user with admin API
   const { data: createData, error: createError } = await supabase.auth.admin.createUser({

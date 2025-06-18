@@ -15,7 +15,7 @@ dotenv.config();
 async function runSeeder(): Promise<void> {
   try {
     // DI設定
-    await setupDI();
+    setupDI();
 
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
     const seeder = container.resolve(DatabaseSeeder);
@@ -39,10 +39,10 @@ async function runSeeder(): Promise<void> {
   }
 }
 
-async function resetDatabase(): Promise<void> {
+function resetDatabase(): void {
   try {
     // DI設定
-    await setupDI();
+    setupDI();
 
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
     logger.info('Starting database reset process...');
