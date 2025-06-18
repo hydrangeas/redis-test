@@ -86,7 +86,7 @@ export function setupDependencies(): MockDependencies {
   const mockEventBus = new EventEmitter();
   // EventEmitter uses emit, not publish
   const eventBusWithPublish = mockEventBus as EventEmitter & { publish: ReturnType<typeof vi.fn> };
-  eventBusWithPublish.publish = vi.fn(() => Promise.resolve());
+  eventBusWithPublish.publish = vi.fn().mockResolvedValue(undefined);
 
   const mockRepositories = {
     authentication: createMockAuthRepository(),

@@ -99,55 +99,55 @@ export class InMemoryAPIRepository implements IAPIRepository {
     }
   }
 
-  save(aggregate: APIAggregate): Result<void> {
+  async save(aggregate: APIAggregate): Promise<Result<void>> {
     try {
       this.aggregate = aggregate;
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'SAVE_FAILED',
           'Failed to save API aggregate',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  getAggregate(): Result<APIAggregate> {
+  async getAggregate(): Promise<Result<APIAggregate>> {
     if (!this.aggregate) {
-      return Result.fail(DomainError.notFound('AGGREGATE_NOT_FOUND', 'API aggregate not found'));
+      return Promise.resolve(Result.fail(DomainError.notFound('AGGREGATE_NOT_FOUND', 'API aggregate not found')));
     }
 
-    return Result.ok(this.aggregate);
+    return Promise.resolve(Result.ok(this.aggregate));
   }
 
-  findByEndpointId(
+  async findByEndpointId(
     _endpointId: EndpointId,
-  ): Result<APIAggregate | null> {
+  ): Promise<Result<APIAggregate | null>> {
     // APIEndpointはvalue objectになりidを持たないため、この検索方法は使用できません
     // 常にnullを返します
-    return Result.ok(null);
+    return Promise.resolve(Result.ok(null));
   }
 
-  findByPathAndMethod(
+  async findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
-  ): Result<APIAggregate | null> {
+  ): Promise<Result<APIAggregate | null>> {
     if (!this.aggregate) {
-      return Result.ok(null);
+      return Promise.resolve(Result.ok(null));
     }
 
     const endpoint = this.aggregate.findEndpointByPathAndMethod(path, method);
     if (endpoint.isFailure) {
-      return Result.ok(null);
+      return Promise.resolve(Result.ok(null));
     }
 
-    return Result.ok(this.aggregate);
+    return Promise.resolve(Result.ok(this.aggregate));
   }
 
-  exists(): Result<boolean> {
-    return Result.ok(this.aggregate !== null);
+  async exists(): Promise<Result<boolean>> {
+    return Promise.resolve(Result.ok(this.aggregate !== null));
   }
 
   /**

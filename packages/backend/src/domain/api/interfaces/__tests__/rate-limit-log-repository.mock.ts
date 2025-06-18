@@ -52,25 +52,25 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * 複数のログを一括保存
    */
-  saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
+  async saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
     this.saveManySpy(logs);
 
     try {
       this.logs.push(...logs);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('SAVE_FAILED', 'Failed to save rate limit logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * ユーザーとエンドポイントの組み合わせでログを検索
    */
-  findByUserAndEndpoint(
+  async findByUserAndEndpoint(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
@@ -86,20 +86,20 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
           log.timestamp <= window.endTime,
       );
 
-      return Result.ok(filteredLogs);
+      return Promise.resolve(Result.ok(filteredLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('FIND_FAILED', 'Failed to find rate limit logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * 特定のユーザーの全ログを取得
    */
-  findByUser(
+  async findByUser(
     userId: UserId,
     window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[]>> {
@@ -116,20 +116,20 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      return Result.ok(filteredLogs);
+      return Promise.resolve(Result.ok(filteredLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('FIND_FAILED', 'Failed to find user logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * 特定のエンドポイントの全ログを取得
    */
-  findByEndpoint(
+  async findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
   ): Promise<Result<RateLimitLog[]>> {
@@ -146,20 +146,20 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      return Result.ok(filteredLogs);
+      return Promise.resolve(Result.ok(filteredLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('FIND_FAILED', 'Failed to find endpoint logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * 古いログを削除
    */
-  deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
+  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     this.deleteOldLogsSpy(beforeDate);
 
     try {
@@ -167,20 +167,20 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
       this.logs = this.logs.filter((log) => log.timestamp >= beforeDate);
       const deletedCount = originalCount - this.logs.length;
 
-      return Result.ok(deletedCount);
+      return Promise.resolve(Result.ok(deletedCount));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('DELETE_FAILED', 'Failed to delete old logs', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * 特定期間のリクエスト数を集計
    */
-  countRequests(
+  async countRequests(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
@@ -196,13 +196,13 @@ export class MockRateLimitLogRepository implements IRateLimitLogRepository {
           log.timestamp <= window.endTime,
       ).length;
 
-      return Result.ok(count);
+      return Promise.resolve(Result.ok(count));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('COUNT_FAILED', 'Failed to count requests', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 

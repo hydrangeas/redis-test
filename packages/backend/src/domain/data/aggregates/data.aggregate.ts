@@ -133,7 +133,7 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   /**
    * データアクセスを処理
    */
-  processDataAccess(
+  async processDataAccess(
     userId: string,
     path: DataPath,
     userTier: string,

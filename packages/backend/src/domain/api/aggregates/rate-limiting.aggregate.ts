@@ -2,6 +2,7 @@ import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { ValidationError } from '@/domain/errors/validation-error';
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
 import { Result } from '@/domain/shared/result';
+import { UniqueEntityId } from '@/domain/shared/unique-entity-id';
 
 import { RateLimitLog } from '../entities/rate-limit-log.entity';
 import { RateLimitWindow } from '../value-objects/rate-limit-window';

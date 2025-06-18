@@ -16,43 +16,43 @@ import { Result } from '@/domain/errors/result';
 export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
   private logs: Map<string, RateLimitLog> = new Map();
 
-  save(log: RateLimitLog): Result<void> {
+  async save(log: RateLimitLog): Promise<Result<void>> {
     try {
       this.logs.set(log.id.value, log);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'SAVE_FAILED',
           'Failed to save rate limit log',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  saveMany(logs: RateLimitLog[]): Result<void> {
+  async saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
     try {
       for (const log of logs) {
         this.logs.set(log.id.value, log);
       }
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'SAVE_MANY_FAILED',
           'Failed to save rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  findByUserAndEndpoint(
+  async findByUserAndEndpoint(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Result<RateLimitLog[]> {
+  ): Promise<Result<RateLimitLog[]>> {
     try {
       const now = new Date();
       const windowStart = new Date(now.getTime() - window.windowMilliseconds);
@@ -66,22 +66,22 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         );
       });
 
-      return Result.ok(matchingLogs);
+      return Promise.resolve(Result.ok(matchingLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'FIND_FAILED',
           'Failed to find rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  findByUser(
+  async findByUser(
     userId: UserId,
     window?: RateLimitWindow,
-  ): Result<RateLimitLog[]> {
+  ): Promise<Result<RateLimitLog[]>> {
     try {
       let matchingLogs = Array.from(this.logs.values()).filter((log) => log.userId === userId.value);
 
@@ -93,22 +93,22 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      return Result.ok(matchingLogs);
+      return Promise.resolve(Result.ok(matchingLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'FIND_BY_USER_FAILED',
           'Failed to find user rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  findByEndpoint(
+  async findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
-  ): Result<RateLimitLog[]> {
+  ): Promise<Result<RateLimitLog[]>> {
     try {
       let matchingLogs = Array.from(this.logs.values()).filter(
         (log) => log.endpointId === endpointId.value,
@@ -122,19 +122,19 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      return Result.ok(matchingLogs);
+      return Promise.resolve(Result.ok(matchingLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'FIND_BY_ENDPOINT_FAILED',
           'Failed to find endpoint rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  deleteOldLogs(beforeDate: Date): Result<number> {
+  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
     try {
       const initialSize = this.logs.size;
 
@@ -146,23 +146,23 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
       }
 
       const deletedCount = initialSize - this.logs.size;
-      return Result.ok(deletedCount);
+      return Promise.resolve(Result.ok(deletedCount));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'DELETE_FAILED',
           'Failed to delete old logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
-  countRequests(
+  async countRequests(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Result<number> {
+  ): Promise<Result<number>> {
     try {
       const now = new Date();
       const windowStart = new Date(now.getTime() - window.windowMilliseconds);
@@ -178,15 +178,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         })
         .length; // Count the number of logs
 
-      return Result.ok(count);
+      return Promise.resolve(Result.ok(count));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'COUNT_FAILED',
           'Failed to count requests',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 

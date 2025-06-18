@@ -125,6 +125,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     if (
       this.props.result === AuthResult.FAILED &&
       this.props.metadata?.failureCount &&
+      typeof this.props.metadata.failureCount === 'number' &&
       this.props.metadata.failureCount > 5
     ) {
       return true;
