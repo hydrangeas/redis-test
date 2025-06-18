@@ -15,7 +15,7 @@ import { DI_TOKENS } from '../di';
 export class EventLogger implements IEventHandler<DomainEvent> {
   constructor(@inject(DI_TOKENS.Logger) private readonly logger: Logger) {}
 
-  async handle(event: DomainEvent): Promise<void> {
+  handle(event: DomainEvent): void {
     this.logger.info(
       {
         event: {
@@ -36,7 +36,7 @@ export class EventLogger implements IEventHandler<DomainEvent> {
    */
   private sanitizeEventData(event: unknown): unknown {
     const sensitiveKeys = ['password', 'token', 'secret', 'apikey', 'jwt'];
-    const sanitized = { ...event };
+    const sanitized = { ...(event as Record<string, unknown>) };
 
     const removeSensitive = (obj: unknown): unknown => {
       if (typeof obj !== 'object' || obj === null) return obj;

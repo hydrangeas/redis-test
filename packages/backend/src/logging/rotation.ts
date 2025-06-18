@@ -14,7 +14,7 @@ if (!existsSync(logsDir)) {
   mkdirSync(logsDir, { recursive: true });
 }
 
-export function createRotatingLogger() {
+export function createRotatingLogger(): pino.Logger {
   // アプリケーションログのローテーション設定
   const appLogStream = createStream('app.log', {
     interval: '1d', // 日次ローテーション
@@ -64,7 +64,7 @@ export function createRotatingLogger() {
 }
 
 // ログファイルのクリーンアップ関数
-export async function cleanupOldLogs(daysToKeep: number = 30) {
+export async function cleanupOldLogs(daysToKeep: number = 30): Promise<void> {
   const { readdir, stat, unlink } = await import('fs').then((m) => m.promises);
   const files = await readdir(logsDir);
   const now = Date.now();

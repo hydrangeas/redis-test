@@ -4,7 +4,7 @@ import { config, isProduction } from '@/config/index.js';
 
 // カスタムシリアライザー
 const serializers = {
-  req: (req: { id: string; method: string; url: string; query: unknown; params: unknown; headers: Record<string, string>; ip: string; user?: { id: string } }) => ({
+  req: (req: { id: string; method: string; url: string; query: unknown; params: unknown; headers: Record<string, string>; ip: string; user?: { id: string } }): Record<string, unknown> => ({
     id: req.id,
     method: req.method,
     url: req.url,
@@ -18,14 +18,14 @@ const serializers = {
     userId: req.user?.id,
   }),
 
-  res: (res: { statusCode: number; getHeaders: () => Record<string, unknown> }) => ({
+  res: (res: { statusCode: number; getHeaders: () => Record<string, unknown> }): Record<string, unknown> => ({
     statusCode: res.statusCode,
     headers: res.getHeaders(),
   }),
 
   err: pino.stdSerializers.err,
 
-  user: (user: { id: string; email: string; tier: string }) => ({
+  user: (user: { id: string; email: string; tier: string }): { id: string; email: string; tier: string } => ({
     id: user.id,
     email: user.email,
     tier: user.tier,
@@ -70,6 +70,6 @@ const developmentOptions: pino.LoggerOptions = {
 export const logger = pino(isProduction() ? productionOptions : developmentOptions);
 
 // 子ロガーの作成
-export function createLogger(context: string) {
+export function createLogger(context: string): pino.Logger {
   return logger.child({ context });
 }

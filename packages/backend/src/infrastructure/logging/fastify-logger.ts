@@ -24,7 +24,7 @@ export function createFastifyLoggerConfig(config: EnvConfig): FastifyServerOptio
  */
 export function setupRequestLogging(server: FastifyInstance): void {
   // リクエスト開始時のログ
-  server.addHook('onRequest', async (request: FastifyRequest) => {
+  server.addHook('onRequest', (request: FastifyRequest) => {
     request.log.info(
       {
         req: request,
