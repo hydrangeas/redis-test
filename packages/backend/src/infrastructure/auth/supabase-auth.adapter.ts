@@ -68,8 +68,8 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         sub: user.user.id,
         email: user.user.email,
         app_metadata: {
-          tier: user.user.app_metadata?.tier || 'tier1',
-          ...user.user.app_metadata,
+          tier: (user.user.app_metadata?.tier as string | undefined) || 'tier1',
+          ...(user.user.app_metadata as Record<string, unknown> | undefined),
         },
         user_metadata: user.user.user_metadata || {},
       };

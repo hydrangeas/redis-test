@@ -16,15 +16,26 @@ import { DomainError } from '@/domain/errors';
 import { Result } from '@/domain/errors/result';
 
 import { DI_TOKENS } from './tokens';
+import { OpenDataResourceFactory } from '../../domain/data/factories/open-data-resource.factory';
+import { APILogFactory } from '../../domain/log/factories/api-log.factory';
+import { AuthLogFactory } from '../../domain/log/factories/auth-log.factory';
 import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
 import { JWTValidatorService } from '../auth/services/jwt-validator.service';
+import { JWTService } from '../auth/services/jwt.service';
 import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 import { getEnvConfig, type EnvConfig } from '../config/env.config';
 import { EventBus } from '../events/event-bus';
 import { InMemoryEventStore } from '../events/in-memory-event-store';
 import { createLogger } from '../logging';
+import { SupabaseUserRepository } from '../repositories/auth/supabase-user.repository';
+import { SupabaseAPILogRepository } from '../repositories/log/supabase-api-log.repository';
+import { SupabaseAuthLogRepository } from '../repositories/log/supabase-auth-log.repository';
 import { OpenDataRepository } from '../repositories/open-data.repository';
 import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
+import { SecureFileAccessService } from '../services/secure-file-access.service';
+import { SecurityAuditService } from '../services/security-audit.service';
+import { SupabaseService } from '../services/supabase.service';
+import { FileStorageService } from '../storage/file-storage.service';
 
 import type { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
 import type { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
@@ -39,7 +50,7 @@ import type { DependencyContainer } from 'tsyringe';
  * DIコンテナのセットアップ
  * アプリケーション起動時に一度だけ実行される
  */
-export async function setupDI(): Promise<DependencyContainer> {
+export function setupDI(): DependencyContainer {
   // 環境変数設定の登録
   const envConfig = getEnvConfig();
   container.register<EnvConfig>(DI_TOKENS.EnvConfig, {
@@ -133,11 +144,11 @@ export function setupTestDI(): DependencyContainer {
         getUserById: () => Promise.resolve({ data: { user: null }, error: null }),
       },
     },
-    from: () => ({
-      select: () => ({ data: [], error: null }),
-      insert: () => ({ data: null, error: null }),
-      update: () => ({ data: null, error: null }),
-      delete: () => ({ data: null, error: null }),
+    from: (): { select: () => { data: unknown[]; error: null }; insert: () => { data: null; error: null }; update: () => { data: null; error: null }; delete: () => { data: null; error: null } } => ({
+      select: (): { data: unknown[]; error: null } => ({ data: [], error: null }),
+      insert: (): { data: null; error: null } => ({ data: null, error: null }),
+      update: (): { data: null; error: null } => ({ data: null, error: null }),
+      delete: (): { data: null; error: null } => ({ data: null, error: null }),
     }),
   } as unknown as SupabaseClient;
   container.register<SupabaseClient>(DI_TOKENS.SupabaseClient, {
@@ -413,39 +424,31 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
 
   // UserRepositoryの登録
-  const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
   container.register(DI_TOKENS.UserRepository, {
     useClass: SupabaseUserRepository,
   });
 
   // AuthLogRepositoryの登録
-  const { SupabaseAuthLogRepository } = require('../repositories/log/supabase-auth-log.repository');
   container.register(DI_TOKENS.AuthLogRepository, {
     useClass: SupabaseAuthLogRepository,
   });
 
   // APILogRepositoryの登録
-  const { SupabaseAPILogRepository } = require('../repositories/log/supabase-api-log.repository');
   container.register(DI_TOKENS.APILogRepository, {
     useClass: SupabaseAPILogRepository,
   });
 
   // Factoriesの登録
-  const {
-    OpenDataResourceFactory,
-  } = require('../../domain/data/factories/open-data-resource.factory');
   container.register(DI_TOKENS.OpenDataResourceFactory, {
     useClass: OpenDataResourceFactory,
   });
 
   // JWTServiceの登録
-  const { JWTService } = require('../auth/services/jwt.service');
   container.register(DI_TOKENS.JwtService, {
     useClass: JWTService,
   });
 
   // FileStorageServiceの登録
-  const { FileStorageService } = require('../storage/file-storage.service');
   container.register(DI_TOKENS.FileStorage, {
     useClass: FileStorageService,
   });
@@ -454,19 +457,16 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
 
   // SupabaseServiceの登録
-  const { SupabaseService } = require('../services/supabase.service');
   container.register(DI_TOKENS.SupabaseService, {
     useClass: SupabaseService,
   });
 
   // SecurityAuditServiceの登録
-  const { SecurityAuditService } = require('../services/security-audit.service');
   container.register(DI_TOKENS.SecurityAuditService, {
     useClass: SecurityAuditService,
   });
 
   // SecureFileAccessServiceの登録
-  const { SecureFileAccessService } = require('../services/secure-file-access.service');
   container.register(DI_TOKENS.SecureFileAccessService, {
     useClass: SecureFileAccessService,
   });

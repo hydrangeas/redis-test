@@ -10,8 +10,8 @@ import { DI_TOKENS } from './tokens';
 /**
  * Decorator to mark a class as injectable with singleton lifecycle
  */
-export const Singleton = () => {
-  return <T extends new (...args: unknown[]) => unknown>(target: T) => {
+export const Singleton = (): (<T extends new (...args: unknown[]) => unknown>(target: T) => T) => {
+  return <T extends new (...args: unknown[]) => unknown>(target: T): T => {
     singleton()(target);
     return target;
   };
@@ -20,9 +20,9 @@ export const Singleton = () => {
 /**
  * Decorator to mark a class as injectable with scoped lifecycle
  */
-export const Scoped = () => {
-  return <T extends new (...args: unknown[]) => unknown>(target: T) => {
-    scoped(undefined, undefined)(target as any);
+export const Scoped = (): (<T extends new (...args: unknown[]) => unknown>(target: T) => T) => {
+  return <T extends new (...args: unknown[]) => unknown>(target: T): T => {
+    scoped(undefined, undefined)(target as new (...args: unknown[]) => unknown);
     return target;
   };
 };
@@ -35,10 +35,10 @@ export const Injectable = injectable;
 /**
  * Type-safe injection decorators for common dependencies
  */
-export const InjectLogger = () => inject(DI_TOKENS.Logger);
-export const InjectEnvConfig = () => inject(DI_TOKENS.EnvConfig);
-export const InjectEventBus = () => inject(DI_TOKENS.EventBus);
-export const InjectSupabaseClient = () => inject(DI_TOKENS.SupabaseClient);
+export const InjectLogger = (): ParameterDecorator => inject(DI_TOKENS.Logger);
+export const InjectEnvConfig = (): ParameterDecorator => inject(DI_TOKENS.EnvConfig);
+export const InjectEventBus = (): ParameterDecorator => inject(DI_TOKENS.EventBus);
+export const InjectSupabaseClient = (): ParameterDecorator => inject(DI_TOKENS.SupabaseClient);
 
 /**
  * Generic type-safe injection decorator
@@ -50,26 +50,26 @@ export function Inject(token: symbol): ParameterDecorator {
 /**
  * Repository injection decorators
  */
-export const InjectUserRepository = () => inject(DI_TOKENS.UserRepository);
-export const InjectAuthLogRepository = () => inject(DI_TOKENS.AuthLogRepository);
-export const InjectAPILogRepository = () => inject(DI_TOKENS.APILogRepository);
-export const InjectRateLimitRepository = () => inject(DI_TOKENS.RateLimitRepository);
-export const InjectOpenDataRepository = () => inject(DI_TOKENS.OpenDataRepository);
+export const InjectUserRepository = (): ParameterDecorator => inject(DI_TOKENS.UserRepository);
+export const InjectAuthLogRepository = (): ParameterDecorator => inject(DI_TOKENS.AuthLogRepository);
+export const InjectAPILogRepository = (): ParameterDecorator => inject(DI_TOKENS.APILogRepository);
+export const InjectRateLimitRepository = (): ParameterDecorator => inject(DI_TOKENS.RateLimitRepository);
+export const InjectOpenDataRepository = (): ParameterDecorator => inject(DI_TOKENS.OpenDataRepository);
 
 /**
  * Service injection decorators
  */
-export const InjectAuthenticationService = () => inject(DI_TOKENS.AuthenticationService);
-export const InjectRateLimitService = () => inject(DI_TOKENS.RateLimitService);
-export const InjectDataAccessService = () => inject(DI_TOKENS.DataAccessService);
-export const InjectJWTService = () => inject(DI_TOKENS.JwtService);
+export const InjectAuthenticationService = (): ParameterDecorator => inject(DI_TOKENS.AuthenticationService);
+export const InjectRateLimitService = (): ParameterDecorator => inject(DI_TOKENS.RateLimitService);
+export const InjectDataAccessService = (): ParameterDecorator => inject(DI_TOKENS.DataAccessService);
+export const InjectJWTService = (): ParameterDecorator => inject(DI_TOKENS.JwtService);
 
 /**
  * Use case injection decorators
  */
-export const InjectAuthenticationUseCase = () => inject(DI_TOKENS.AuthenticationUseCase);
-export const InjectDataAccessUseCase = () => inject(DI_TOKENS.DataAccessUseCase);
-export const InjectRateLimitUseCase = () => inject(DI_TOKENS.RateLimitUseCase);
+export const InjectAuthenticationUseCase = (): ParameterDecorator => inject(DI_TOKENS.AuthenticationUseCase);
+export const InjectDataAccessUseCase = (): ParameterDecorator => inject(DI_TOKENS.DataAccessUseCase);
+export const InjectRateLimitUseCase = (): ParameterDecorator => inject(DI_TOKENS.RateLimitUseCase);
 
 /**
  * Factory pattern for creating injection decorators
@@ -83,8 +83,8 @@ export function createInjectionDecorator(token: symbol): () => ParameterDecorato
  */
 export function RegisterInterfaces(
   interfaces: { token: symbol; useClass?: unknown; useValue?: unknown }[],
-) {
-  return <T extends new (...args: unknown[]) => unknown>(target: T) => {
+): <T extends new (...args: unknown[]) => unknown>(target: T) => T {
+  return <T extends new (...args: unknown[]) => unknown>(target: T): T => {
     // This would be used with a custom container setup
     // For now, it serves as documentation
     Reflect.defineMetadata('di:interfaces', interfaces, target);

@@ -79,8 +79,11 @@ switch (command) {
     void resetDatabase();
     break;
   default:
+    // eslint-disable-next-line no-console
     console.log('Usage: npm run db:seed [seed|reset]');
+    // eslint-disable-next-line no-console
     console.log('  seed  - Populate database with test data');
+    // eslint-disable-next-line no-console
     console.log('  reset - Reset database (requires manual schema reset)');
     process.exit(1);
 }

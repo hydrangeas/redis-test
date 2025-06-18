@@ -9,7 +9,7 @@ declare module 'fastify' {
   }
 }
 
-export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: FastifyReply) => {
+export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
   // File security is handled by the route handler directly
   // This middleware only sets up the security context
   const user = request.user;

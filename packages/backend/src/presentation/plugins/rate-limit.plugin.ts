@@ -29,7 +29,7 @@ declare module 'fastify' {
   }
 }
 
-const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fastify, options) => {
+const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = (fastify, options) => {
   const rateLimitService = container.resolve<IRateLimitService>(DI_TOKENS.RateLimitService);
 
   const defaultExcludePaths = [
@@ -70,7 +70,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
   /**
    * レート制限をチェックする関数をデコレーターとして登録
    */
-  const checkRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
+  const checkRateLimit = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     // 認証されていない場合はスキップ（認証ミドルウェアで処理）
     if (!request.user) {
       return;

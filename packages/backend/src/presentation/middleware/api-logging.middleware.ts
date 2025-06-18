@@ -20,7 +20,7 @@ import type { Logger } from 'pino';
 
 export const apiLoggingMiddleware = {
   // リクエスト開始時
-  onRequest: (request: FastifyRequest, _reply: FastifyReply) => {
+  onRequest: (request: FastifyRequest, _reply: FastifyReply): void => {
     request.apiLoggingContext = {
       startTime: Date.now(),
       requestId: request.id,
@@ -34,7 +34,7 @@ export const apiLoggingMiddleware = {
   },
 
   // レスポンス送信時
-  onSend: (request: FastifyRequest, reply: FastifyReply, payload: unknown) => {
+  onSend: (request: FastifyRequest, reply: FastifyReply, payload: unknown): unknown => {
     const apiLogService = container.resolve<IApiLogService>(DI_TOKENS.ApiLogService);
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
@@ -157,7 +157,7 @@ function sanitizeEndpoint(url: string): string {
 function extractErrorMessage(payload: unknown): string | undefined {
   if (typeof payload === 'string') {
     try {
-      const parsed = JSON.parse(payload);
+      const parsed = JSON.parse(payload) as { error?: string; message?: string; detail?: string };
       return parsed.error || parsed.message || parsed.detail;
     } catch {
       return payload.substring(0, 500); // 最初の500文字
@@ -166,7 +166,7 @@ function extractErrorMessage(payload: unknown): string | undefined {
 
   if (payload && typeof payload === 'object') {
     const obj = payload as Record<string, unknown>;
-    return obj.error as string || obj.message as string || obj.detail as string;
+    return (obj.error as string | undefined) || (obj.message as string | undefined) || (obj.detail as string | undefined);
   }
 
   return undefined;

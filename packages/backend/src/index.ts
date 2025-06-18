@@ -16,7 +16,7 @@ async function start(): Promise<void> {
     validateEnvironment();
 
     // DI設定
-    await setupDI();
+    setupDI();
 
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
