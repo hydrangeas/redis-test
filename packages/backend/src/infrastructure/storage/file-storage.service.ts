@@ -39,7 +39,7 @@ export class FileStorageService implements IFileStorage {
     this.cache = new LRUCache<string, CacheEntry>({
       max: 100, // Maximum 100 files
       maxSize: 100 * 1024 * 1024, // Maximum 100MB
-      sizeCalculation: (entry) => {
+      sizeCalculation: (entry): number => {
         return JSON.stringify(entry.content).length + (entry.compressed?.length || 0);
       },
       ttl: 1000 * 60 * 60, // 1 hour
@@ -53,7 +53,7 @@ export class FileStorageService implements IFileStorage {
   async readFile(filePath: string): Promise<Result<unknown>> {
     try {
       // Path validation
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -97,7 +97,7 @@ export class FileStorageService implements IFileStorage {
 
   async getFileMetadata(filePath: string): Promise<Result<FileMetadata>> {
     try {
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -122,7 +122,7 @@ export class FileStorageService implements IFileStorage {
         path: filePath,
         size: stats.size,
         mtime: stats.mtime,
-        etag: await this.generateETag(absolutePath, stats),
+        etag: this.generateETag(absolutePath, stats),
         contentType: this.detectContentType(filePath),
       };
 
@@ -145,7 +145,7 @@ export class FileStorageService implements IFileStorage {
     options?: { start?: number; end?: number },
   ): Promise<Result<NodeJS.ReadableStream>> {
     try {
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -176,7 +176,7 @@ export class FileStorageService implements IFileStorage {
 
   async listFiles(directory: string): Promise<Result<string[]>> {
     try {
-      const validationResult = await this.validatePath(directory);
+      const validationResult = this.validatePath(directory);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -213,7 +213,7 @@ export class FileStorageService implements IFileStorage {
 
   async exists(filePath: string): Promise<boolean> {
     try {
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return false;
       }
@@ -233,7 +233,7 @@ export class FileStorageService implements IFileStorage {
     this.cache.clear();
   }
 
-  private async validatePath(filePath: string): Promise<Result<void>> {
+  private validatePath(filePath: string): Result<void> {
     // Basic validation
     if (!filePath || filePath.trim().length === 0) {
       return Result.fail(
@@ -260,6 +260,7 @@ export class FileStorageService implements IFileStorage {
     }
 
     // Check for dangerous characters
+    // eslint-disable-next-line no-control-regex
     const dangerousChars = /[<>:"|?*\x00-\x1f\x80-\x9f]/;
     if (dangerousChars.test(filePath)) {
       return Result.fail(
@@ -293,7 +294,7 @@ export class FileStorageService implements IFileStorage {
         path: path.relative(this.dataDirectory, absolutePath),
         size: stats.size,
         mtime: stats.mtime,
-        etag: await this.generateETag(absolutePath, stats),
+        etag: this.generateETag(absolutePath, stats),
         contentType: 'application/json',
       };
 
@@ -331,7 +332,7 @@ export class FileStorageService implements IFileStorage {
     return files;
   }
 
-  private async generateETag(filePath: string, stats: Awaited<ReturnType<typeof fs.stat>>): Promise<string> {
+  private generateETag(filePath: string, stats: Awaited<ReturnType<typeof fs.stat>>): string {
     const hash = crypto.createHash('md5');
     hash.update(`${filePath}-${stats.size}-${stats.mtime.getTime()}`);
     return `"${hash.digest('hex')}"`;

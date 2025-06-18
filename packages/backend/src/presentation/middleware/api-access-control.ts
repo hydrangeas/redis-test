@@ -73,7 +73,7 @@ export async function apiAccessControlMiddleware(
   // アクセス拒否の場合
   if (!decision.allowed) {
     switch (decision.reason) {
-      case 'rate_limit_exceeded':
+      case 'rate_limit_exceeded': {
         // レート制限ヘッダーの設定
         if (decision.rateLimitStatus) {
           void reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
@@ -96,8 +96,9 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(429).send(rateLimitDetails);
+      }
 
-      case 'unauthorized':
+      case 'unauthorized': {
         const unauthorizedDetails = toProblemDetails(
           new DomainError(
             'FORBIDDEN',
@@ -107,8 +108,9 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(403).send(unauthorizedDetails);
+      }
 
-      case 'endpoint_not_found':
+      case 'endpoint_not_found': {
         const notFoundDetails = toProblemDetails(
           new DomainError(
             'ENDPOINT_NOT_FOUND',
@@ -118,8 +120,9 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(404).send(notFoundDetails);
+      }
 
-      default:
+      default: {
         const genericDetails = toProblemDetails(
           new DomainError(
             'ACCESS_DENIED',
@@ -129,6 +132,7 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(403).send(genericDetails);
+      }
     }
   }
 

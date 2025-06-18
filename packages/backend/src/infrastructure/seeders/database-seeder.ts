@@ -155,7 +155,7 @@ export class DatabaseSeeder {
 
       const { error } = await this.supabase.from('api_keys').insert({
         user_id: user.id,
-        key_hash: await this.hashApiKey(apiKey),
+        key_hash: this.hashApiKey(apiKey),
         key_prefix: apiKey.substring(0, 8),
         last_used_at: faker.date.recent({ days: 7 }),
         created_at: faker.date.past({ years: 1 }),
@@ -295,7 +295,7 @@ export class DatabaseSeeder {
     return `${prefix}${randomPart}`;
   }
 
-  private async hashApiKey(apiKey: string): Promise<string> {
+  private hashApiKey(apiKey: string): string {
     return createHash('sha256').update(apiKey).digest('hex');
   }
 

@@ -19,9 +19,7 @@ import type { Provider } from '../value-objects/provider';
 import type { RequestInfo } from '../value-objects/request-info';
 import type { ResponseInfo } from '../value-objects/response-info';
 import type { UserAgent } from '../value-objects/user-agent';
-
 // ドメインイベント
-
 import type { Endpoint } from '@/domain/api/value-objects/endpoint';
 import type { UserId } from '@/domain/auth/value-objects/user-id';
 
@@ -170,7 +168,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     result: AuthResult,
     userId?: UserId,
     errorMessage?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): Result<void> {
     // ログ数の上限チェック
     if (this.props.authLogs.length >= LogAggregate.MAX_LOGS_PER_TYPE) {

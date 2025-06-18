@@ -97,7 +97,7 @@ export const apiLoggingMiddleware = {
 
       if (logEntryResult.isSuccess) {
         // 非同期でログを保存
-        void apiLogService.saveLog(logEntryResult.getValue()).catch((error) => {
+        void apiLogService.saveLog(logEntryResult.getValue()).catch((error: unknown) => {
           logger.error({ error }, 'Failed to save API log');
         });
       } else {
