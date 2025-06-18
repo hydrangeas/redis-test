@@ -10,7 +10,7 @@ import type { Logger } from 'pino';
 /**
  * アプリケーションのエントリーポイント
  */
-async function start() {
+async function start(): Promise<void> {
   try {
     // 環境変数の検証
     validateEnvironment();
@@ -48,7 +48,7 @@ async function start() {
     );
 
     // Graceful shutdown
-    const gracefulShutdown = async (signal: string) => {
+    const gracefulShutdown = async (signal: string): Promise<void> => {
       logger.info({ signal }, 'Shutdown signal received');
 
       try {
@@ -102,7 +102,7 @@ async function start() {
 /**
  * 必要な環境変数の検証
  */
-function validateEnvironment() {
+function validateEnvironment(): void {
   const required = ['NODE_ENV', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'JWT_SECRET'];
 
   const missing = required.filter((key) => !process.env[key]);

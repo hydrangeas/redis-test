@@ -21,24 +21,16 @@ import { JWTValidatorService } from '../auth/services/jwt-validator.service';
 import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
 import { getEnvConfig, type EnvConfig } from '../config/env.config';
 import { EventBus } from '../events/event-bus';
+import { InMemoryEventStore } from '../events/in-memory-event-store';
 import { createLogger } from '../logging';
-
 import { OpenDataRepository } from '../repositories/open-data.repository';
-
 import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
-import type { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
 
+import type { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
 import type { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
 import type { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
 import type { IEventBus } from '@/domain/interfaces/event-bus.interface';
-
-
 import type { IEventStore } from '@/domain/interfaces/event-store.interface';
-
-import { InMemoryEventStore } from '../events/in-memory-event-store';
-
-
-
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Logger } from 'pino';
 import type { DependencyContainer } from 'tsyringe';

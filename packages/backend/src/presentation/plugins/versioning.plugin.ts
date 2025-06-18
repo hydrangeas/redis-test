@@ -16,7 +16,7 @@ export interface VersioningOptions {
   enableFallback?: boolean;
 }
 
-const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, options) => {
+const versioningPlugin: FastifyPluginAsync<VersioningOptions> = (fastify, options) => {
   const {
     defaultVersion,
     supportedVersions,
@@ -154,7 +154,7 @@ const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, 
 
   // バージョン別ルート登録ヘルパー
   fastify.decorate('routeVersion', function (version: string | string[], handler: (request: FastifyRequest, reply: FastifyReply) => Promise<unknown>) {
-    return async function (request: FastifyRequest, reply: FastifyReply) {
+    return async function (request: FastifyRequest, reply: FastifyReply): Promise<unknown> {
       const versions = Array.isArray(version) ? version : [version];
 
       if (versions.includes(request.apiVersion!)) {

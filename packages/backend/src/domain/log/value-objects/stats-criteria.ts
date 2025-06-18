@@ -10,7 +10,7 @@ export class StatsCriteria {
   private constructor(
     private readonly _timeRange: TimeRange,
     private readonly _groupBy?: string,
-    private readonly _filters?: Map<string, any>,
+    private readonly _filters?: Map<string, unknown>,
     private readonly _metrics?: string[],
   ) {
     Object.freeze(this);
@@ -39,7 +39,7 @@ export class StatsCriteria {
   /**
    * フィルター条件を取得
    */
-  get filters(): Map<string, any> {
+  get filters(): Map<string, unknown> {
     return new Map(this._filters || []);
   }
 
@@ -56,7 +56,7 @@ export class StatsCriteria {
   static create(params: {
     timeRange: TimeRange;
     groupBy?: string;
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
     metrics?: string[];
   }): Result<StatsCriteria> {
     const { timeRange, groupBy, filters, metrics } = params;
@@ -137,7 +137,7 @@ export class StatsCriteria {
   /**
    * フィルターを追加した新しい条件を作成
    */
-  withFilter(key: string, value: any): StatsCriteria {
+  withFilter(key: string, value: unknown): StatsCriteria {
     const newFilters = new Map(this._filters || []);
     newFilters.set(key, value);
 
@@ -191,7 +191,7 @@ export class StatsCriteria {
   toJSON(): {
     timeRange: { start: string; end: string };
     groupBy?: string;
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
     metrics?: string[];
   } {
     return {

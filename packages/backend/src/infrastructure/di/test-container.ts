@@ -227,7 +227,7 @@ export class TestContainerFactory {
  * Helper function to create a test container with custom mocks
  */
 export function createTestContainer(
-  customMocks?: Record<string | symbol, any>,
+  customMocks?: Record<string | symbol, unknown>,
   envOverrides?: Partial<EnvConfig>,
 ): DependencyContainer {
   const testContainer = TestContainerFactory.create(envOverrides);
@@ -267,7 +267,7 @@ export class MockFactory {
       trace: vi.fn(),
       fatal: vi.fn(),
       child: vi.fn().mockReturnThis(),
-    } as any;
+    } as Logger;
   }
 
   /**

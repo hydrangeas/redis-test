@@ -1,14 +1,14 @@
 import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
 
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 
 import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import type { Static } from '@sinclair/typebox';
-import type { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 // v2で追加されたフィルタリング機能のスキーマ
 const DataQueryParams = Type.Object({
@@ -21,7 +21,7 @@ const DataQueryParams = Type.Object({
 
 type DataQueryParamsType = Static<typeof DataQueryParams>;
 
-const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
+const dataRoutesV2: FastifyPluginAsync = (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );
@@ -31,10 +31,10 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
     Params: { '*': string };
     Querystring: DataQueryParamsType;
   }>('/*', {
-    handler: fastify.routeVersion(['2', '2.1'], async (_request: import('fastify').FastifyRequest<{
+    handler: fastify.routeVersion(['2', '2.1'], async (_request: FastifyRequest<{
       Params: { '*': string };
       Querystring: DataQueryParamsType;
-    }>, _reply: import('fastify').FastifyReply) => {
+    }>, _reply: FastifyReply) => {
       try {
         const user = _request.user as AuthenticatedUser;
         const dataPath = _request.params['*'];
@@ -48,9 +48,9 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
           const problemDetails = toProblemDetails(error, _request.url);
 
           let statusCode = 500;
-          if (error instanceof DomainError && error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
             statusCode = 404;
-          } else if (error instanceof DomainError && error.type === 'VALIDATION') {
+          } else if (error instanceof DomainError && error.type === ErrorType.VALIDATION) {
             statusCode = 400;
           }
 
@@ -64,7 +64,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
         if (filter && typeof processedContent === 'object' && Array.isArray(processedContent)) {
           processedContent = processedContent.filter((item) => {
             return Object.entries(filter).every(([key, value]) => {
-              return item[key] === value;
+              return (item as Record<string, unknown>)[key] === value;
             });
           });
         }
@@ -87,9 +87,9 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
           const [field, order] = sort.split(':');
           processedContent.sort((a, b) => {
             if (order === 'desc') {
-              return b[field] > a[field] ? 1 : -1;
+              return (b as Record<string, unknown>)[field] > (a as Record<string, unknown>)[field] ? 1 : -1;
             }
-            return a[field] > b[field] ? 1 : -1;
+            return (a as Record<string, unknown>)[field] > (b as Record<string, unknown>)[field] ? 1 : -1;
           });
         }
 

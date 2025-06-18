@@ -42,7 +42,7 @@ const ErrorResponse = Type.Object({
 type RefreshTokenRequestType = Static<typeof RefreshTokenRequest>;
 type RefreshTokenResponseType = Static<typeof RefreshTokenResponse>;
 
-const refreshRoute: FastifyPluginAsync = async (fastify) => {
+const refreshRoute: FastifyPluginAsync = (fastify) => {
   const authUseCase = container.resolve<AuthenticationUseCase>(DI_TOKENS.AuthenticationUseCase);
 
   fastify.post<{

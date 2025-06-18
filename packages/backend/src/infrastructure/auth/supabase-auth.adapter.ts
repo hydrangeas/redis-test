@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe';
 import { TokenPayload } from '@/domain/auth/types/token-payload';
 import { getEnvConfig } from '@/infrastructure/config/env.config';
 
-import { IAuthAdapter, Session } from './interfaces/auth-adapter.interface';
+import { IAuthAdapter, Session, AuthUser, CreateUserData, UpdateUserData } from './interfaces/auth-adapter.interface';
 
 @injectable()
 export class SupabaseAuthAdapter implements IAuthAdapter {
@@ -168,7 +168,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * IDでユーザーを取得
    */
-  async getUserById(id: string): Promise<any | null> {
+  async getUserById(id: string): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.getUserById(id);
 
@@ -193,7 +193,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * メールアドレスでユーザーを取得
    */
-  async getUserByEmail(email: string): Promise<any | null> {
+  async getUserByEmail(email: string): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.listUsers();
 
@@ -219,7 +219,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * ユーザーを作成
    */
-  async createUser(userData: any): Promise<any | null> {
+  async createUser(userData: CreateUserData): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.createUser({
         email: userData.email,
@@ -248,7 +248,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * ユーザー情報を更新
    */
-  async updateUser(id: string, updates: any): Promise<any | null> {
+  async updateUser(id: string, updates: UpdateUserData): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.updateUserById(id, {
         email: updates.email,
@@ -312,7 +312,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
       });
 
       if (data?.session) {
-        const decoded = jwtDecode<any>(data.session.access_token);
+        const decoded = jwtDecode<TokenPayload>(data.session.access_token);
         const hasTierClaim = decoded.app_metadata?.tier !== undefined;
 
         // クリーンアップ

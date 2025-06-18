@@ -66,7 +66,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     return this.props.errorMessage;
   }
 
-  get metadata(): Record<string, any> | undefined {
+  get metadata(): Record<string, unknown> | undefined {
     return this.props.metadata ? { ...this.props.metadata } : undefined;
   }
 
@@ -148,7 +148,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     return this.props.result === AuthResult.BLOCKED || this.isAnomalous();
   }
 
-  public toJSON(): Record<string, any> {
+  public toJSON(): Record<string, unknown> {
     return {
       id: this.id.value,
       userId: this.props.userId?.value,

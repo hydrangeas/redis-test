@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin';
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 /**
  * シンプルなパス検証プラグイン

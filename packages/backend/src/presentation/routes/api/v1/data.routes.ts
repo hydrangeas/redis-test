@@ -1,7 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
 
-import { DomainError } from '@/domain/errors/domain-error';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
 
@@ -9,7 +9,7 @@ import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrie
 import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
-const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
+const dataRoutesV1: FastifyPluginAsync = (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );
@@ -29,9 +29,9 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
           const problemDetails = toProblemDetails(error, _request.url);
 
           let statusCode = 500;
-          if (error instanceof DomainError && error.type === 'NOT_FOUND') {
+          if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
             statusCode = 404;
-          } else if (error instanceof DomainError && error.type === 'VALIDATION') {
+          } else if (error instanceof DomainError && error.type === ErrorType.VALIDATION) {
             statusCode = 400;
           }
 

@@ -8,15 +8,15 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
   private signedOutUsers = new Set<string>();
   private mockUsers = new Map<string, AuthUser>();
 
-  async verifyToken(token: string): Promise<TokenPayload | null> {
-    return this.mockTokens.get(token) || null;
+  verifyToken(token: string): Promise<TokenPayload | null> {
+    return Promise.resolve(this.mockTokens.get(token) || null);
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<Session | null> {
-    return this.mockSessions.get(refreshToken) || null;
+  refreshAccessToken(refreshToken: string): Promise<Session | null> {
+    return Promise.resolve(this.mockSessions.get(refreshToken) || null);
   }
 
-  async signOut(userId: string): Promise<void> {
+  signOut(userId: string): Promise<void> {
     this.signedOutUsers.add(userId);
     // Remove all sessions for this user
     for (const [token, session] of this.mockSessions.entries()) {
@@ -24,6 +24,7 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
         this.mockSessions.delete(token);
       }
     }
+    return Promise.resolve();
   }
 
   getUserById(id: string): Promise<AuthUser | null> {
@@ -40,9 +41,8 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
   }
 
   createUser(userData: CreateUserData): Promise<AuthUser | null> {
-    const user = {
+    const user: AuthUser = {
       id: `user-${Date.now()}`,
-      email: userData.email,
       email: userData.email,
       app_metadata: userData.app_metadata || {},
       user_metadata: userData.user_metadata || {},

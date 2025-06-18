@@ -23,6 +23,7 @@ export interface AuthUser {
 export interface CreateUserData {
   email: string;
   password?: string;
+  email_confirmed?: boolean;
   app_metadata?: Record<string, unknown>;
   user_metadata?: Record<string, unknown>;
 }
@@ -30,6 +31,7 @@ export interface CreateUserData {
 export interface UpdateUserData {
   email?: string;
   password?: string;
+  email_confirmed?: boolean;
   app_metadata?: Record<string, unknown>;
   user_metadata?: Record<string, unknown>;
 }

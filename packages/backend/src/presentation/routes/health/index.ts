@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 
 import { Type } from '@sinclair/typebox';
@@ -53,7 +54,7 @@ const DetailedHealthStatus = Type.Intersect([
   }),
 ]);
 
-const healthRoutes: FastifyPluginAsync = async (fastify) => {
+const healthRoutes: FastifyPluginAsync = (fastify) => {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   // 基本的なヘルスチェック
@@ -132,7 +133,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
 
         // メモリ使用状況
         const memoryUsage = process.memoryUsage();
-        const totalMemory = require('os').totalmem();
+        const totalMemory = os.totalmem();
         const usedMemory = memoryUsage.heapUsed + memoryUsage.external;
 
         // CPU使用状況（簡易版）
@@ -252,7 +253,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
 };
 
 // ヘルスチェックの実行
-async function performHealthChecks() {
+async function performHealthChecks(): Promise<Record<string, { status: string; message?: string }>> {
   const checks = {
     database: await checkDatabase(),
     dataFiles: await checkDataFiles(),
@@ -263,7 +264,7 @@ async function performHealthChecks() {
 }
 
 // データベース接続チェック
-async function checkDatabase() {
+async function checkDatabase(): Promise<{ status: string; message?: string }> {
   try {
     // Supabaseクライアントを使用した接続チェック
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -301,7 +302,7 @@ async function checkDatabase() {
 }
 
 // データファイルアクセスチェック
-async function checkDataFiles() {
+async function checkDataFiles(): Promise<{ status: string; message?: string }> {
   try {
     const dataDirectory = process.env.DATA_DIRECTORY || path.join(process.cwd(), 'data');
 
@@ -330,7 +331,7 @@ async function checkDataFiles() {
 }
 
 // キャッシュステータスチェック
-function checkCache() {
+function checkCache(): { status: string; message?: string } {
   // 現在の実装では、キャッシュは常に利用可能
   // 将来的にRedisなどを使用する場合はここでチェック
   return {

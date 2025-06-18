@@ -69,7 +69,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       } else {
         current[key] = { ...currentValue };
       }
-      current = current[key] as JsonObjectType;
+      current = current[key];
     }
 
     current[keys[keys.length - 1]] = value;
@@ -92,7 +92,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
         return JsonObject.create(newValue); // Path doesn't exist, return as is
       }
       current[key] = { ...currentValue };
-      current = current[key] as JsonObjectType;
+      current = current[key];
     }
 
     delete current[keys[keys.length - 1]];

@@ -64,7 +64,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
         preferredSecurityScheme: 'bearerAuth', // デフォルトの認証スキーム
       },
       defaultOpenAllTags: false, // すべてのタグを展開しない
-      onSpecUpdate: (_spec: any) => {
+      onSpecUpdate: (_spec: unknown) => {
         // 仕様書が更新されたときの処理
         fastify.log.info('OpenAPI specification updated');
       },

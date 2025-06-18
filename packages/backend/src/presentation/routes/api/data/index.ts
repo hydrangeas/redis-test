@@ -1,7 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
 
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
@@ -71,10 +70,10 @@ const ListResponse = Type.Object({
 type DataPathParamsType = Static<typeof DataPathParams>;
 type ListQueryParamsType = Static<typeof ListQueryParams>;
 
-const dataRoutes: FastifyPluginAsync = async (fastify) => {
+const dataRoutes: FastifyPluginAsync = (fastify) => {
   // デバッグ: authenticateが存在するか確認
   if (process.env.NODE_ENV === 'test') {
-    console.log('fastify.authenticate exists?', typeof fastify.authenticate);
+    // console.log('fastify.authenticate exists?', typeof fastify.authenticate);
   }
 
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
@@ -86,7 +85,7 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
   // ワイルドカードルートでデータアクセス
   fastify.get<{
     Params: DataPathParamsType;
-    Reply: unknown | Static<typeof ErrorResponse>;
+    Reply: Static<typeof ErrorResponse>;
   }>(
     '/*',
     {
@@ -202,9 +201,9 @@ const dataRoutes: FastifyPluginAsync = async (fastify) => {
           let statusCode = 500;
           if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
             statusCode = 404;
-          } else if (error instanceof DomainError && error.type === 'VALIDATION') {
+          } else if (error instanceof DomainError && error.type === ErrorType.VALIDATION) {
             statusCode = 400;
-          } else if (error instanceof DomainError && error.type === 'UNAUTHORIZED') {
+          } else if (error instanceof DomainError && error.type === ErrorType.UNAUTHORIZED) {
             statusCode = 403;
           }
 

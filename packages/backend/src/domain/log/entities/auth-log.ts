@@ -104,6 +104,6 @@ export class AuthLog extends Entity<AuthLogProps> {
    * Get a summary of the log entry
    */
   getSummary(): string {
-    return `${this.userId.value} ${this.event} ${this.result} at ${this.timestamp.toISOString()}`;
+    return `${this.userId.value} ${this.event.type} ${this.result} at ${this.timestamp.toISOString()}`;
   }
 }
