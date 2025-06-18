@@ -159,7 +159,7 @@ export class ApiLogService implements IApiLogService {
     // 定期的にバッファをフラッシュ
     this.flushTimer = setInterval(() => {
       if (this.buffer.length > 0) {
-        this.flushBuffer().catch((error) => {
+        this.flushBuffer().catch((error: unknown) => {
           this.logger.error({ error }, 'Failed to flush buffer in timer');
         });
       }

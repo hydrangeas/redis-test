@@ -30,7 +30,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     }, 60000); // 1分ごと
   }
 
-  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
+  checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): RateLimitCheckResult {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000; // ミリ秒に変換
@@ -102,7 +102,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     };
   }
 
-  async recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
+  recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): void {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
@@ -130,14 +130,14 @@ export class InMemoryRateLimitService implements IRateLimitService {
     );
   }
 
-  async getUsageStatus(
+  getUsageStatus(
     user: AuthenticatedUser,
-  ): Promise<{
+  ): {
     currentCount: number;
     limit: number;
     windowStart: Date;
     windowEnd: Date;
-  }> {
+  } {
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
     const limit = user.tier.rateLimit.maxRequests;
@@ -164,7 +164,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     };
   }
 
-  async resetLimit(userId: string): Promise<void> {
+  resetLimit(userId: string): void {
     // Reset all endpoints for the user
     const prefix = `${userId}:`;
     for (const key of this.windows.keys()) {

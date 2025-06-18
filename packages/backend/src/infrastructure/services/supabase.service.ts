@@ -60,7 +60,7 @@ export class SupabaseService {
   /**
    * Verify a JWT token
    */
-  async verifyToken(token: string) {
+  async verifyToken(token: string): Promise<unknown> {
     const { data, error } = await this.adminClient.auth.getUser(token);
 
     if (error) {
@@ -73,7 +73,7 @@ export class SupabaseService {
   /**
    * Get user metadata including tier information
    */
-  async getUserMetadata(userId: string) {
+  async getUserMetadata(userId: string): Promise<{ tier: string; [key: string]: unknown }> {
     const { data, error } = await this.adminClient
       .from('auth.users')
       .select('raw_app_meta_data')
@@ -85,13 +85,13 @@ export class SupabaseService {
       return { tier: 'tier1' };
     }
 
-    return data?.raw_app_meta_data || { tier: 'tier1' };
+    return (data?.raw_app_meta_data as { tier: string; [key: string]: unknown }) || { tier: 'tier1' };
   }
 
   /**
    * Update user tier
    */
-  async updateUserTier(userId: string, tier: string) {
+  async updateUserTier(userId: string, tier: string): Promise<void> {
     const { error } = await this.adminClient.auth.admin.updateUserById(userId, {
       app_metadata: { tier },
     });
@@ -104,7 +104,7 @@ export class SupabaseService {
   /**
    * Log authentication event
    */
-  async logAuthEvent(event: { userId: string; eventType: string; metadata?: unknown }) {
+  async logAuthEvent(event: { userId: string; eventType: string; metadata?: unknown }): Promise<void> {
     const { error } = await this.adminClient.from('auth_logs').insert({
       user_id: event.userId,
       event_type: event.eventType,

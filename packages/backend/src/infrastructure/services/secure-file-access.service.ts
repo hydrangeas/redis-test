@@ -105,7 +105,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
       }
 
       // Access permission check
-      const hasAccess = await this.checkAccessPermission(filePath, context);
+      const hasAccess = this.checkAccessPermission(filePath, context);
       if (!hasAccess) {
         await this.logSecurityEvent('ACCESS_DENIED', context, { filePath });
         return Result.fail(
@@ -128,6 +128,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
     // Remove dangerous characters
     const sanitized = inputPath
       .trim()
+      // eslint-disable-next-line no-control-regex
       .replace(/[<>:"|?*\x00-\x1f\x80-\x9f]/g, '') // Control chars and dangerous chars
       .replace(/\\/g, '/') // Normalize backslashes to forward slashes
       .replace(/\/+/g, '/') // Replace multiple slashes with single
@@ -205,10 +206,10 @@ export class SecureFileAccessService implements ISecureFileAccess {
     }
   }
 
-  private async checkAccessPermission(
+  private checkAccessPermission(
     filePath: string,
     context: SecurityContext,
-  ): Promise<boolean> {
+  ): boolean {
     // Public files are accessible to everyone
     if (filePath.startsWith('public/')) {
       return true;
@@ -250,7 +251,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
   private async logSecurityEvent(
     eventType: string,
     context: SecurityContext,
-    details: Record<string, any>,
+    details: Record<string, unknown>,
   ): Promise<void> {
     const event = {
       type: eventType,

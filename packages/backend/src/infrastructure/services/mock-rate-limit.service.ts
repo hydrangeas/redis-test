@@ -16,8 +16,8 @@ export class MockRateLimitService implements IRateLimitService {
   private usageMap = new Map<string, number>();
   private windowStart = new Date();
 
-  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
-    const key = `${user.userId.value}:${endpoint.path}`;
+  checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): RateLimitCheckResult {
+    const key = `${user.userId.value}:${endpoint.path.value}`;
     const currentCount = this.usageMap.get(key) || 0;
     const limit = user.tier.rateLimit.maxRequests;
 
@@ -42,18 +42,18 @@ export class MockRateLimitService implements IRateLimitService {
     };
   }
 
-  async recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
-    const key = `${user.userId.value}:${endpoint.path}`;
+  recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): void {
+    const key = `${user.userId.value}:${endpoint.path.value}`;
     const currentCount = this.usageMap.get(key) || 0;
     this.usageMap.set(key, currentCount + 1);
   }
 
-  async getUsageStatus(user: AuthenticatedUser): Promise<{
+  getUsageStatus(user: AuthenticatedUser): {
     currentCount: number;
     limit: number;
     windowStart: Date;
     windowEnd: Date;
-  }> {
+  } {
     let totalCount = 0;
 
     // Sum all endpoints for this user
@@ -71,7 +71,7 @@ export class MockRateLimitService implements IRateLimitService {
     };
   }
 
-  async resetLimit(userId: string): Promise<void> {
+  resetLimit(userId: string): void {
     // Remove all entries for this user
     for (const key of this.usageMap.keys()) {
       if (key.startsWith(userId)) {
