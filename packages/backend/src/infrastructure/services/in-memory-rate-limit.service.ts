@@ -130,14 +130,14 @@ export class InMemoryRateLimitService implements IRateLimitService {
     );
   }
 
-  getUsageStatus(
+  async getUsageStatus(
     user: AuthenticatedUser,
-  ): {
+  ): Promise<{
     currentCount: number;
     limit: number;
     windowStart: Date;
     windowEnd: Date;
-  } {
+  }> {
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
     const limit = user.tier.rateLimit.maxRequests;
@@ -164,7 +164,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     };
   }
 
-  resetLimit(userId: string): void {
+  async resetLimit(userId: string): Promise<void> {
     // Reset all endpoints for the user
     const prefix = `${userId}:`;
     for (const key of this.windows.keys()) {

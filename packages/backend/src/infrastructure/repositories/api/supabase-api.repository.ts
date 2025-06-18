@@ -223,7 +223,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       // エンドポイントを集約に追加
       for (const record of endpoints || []) {
         const pathResult = EndpointPath.create(record.path);
-        const typeResult = EndpointType.create(record.type);
+        const typeResult = EndpointType.create(record.type as 'public' | 'protected');
 
         if (pathResult.isSuccess && typeResult.isSuccess) {
           // Note: rate_limit_override from database is not currently used
