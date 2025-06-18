@@ -16,7 +16,7 @@ export interface VersioningOptions {
   enableFallback?: boolean;
 }
 
-const versioningPlugin: FastifyPluginAsync<VersioningOptions> = (fastify, options) => {
+const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, options) => {
   const {
     defaultVersion,
     supportedVersions,

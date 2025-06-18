@@ -4,7 +4,7 @@ import type { FastifyInstance } from 'fastify';
 
 // startTime is already declared in monitoring.ts as bigint
 
-export default fp(async function vercelAnalytics(fastify: FastifyInstance) {
+export default fp(function vercelAnalytics(fastify: FastifyInstance) {
   // Vercel Analytics用のデータ収集
   fastify.addHook('onRequest', async (request, _reply) => {
     request.startTime = BigInt(Date.now());

@@ -101,7 +101,7 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger).child({ context: 'monitoring' });
 
   // Add hook to track request start time
-  fastify.addHook('onRequest', async (request: FastifyRequest) => {
+  fastify.addHook('onRequest', (request: FastifyRequest) => {
     request.startTime = process.hrtime.bigint();
   });
 
@@ -239,19 +239,19 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
   logger.info('Monitoring plugin loaded');
 };
 
-async function checkDatabase(): Promise<{ status: string; latency?: number; error?: string }> {
+function checkDatabase(): Promise<{ status: string; latency?: number; error?: string }> {
   try {
     const start = Date.now();
     // For now, we'll assume the database is healthy if we can resolve the Supabase client
     container.resolve(DI_TOKENS.SupabaseClient);
     const latency = Date.now() - start;
 
-    return { status: 'healthy', latency };
+    return Promise.resolve({ status: 'healthy', latency });
   } catch (error) {
-    return {
+    return Promise.resolve({
       status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    });
   }
 }
 
