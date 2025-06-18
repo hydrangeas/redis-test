@@ -67,7 +67,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       if (!currentValue || typeof currentValue !== 'object' || Array.isArray(currentValue)) {
         current[key] = {};
       } else {
-        current[key] = { ...(currentValue as JsonObjectType) };
+        current[key] = { ...currentValue };
       }
       current = current[key] as JsonObjectType;
     }
@@ -91,7 +91,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       if (!currentValue || typeof currentValue !== 'object' || Array.isArray(currentValue)) {
         return JsonObject.create(newValue); // Path doesn't exist, return as is
       }
-      current[key] = { ...(currentValue as JsonObjectType) };
+      current[key] = { ...currentValue };
       current = current[key] as JsonObjectType;
     }
 
@@ -127,7 +127,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
           typeof targetValue === 'object' &&
           !Array.isArray(targetValue)
         ) {
-          result[key] = this.deepMerge(targetValue as JsonObjectType, sourceValue as JsonObjectType);
+          result[key] = this.deepMerge(targetValue, sourceValue);
         } else {
           result[key] = sourceValue;
         }
@@ -184,7 +184,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
       return Result.fail(DomainError.validation('INVALID_JSON_OBJECT', 'Value must be a valid JSON object'));
     }
 
-    return Result.ok(new JsonObject({ value: value as JsonObjectType }));
+    return Result.ok(new JsonObject({ value }));
   }
 
   /**
@@ -218,7 +218,7 @@ export class JsonObject extends ValueObject<JsonObjectProps> {
    */
   static fromJsonString(jsonString: string): Result<JsonObject> {
     try {
-      const parsed = JSON.parse(jsonString);
+      const parsed = JSON.parse(jsonString) as unknown;
       return JsonObject.create(parsed);
     } catch (error) {
       return Result.fail(DomainError.validation('INVALID_JSON_STRING', 'Invalid JSON string'));

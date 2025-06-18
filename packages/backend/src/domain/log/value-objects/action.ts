@@ -36,7 +36,7 @@ export class Action {
 
   private constructor(
     private readonly _type: ActionType,
-    private readonly _metadata?: Record<string, any>,
+    private readonly _metadata?: Record<string, unknown>,
   ) {
     Object.freeze(this);
     if (this._metadata) {
@@ -54,7 +54,7 @@ export class Action {
   /**
    * メタデータを取得
    */
-  get metadata(): Record<string, any> {
+  get metadata(): Record<string, unknown> {
     return this._metadata || {};
   }
 
@@ -68,7 +68,7 @@ export class Action {
   /**
    * アクションを作成
    */
-  static create(type: ActionType, metadata?: Record<string, any>): Result<Action> {
+  static create(type: ActionType, metadata?: Record<string, unknown>): Result<Action> {
     if (!Object.values(ActionType).includes(type)) {
       return Result.fail<Action>(new DomainError('INVALID_ACTION_TYPE', '無効なアクションタイプです', ErrorType.VALIDATION));
     }
@@ -159,7 +159,7 @@ export class Action {
     return result.getValue();
   }
 
-  static systemEvent(eventType: string, metadata?: Record<string, any>): Action {
+  static systemEvent(eventType: string, metadata?: Record<string, unknown>): Action {
     const result = Action.create(ActionType.SYSTEM_ACTION, { eventType, ...metadata });
     if (result.isFailure) {
       throw result.getError();
@@ -188,7 +188,7 @@ export class Action {
   /**
    * JSON表現を返す
    */
-  toJSON(): { type: string; metadata?: Record<string, any> } {
+  toJSON(): { type: string; metadata?: Record<string, unknown> } {
     return {
       type: this._type,
       ...(this._metadata && { metadata: this._metadata }),

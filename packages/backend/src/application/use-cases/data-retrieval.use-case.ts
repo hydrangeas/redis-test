@@ -215,7 +215,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       );
 
       return Result.ok({
-        content: contentResult.getValue() as unknown,
+        content: contentResult.getValue(),
         checksum: resource.metadata.etag,
         lastModified: resource.metadata.lastModified,
       });
@@ -347,7 +347,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       );
 
       return Result.ok({
-        data: contentResult.getValue() as unknown,
+        data: contentResult.getValue(),
         notModified: false,
         newEtag: resource.metadata.etag,
       });
@@ -430,7 +430,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       );
 
       return Result.ok({
-        data: contentResult.getValue() as unknown,
+        data: contentResult.getValue(),
         notModified: false,
         lastModified: resource.metadata.lastModified,
       });

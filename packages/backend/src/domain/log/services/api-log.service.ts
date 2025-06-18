@@ -106,7 +106,7 @@ export class APILogService {
         'API', // endpointType
         new Date(),
       );
-      await this.eventBus.publish(event);
+      this.eventBus.publish(event);
 
       return Result.ok<void>(undefined);
     } catch (error) {

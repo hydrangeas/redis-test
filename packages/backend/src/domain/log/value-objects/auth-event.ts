@@ -109,7 +109,7 @@ export class AuthEvent {
   /**
    * JSON表現を返す
    */
-  toJSON(): Record<string, any> {
+  toJSON(): Record<string, unknown> {
     return {
       type: this._type,
       description: this._description,

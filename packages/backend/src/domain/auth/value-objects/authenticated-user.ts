@@ -1,4 +1,4 @@
-import { RateLimit } from './rate-limit';
+import type { RateLimit } from './rate-limit';
 import { TierLevel } from './tier-level';
 import { UserId } from './user-id';
 import { UserTier } from './user-tier';

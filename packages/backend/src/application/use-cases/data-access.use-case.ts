@@ -131,7 +131,7 @@ export class DataAccessUseCase {
         return Result.fail(contentResult.getError());
       }
 
-      const content = contentResult.getValue() as unknown;
+      const content = contentResult.getValue();
       const responseTime = Date.now() - startTime;
 
       // 7. 成功ログの記録

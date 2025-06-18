@@ -13,5 +13,5 @@ export interface IJWTValidator {
    * @param token JWTトークン文字列
    * @returns デコードされたペイロード
    */
-  decodeToken<T = any>(token: string): T | null;
+  decodeToken<T = unknown>(token: string): T | null;
 }

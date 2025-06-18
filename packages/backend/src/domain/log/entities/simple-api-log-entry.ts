@@ -22,7 +22,7 @@ interface SimpleApiLogEntryProps {
   userAgent: UserAgent;
   timestamp: Date;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class SimpleApiLogEntry extends Entity<SimpleApiLogEntryProps> {
@@ -66,7 +66,7 @@ export class SimpleApiLogEntry extends Entity<SimpleApiLogEntryProps> {
     return this.props.errorMessage;
   }
 
-  get metadata(): Record<string, any> | undefined {
+  get metadata(): Record<string, unknown> | undefined {
     return this.props.metadata;
   }
 
