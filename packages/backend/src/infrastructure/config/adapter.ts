@@ -16,7 +16,7 @@ export function adaptConfigToEnv(): EnvConfig {
     // Supabase
     PUBLIC_SUPABASE_URL: appConfig.supabase.url,
     PUBLIC_SUPABASE_ANON_KEY: appConfig.supabase.anonKey,
-    SUPABASE_SERVICE_ROLE_KEY: appConfig.supabase.serviceRoleKey,
+    SUPABASE_SERVICE_ROLE_KEY: appConfig.supabase.serviceRoleKey || '',
     SUPABASE_URL: appConfig.supabase.url,
     SUPABASE_ANON_KEY: appConfig.supabase.anonKey,
 

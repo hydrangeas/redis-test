@@ -15,7 +15,7 @@ import { DI_TOKENS } from '../di';
 export class EventLogger implements IEventHandler<DomainEvent> {
   constructor(@inject(DI_TOKENS.Logger) private readonly logger: Logger) {}
 
-  handle(event: DomainEvent): void {
+  handle(event: DomainEvent): Promise<void> {
     this.logger.info(
       {
         event: {
@@ -29,6 +29,7 @@ export class EventLogger implements IEventHandler<DomainEvent> {
       },
       `Domain event: ${event.getEventName()}`,
     );
+    return Promise.resolve();
   }
 
   /**

@@ -12,15 +12,15 @@ export class InMemoryEventStore implements IEventStore {
   private events: DomainEvent[] = [];
   private deadLetters: DeadLetterEvent[] = [];
 
-  save(event: DomainEvent): void {
+  async save(event: DomainEvent): Promise<void> {
     this.events.push(event);
   }
 
-  getByAggregateId(aggregateId: string): DomainEvent[] {
+  async getByAggregateId(aggregateId: string): Promise<DomainEvent[]> {
     return this.events.filter((event) => event.getAggregateId() === aggregateId);
   }
 
-  getByEventName(eventName: string, limit?: number): DomainEvent[] {
+  async getByEventName(eventName: string, limit?: number): Promise<DomainEvent[]> {
     const filtered = this.events.filter((event) => event.getEventName() === eventName);
 
     if (limit && limit > 0) {
@@ -30,7 +30,7 @@ export class InMemoryEventStore implements IEventStore {
     return filtered;
   }
 
-  saveDeadLetter(deadLetter: DeadLetterEvent): void {
+  async saveDeadLetter(deadLetter: DeadLetterEvent): Promise<void> {
     this.deadLetters.push(deadLetter);
   }
 

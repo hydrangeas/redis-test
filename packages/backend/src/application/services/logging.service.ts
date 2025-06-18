@@ -33,6 +33,20 @@ export interface APILogMetadata {
 }
 
 /**
+ * Helper function to ensure error is a DomainError
+ */
+function ensureDomainError(error: Error | DomainError): DomainError {
+  if (error instanceof DomainError) {
+    return error;
+  }
+  return new DomainError(
+    'CONVERSION_ERROR',
+    error.message || 'Unknown error',
+    ErrorType.INTERNAL,
+  );
+}
+
+/**
  * ロギングサービス
  * 認証ログとAPIアクセスログの記録と検索を提供
  */
@@ -57,7 +71,7 @@ export class LoggingService {
     try {
       const userIdResult = UserId.create(userId);
       if (userIdResult.isFailure) {
-        return Result.fail(userIdResult.getError());
+        return Result.fail(ensureDomainError(userIdResult.getError()));
       }
 
       // Create value objects for required fields
@@ -66,13 +80,13 @@ export class LoggingService {
       const userAgentResult = UserAgent.create(metadata?.userAgent || 'Unknown');
 
       if (providerResult.isFailure) {
-        return Result.fail(providerResult.getError());
+        return Result.fail(ensureDomainError(providerResult.getError()));
       }
       if (ipAddressResult.isFailure) {
-        return Result.fail(ipAddressResult.getError());
+        return Result.fail(ensureDomainError(ipAddressResult.getError()));
       }
       if (userAgentResult.isFailure) {
-        return Result.fail(userAgentResult.getError());
+        return Result.fail(ensureDomainError(userAgentResult.getError()));
       }
 
       // Create auth event and result
@@ -80,7 +94,7 @@ export class LoggingService {
       const authResultValue = result === 'SUCCESS' ? AuthResult.SUCCESS : AuthResult.FAILED;
 
       if (authEventResult.isFailure) {
-        return Result.fail(authEventResult.getError());
+        return Result.fail(ensureDomainError(authEventResult.getError()));
       }
 
       // Create auth log entry
@@ -96,13 +110,13 @@ export class LoggingService {
       });
 
       if (authLogEntryResult.isFailure) {
-        return Result.fail(authLogEntryResult.getError());
+        return Result.fail(ensureDomainError(authLogEntryResult.getError()));
       }
 
       // Save to repository
       const saveResult = await this.authLogRepository.save(authLogEntryResult.getValue());
       if (saveResult.isFailure) {
-        return Result.fail(saveResult.getError());
+        return Result.fail(ensureDomainError(saveResult.getError()));
       }
 
       return Result.ok<void>(undefined);
@@ -154,12 +168,12 @@ export class LoggingService {
     if (userId) {
       const userIdResult = UserId.create(userId);
       if (userIdResult.isFailure) {
-        return Result.fail(userIdResult.getError());
+        return Result.fail(ensureDomainError(userIdResult.getError()));
       }
 
       const timeRangeValue = timeRange ? TimeRange.create(timeRange.start, timeRange.end) : undefined;
       if (timeRange && timeRangeValue?.isFailure) {
-        return Result.fail(timeRangeValue.getError());
+        return Result.fail(ensureDomainError(timeRangeValue.getError()));
       }
 
       const result = await this.authLogRepository.findByUserId(
@@ -170,7 +184,7 @@ export class LoggingService {
       
       // Convert from domain/shared/result to domain/errors/result
       if (result.isFailure) {
-        return Result.fail(result.getError());
+        return Result.fail(ensureDomainError(result.getError()));
       }
       return Result.ok(result.getValue());
     }
@@ -178,7 +192,7 @@ export class LoggingService {
     if (timeRange) {
       const timeRangeResult = TimeRange.create(timeRange.start, timeRange.end);
       if (timeRangeResult.isFailure) {
-        return Result.fail(timeRangeResult.getError());
+        return Result.fail(ensureDomainError(timeRangeResult.getError()));
       }
       // TODO: Add findByTimeRange method to auth log repository
       return Result.ok([]);
@@ -198,12 +212,12 @@ export class LoggingService {
     if (userId) {
       const userIdResult = UserId.create(userId);
       if (userIdResult.isFailure) {
-        return Result.fail(userIdResult.getError());
+        return Result.fail(ensureDomainError(userIdResult.getError()));
       }
 
       const timeRangeValue = timeRange ? TimeRange.create(timeRange.start, timeRange.end) : undefined;
       if (timeRange && timeRangeValue?.isFailure) {
-        return Result.fail(timeRangeValue.getError());
+        return Result.fail(ensureDomainError(timeRangeValue.getError()));
       }
 
       const result = await this.apiLogRepository.findByUserId(
@@ -214,7 +228,7 @@ export class LoggingService {
       
       // Convert from domain/shared/result to domain/errors/result
       if (result.isFailure) {
-        return Result.fail(result.getError());
+        return Result.fail(ensureDomainError(result.getError()));
       }
       return Result.ok(result.getValue());
     }
@@ -222,11 +236,11 @@ export class LoggingService {
     if (timeRange) {
       const timeRangeResult = TimeRange.create(timeRange.start, timeRange.end);
       if (timeRangeResult.isFailure) {
-        return Result.fail(timeRangeResult.getError());
+        return Result.fail(ensureDomainError(timeRangeResult.getError()));
       }
       const result = await this.apiLogRepository.findByTimeRange(timeRangeResult.getValue(), limit);
       if (result.isFailure) {
-        return Result.fail(result.getError());
+        return Result.fail(ensureDomainError(result.getError()));
       }
       return Result.ok(result.getValue());
     }
@@ -240,7 +254,7 @@ export class LoggingService {
   async getErrorLogs(limit = 100): Promise<Result<APILogEntry[]>> {
     const result = await this.apiLogRepository.findErrors(undefined, limit);
     if (result.isFailure) {
-      return Result.fail(result.getError());
+      return Result.fail(ensureDomainError(result.getError()));
     }
     return Result.ok(result.getValue());
   }
@@ -264,7 +278,7 @@ export class LoggingService {
     if (ipAddress) {
       const ipAddressResult = IPAddress.create(ipAddress);
       if (ipAddressResult.isFailure) {
-        return Result.fail(ipAddressResult.getError());
+        return Result.fail(ensureDomainError(ipAddressResult.getError()));
       }
 
       // Find failed login attempts from this IP
@@ -275,7 +289,7 @@ export class LoggingService {
       );
 
       if (failedLogins.isFailure) {
-        return Result.fail(failedLogins.getError());
+        return Result.fail(ensureDomainError(failedLogins.getError()));
       }
 
       const failures = failedLogins
@@ -290,7 +304,7 @@ export class LoggingService {
     // Check for suspicious activities across all IPs
     const result = await this.authLogRepository.findSuspiciousActivities(timeRangeResult.getValue(), 100);
     if (result.isFailure) {
-      return Result.fail(result.getError());
+      return Result.fail(ensureDomainError(result.getError()));
     }
     return Result.ok(result.getValue());
   }

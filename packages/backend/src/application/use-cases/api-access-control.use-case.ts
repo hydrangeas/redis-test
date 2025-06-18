@@ -168,14 +168,14 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
-  ): Result<void> {
+  ): Promise<Result<void>> {
     const startTime = Date.now();
 
     try {
       // 公開エンドポイントへのアクセスログを記録
       this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
 
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
       this.logger.error(
         {
@@ -186,13 +186,13 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
         'Error recording public access',
       );
 
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'PUBLIC_ACCESS_RECORD_ERROR',
           'Failed to record public access',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
