@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import { LoggingService } from '../logging.service';
 import { setupDependencies } from '../../__tests__/test-utils';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { AuthEvent } from '@/domain/log/value-objects/auth-event';
+import { EventType } from '@/domain/log/value-objects/auth-event';
 import { APILog } from '@/domain/log/entities/api-log';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
@@ -28,7 +28,7 @@ describe('LoggingService Integration', () => {
   describe('logAuthEvent', () => {
     it('should log successful authentication event', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
-      const eventType = AuthEvent.LOGIN_SUCCESS;
+      const eventType = EventType.LOGIN_SUCCESS;
       const metadata = {
         ipAddress: '192.168.1.100',
         userAgent: 'Mozilla/5.0',
@@ -52,7 +52,7 @@ describe('LoggingService Integration', () => {
 
     it('should log failed authentication event', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440001'; // Valid UUID v4
-      const eventType = AuthEvent.LOGIN_FAILED;
+      const eventType = EventType.LOGIN_FAILED;
       const metadata = {
         ipAddress: '192.168.1.100',
         userAgent: 'Mozilla/5.0',
@@ -69,7 +69,7 @@ describe('LoggingService Integration', () => {
 
     it('should handle repository errors', async () => {
       const userId = '550e8400-e29b-41d4-a716-446655440002'; // Valid UUID v4
-      const eventType = AuthEvent.LOGIN_SUCCESS;
+      const eventType = EventType.LOGIN_SUCCESS;
 
       mockDependencies.mockRepositories.authLog.save.mockRejectedValue(new Error('Database error'));
 
@@ -188,6 +188,7 @@ describe('LoggingService Integration', () => {
       expect(result.getValue()).toEqual(mockLogs);
       expect(mockDependencies.mockRepositories.authLog.findByUserId).toHaveBeenCalledWith(
         expect.objectContaining({ value: userId }),
+        undefined,
         limit,
       );
     });

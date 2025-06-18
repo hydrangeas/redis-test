@@ -9,6 +9,7 @@ import {
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
 import { InvalidAPIAccess } from '@/domain/api/events/invalid-api-access.event';
+import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
 import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
 import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';

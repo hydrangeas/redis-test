@@ -289,10 +289,11 @@ describe('APIAccessControlUseCase Integration', () => {
       rateLimitUseCase.checkAndRecordAccess.mockImplementation(async () => {
         const currentCount = requestCount++;
         const allowed = currentCount < 60;
+        const remaining = Math.max(0, 60 - currentCount - 1);
         return Result.ok({
           allowed,
           limit: 60,
-          remaining: Math.max(0, 60 - currentCount),
+          remaining,
           resetAt: Math.floor((Date.now() + 60000) / 1000),
           retryAfter: allowed ? undefined : 30,
         });

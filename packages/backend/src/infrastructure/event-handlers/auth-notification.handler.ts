@@ -70,14 +70,33 @@ export class AuthNotificationHandler implements IEventHandler<UserAuthenticated>
 }
 */
 
+interface INotificationService {
+  sendNewDeviceAlert: (params: { userId: string; device: string; location: string; timestamp: Date }) => Promise<void>;
+  sendSecurityAlert: (params: { userId: string; reason: string; details: unknown }) => Promise<void>;
+}
+
+interface ILogger {
+  info: (obj: Record<string, unknown>, msg: string) => void;
+  warn: (obj: Record<string, unknown>, msg: string) => void;
+  error: (obj: Record<string, unknown>, msg: string) => void;
+}
+
+interface IEvent {
+  userId: string;
+  userAgent?: string;
+  occurredAt: Date;
+  getData: () => unknown;
+  getMetadata: () => unknown;
+}
+
 // Temporary export to avoid compilation errors
 export class AuthNotificationHandler {
   constructor(
-    private readonly notificationService: any,
-    private readonly logger: any,
+    private readonly notificationService: INotificationService,
+    private readonly logger: ILogger,
   ) {}
 
-  async handle(event: any): Promise<void> {
+  async handle(event: IEvent): Promise<void> {
     // Stub implementation for tests
     try {
       if (await this.isNewDevice(event)) {
@@ -114,11 +133,11 @@ export class AuthNotificationHandler {
     }
   }
 
-  private async isNewDevice(_event: any): Promise<boolean> {
+  private async isNewDevice(_event: IEvent): Promise<boolean> {
     return false;
   }
 
-  private async isSuspiciousLogin(_event: any): Promise<boolean> {
+  private async isSuspiciousLogin(_event: IEvent): Promise<boolean> {
     return false;
   }
 }
