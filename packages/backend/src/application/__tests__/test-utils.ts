@@ -54,6 +54,9 @@ interface MockDependencies {
   mockJWTValidator: {
     validateToken: ReturnType<typeof vi.fn>;
   };
+  mockJWTService: {
+    decodeToken: ReturnType<typeof vi.fn>;
+  };
   mockAuthenticationService: {
     validateToken: ReturnType<typeof vi.fn>;
     validateAccessToken: ReturnType<typeof vi.fn>;
@@ -86,7 +89,7 @@ export function setupDependencies(): MockDependencies {
   const mockEventBus = new EventEmitter();
   // EventEmitter uses emit, not publish
   const eventBusWithPublish = mockEventBus as EventEmitter & { publish: ReturnType<typeof vi.fn> };
-  eventBusWithPublish.publish = vi.fn().mockResolvedValue(undefined);
+  eventBusWithPublish.publish = vi.fn<any[], Promise<void>>().mockResolvedValue(undefined);
 
   const mockRepositories = {
     authentication: createMockAuthRepository(),
@@ -135,6 +138,10 @@ export function setupDependencies(): MockDependencies {
 
   const mockJWTValidator = {
     validateToken: vi.fn(),
+  };
+
+  const mockJWTService = {
+    decodeToken: vi.fn(),
   };
 
   const mockAuthenticationService = {
@@ -195,6 +202,7 @@ export function setupDependencies(): MockDependencies {
   container.registerInstance(DI_TOKENS.Logger, mockLogger);
   container.registerInstance(DI_TOKENS.AuthAdapter, mockAuthAdapter);
   container.registerInstance(DI_TOKENS.JWTValidator, mockJWTValidator);
+  container.registerInstance(DI_TOKENS.JwtService, mockJWTService);
 
   return {
     mockEventBus,
@@ -210,6 +218,7 @@ export function setupDependencies(): MockDependencies {
     mockDataAccessService,
     mockApiLogService,
     mockAPIAccessControlUseCase,
+    mockJWTService,
   };
 }
 

@@ -6,6 +6,7 @@
 export { DI_TOKENS, LifecycleScope, createToken } from './tokens';
 export type { DIToken } from './tokens';
 export { setupDI, setupTestDI } from './container';
+export { createTestContainer, MockFactory, DITestUtils } from './test-container';
 export {
   // Lifecycle decorators
   Injectable,

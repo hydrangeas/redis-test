@@ -150,7 +150,7 @@ describe('LoggingService Integration', () => {
 
     it('should handle invalid parameters', async () => {
       mockDependencies.mockApiLogService.logAPIAccess.mockResolvedValue(
-        Result.fail(new DomainError('INVALID_USER_ID_FORMAT', 'Invalid user ID', 'VALIDATION'))
+        Result.fail(new DomainError('INVALID_USER_ID_FORMAT', 'Invalid user ID', 'VALIDATION', {}))
       );
       
       const result = await service.logAPIAccess(
@@ -271,10 +271,7 @@ describe('LoggingService Integration', () => {
       const endDate = new Date('2024-01-31');
 
       mockDependencies.mockRepositories.apiLog.countByStatusCode.mockResolvedValue(
-        Result.fail({
-          code: 'DATABASE_ERROR',
-          message: 'Failed to retrieve statistics',
-        }),
+        Result.fail(new DomainError('DATABASE_ERROR', 'Failed to retrieve statistics', 'INTERNAL', {})),
       );
 
       const result = await service.getAPIStatistics(startDate, endDate);

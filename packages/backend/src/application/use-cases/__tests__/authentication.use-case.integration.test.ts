@@ -153,10 +153,13 @@ describe('AuthenticationUseCase Integration', () => {
         },
       });
 
-      // Mock JWT decode
-      mockDependencies.mockJWTValidator.decodeToken = vi.fn().mockReturnValue({
-        jti: 'new-token-id',
-      });
+      // Use the JWT service mock for decoding
+      mockDependencies.mockJWTService = {
+        decodeToken: vi.fn().mockReturnValue({
+          jti: 'new-token-id',
+        }),
+      };
+      container.registerInstance(DI_TOKENS.JwtService, mockDependencies.mockJWTService);
 
       const result = await useCase.refreshToken(mockRefreshToken);
 
@@ -246,7 +249,7 @@ describe('AuthenticationUseCase Integration', () => {
         userTierResult.getValue(),
       );
 
-      mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
+      mockDependencies.mockAuthenticationService.validateAccessToken.mockReturnValue(
         Result.ok(authenticatedUser),
       );
 
@@ -257,7 +260,7 @@ describe('AuthenticationUseCase Integration', () => {
       // Verify all layers were involved
       expect(mockDependencies.mockJWTValidator.validateToken).toHaveBeenCalled();
       expect(mockDependencies.mockAuthAdapter.verifyToken).toHaveBeenCalled();
-      expect(mockDependencies.mockAuthenticationService.validateToken).toHaveBeenCalled();
+      expect(mockDependencies.mockAuthenticationService.validateAccessToken).toHaveBeenCalled();
     });
 
     it('should handle errors gracefully at any layer', async () => {
@@ -277,7 +280,7 @@ describe('AuthenticationUseCase Integration', () => {
       expect(result.error.code).toBe('INTERNAL_ERROR');
 
       // Verify no data was processed further
-      expect(mockDependencies.mockAuthenticationService.validateToken).not.toHaveBeenCalled();
+      expect(mockDependencies.mockAuthenticationService.validateAccessToken).not.toHaveBeenCalled();
     });
   });
 });

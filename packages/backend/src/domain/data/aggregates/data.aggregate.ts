@@ -133,18 +133,16 @@ export class DataAggregate extends AggregateRoot<DataAggregateProps> {
   /**
    * データアクセスを処理
    */
-  async processDataAccess(
+  processDataAccess(
     userId: string,
     path: DataPath,
     userTier: string,
     requestTime: Date = new Date(),
-  ): Promise<
-    Result<{
-      resource: OpenDataResource;
-      cacheHit: boolean;
-      cacheKey: string;
-    }>
-  > {
+  ): Result<{
+    resource: OpenDataResource;
+    cacheHit: boolean;
+    cacheKey: string;
+  }> {
     // リソースを検索
     const resourceResult = this.findResourceByPath(path);
     if (resourceResult.isFailure) {
