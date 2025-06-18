@@ -17,8 +17,6 @@ import { Result } from '@/domain/errors/result';
 
 import { DI_TOKENS } from './tokens';
 import { OpenDataResourceFactory } from '../../domain/data/factories/open-data-resource.factory';
-import { APILogFactory } from '../../domain/log/factories/api-log.factory';
-import { AuthLogFactory } from '../../domain/log/factories/auth-log.factory';
 import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
 import { JWTValidatorService } from '../auth/services/jwt-validator.service';
 import { JWTService } from '../auth/services/jwt.service';
@@ -31,6 +29,8 @@ import { SupabaseUserRepository } from '../repositories/auth/supabase-user.repos
 import { SupabaseAPILogRepository } from '../repositories/log/supabase-api-log.repository';
 import { SupabaseAuthLogRepository } from '../repositories/log/supabase-auth-log.repository';
 import { OpenDataRepository } from '../repositories/open-data.repository';
+import { DatabaseSeeder } from '../seeders/database-seeder';
+import { ApiLogService } from '../services/api-log.service';
 import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
 import { SecureFileAccessService } from '../services/secure-file-access.service';
 import { SecurityAuditService } from '../services/security-audit.service';
@@ -472,13 +472,11 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
 
   // DatabaseSeederの登録
-  const { DatabaseSeeder } = require('../seeders/database-seeder');
   container.register('DatabaseSeeder', {
     useClass: DatabaseSeeder,
   });
 
   // ApiLogServiceの登録
-  const { ApiLogService } = require('../services/api-log.service');
   container.register(DI_TOKENS.ApiLogService, {
     useClass: ApiLogService,
   });

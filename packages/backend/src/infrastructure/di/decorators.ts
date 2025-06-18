@@ -100,7 +100,7 @@ export class DIMetadata {
    * Get all registered interfaces for a class
    */
   static getInterfaces(target: unknown): { token: symbol; useClass?: unknown; useValue?: unknown }[] {
-    return Reflect.getMetadata('di:interfaces', target) || [];
+    return (Reflect.getMetadata('di:interfaces', target) || []) as { token: symbol; useClass?: unknown; useValue?: unknown }[];
   }
 
   /**
@@ -116,9 +116,9 @@ export class DIMetadata {
  * Decorator to mark a method as an initializer
  * Methods marked with this decorator will be called after injection
  */
-export function PostConstruct() {
-  return (target: object, propertyKey: string, _descriptor: PropertyDescriptor) => {
-    const existingMethods = Reflect.getMetadata('di:postconstruct', target.constructor) || [];
+export function PostConstruct(): MethodDecorator {
+  return (target: object, propertyKey: string | symbol, _descriptor: PropertyDescriptor): void => {
+    const existingMethods = (Reflect.getMetadata('di:postconstruct', target.constructor) as Array<string | symbol> | undefined) || [];
     existingMethods.push(propertyKey);
     Reflect.defineMetadata('di:postconstruct', existingMethods, target.constructor);
   };
@@ -128,10 +128,10 @@ export function PostConstruct() {
  * Execute post-construction methods
  */
 export async function executePostConstruct(instance: object): Promise<void> {
-  const methods = Reflect.getMetadata('di:postconstruct', instance.constructor) || [];
+  const methods = (Reflect.getMetadata('di:postconstruct', instance.constructor) as Array<string | symbol> | undefined) || [];
   for (const method of methods) {
-    if (typeof (instance as Record<string, any>)[method] === 'function') {
-      await (instance as Record<string, any>)[method]();
+    if (typeof (instance as Record<string | symbol, unknown>)[method] === 'function') {
+      await (instance as Record<string | symbol, (...args: unknown[]) => unknown>)[method]();
     }
   }
 }
@@ -144,7 +144,7 @@ export function LazyInject(_token: symbol): PropertyDecorator {
   return (target: object, propertyKey: string | symbol) => {
     let instance: unknown;
 
-    const getter = () => {
+    const getter = (): unknown => {
       if (!instance) {
         // This would need access to the container
         // For now, it's a placeholder
@@ -153,7 +153,7 @@ export function LazyInject(_token: symbol): PropertyDecorator {
       return instance;
     };
 
-    const setter = (value: unknown) => {
+    const setter = (value: unknown): void => {
       instance = value;
     };
 

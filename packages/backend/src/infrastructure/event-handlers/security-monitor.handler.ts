@@ -99,7 +99,7 @@ export class SecurityMonitorHandler
         });
 
         // IPブロックの推奨
-        await this.recommendIPBlock(event.ipAddress);
+        this.recommendIPBlock(event.ipAddress);
       }
     } catch (error) {
       this.logger.error(
@@ -162,7 +162,7 @@ export class SecurityMonitorHandler
     return logs.filter((log) => log.event.type === EventType.LOGIN_FAILED).length;
   }
 
-  private async recommendIPBlock(ipAddress: string): Promise<void> {
+  private recommendIPBlock(ipAddress: string): void {
     // 実装: IPブロックリストへの追加推奨
     this.logger.warn(
       {

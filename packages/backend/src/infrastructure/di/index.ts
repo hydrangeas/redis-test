@@ -47,19 +47,21 @@ export {
 } from './decorators';
 
 // Re-export TSyringe utilities for convenience
+import { container } from 'tsyringe';
+
+import { setupDI } from './container';
+
 import type { ValueProvider } from 'tsyringe';
 
-import { container } from 'tsyringe';
-export { container };
-
 // Import setupDI for local use
-import { setupDI } from './container';
+
+export { container };
 
 /**
  * Initialize the DI container for the application
  */
-export async function initializeContainer(): Promise<void> {
-  await setupDI();
+export function initializeContainer(): void {
+  setupDI();
 }
 
 /**

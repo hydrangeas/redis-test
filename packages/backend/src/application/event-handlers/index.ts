@@ -10,7 +10,7 @@ export * from './data';
 // Event Handler Registration
 
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { EventLogger } from '@/infrastructure/logging';
+import { EventLogger } from '@/infrastructure/logging/event-logger';
 
 import { APIAccessRequestedHandler } from './api/api-access-requested.handler';
 import { RateLimitExceededHandler } from './api/rate-limit-exceeded.handler';
