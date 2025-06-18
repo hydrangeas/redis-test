@@ -10,14 +10,28 @@ import type { FastifyInstance } from 'fastify';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+interface OpenAPISpec {
+  openapi: string;
+  info?: {
+    title?: string;
+    version?: string;
+    description?: string;
+  };
+  servers?: Array<{
+    url: string;
+    description: string;
+  }>;
+  paths: Record<string, unknown>;
+}
+
 export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
   // OpenAPI仕様書の読み込み
-  let openapiSpec: Record<string, unknown>;
+  let openapiSpec: OpenAPISpec;
 
   try {
     const openapiPath = join(__dirname, '../openapi/openapi.yaml');
     const openapiContent = readFileSync(openapiPath, 'utf8');
-    openapiSpec = yaml.load(openapiContent) as Record<string, unknown>;
+    openapiSpec = yaml.load(openapiContent) as OpenAPISpec;
   } catch (error) {
     fastify.log.error('Failed to load OpenAPI specification:', error);
     // フォールバック仕様
@@ -39,7 +53,7 @@ export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
       url: `${baseUrl}/api/v1`,
       description: 'Current environment',
     },
-    ...((openapiSpec as any).servers || []),
+    ...(openapiSpec.servers || []),
   ];
 
   // Scalar UIのHTMLを生成
@@ -47,7 +61,7 @@ export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>${(openapiSpec as any).info?.title || 'API'} - API Documentation</title>
+  <title>${openapiSpec.info?.title || 'API'} - API Documentation</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>

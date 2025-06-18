@@ -174,7 +174,7 @@ describe('LoggingService Integration', () => {
       const mockLogs = [
         {
           userId: { value: userId },
-          event: AuthEvent.LOGIN_SUCCESS,
+          event: EventType.LOGIN_SUCCESS,
           timestamp: new Date(),
           metadata: {},
         },

@@ -250,6 +250,8 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
   );
+  
+  return Promise.resolve();
 };
 
 // ヘルスチェックの実行

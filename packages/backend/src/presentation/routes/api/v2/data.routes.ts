@@ -20,7 +20,7 @@ const DataQueryParams = Type.Object({
 
 type DataQueryParamsType = Static<typeof DataQueryParams>;
 
-const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
+const dataRoutesV2: FastifyPluginAsync = (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );
@@ -65,7 +65,8 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
     try {
       const user = _request.user as AuthenticatedUser;
-      const dataPath = (_request.params as any)['*'];
+      const params = _request.params as Record<string, string>;
+      const dataPath = params['*'];
       const { filter, fields, sort, limit, offset } = _request.query as DataQueryParamsType;
 
       // v2の実装（フィルタリング機能追加）
@@ -99,11 +100,12 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
 
       // フィールド選択
       if (fields && fields.length > 0 && Array.isArray(processedContent)) {
-        processedContent = processedContent.map((item: any) => {
+        processedContent = processedContent.map((item) => {
           const filtered: Record<string, unknown> = {};
+          const itemRecord = item as Record<string, unknown>;
           fields.forEach((field: string) => {
-            if (field in item) {
-              filtered[field] = item[field];
+            if (field in itemRecord) {
+              filtered[field] = itemRecord[field];
             }
           });
           return filtered;
@@ -113,11 +115,13 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
       // ソート（簡易実装）
       if (sort && Array.isArray(processedContent)) {
         const [field, order] = sort.split(':');
-        processedContent.sort((a: any, b: any) => {
+        processedContent.sort((a, b) => {
+          const aRecord = a as Record<string, unknown>;
+          const bRecord = b as Record<string, unknown>;
           if (order === 'desc') {
-            return (b as any)[field] > (a as any)[field] ? 1 : -1;
+            return bRecord[field] > aRecord[field] ? 1 : -1;
           }
-          return (a as any)[field] > (b as any)[field] ? 1 : -1;
+          return aRecord[field] > bRecord[field] ? 1 : -1;
         });
       }
 
@@ -158,6 +162,7 @@ const dataRoutesV2: FastifyPluginAsync = async (fastify) => {
       return _reply.code(500).send(problemDetails);
     }
   });
+  return Promise.resolve();
 };
 
 export default dataRoutesV2;

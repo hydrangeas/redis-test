@@ -29,7 +29,7 @@ const ErrorResponse = Type.Object({
 
 type LogoutResponseType = Static<typeof LogoutResponse>;
 
-const logoutRoute: FastifyPluginAsync = async (fastify) => {
+const logoutRoute: FastifyPluginAsync = (fastify) => {
   const authUseCase = container.resolve<AuthenticationUseCase>(DI_TOKENS.AuthenticationUseCase);
 
   fastify.post<{
@@ -158,6 +158,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
       }
     },
   );
+  return Promise.resolve();
 };
 
 export default logoutRoute;

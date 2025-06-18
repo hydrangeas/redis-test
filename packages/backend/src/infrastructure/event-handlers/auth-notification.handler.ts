@@ -96,15 +96,20 @@ export class AuthNotificationHandler {
     private readonly logger: ILogger,
   ) {}
 
-  async handle(event: IEvent): Promise<void> {
+  handle(event: IEvent): Promise<void> {
     // Stub implementation for tests
     try {
-      if (await this.isNewDevice(event)) {
-        await this.notificationService.sendNewDeviceAlert({
+      if (this.isNewDevice(event)) {
+        this.notificationService.sendNewDeviceAlert({
           userId: event.userId,
           device: event.userAgent || 'Unknown device',
           location: 'Unknown location',
           timestamp: event.occurredAt,
+        }).catch((err) => {
+          this.logger.error({
+            error: err instanceof Error ? err.message : String(err),
+            userId: event.userId,
+          }, 'Failed to send new device alert');
         });
         
         this.logger.info({
@@ -113,11 +118,16 @@ export class AuthNotificationHandler {
         }, 'New device login alert sent');
       }
 
-      if (await this.isSuspiciousLogin(event)) {
-        await this.notificationService.sendSecurityAlert({
+      if (this.isSuspiciousLogin(event)) {
+        this.notificationService.sendSecurityAlert({
           userId: event.userId,
           reason: 'Suspicious login pattern detected',
           details: event.getData(),
+        }).catch((err) => {
+          this.logger.warn({
+            error: err instanceof Error ? err.message : String(err),
+            userId: event.userId,
+          }, 'Failed to send suspicious login alert');
         });
         
         this.logger.warn({
@@ -131,13 +141,14 @@ export class AuthNotificationHandler {
         event: event.getMetadata(),
       }, 'Failed to send authentication notification');
     }
+    return Promise.resolve();
   }
 
-  private async isNewDevice(_event: IEvent): Promise<boolean> {
+  private isNewDevice(_event: IEvent): boolean {
     return false;
   }
 
-  private async isSuspiciousLogin(_event: IEvent): Promise<boolean> {
+  private isSuspiciousLogin(_event: IEvent): boolean {
     return false;
   }
 }

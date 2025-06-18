@@ -36,7 +36,7 @@ const ErrorResponse = Type.Object({
 
 type DataResponseType = Static<typeof DataResponse>;
 
-const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
+const dataAccessRoute: FastifyPluginAsync = (fastify) => {
   const dataAccessUseCase = container.resolve<DataAccessUseCase>(DI_TOKENS.DataAccessUseCase);
 
   // ワイルドカードルートでデータアクセス
@@ -202,6 +202,7 @@ const dataAccessRoute: FastifyPluginAsync = async (fastify) => {
       }
     },
   );
+  return Promise.resolve();
 };
 
 export default dataAccessRoute;

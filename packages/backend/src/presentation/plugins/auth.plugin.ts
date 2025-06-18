@@ -1,11 +1,11 @@
 import fp from 'fastify-plugin';
 import { container } from 'tsyringe';
 
-import { metrics } from '@/plugins/monitoring';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { metrics } from '@/plugins/monitoring';
 
 import type { IJWTService } from '@/application/interfaces/jwt.service.interface';
 import type { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
@@ -27,7 +27,7 @@ declare module 'fastify' {
   }
 }
 
-const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, options) => {
+const authPlugin: FastifyPluginAsync<AuthPluginOptions> = (fastify, options) => {
   const excludePaths = options.excludePaths || [];
 
   const authenticate = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {

@@ -187,5 +187,5 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   // 404ハンドラーはerror-handlerプラグインで設定されるためここでは設定しない
 
-  return server as any;
+  return server;
 }

@@ -38,8 +38,8 @@ export async function errorHandler(
   void reply.header('Content-Type', 'application/problem+json');
 
   // Fastifyバリデーションエラー
-  if ('validation' in error && error.validation) {
-    const problemDetails = mapValidationError(error.validation as any, request.url);
+  if ('validation' in error && error.validation && Array.isArray(error.validation)) {
+    const problemDetails = mapValidationError(error.validation, request.url);
     return reply.status(problemDetails.status).send(problemDetails);
   }
 

@@ -29,7 +29,7 @@ declare module 'fastify' {
   }
 }
 
-const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fastify, options) => {
+const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = (fastify, options) => {
   const rateLimitService = container.resolve<IRateLimitService>(DI_TOKENS.RateLimitService);
 
   const defaultExcludePaths = [

@@ -9,7 +9,7 @@ import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrie
 import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import type { FastifyPluginAsync } from 'fastify';
 
-const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
+const dataRoutesV1: FastifyPluginAsync = (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );
@@ -48,7 +48,8 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
 
     try {
       const user = _request.user as AuthenticatedUser;
-      const dataPath = (_request.params as any)['*'];
+      const params = _request.params as Record<string, string>;
+      const dataPath = params['*'];
 
       // v1の実装（基本機能のみ）
       const result = await dataRetrievalUseCase.retrieveData(dataPath, user);
@@ -92,6 +93,7 @@ const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
       return _reply.code(500).send(problemDetails);
     }
   });
+  return Promise.resolve();
 };
 
 export default dataRoutesV1;

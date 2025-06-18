@@ -62,7 +62,7 @@ describe('LogLevel', () => {
       invalidInputs.forEach((input) => {
         const result = LogLevel.fromString(input);
         expect(result.isFailure).toBe(true);
-        expect(result.error).toBe(`無効なログレベル: ${input}`);
+        expect(result.getError().message).toBe(`無効なログレベル: ${input}`);
       });
     });
   });
