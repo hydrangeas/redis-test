@@ -99,7 +99,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     }
   }
 
-  async save(aggregate: APIAggregate): Promise<Result<void>> {
+  save(aggregate: APIAggregate): Result<void> {
     try {
       this.aggregate = aggregate;
       return Result.ok(undefined);
@@ -114,7 +114,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     }
   }
 
-  async getAggregate(): Promise<Result<APIAggregate>> {
+  getAggregate(): Result<APIAggregate> {
     if (!this.aggregate) {
       return Result.fail(DomainError.notFound('AGGREGATE_NOT_FOUND', 'API aggregate not found'));
     }
@@ -122,18 +122,18 @@ export class InMemoryAPIRepository implements IAPIRepository {
     return Result.ok(this.aggregate);
   }
 
-  async findByEndpointId(
+  findByEndpointId(
     _endpointId: EndpointId,
-  ): Promise<Result<APIAggregate | null>> {
+  ): Result<APIAggregate | null> {
     // APIEndpointはvalue objectになりidを持たないため、この検索方法は使用できません
     // 常にnullを返します
     return Result.ok(null);
   }
 
-  async findByPathAndMethod(
+  findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
-  ): Promise<Result<APIAggregate | null>> {
+  ): Result<APIAggregate | null> {
     if (!this.aggregate) {
       return Result.ok(null);
     }
@@ -146,7 +146,7 @@ export class InMemoryAPIRepository implements IAPIRepository {
     return Result.ok(this.aggregate);
   }
 
-  async exists(): Promise<Result<boolean>> {
+  exists(): Result<boolean> {
     return Result.ok(this.aggregate !== null);
   }
 

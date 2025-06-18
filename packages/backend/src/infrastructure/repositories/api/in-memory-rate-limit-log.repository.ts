@@ -16,7 +16,7 @@ import { Result } from '@/domain/errors/result';
 export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
   private logs: Map<string, RateLimitLog> = new Map();
 
-  async save(log: RateLimitLog): Promise<Result<void>> {
+  save(log: RateLimitLog): Result<void> {
     try {
       this.logs.set(log.id.value, log);
       return Result.ok(undefined);
@@ -31,7 +31,7 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async saveMany(logs: RateLimitLog[]): Promise<Result<void>> {
+  saveMany(logs: RateLimitLog[]): Result<void> {
     try {
       for (const log of logs) {
         this.logs.set(log.id.value, log);
@@ -48,11 +48,11 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async findByUserAndEndpoint(
+  findByUserAndEndpoint(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[]>> {
+  ): Result<RateLimitLog[]> {
     try {
       const now = new Date();
       const windowStart = new Date(now.getTime() - window.windowMilliseconds);
@@ -78,10 +78,10 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async findByUser(
+  findByUser(
     userId: UserId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[]>> {
+  ): Result<RateLimitLog[]> {
     try {
       let matchingLogs = Array.from(this.logs.values()).filter((log) => log.userId === userId.value);
 
@@ -105,10 +105,10 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async findByEndpoint(
+  findByEndpoint(
     endpointId: EndpointId,
     window?: RateLimitWindow,
-  ): Promise<Result<RateLimitLog[]>> {
+  ): Result<RateLimitLog[]> {
     try {
       let matchingLogs = Array.from(this.logs.values()).filter(
         (log) => log.endpointId === endpointId.value,
@@ -134,7 +134,7 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async deleteOldLogs(beforeDate: Date): Promise<Result<number>> {
+  deleteOldLogs(beforeDate: Date): Result<number> {
     try {
       const initialSize = this.logs.size;
 
@@ -158,11 +158,11 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
     }
   }
 
-  async countRequests(
+  countRequests(
     userId: UserId,
     endpointId: EndpointId,
     window: RateLimitWindow,
-  ): Promise<Result<number>> {
+  ): Result<number> {
     try {
       const now = new Date();
       const windowStart = new Date(now.getTime() - window.windowMilliseconds);

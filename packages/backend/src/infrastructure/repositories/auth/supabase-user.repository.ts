@@ -12,6 +12,20 @@ import { Result } from '@/domain/errors/result';
 import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
+interface SupabaseUserData {
+  id: string;
+  email?: string | null;
+  app_metadata?: {
+    tier?: string;
+    [key: string]: unknown;
+  };
+  created_at?: string;
+  updated_at?: string;
+  last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+  user_metadata?: Record<string, unknown>;
+}
+
 /**
  * Supabaseユーザーリポジトリ実装
  *
@@ -42,7 +56,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       // Supabaseユーザーからドメインモデルへ変換
-      const user = await this.mapToDomainUser(supabaseUser);
+      const user = this.mapToDomainUser(supabaseUser as SupabaseUserData);
 
       if (!user) {
         return Result.fail(
@@ -87,7 +101,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       // Supabaseユーザーからドメインモデルへ変換
-      const user = await this.mapToDomainUser(supabaseUser);
+      const user = this.mapToDomainUser(supabaseUser as SupabaseUserData);
 
       if (!user) {
         return Result.fail(
@@ -249,11 +263,11 @@ export class SupabaseUserRepository implements IUserRepository {
   /**
    * SupabaseユーザーからドメインUserへのマッピング
    */
-  private async mapToDomainUser(supabaseUser: any): Promise<User | null> {
+  private mapToDomainUser(supabaseUser: SupabaseUserData): User | null {
     try {
       this.logger.debug(
         {
-          supabaseUser,
+          supabaseUser: supabaseUser as unknown,
         },
         'Mapping Supabase user to domain model',
       );

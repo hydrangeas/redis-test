@@ -177,7 +177,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       // デフォルトレート制限を取得
       const { data: rateLimits, error: rateLimitError } = await this.supabase
         .from('default_rate_limits')
-        .select('*');
+        .select('*') as { data: RateLimitRecord[] | null; error: Error | null };
 
       if (rateLimitError) {
         this.logger.error({ error: rateLimitError }, 'Failed to fetch rate limits');
@@ -213,7 +213,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       const { data: endpoints, error: endpointError } = await this.supabase
         .from('api_endpoints')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }) as { data: EndpointRecord[] | null; error: Error | null };
 
       if (endpointError) {
         this.logger.error({ error: endpointError }, 'Failed to fetch endpoints');

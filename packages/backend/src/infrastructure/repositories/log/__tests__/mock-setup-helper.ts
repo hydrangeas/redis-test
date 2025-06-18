@@ -1,7 +1,21 @@
 import { vi } from 'vitest';
 
-export function createSupabaseMock() {
-  const methods: Record<string, any> = {
+interface SupabaseMockMethods {
+  from: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  select: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+  gte: ReturnType<typeof vi.fn>;
+  lte: ReturnType<typeof vi.fn>;
+  lt: ReturnType<typeof vi.fn>;
+  order: ReturnType<typeof vi.fn>;
+  limit: ReturnType<typeof vi.fn>;
+  single: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+}
+
+export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi.fn> }; methods: SupabaseMockMethods } {
+  const methods: SupabaseMockMethods = {
     from: vi.fn(),
     insert: vi.fn(),
     select: vi.fn(),
@@ -16,17 +30,17 @@ export function createSupabaseMock() {
   };
 
   // Create a chainable mock
-  const chainableObject: Record<string, any> = Object.create(null);
+  const chainableObject = Object.create(null) as SupabaseMockMethods;
 
   // Add all methods to the chainable object
   Object.keys(methods).forEach((key) => {
-    chainableObject[key] = methods[key];
+    (chainableObject as Record<string, unknown>)[key] = methods[key as keyof SupabaseMockMethods];
     // Make each method return the chainable object by default
-    methods[key].mockReturnValue(chainableObject);
+    (methods[key as keyof SupabaseMockMethods]).mockReturnValue(chainableObject);
   });
 
   // Special handling for select with options
-  methods.select.mockImplementation((_fields?: string, _options?: any) => {
+  methods.select.mockImplementation((_fields?: string, _options?: { count?: 'exact'; head?: boolean }) => {
     // Still return the chainable object
     return chainableObject;
   });

@@ -119,14 +119,14 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         .eq('endpoint_id', endpointId.value)
         .gte('requested_at', windowStart.toISOString())
         .lte('requested_at', now.toISOString())
-        .order('requested_at', { ascending: false });
+        .order('requested_at', { ascending: false }) as { data: RateLimitLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find rate limit logs');
         return Result.fail(DomainError.internal('FIND_FAILED', 'Failed to find rate limit logs'));
       }
 
-      const logs = await this.recordsToLogs(data || []);
+      const logs = this.recordsToLogs(data || []);
       return Result.ok(logs);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding rate limit logs');
@@ -155,7 +155,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
           .lte('requested_at', now.toISOString());
       }
 
-      const { data, error } = await query.order('requested_at', { ascending: false });
+      const { data, error } = await query.order('requested_at', { ascending: false }) as { data: RateLimitLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find user rate limit logs');
@@ -164,7 +164,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      const logs = await this.recordsToLogs(data || []);
+      const logs = this.recordsToLogs(data || []);
       return Result.ok(logs);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding user logs');
@@ -196,7 +196,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
           .lte('requested_at', now.toISOString());
       }
 
-      const { data, error } = await query.order('requested_at', { ascending: false });
+      const { data, error } = await query.order('requested_at', { ascending: false }) as { data: RateLimitLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find endpoint rate limit logs');
@@ -205,7 +205,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      const logs = await this.recordsToLogs(data || []);
+      const logs = this.recordsToLogs(data || []);
       return Result.ok(logs);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding endpoint logs');
@@ -284,7 +284,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
         return Result.fail(DomainError.internal('COUNT_FAILED', 'Failed to count requests'));
       }
 
-      const totalCount = (data || []).reduce((sum, record) => sum + record.request_count, 0);
+      const totalCount = (data || []).reduce((sum, record: { request_count: number }) => sum + record.request_count, 0);
 
       return Result.ok(totalCount);
     } catch (error) {
@@ -302,7 +302,7 @@ export class SupabaseRateLimitLogRepository implements IRateLimitLogRepository {
   /**
    * レコードをドメインオブジェクトに変換
    */
-  private async recordsToLogs(records: RateLimitLogRecord[]): Promise<RateLimitLog[]> {
+  private recordsToLogs(records: RateLimitLogRecord[]): RateLimitLog[] {
     const logs: RateLimitLog[] = [];
 
     for (const record of records) {
