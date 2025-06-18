@@ -124,7 +124,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * IDからデータリソースを検索
    */
-  findById(id: ResourceId): Result<OpenDataResource> {
+  async findById(id: ResourceId): Promise<Result<OpenDataResource>> {
     try {
       // IDからパスを逆引き（簡易実装）
       // 実際の実装では、IDとパスのマッピングを別途管理する必要がある
@@ -133,23 +133,27 @@ export class OpenDataRepository implements IOpenDataRepository {
       );
 
       if (cachedEntry) {
-        return Result.ok(cachedEntry.resource);
+        return Promise.resolve(Result.ok(cachedEntry.resource));
       }
 
-      return Result.fail(
-        new DomainError(
-          'RESOURCE_NOT_FOUND',
-          `Resource not found with id: ${id.value}`,
-          ErrorType.NOT_FOUND,
+      return Promise.resolve(
+        Result.fail(
+          new DomainError(
+            'RESOURCE_NOT_FOUND',
+            `Resource not found with id: ${id.value}`,
+            ErrorType.NOT_FOUND,
+          ),
         ),
       );
     } catch (error) {
       this.logger.error({ error, id: id.value }, 'Failed to find resource by id');
 
-      return Result.fail(
-        new DomainError('REPOSITORY_ERROR', 'Failed to find resource', ErrorType.INTERNAL, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }),
+      return Promise.resolve(
+        Result.fail(
+          new DomainError('REPOSITORY_ERROR', 'Failed to find resource', ErrorType.INTERNAL, {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+        ),
       );
     }
   }
@@ -174,7 +178,7 @@ export class OpenDataRepository implements IOpenDataRepository {
       if (resource.metadata.contentType === 'application/json') {
         try {
           const jsonContent = JSON.parse(content) as unknown;
-          this.cache(resource, jsonContent);
+          await this.cache(resource, jsonContent);
           return Result.ok(jsonContent);
         } catch (parseError) {
           return Result.fail(
@@ -188,7 +192,7 @@ export class OpenDataRepository implements IOpenDataRepository {
         }
       }
 
-      this.cache(resource, content);
+      await this.cache(resource, content);
       return Result.ok(content);
     } catch (error) {
       this.logger.error({ error, path: resource.path.value }, 'Failed to get resource content');
@@ -273,7 +277,7 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * リソースのメタデータを更新
    */
-  updateMetadata(resource: OpenDataResource): Result<void> {
+  async updateMetadata(resource: OpenDataResource): Promise<Result<void>> {
     try {
       // ファイルシステムベースの実装では、メタデータは自動的に更新される
       // この実装では、キャッシュの更新のみ行う
@@ -285,14 +289,16 @@ export class OpenDataRepository implements IOpenDataRepository {
         this.logger.debug({ path: resource.path.value }, 'Updated cached resource metadata');
       }
 
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
       this.logger.error({ error, path: resource.path.value }, 'Failed to update metadata');
 
-      return Result.fail(
-        new DomainError('METADATA_UPDATE_ERROR', 'Failed to update metadata', ErrorType.INTERNAL, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }),
+      return Promise.resolve(
+        Result.fail(
+          new DomainError('METADATA_UPDATE_ERROR', 'Failed to update metadata', ErrorType.INTERNAL, {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+        ),
       );
     }
   }
@@ -300,12 +306,12 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * キャッシュされたリソースを取得
    */
-  getCached(dataPath: DataPath): OpenDataResource | null {
+  async getCached(dataPath: DataPath): Promise<OpenDataResource | null> {
     const cacheKey = this.getCacheKey(dataPath);
     const cached = this.cacheStore.get(cacheKey);
 
     if (!cached) {
-      return null;
+      return Promise.resolve(null);
     }
 
     // キャッシュ有効期限チェック
@@ -314,16 +320,16 @@ export class OpenDataRepository implements IOpenDataRepository {
 
     if (now > expirationTime) {
       this.cacheStore.delete(cacheKey);
-      return null;
+      return Promise.resolve(null);
     }
 
-    return cached.resource;
+    return Promise.resolve(cached.resource);
   }
 
   /**
    * リソースをキャッシュに保存
    */
-  cache(resource: OpenDataResource, content: unknown): void {
+  async cache(resource: OpenDataResource, content: unknown): Promise<void> {
     const cacheKey = this.getCacheKey(resource.path);
 
     this.cacheStore.set(cacheKey, {
@@ -341,12 +347,14 @@ export class OpenDataRepository implements IOpenDataRepository {
       )[0][0];
       this.cacheStore.delete(oldestKey);
     }
+
+    return Promise.resolve();
   }
 
   /**
    * キャッシュをクリア
    */
-  clearCache(dataPath?: DataPath): void {
+  async clearCache(dataPath?: DataPath): Promise<void> {
     if (dataPath) {
       const cacheKey = this.getCacheKey(dataPath);
       this.cacheStore.delete(cacheKey);
@@ -355,6 +363,8 @@ export class OpenDataRepository implements IOpenDataRepository {
       this.cacheStore.clear();
       this.logger.info('Cleared all cache');
     }
+
+    return Promise.resolve();
   }
 
   /**

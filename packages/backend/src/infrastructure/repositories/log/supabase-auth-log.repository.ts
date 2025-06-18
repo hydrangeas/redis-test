@@ -57,7 +57,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         result: logEntry.result,
         error_message: logEntry.errorMessage || null,
         metadata: logEntry.metadata || {},
-        session_id: logEntry.metadata?.sessionId || null,
+        session_id: (logEntry.metadata?.sessionId as string) || null,
         created_at: logEntry.timestamp.toISOString(),
       };
 
@@ -531,7 +531,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         throw new Error(`Failed to create LogId: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
       const logId = logIdResult.getValue();
-      const event = new AuthEvent(record.event_type as EventType, record.metadata?.description);
+      const event = new AuthEvent(record.event_type as EventType, record.metadata?.description as string | undefined);
       const providerResult = Provider.create(record.provider || 'unknown');
       if (providerResult.isFailure) {
         const error = providerResult.getError();
@@ -596,7 +596,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           timestamp: new Date(record.created_at),
           result: record.result as AuthResult,
           errorMessage: record.error_message || undefined,
-          metadata: record.metadata,
+          metadata: record.metadata || undefined,
         },
         logId,
       );

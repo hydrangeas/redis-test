@@ -3,7 +3,7 @@
  * These decorators provide a more convenient way to inject dependencies
  */
 
-import { inject, injectable, singleton, scoped } from 'tsyringe';
+import { inject, injectable, singleton, scoped, Lifecycle } from 'tsyringe';
 
 import { DI_TOKENS } from './tokens';
 

@@ -103,7 +103,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         .eq('id', id.value)
         .single() as { data: APILogRecord | null; error: Error | null };
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && 'code' in error && error.code !== 'PGRST116') {
         // PGRST116 = no rows returned
         this.logger.error({ error, logId: id.value }, 'Failed to find API log by ID');
         return Result.fail(
@@ -424,7 +424,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
       const requestInfo = new RequestInfo({
         ipAddress: record.ip_address,
         userAgent: record.user_agent || 'Unknown',
-        headers: record.metadata || {},
+        headers: (record.metadata as Record<string, string>) || {},
         body: record.metadata?.requestBody || null,
       });
 
@@ -432,7 +432,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         statusCode: record.status_code,
         responseTime: record.response_time,
         size: record.response_size || 0,
-        headers: record.metadata || {},
+        headers: (record.metadata as Record<string, string>) || {},
       });
 
       const userId = record.user_id ? UserId.create(record.user_id).getValue() : undefined;

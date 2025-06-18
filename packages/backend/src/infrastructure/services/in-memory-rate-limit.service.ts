@@ -30,7 +30,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     }, 60000); // 1分ごと
   }
 
-  checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): RateLimitCheckResult {
+  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000; // ミリ秒に変換
@@ -102,7 +102,7 @@ export class InMemoryRateLimitService implements IRateLimitService {
     };
   }
 
-  recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): void {
+  async recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
     const key = this.generateKey(user, endpoint);
     const now = Date.now();
     const windowSize = user.tier.rateLimit.windowSeconds * 1000;
