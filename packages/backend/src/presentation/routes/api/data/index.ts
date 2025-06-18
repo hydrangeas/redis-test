@@ -70,7 +70,7 @@ const ListResponse = Type.Object({
 type DataPathParamsType = Static<typeof DataPathParams>;
 type ListQueryParamsType = Static<typeof ListQueryParams>;
 
-const dataRoutes: FastifyPluginAsync = async (fastify) => {
+const dataRoutes: FastifyPluginAsync = (fastify) => {
   // デバッグ: authenticateが存在するか確認
   if (process.env.NODE_ENV === 'test') {
     // console.log('fastify.authenticate exists?', typeof fastify.authenticate);

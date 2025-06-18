@@ -9,7 +9,7 @@ import type { IDataRetrievalUseCase } from '@/application/interfaces/data-retrie
 import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
-const dataRoutesV1: FastifyPluginAsync = async (fastify) => {
+const dataRoutesV1: FastifyPluginAsync = (fastify) => {
   const dataRetrievalUseCase = container.resolve<IDataRetrievalUseCase>(
     DI_TOKENS.DataRetrievalUseCase,
   );

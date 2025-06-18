@@ -54,7 +54,7 @@ const DetailedHealthStatus = Type.Intersect([
   }),
 ]);
 
-const healthRoutes: FastifyPluginAsync = async (fastify) => {
+const healthRoutes: FastifyPluginAsync = (fastify) => {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   // 基本的なヘルスチェック

@@ -1,4 +1,4 @@
-import pino from 'pino';
+import { pino, stdSerializers, stdTimeFunctions } from 'pino';
 import { container } from 'tsyringe';
 
 import { DI_TOKENS } from '../di';
@@ -38,9 +38,9 @@ export function createLoggerConfig(config: EnvConfig): LoggerOptions {
         statusCode: reply.statusCode,
         responseTime: (reply.getResponseTime as (() => number) | undefined)?.(),
       }),
-      err: pino.stdSerializers.err,
+      err: stdSerializers.err,
     },
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: stdTimeFunctions.isoTime,
     redact: {
       paths: [
         'req.headers.authorization',

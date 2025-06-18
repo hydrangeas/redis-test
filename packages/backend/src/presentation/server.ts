@@ -1,5 +1,5 @@
 import { fastifyCors } from '@fastify/cors';
-import fastifyHelmet from '@fastify/helmet';
+import { default as fastifyHelmet } from '@fastify/helmet';
 import { fastifySwagger } from '@fastify/swagger';
 import Fastify from 'fastify';
 import { container } from 'tsyringe';

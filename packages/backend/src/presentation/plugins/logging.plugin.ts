@@ -9,7 +9,7 @@ interface LoggingPluginOptions {
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
 }
 
-const loggingPlugin: FastifyPluginAsync<LoggingPluginOptions> = async (fastify, options) => {
+const loggingPlugin: FastifyPluginAsync<LoggingPluginOptions> = (fastify, options) => {
   const skipPaths = options.skipPaths || ['/health', '/metrics'];
 
   // インフラストラクチャ層のロギング設定を適用

@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import { sign, verify, decode } from 'jsonwebtoken';
 import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
 
@@ -28,7 +28,7 @@ export class JWTService implements IJWTService {
         type: 'access',
       };
 
-      const token = jwt.sign(payload, this.config.JWT_SECRET, {
+      const token = sign(payload, this.config.JWT_SECRET, {
         expiresIn: this.accessTokenExpiry,
         issuer: this.config.API_BASE_URL,
         audience: this.config.API_BASE_URL,
@@ -52,7 +52,7 @@ export class JWTService implements IJWTService {
         type: 'refresh',
       };
 
-      const token = jwt.sign(payload, this.config.JWT_SECRET, {
+      const token = sign(payload, this.config.JWT_SECRET, {
         expiresIn: this.refreshTokenExpiry,
         issuer: this.config.API_BASE_URL,
         audience: this.config.API_BASE_URL,
@@ -71,7 +71,7 @@ export class JWTService implements IJWTService {
    */
   verifyAccessToken(token: string): Promise<Result<JWTPayload>> {
     try {
-      const payload = jwt.verify(token, this.config.JWT_SECRET, {
+      const payload = verify(token, this.config.JWT_SECRET, {
         issuer: this.config.API_BASE_URL,
         audience: this.config.API_BASE_URL,
       }) as JWTPayload;
@@ -102,7 +102,7 @@ export class JWTService implements IJWTService {
    */
   verifyRefreshToken(token: string): Promise<Result<JWTPayload>> {
     try {
-      const payload = jwt.verify(token, this.config.JWT_SECRET, {
+      const payload = verify(token, this.config.JWT_SECRET, {
         issuer: this.config.API_BASE_URL,
         audience: this.config.API_BASE_URL,
       }) as JWTPayload;
@@ -133,7 +133,7 @@ export class JWTService implements IJWTService {
    */
   decodeToken(token: string): JWTPayload | null {
     try {
-      return jwt.decode(token) as JWTPayload;
+      return decode(token) as JWTPayload;
     } catch (error) {
       this.logger.error({ error }, 'Failed to decode token');
       return null;

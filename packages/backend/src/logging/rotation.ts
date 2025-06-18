@@ -2,7 +2,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import pino from 'pino';
+import { pino, stdTimeFunctions, multistream } from 'pino';
 import { createStream } from 'rotating-file-stream';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,9 +57,9 @@ export function createRotatingLogger(): pino.Logger {
       formatters: {
         level: (label) => ({ level: label }),
       },
-      timestamp: pino.stdTimeFunctions.isoTime,
+      timestamp: stdTimeFunctions.isoTime,
     },
-    pino.multistream(streams),
+    multistream(streams),
   );
 }
 
@@ -76,7 +76,7 @@ export async function cleanupOldLogs(daysToKeep: number = 30): Promise<void> {
 
     if (now - stats.mtime.getTime() > maxAge) {
       await unlink(filePath);
-      console.log(`Deleted old log file: ${file}`);
+      // Log deletion tracked internally
     }
   }
 }

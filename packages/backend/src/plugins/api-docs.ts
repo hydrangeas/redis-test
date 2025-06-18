@@ -10,7 +10,7 @@ import type { FastifyInstance } from 'fastify';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
+export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
   // OpenAPI仕様書の読み込み
   let openapiSpec: Record<string, unknown>;
 

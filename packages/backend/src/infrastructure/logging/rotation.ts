@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import pino, { type LoggerOptions } from 'pino';
+import { pino, stdTimeFunctions, stdSerializers, type LoggerOptions } from 'pino';
 // @ts-expect-error - pino-multi-stream doesn't have type declarations
 import pinoMultiStream from 'pino-multi-stream';
 import { createStream } from 'rotating-file-stream';
@@ -89,7 +89,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}): pino.
       formatters: {
         level: (label) => ({ level: label }),
       },
-      timestamp: pino.stdTimeFunctions.isoTime,
+      timestamp: stdTimeFunctions.isoTime,
       base: {
         pid: process.pid,
         hostname: process.env.HOSTNAME || 'unknown',
@@ -158,7 +158,7 @@ export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
     },
   }),
 
-  err: pino.stdSerializers.err,
+  err: stdSerializers.err,
 
   user: (user: Record<string, unknown>) => ({
     id: (user.userId as { value?: string } | undefined)?.value,

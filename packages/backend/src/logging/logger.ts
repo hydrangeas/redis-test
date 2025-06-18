@@ -1,4 +1,4 @@
-import pino from 'pino';
+import { pino, stdSerializers, stdTimeFunctions } from 'pino';
 
 import { config, isProduction } from '@/config/index.js';
 
@@ -23,7 +23,7 @@ const serializers = {
     headers: res.getHeaders(),
   }),
 
-  err: pino.stdSerializers.err,
+  err: stdSerializers.err,
 
   user: (user: { id: string; email: string; tier: string }): { id: string; email: string; tier: string } => ({
     id: user.id,
@@ -42,7 +42,7 @@ const productionOptions: pino.LoggerOptions = {
   formatters: {
     level: (label) => ({ level: label }),
   },
-  timestamp: pino.stdTimeFunctions.isoTime,
+  timestamp: stdTimeFunctions.isoTime,
   base: {
     app: config.app.name,
     version: config.app.version,
