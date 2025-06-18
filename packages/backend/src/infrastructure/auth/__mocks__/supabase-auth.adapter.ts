@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
+
 import type { IAuthAdapter, Session, AuthUser, CreateUserData, UpdateUserData } from '../interfaces/auth-adapter.interface';
 import type { TokenPayload } from '@/domain/auth/types/token-payload';
 
-
+@injectable()
 export class MockSupabaseAuthAdapter implements IAuthAdapter {
   private mockTokens = new Map<string, TokenPayload>();
   private mockSessions = new Map<string, Session>();

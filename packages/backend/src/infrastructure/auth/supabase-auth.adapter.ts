@@ -1,10 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { jwtDecode } from 'jwt-decode';
 import { Logger } from 'pino';
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 
 import { TokenPayload } from '@/domain/auth/types/token-payload';
 import { getEnvConfig } from '@/infrastructure/config/env.config';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 import { IAuthAdapter, Session, AuthUser, CreateUserData, UpdateUserData } from './interfaces/auth-adapter.interface';
 
@@ -13,7 +14,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   private readonly supabaseClient: SupabaseClient;
   private readonly adminClient: SupabaseClient;
 
-  constructor(private readonly logger: Logger) {
+  constructor(@inject(DI_TOKENS.Logger) private readonly logger: Logger) {
     const env = getEnvConfig();
 
     // 通常のクライアント（anonキー使用）
