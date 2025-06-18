@@ -97,7 +97,7 @@ export const metrics = {
   errorTotal,
 };
 
-const monitoringPlugin: FastifyPluginAsync = (fastify) => {
+const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger).child({ context: 'monitoring' });
 
   // Add hook to track request start time

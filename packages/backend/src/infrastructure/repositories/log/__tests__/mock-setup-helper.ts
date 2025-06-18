@@ -50,8 +50,8 @@ export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi
     from: vi.fn((_tableName: string) => {
       // Return the chainable object when from is called
       return chainableObject;
-    }),
+    }) as any,
   };
 
-  return { mockClient, methods: chainableObject };
+  return { mockClient: mockClient as any, methods: chainableObject };
 }

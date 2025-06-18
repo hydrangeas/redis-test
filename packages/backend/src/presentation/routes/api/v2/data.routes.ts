@@ -118,10 +118,12 @@ const dataRoutesV2: FastifyPluginAsync = (fastify) => {
         processedContent.sort((a, b) => {
           const aRecord = a as Record<string, unknown>;
           const bRecord = b as Record<string, unknown>;
+          const aVal = aRecord[field] as string | number;
+          const bVal = bRecord[field] as string | number;
           if (order === 'desc') {
-            return bRecord[field] > aRecord[field] ? 1 : -1;
+            return bVal > aVal ? 1 : -1;
           }
-          return aRecord[field] > bRecord[field] ? 1 : -1;
+          return aVal > bVal ? 1 : -1;
         });
       }
 

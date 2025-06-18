@@ -54,7 +54,7 @@ export async function errorHandler(
  * エラーハンドラープラグイン
  */
 export default fp(
-  function errorHandlerPlugin(fastify) {
+  async function errorHandlerPlugin(fastify) {
     fastify.setErrorHandler(errorHandler);
 
     // 404エラーのカスタムハンドラー

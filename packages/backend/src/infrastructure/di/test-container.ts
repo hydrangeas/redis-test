@@ -316,7 +316,7 @@ export class DITestUtils {
    */
   static spyOn<T extends Record<string, unknown>>(container: DependencyContainer, token: symbol, method: keyof T): ReturnType<typeof vi.spyOn> {
     const service = container.resolve<T>(token);
-    return vi.spyOn(service, method as string);
+    return vi.spyOn(service as any, method as any);
   }
 
   /**

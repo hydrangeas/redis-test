@@ -20,7 +20,7 @@ import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
-export async function buildServer(): Promise<FastifyInstance> {
+export async function buildServer(): Promise<FastifyInstance<any, any, any, any, TypeBoxTypeProvider>> {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   const server = Fastify({

@@ -145,7 +145,7 @@ export function toProblemDetails(
 interface ValidationError {
   instancePath?: string;
   dataPath?: string;
-  message: string;
+  message?: string;
   params?: Record<string, unknown>;
 }
 
@@ -161,7 +161,7 @@ export function mapValidationError(validation: ValidationError[], instance: stri
     instance,
     errors: validation.map((err) => ({
       field: err.instancePath || err.dataPath,
-      message: err.message,
+      message: err.message || 'Validation failed',
       params: err.params,
     })),
   };
