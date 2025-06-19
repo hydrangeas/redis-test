@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     // 認証状態の変更を監視
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_, session) => {
         if (session?.user) {
           setUser(session.user);
         } else {
@@ -42,7 +42,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       authListener.subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkUser = async () => {
@@ -52,7 +51,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       } = await supabase.auth.getUser();
       setUser(user);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error checking user:", error);
       setUser(null);
     } finally {
@@ -65,7 +63,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       await supabase.auth.signOut();
       setUser(null);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error signing out:", error);
       throw error;
     }

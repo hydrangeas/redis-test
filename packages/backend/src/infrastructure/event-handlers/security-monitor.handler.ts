@@ -1,14 +1,16 @@
 import { injectable, inject } from 'tsyringe';
-import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
-import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
+
 import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
-import { ISecurityAlertService } from '@/infrastructure/services/security-alert.service';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { EventType } from '@/domain/log/value-objects/auth-event';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { ISecurityAlertService } from '@/infrastructure/services/security-alert.service';
+
 import type { Logger } from 'pino';
 
 @injectable()
@@ -97,7 +99,7 @@ export class SecurityMonitorHandler
         });
 
         // IPブロックの推奨
-        await this.recommendIPBlock(event.ipAddress);
+        this.recommendIPBlock(event.ipAddress);
       }
     } catch (error) {
       this.logger.error(
@@ -160,7 +162,7 @@ export class SecurityMonitorHandler
     return logs.filter((log) => log.event.type === EventType.LOGIN_FAILED).length;
   }
 
-  private async recommendIPBlock(ipAddress: string): Promise<void> {
+  private recommendIPBlock(ipAddress: string): void {
     // 実装: IPブロックリストへの追加推奨
     this.logger.warn(
       {

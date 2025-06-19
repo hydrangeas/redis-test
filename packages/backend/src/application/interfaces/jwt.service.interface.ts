@@ -1,4 +1,4 @@
-import { Result } from '@/domain/shared/result';
+import type { Result } from '@/domain/shared/result';
 
 /**
  * JWTトークンのペイロード
@@ -8,7 +8,7 @@ export interface JWTPayload {
   tier?: string; // ユーザーティア
   exp?: number; // 有効期限
   iat?: number; // 発行時刻
-  [key: string]: any; // その他のカスタムクレーム
+  [key: string]: unknown; // その他のカスタムクレーム
 }
 
 /**

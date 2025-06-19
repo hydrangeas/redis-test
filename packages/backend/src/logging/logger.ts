@@ -1,9 +1,10 @@
-import pino from 'pino';
+import { pino, stdSerializers, stdTimeFunctions } from 'pino';
+
 import { config, isProduction } from '@/config/index.js';
 
 // カスタムシリアライザー
 const serializers = {
-  req: (req: any) => ({
+  req: (req: { id: string; method: string; url: string; query: unknown; params: unknown; headers: Record<string, string>; ip: string; user?: { id: string } }): Record<string, unknown> => ({
     id: req.id,
     method: req.method,
     url: req.url,
@@ -17,14 +18,14 @@ const serializers = {
     userId: req.user?.id,
   }),
 
-  res: (res: any) => ({
+  res: (res: { statusCode: number; getHeaders: () => Record<string, unknown> }): Record<string, unknown> => ({
     statusCode: res.statusCode,
     headers: res.getHeaders(),
   }),
 
-  err: pino.stdSerializers.err,
+  err: stdSerializers.err,
 
-  user: (user: any) => ({
+  user: (user: { id: string; email: string; tier: string }): { id: string; email: string; tier: string } => ({
     id: user.id,
     email: user.email,
     tier: user.tier,
@@ -41,7 +42,7 @@ const productionOptions: pino.LoggerOptions = {
   formatters: {
     level: (label) => ({ level: label }),
   },
-  timestamp: pino.stdTimeFunctions.isoTime,
+  timestamp: stdTimeFunctions.isoTime,
   base: {
     app: config.app.name,
     version: config.app.version,
@@ -69,6 +70,6 @@ const developmentOptions: pino.LoggerOptions = {
 export const logger = pino(isProduction() ? productionOptions : developmentOptions);
 
 // 子ロガーの作成
-export function createLogger(context: string) {
+export function createLogger(context: string): pino.Logger {
   return logger.child({ context });
 }

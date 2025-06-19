@@ -1,5 +1,6 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { SecurityContext } from '@/domain/data/interfaces/secure-file-access.interface';
+import type { SecurityContext } from '@/domain/data/interfaces/secure-file-access.interface';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+
 
 // Extend FastifyRequest type to include security context
 declare module 'fastify' {
@@ -8,7 +9,7 @@ declare module 'fastify' {
   }
 }
 
-export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: FastifyReply) => {
+export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
   // File security is handled by the route handler directly
   // This middleware only sets up the security context
   const user = request.user;
@@ -22,7 +23,7 @@ export const fileSecurityMiddleware = async (request: FastifyRequest, _reply: Fa
   };
 
   // Set security headers
-  _reply.headers({
+  void _reply.headers({
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',

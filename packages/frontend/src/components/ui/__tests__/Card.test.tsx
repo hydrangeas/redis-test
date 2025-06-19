@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import {
@@ -17,32 +16,29 @@ describe("Card", () => {
   });
 
   it("renders with different padding sizes", () => {
-    const { rerender } = render(<Card padding="small">Small padding</Card>);
-    expect(screen.getByText("Small padding").parentElement).toHaveClass("p-3");
+    const { rerender, container } = render(<Card padding="small">Small padding</Card>);
+    const card = container.firstChild as HTMLElement;
+    expect(card).toHaveClass("p-3");
 
     rerender(<Card padding="large">Large padding</Card>);
-    expect(screen.getByText("Large padding").parentElement).toHaveClass(
-      "p-6 md:p-8"
-    );
+    const largeCard = container.firstChild as HTMLElement;
+    expect(largeCard).toHaveClass("p-6", "md:p-8");
   });
 
   it("renders with different shadow sizes", () => {
-    const { rerender } = render(<Card shadow="small">Small shadow</Card>);
-    expect(screen.getByText("Small shadow").parentElement).toHaveClass(
-      "shadow-sm"
-    );
+    const { rerender, container } = render(<Card shadow="small">Small shadow</Card>);
+    const card = container.firstChild as HTMLElement;
+    expect(card).toHaveClass("shadow-sm");
 
     rerender(<Card shadow="large">Large shadow</Card>);
-    expect(screen.getByText("Large shadow").parentElement).toHaveClass(
-      "shadow-lg"
-    );
+    const largeCard = container.firstChild as HTMLElement;
+    expect(largeCard).toHaveClass("shadow-lg");
   });
 
   it("renders with hover effect", () => {
-    render(<Card hover>Hoverable card</Card>);
-    expect(screen.getByText("Hoverable card").parentElement).toHaveClass(
-      "transition-shadow hover:shadow-lg"
-    );
+    const { container } = render(<Card hover>Hoverable card</Card>);
+    const card = container.firstChild as HTMLElement;
+    expect(card).toHaveClass("transition-shadow", "hover:shadow-lg");
   });
 
   it("renders complete card structure", () => {
@@ -91,15 +87,15 @@ describe("Card", () => {
   });
 
   it("CardContent has proper spacing", () => {
-    render(<CardContent>Content</CardContent>);
-    expect(screen.getByText("Content").parentElement).toHaveClass("pt-4");
+    const { container } = render(<CardContent>Content</CardContent>);
+    const content = container.firstChild as HTMLElement;
+    expect(content).toHaveClass("pt-4");
   });
 
   it("CardFooter has proper styling", () => {
-    render(<CardFooter>Footer</CardFooter>);
-
-    const footer = screen.getByText("Footer").parentElement;
-    expect(footer).toHaveClass("pt-4 mt-4 border-t border-gray-200");
+    const { container } = render(<CardFooter>Footer</CardFooter>);
+    const footer = container.firstChild as HTMLElement;
+    expect(footer).toHaveClass("pt-4", "mt-4", "border-t", "border-gray-200");
   });
 
   it("accepts custom className on all components", () => {
@@ -122,11 +118,12 @@ describe("Card", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Title")).toHaveClass("custom-title");
     expect(screen.getByText("Desc")).toHaveClass("custom-desc");
-    expect(screen.getByText("Content").parentElement).toHaveClass(
-      "custom-content"
-    );
-    expect(screen.getByText("Footer").parentElement).toHaveClass(
-      "custom-footer"
-    );
+    // Find the CardContent by looking for the element with both pt-4 and custom-content classes
+    const contentElement = screen.getByText("Content").closest(".custom-content");
+    expect(contentElement).toBeInTheDocument();
+    
+    // Find the CardFooter by looking for the element with custom-footer class
+    const footerElement = screen.getByText("Footer").closest(".custom-footer");
+    expect(footerElement).toBeInTheDocument();
   });
 });

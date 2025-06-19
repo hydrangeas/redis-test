@@ -154,7 +154,7 @@ export class ResponseInfo {
   /**
    * メトリクス用のオブジェクトを生成
    */
-  toMetrics(): Record<string, any> {
+  toMetrics(): Record<string, unknown> {
     return {
       statusCode: this._statusCode,
       statusCategory: this.getStatusCategory(),

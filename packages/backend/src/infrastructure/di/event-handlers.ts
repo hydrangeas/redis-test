@@ -1,9 +1,12 @@
 import { container } from 'tsyringe';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+
 import { AuthLogHandler } from '@/infrastructure/event-handlers/auth-log.handler';
+
 // TODO: Enable when NotificationService is implemented
 // import { AuthNotificationHandler } from '@/infrastructure/event-handlers/auth-notification.handler';
 import { DI_TOKENS } from './tokens';
+
+import type { IEventBus } from '@/domain/interfaces/event-bus.interface';
 
 /**
  * イベントハンドラーをイベントバスに登録

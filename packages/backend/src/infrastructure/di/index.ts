@@ -6,6 +6,7 @@
 export { DI_TOKENS, LifecycleScope, createToken } from './tokens';
 export type { DIToken } from './tokens';
 export { setupDI, setupTestDI } from './container';
+export { createTestContainer, MockFactory, DITestUtils } from './test-container';
 export {
   // Lifecycle decorators
   Injectable,
@@ -48,16 +49,20 @@ export {
 
 // Re-export TSyringe utilities for convenience
 import { container } from 'tsyringe';
-export { container };
+
+import { setupDI } from './container';
+
+import type { ValueProvider } from 'tsyringe';
 
 // Import setupDI for local use
-import { setupDI } from './container';
+
+export { container };
 
 /**
  * Initialize the DI container for the application
  */
-export async function initializeContainer(): Promise<void> {
-  await setupDI();
+export function initializeContainer(): void {
+  setupDI();
 }
 
 /**
@@ -79,9 +84,9 @@ export function isServiceRegistered(token: symbol): boolean {
  */
 export function registerService<T>(
   token: symbol,
-  provider: { useClass?: any; useValue?: T; useFactory?: () => T },
+  provider: { useClass?: new (...args: unknown[]) => T; useValue?: T; useFactory?: () => T },
 ): void {
-  container.register(token, provider as any);
+  container.register(token, provider as ValueProvider<T>);
 }
 
 /**

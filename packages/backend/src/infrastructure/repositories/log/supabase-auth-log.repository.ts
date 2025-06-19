@@ -1,20 +1,20 @@
-import { injectable, inject } from 'tsyringe';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { EventType } from '@/domain/log/value-objects/auth-event';
-import { IPAddress } from '@/domain/log/value-objects/ip-address';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
-import { AuthEvent } from '@/domain/log/value-objects/auth-event';
-import { Provider } from '@/domain/log/value-objects/provider';
-import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { injectable, inject } from 'tsyringe';
+
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { AuthResult } from '@/domain/log/value-objects';
+import { EventType , AuthEvent } from '@/domain/log/value-objects/auth-event';
+import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { LogId } from '@/domain/log/value-objects/log-id';
+import { Provider } from '@/domain/log/value-objects/provider';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface AuthLogRecord {
   id: string;
@@ -25,7 +25,7 @@ interface AuthLogRecord {
   user_agent: string | null;
   result: string;
   error_message: string | null;
-  metadata: any;
+  metadata: Record<string, unknown> | null;
   session_id: string | null;
   created_at: string;
 }
@@ -57,7 +57,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         result: logEntry.result,
         error_message: logEntry.errorMessage || null,
         metadata: logEntry.metadata || {},
-        session_id: logEntry.metadata?.sessionId || null,
+        session_id: (logEntry.metadata?.sessionId as string) || null,
         created_at: logEntry.timestamp.toISOString(),
       };
 
@@ -75,7 +75,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
       }
 
       this.logger.debug({ logId: logEntry.id.value }, 'Auth log saved successfully');
-      return Result.ok(undefined as any);
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error saving auth log');
       return Result.fail(
@@ -97,9 +97,9 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         .from('auth_logs')
         .select('*')
         .eq('id', id.value)
-        .single();
+        .single() as { data: AuthLogRecord | null; error: Error | null };
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && (error as { code?: string }).code !== 'PGRST116') {
         // PGRST116 = no rows returned
         this.logger.error({ error, logId: id.value }, 'Failed to find auth log by ID');
         return Result.fail(
@@ -115,7 +115,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         return Result.ok(null);
       }
 
-      const logEntry = await this.recordToLogEntry(data);
+      const logEntry = this.recordToLogEntry(data);
       return Result.ok(logEntry);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding auth log');
@@ -151,7 +151,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: AuthLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error, userId: userId.value }, 'Failed to find auth logs by user ID');
@@ -164,7 +164,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding auth logs by user');
@@ -200,7 +200,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: AuthLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error, eventType }, 'Failed to find auth logs by event type');
@@ -213,7 +213,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding auth logs by event type');
@@ -249,7 +249,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: AuthLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error, ipAddress: ipAddress.value }, 'Failed to find auth logs by IP');
@@ -262,7 +262,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding auth logs by IP');
@@ -297,7 +297,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: AuthLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find auth failure logs');
@@ -310,7 +310,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding auth failure logs');
@@ -345,7 +345,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: AuthLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find suspicious activity logs');
@@ -358,7 +358,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding suspicious activity logs');
@@ -391,7 +391,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         .from('auth_logs')
         .select('*')
         .gte('created_at', timeRange.start.toISOString())
-        .lte('created_at', timeRange.end.toISOString());
+        .lte('created_at', timeRange.end.toISOString()) as { data: AuthLogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to get auth statistics');
@@ -404,7 +404,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
         );
       }
 
-      const logs = data || [];
+      const logs = (data || []);
       const uniqueUserIds = new Set<string>();
       const loginsByProvider = new Map<string, number>();
 
@@ -421,9 +421,9 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           uniqueUserIds.add(log.user_id);
         }
 
-        if (log.result === AuthResult.SUCCESS) {
+        if (log.result === (AuthResult.SUCCESS as string)) {
           successfulLogins++;
-        } else if (log.result === AuthResult.FAILED) {
+        } else if (log.result === (AuthResult.FAILED as string)) {
           failedLogins++;
         }
 
@@ -431,11 +431,11 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           suspiciousActivities++;
         }
 
-        if (log.event_type === EventType.TOKEN_REFRESH) {
+        if (log.event_type === (EventType.TOKEN_REFRESH as string)) {
           tokenRefreshCount++;
         }
 
-        if (log.provider && log.event_type === EventType.LOGIN) {
+        if (log.provider && log.event_type === (EventType.LOGIN as string)) {
           const count = loginsByProvider.get(log.provider) || 0;
           loginsByProvider.set(log.provider, count + 1);
         }
@@ -523,57 +523,64 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   /**
    * レコードをドメインオブジェクトに変換
    */
-  private async recordToLogEntry(record: AuthLogRecord): Promise<AuthLogEntry | null> {
+  private recordToLogEntry(record: AuthLogRecord): AuthLogEntry | null {
     try {
       const logIdResult = LogId.create(record.id);
       if (logIdResult.isFailure) {
-        throw new Error(`Failed to create LogId: ${logIdResult.getError().message}`);
+        const error = logIdResult.getError();
+        throw new Error(`Failed to create LogId: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
       const logId = logIdResult.getValue();
-      const event = new AuthEvent(record.event_type as EventType, record.metadata?.description);
+      const event = new AuthEvent(record.event_type as EventType, record.metadata?.description as string | undefined);
       const providerResult = Provider.create(record.provider || 'unknown');
       if (providerResult.isFailure) {
-        throw new Error(`Failed to create Provider: ${providerResult.getError().message}`);
+        const error = providerResult.getError();
+        throw new Error(`Failed to create Provider: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
       const provider = providerResult.getValue();
       
       const ipAddress = record.ip_address
-        ? (() => {
+        ? ((): IPAddress => {
             const result = IPAddress.create(record.ip_address);
             if (result.isFailure) {
-              throw new Error(`Failed to create IPAddress: ${result.getError().message}`);
+              const error = result.getError();
+              throw new Error(`Failed to create IPAddress: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             return result.getValue();
           })()
-        : (() => {
+        : ((): IPAddress => {
             const result = IPAddress.unknown();
             if (result.isFailure) {
-              throw new Error(`Failed to create unknown IPAddress: ${result.getError().message}`);
+              const error = result.getError();
+              throw new Error(`Failed to create unknown IPAddress: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             return result.getValue();
           })();
         
       const userAgent = record.user_agent
-        ? (() => {
+        ? ((): UserAgent => {
             const result = UserAgent.create(record.user_agent);
             if (result.isFailure) {
-              throw new Error(`Failed to create UserAgent: ${result.getError().message}`);
+              const error = result.getError();
+              throw new Error(`Failed to create UserAgent: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             return result.getValue();
           })()
-        : (() => {
+        : ((): UserAgent => {
             const result = UserAgent.unknown();
             if (result.isFailure) {
-              throw new Error(`Failed to create unknown UserAgent: ${result.getError().message}`);
+              const error = result.getError();
+              throw new Error(`Failed to create unknown UserAgent: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             return result.getValue();
           })();
 
       const userId = record.user_id 
-        ? (() => {
+        ? ((): UserId => {
             const result = UserId.create(record.user_id);
             if (result.isFailure) {
-              throw new Error(`Failed to create UserId: ${result.getError().message}`);
+              const error = result.getError();
+              throw new Error(`Failed to create UserId: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             return result.getValue();
           })()
@@ -589,7 +596,7 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
           timestamp: new Date(record.created_at),
           result: record.result as AuthResult,
           errorMessage: record.error_message || undefined,
-          metadata: record.metadata,
+          metadata: record.metadata || undefined,
         },
         logId,
       );
@@ -612,11 +619,11 @@ export class SupabaseAuthLogRepository implements IAuthLogRepository {
   /**
    * 複数のレコードをドメインオブジェクトに変換
    */
-  private async recordsToLogEntries(records: AuthLogRecord[]): Promise<AuthLogEntry[]> {
+  private recordsToLogEntries(records: AuthLogRecord[]): AuthLogEntry[] {
     const logEntries: AuthLogEntry[] = [];
 
     for (const record of records) {
-      const logEntry = await this.recordToLogEntry(record);
+      const logEntry = this.recordToLogEntry(record);
       if (logEntry) {
         logEntries.push(logEntry);
       }

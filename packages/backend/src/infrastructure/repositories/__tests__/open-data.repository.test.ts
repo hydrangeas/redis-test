@@ -41,7 +41,6 @@ vi.mock('crypto', () => ({
 describe('OpenDataRepository', () => {
   let repository: OpenDataRepository;
   let mockLogger: Logger;
-  let mockFileStorage: any;
   const testDataDirectory = '/test/data';
 
   beforeEach(() => {
@@ -55,15 +54,7 @@ describe('OpenDataRepository', () => {
       trace: vi.fn(),
     } as any;
 
-    mockFileStorage = {
-      exists: vi.fn(),
-      readFile: vi.fn(),
-      writeFile: vi.fn(),
-      delete: vi.fn(),
-      list: vi.fn(),
-    };
-
-    repository = new OpenDataRepository(mockLogger, mockFileStorage, testDataDirectory);
+    repository = new OpenDataRepository(mockLogger, testDataDirectory);
   });
 
   describe('findByPath', () => {

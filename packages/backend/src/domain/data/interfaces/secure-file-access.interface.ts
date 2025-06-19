@@ -1,4 +1,4 @@
-import { Result } from '@/domain/errors/result';
+import type { Result } from '@/domain/errors/result';
 
 export interface SecurityContext {
   userId: string;
@@ -36,5 +36,5 @@ export interface SecurityEvent {
   userTier: string;
   ipAddress: string;
   userAgent: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }

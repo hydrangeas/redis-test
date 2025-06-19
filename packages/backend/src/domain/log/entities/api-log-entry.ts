@@ -1,12 +1,16 @@
-import { Entity } from '@/domain/shared/entity';
-import { Result } from '@/domain/shared/result';
-import { Guard } from '@/domain/shared/guard';
-import { LogId } from '../value-objects/log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Endpoint } from '@/domain/api/value-objects/endpoint';
-import { RequestInfo } from '../value-objects/request-info';
-import { ResponseInfo } from '../value-objects/response-info';
 import { ValidationError } from '@/domain/errors/validation-error';
+import { Entity } from '@/domain/shared/entity';
+import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+
+import { LogId } from '../value-objects/log-id';
+
+
+import type { RequestInfo } from '../value-objects/request-info';
+import type { ResponseInfo } from '../value-objects/response-info';
+import type { Endpoint } from '@/domain/api/value-objects/endpoint';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+
 
 interface APILogEntryProps {
   userId?: UserId;

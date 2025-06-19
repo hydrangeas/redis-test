@@ -33,41 +33,41 @@ export class DomainError {
     /** エラーの種別 */
     public readonly type: ErrorType,
     /** 追加の詳細情報 */
-    public readonly details?: any,
+    public readonly details?: unknown,
   ) {}
 
   /**
    * ファクトリメソッド
    */
-  static validation(code: string, message: string, details?: any): DomainError {
+  static validation(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.VALIDATION, details);
   }
 
-  static businessRule(code: string, message: string, details?: any): DomainError {
+  static businessRule(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.BUSINESS_RULE, details);
   }
 
-  static notFound(code: string, message: string, details?: any): DomainError {
+  static notFound(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.NOT_FOUND, details);
   }
 
-  static unauthorized(code: string, message: string, details?: any): DomainError {
+  static unauthorized(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.UNAUTHORIZED, details);
   }
 
-  static forbidden(code: string, message: string, details?: any): DomainError {
+  static forbidden(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.FORBIDDEN, details);
   }
 
-  static rateLimit(code: string, message: string, details?: any): DomainError {
+  static rateLimit(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.RATE_LIMIT, details);
   }
 
-  static externalService(code: string, message: string, details?: any): DomainError {
+  static externalService(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.EXTERNAL_SERVICE, details);
   }
 
-  static internal(code: string, message: string, details?: any): DomainError {
+  static internal(code: string, message: string, details?: unknown): DomainError {
     return new DomainError(code, message, ErrorType.INTERNAL, details);
   }
 }

@@ -7,12 +7,19 @@ describe("ApiDocsRedirect", () => {
 
   beforeEach(() => {
     // Mock window.location
-    delete (window as { location?: Location }).location;
-    window.location = { href: "" } as Location;
+    Object.defineProperty(window, "location", {
+      value: { href: "" },
+      writable: true,
+      configurable: true,
+    });
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    Object.defineProperty(window, "location", {
+      value: originalLocation,
+      writable: true,
+      configurable: true,
+    });
     vi.unstubAllEnvs();
   });
 

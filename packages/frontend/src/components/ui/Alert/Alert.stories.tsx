@@ -69,7 +69,7 @@ export const WithTitle: Story = {
 };
 
 export const Dismissible: Story = {
-  render: () => {
+  render: function DismissibleAlert() {
     const [showAlert, setShowAlert] = useState(true);
 
     if (!showAlert) {

@@ -1,24 +1,27 @@
+import { DomainError } from '@/domain/errors/domain-error';
 import { AggregateRoot } from '@/domain/shared/aggregate-root';
 import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
-import { LogId } from '../value-objects/log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
+
+
+
 import { APILogEntry } from '../entities/api-log-entry';
 import { AuthLogEntry } from '../entities/auth-log-entry';
-import { AuthResult } from '../value-objects';
-import { AuthEvent } from '../value-objects/auth-event';
-import { Provider } from '../value-objects/provider';
-import { IPAddress } from '../value-objects/ip-address';
-import { UserAgent } from '../value-objects/user-agent';
-import { Endpoint } from '@/domain/api/value-objects/endpoint';
-import { RequestInfo } from '../value-objects/request-info';
-import { ResponseInfo } from '../value-objects/response-info';
-
-// ドメインイベント
 import { APIAccessLoggedEvent } from '../events/api-access-logged.event';
 import { AuthEventLoggedEvent } from '../events/auth-event-logged.event';
-import { SecurityAlertRaisedEvent } from '../events/security-alert-raised.event';
 import { PerformanceIssueDetectedEvent } from '../events/performance-issue-detected.event';
+import { SecurityAlertRaisedEvent } from '../events/security-alert-raised.event';
+import { AuthResult } from '../value-objects';
+import { LogId } from '../value-objects/log-id';
+
+import type { AuthEvent } from '../value-objects/auth-event';
+import type { IPAddress } from '../value-objects/ip-address';
+import type { Provider } from '../value-objects/provider';
+import type { RequestInfo } from '../value-objects/request-info';
+import type { ResponseInfo } from '../value-objects/response-info';
+import type { UserAgent } from '../value-objects/user-agent';
+// ドメインイベント
+import type { Endpoint } from '@/domain/api/value-objects/endpoint';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
 
 interface LogAggregateProps {
   apiLogs: APILogEntry[];
@@ -122,7 +125,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
       return Result.fail(logResult.error!);
     }
 
-    const apiLog = logResult.getValue()!;
+    const apiLog = logResult.getValue();
     this.props.apiLogs.push(apiLog);
 
     // イベント発行
@@ -165,7 +168,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
     result: AuthResult,
     userId?: UserId,
     errorMessage?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): Result<void> {
     // ログ数の上限チェック
     if (this.props.authLogs.length >= LogAggregate.MAX_LOGS_PER_TYPE) {
@@ -193,7 +196,7 @@ export class LogAggregate extends AggregateRoot<LogAggregateProps> {
       return Result.fail(logResult.error!);
     }
 
-    const authLog = logResult.getValue()!;
+    const authLog = logResult.getValue();
     this.props.authLogs.push(authLog);
 
     // イベント発行

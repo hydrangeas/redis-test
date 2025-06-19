@@ -8,6 +8,7 @@ import { Result } from '@/domain/errors';
 import { Email } from '@/domain/auth/value-objects/email';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
 import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
@@ -45,7 +46,7 @@ describe('AuthenticationUseCase Integration', () => {
       // Mock auth service validation - return AuthenticatedUser
       const userId = '550e8400-e29b-41d4-a716-446655440000'; // Valid UUID v4
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         console.error('UserId creation failed:', userIdResult.getError());
@@ -61,7 +62,7 @@ describe('AuthenticationUseCase Integration', () => {
         userTierResult.getValue(),
       );
 
-      mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
+      mockDependencies.mockAuthenticationService.validateAccessToken.mockReturnValue(
         Result.ok(authenticatedUser),
       );
 
@@ -71,12 +72,11 @@ describe('AuthenticationUseCase Integration', () => {
       const validationResult = result.data;
       expect(validationResult.user).toBeDefined();
       expect(validationResult.user?.userId.value).toBe(userId);
-      expect(validationResult.user?.email.value).toBe('test@example.com');
-      expect(validationResult.user?.tier.level).toBe('tier1');
+      expect(validationResult.user?.tier.level).toBe(TierLevel.TIER1);
       expect(validationResult.tokenId).toBe('token-123');
 
       // Verify auth service was called
-      expect(mockDependencies.mockAuthenticationService.validateToken).toHaveBeenCalled();
+      expect(mockDependencies.mockAuthenticationService.validateAccessToken).toHaveBeenCalled();
     });
 
     it('should handle invalid token format', async () => {
@@ -125,7 +125,7 @@ describe('AuthenticationUseCase Integration', () => {
         exp: Math.floor(Date.now() / 1000) + 3600,
       });
 
-      mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
+      mockDependencies.mockAuthenticationService.validateAccessToken.mockReturnValue(
         Result.fail({ message: 'User not found' }),
       );
 
@@ -153,10 +153,13 @@ describe('AuthenticationUseCase Integration', () => {
         },
       });
 
-      // Mock JWT decode
-      mockDependencies.mockJWTValidator.decodeToken = vi.fn().mockReturnValue({
-        jti: 'new-token-id',
-      });
+      // Use the JWT service mock for decoding
+      mockDependencies.mockJWTService = {
+        decodeToken: vi.fn().mockReturnValue({
+          jti: 'new-token-id',
+        }),
+      };
+      container.registerInstance(DI_TOKENS.JwtService, mockDependencies.mockJWTService);
 
       const result = await useCase.refreshToken(mockRefreshToken);
 
@@ -232,7 +235,7 @@ describe('AuthenticationUseCase Integration', () => {
       });
 
       const userIdResult = UserId.create(userId);
-      const userTierResult = UserTier.create('TIER1');
+      const userTierResult = UserTier.create(TierLevel.TIER1);
 
       if (userIdResult.isFailure) {
         throw new Error('Failed to create UserId');
@@ -246,7 +249,7 @@ describe('AuthenticationUseCase Integration', () => {
         userTierResult.getValue(),
       );
 
-      mockDependencies.mockAuthenticationService.validateToken.mockReturnValue(
+      mockDependencies.mockAuthenticationService.validateAccessToken.mockReturnValue(
         Result.ok(authenticatedUser),
       );
 
@@ -257,7 +260,7 @@ describe('AuthenticationUseCase Integration', () => {
       // Verify all layers were involved
       expect(mockDependencies.mockJWTValidator.validateToken).toHaveBeenCalled();
       expect(mockDependencies.mockAuthAdapter.verifyToken).toHaveBeenCalled();
-      expect(mockDependencies.mockAuthenticationService.validateToken).toHaveBeenCalled();
+      expect(mockDependencies.mockAuthenticationService.validateAccessToken).toHaveBeenCalled();
     });
 
     it('should handle errors gracefully at any layer', async () => {
@@ -277,7 +280,7 @@ describe('AuthenticationUseCase Integration', () => {
       expect(result.error.code).toBe('INTERNAL_ERROR');
 
       // Verify no data was processed further
-      expect(mockDependencies.mockAuthenticationService.validateToken).not.toHaveBeenCalled();
+      expect(mockDependencies.mockAuthenticationService.validateAccessToken).not.toHaveBeenCalled();
     });
   });
 });

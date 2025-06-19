@@ -1,7 +1,10 @@
-import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
+import { pino, stdSerializers, stdTimeFunctions } from 'pino';
 import { container } from 'tsyringe';
+
 import { DI_TOKENS } from '../di';
+
 import type { EnvConfig } from '../config';
+import type { Logger as PinoLogger, LoggerOptions } from 'pino';
 
 /**
  * Pinoロガーのカスタム設定を作成
@@ -13,7 +16,7 @@ export function createLoggerConfig(config: EnvConfig): LoggerOptions {
     level: config.LOG_LEVEL,
     formatters: {
       level: (label: string) => ({ level: label }),
-      bindings: (bindings: any) => ({
+      bindings: (bindings: Record<string, unknown>) => ({
         pid: bindings.pid,
         hostname: bindings.hostname,
         node_version: process.version,
@@ -21,23 +24,23 @@ export function createLoggerConfig(config: EnvConfig): LoggerOptions {
       }),
     },
     serializers: {
-      req: (request: any) => ({
+      req: (request: Record<string, unknown>) => ({
         method: request.method,
         url: request.url,
         path: request.routerPath,
         parameters: request.params,
-        userId: request.user?.id,
+        userId: (request.user as { id?: string } | undefined)?.id,
         requestId: request.id,
         ip: request.ip,
-        userAgent: request.headers?.['user-agent'],
+        userAgent: (request.headers as Record<string, string> | undefined)?.['user-agent'],
       }),
-      res: (reply: any) => ({
+      res: (reply: Record<string, unknown>) => ({
         statusCode: reply.statusCode,
-        responseTime: reply.getResponseTime?.(),
+        responseTime: (reply.getResponseTime as (() => number) | undefined)?.(),
       }),
-      err: pino.stdSerializers.err,
+      err: stdSerializers.err,
     },
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: stdTimeFunctions.isoTime,
     redact: {
       paths: [
         'req.headers.authorization',
@@ -76,7 +79,7 @@ export function createLogger(config?: EnvConfig): PinoLogger {
 /**
  * 子ロガーを作成するユーティリティ
  */
-export function createChildLogger(logger: PinoLogger, bindings: Record<string, any>): PinoLogger {
+export function createChildLogger(logger: PinoLogger, bindings: Record<string, unknown>): PinoLogger {
   return logger.child(bindings);
 }
 

@@ -1,10 +1,13 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
-import { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 // AuthenticatedUser import removed - using from request.user directly
 import { toProblemDetails } from '../errors/error-mapper';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+
+import type { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 /**
  * APIアクセス制御ミドルウェア
@@ -70,17 +73,17 @@ export async function apiAccessControlMiddleware(
   // アクセス拒否の場合
   if (!decision.allowed) {
     switch (decision.reason) {
-      case 'rate_limit_exceeded':
+      case 'rate_limit_exceeded': {
         // レート制限ヘッダーの設定
         if (decision.rateLimitStatus) {
-          reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
-          reply.header(
+          void reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
+          void reply.header(
             'X-RateLimit-Remaining',
             decision.rateLimitStatus.remaining.toString(),
           );
-          reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
+          void reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
           if (decision.rateLimitStatus.retryAfter) {
-            reply.header('Retry-After', decision.rateLimitStatus.retryAfter.toString());
+            void reply.header('Retry-After', decision.rateLimitStatus.retryAfter.toString());
           }
         }
 
@@ -93,8 +96,9 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(429).send(rateLimitDetails);
+      }
 
-      case 'unauthorized':
+      case 'unauthorized': {
         const unauthorizedDetails = toProblemDetails(
           new DomainError(
             'FORBIDDEN',
@@ -104,8 +108,9 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(403).send(unauthorizedDetails);
+      }
 
-      case 'endpoint_not_found':
+      case 'endpoint_not_found': {
         const notFoundDetails = toProblemDetails(
           new DomainError(
             'ENDPOINT_NOT_FOUND',
@@ -115,8 +120,9 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(404).send(notFoundDetails);
+      }
 
-      default:
+      default: {
         const genericDetails = toProblemDetails(
           new DomainError(
             'ACCESS_DENIED',
@@ -126,14 +132,15 @@ export async function apiAccessControlMiddleware(
           request.url,
         );
         return reply.code(403).send(genericDetails);
+      }
     }
   }
 
   // アクセス許可の場合、レート制限ヘッダーを設定
   if (decision.rateLimitStatus) {
-    reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
-    reply.header('X-RateLimit-Remaining', decision.rateLimitStatus.remaining.toString());
-    reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
+    void reply.header('X-RateLimit-Limit', decision.rateLimitStatus.limit.toString());
+    void reply.header('X-RateLimit-Remaining', decision.rateLimitStatus.remaining.toString());
+    void reply.header('X-RateLimit-Reset', new Date(decision.rateLimitStatus.resetAt * 1000).toISOString());
   }
 
   // リクエストにレート制限情報を追加（後続の処理で使用可能）

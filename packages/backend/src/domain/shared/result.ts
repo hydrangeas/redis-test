@@ -1,4 +1,4 @@
-import { DomainError } from '../errors/domain-error';
+import type { DomainError } from '../errors/domain-error';
 
 export class Result<T> {
   public isSuccess: boolean;
@@ -114,7 +114,7 @@ export class Result<T> {
     return new Result<U>(false, error);
   }
 
-  public static combine(results: Result<any>[]): Result<any> {
+  public static combine(results: Result<unknown>[]): Result<unknown> {
     for (const result of results) {
       if (result.isFailure) return result;
     }

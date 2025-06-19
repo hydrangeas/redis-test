@@ -1,8 +1,9 @@
-import { Result } from '@/domain/errors/result';
-import { APILogEntry } from '../entities/api-log-entry';
-import { LogId } from '../value-objects/log-id';
-import { TimeRange } from '../value-objects/time-range';
-import { UserId } from '@/domain/auth/value-objects/user-id';
+
+import type { APILogEntry } from '../entities/api-log-entry';
+import type { LogId } from '../value-objects/log-id';
+import type { TimeRange } from '../value-objects/time-range';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * APIログリポジトリのインターフェース

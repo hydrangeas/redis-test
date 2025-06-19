@@ -1,5 +1,5 @@
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { RateLimitCheckResult } from '@/application/interfaces/rate-limit-use-case.interface';
+import type { RateLimitCheckResult } from '@/application/interfaces/rate-limit-use-case.interface';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 declare module 'fastify' {
   interface FastifyRequest {

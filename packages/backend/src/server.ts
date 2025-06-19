@@ -1,18 +1,21 @@
 import 'reflect-metadata';
-import * as dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+import * as dotenv from 'dotenv';
 import { container } from 'tsyringe';
-import type { Logger } from 'pino';
+
+import buildApp from './app';
 import { DI_TOKENS } from './infrastructure/di';
+
 import type { EnvConfig } from './infrastructure/config';
+import type { Logger } from 'pino';
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '..', '.env.local') });
 
-import buildApp from './app';
 
 const server = await buildApp();
 
@@ -40,7 +43,7 @@ const start = async (): Promise<void> => {
 };
 
 // 環境変数の検証エラーをキャッチ
-start().catch((error) => {
+void start().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });

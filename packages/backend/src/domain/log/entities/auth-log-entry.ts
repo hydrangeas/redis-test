@@ -1,14 +1,17 @@
-import { Entity } from '@/domain/shared/entity';
-import { Result } from '@/domain/shared/result';
-import { Guard } from '@/domain/shared/guard';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
-import { Provider } from '@/domain/log/value-objects/provider';
-import { IPAddress } from '@/domain/log/value-objects/ip-address';
-import { UserAgent } from '@/domain/log/value-objects/user-agent';
+
 import { ValidationError } from '@/domain/errors/validation-error';
 import { AuthResult } from '@/domain/log/value-objects';
+import { EventType } from '@/domain/log/value-objects/auth-event';
+import { LogId } from '@/domain/log/value-objects/log-id';
+import { Entity } from '@/domain/shared/entity';
+import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { AuthEvent} from '@/domain/log/value-objects/auth-event';
+import type { IPAddress } from '@/domain/log/value-objects/ip-address';
+import type { Provider } from '@/domain/log/value-objects/provider';
+import type { UserAgent } from '@/domain/log/value-objects/user-agent';
 
 interface AuthLogEntryProps {
   userId?: UserId;
@@ -19,7 +22,7 @@ interface AuthLogEntryProps {
   timestamp: Date;
   result: AuthResult;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class AuthLogEntry extends Entity<AuthLogEntryProps> {
@@ -63,7 +66,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     return this.props.errorMessage;
   }
 
-  get metadata(): Record<string, any> | undefined {
+  get metadata(): Record<string, unknown> | undefined {
     return this.props.metadata ? { ...this.props.metadata } : undefined;
   }
 
@@ -122,6 +125,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     if (
       this.props.result === AuthResult.FAILED &&
       this.props.metadata?.failureCount &&
+      typeof this.props.metadata.failureCount === 'number' &&
       this.props.metadata.failureCount > 5
     ) {
       return true;
@@ -145,7 +149,7 @@ export class AuthLogEntry extends Entity<AuthLogEntryProps> {
     return this.props.result === AuthResult.BLOCKED || this.isAnomalous();
   }
 
-  public toJSON(): Record<string, any> {
+  public toJSON(): Record<string, unknown> {
     return {
       id: this.id.value,
       userId: this.props.userId?.value,

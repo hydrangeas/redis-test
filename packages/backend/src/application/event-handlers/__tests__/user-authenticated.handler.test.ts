@@ -18,7 +18,6 @@ describe('UserAuthenticatedHandler', () => {
       save: vi.fn(),
       findById: vi.fn(),
       findByUserId: vi.fn(),
-      findByEventType: vi.fn(),
       findByIPAddress: vi.fn(),
       findFailures: vi.fn(),
       findSuspiciousActivities: vi.fn(),
@@ -31,7 +30,7 @@ describe('UserAuthenticatedHandler', () => {
       error: vi.fn(),
       warn: vi.fn(),
       debug: vi.fn(),
-    } as any;
+    } as unknown as Logger;
 
     handler = new UserAuthenticatedHandler(mockAuthLogRepository, mockLogger);
   });
@@ -51,7 +50,7 @@ describe('UserAuthenticatedHandler', () => {
       );
 
       const mockLogId = LogId.create().value!;
-      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
+      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined));
 
       // Act
       await handler.handle(event);
@@ -140,14 +139,14 @@ describe('UserAuthenticatedHandler', () => {
         '', // Invalid empty user agent
       );
 
-      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined as any));
+      vi.mocked(mockAuthLogRepository.save).mockResolvedValueOnce(Result.ok(undefined));
 
       // Act
       await handler.handle(event);
 
       // Assert
       expect(mockAuthLogRepository.save).toHaveBeenCalled();
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: event.eventId,

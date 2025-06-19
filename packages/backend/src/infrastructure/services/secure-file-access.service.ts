@@ -1,14 +1,16 @@
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
 import { injectable, inject } from 'tsyringe';
+
 import {
   ISecureFileAccess,
   SecurityContext,
   ISecurityAuditService,
 } from '@/domain/data/interfaces/secure-file-access.interface';
-import { Result } from '@/domain/errors/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 
 interface FileAccessPolicy {
   allowedExtensions: string[];
@@ -103,7 +105,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
       }
 
       // Access permission check
-      const hasAccess = await this.checkAccessPermission(filePath, context);
+      const hasAccess = this.checkAccessPermission(filePath, context);
       if (!hasAccess) {
         await this.logSecurityEvent('ACCESS_DENIED', context, { filePath });
         return Result.fail(
@@ -124,8 +126,9 @@ export class SecureFileAccessService implements ISecureFileAccess {
 
   private sanitizePath(inputPath: string): string {
     // Remove dangerous characters
-    let sanitized = inputPath
+    const sanitized = inputPath
       .trim()
+      // eslint-disable-next-line no-control-regex
       .replace(/[<>:"|?*\x00-\x1f\x80-\x9f]/g, '') // Control chars and dangerous chars
       .replace(/\\/g, '/') // Normalize backslashes to forward slashes
       .replace(/\/+/g, '/') // Replace multiple slashes with single
@@ -203,10 +206,10 @@ export class SecureFileAccessService implements ISecureFileAccess {
     }
   }
 
-  private async checkAccessPermission(
+  private checkAccessPermission(
     filePath: string,
     context: SecurityContext,
-  ): Promise<boolean> {
+  ): boolean {
     // Public files are accessible to everyone
     if (filePath.startsWith('public/')) {
       return true;
@@ -248,7 +251,7 @@ export class SecureFileAccessService implements ISecureFileAccess {
   private async logSecurityEvent(
     eventType: string,
     context: SecurityContext,
-    details: Record<string, any>,
+    details: Record<string, unknown>,
   ): Promise<void> {
     const event = {
       type: eventType,

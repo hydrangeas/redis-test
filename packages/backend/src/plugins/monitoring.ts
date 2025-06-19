@@ -1,9 +1,11 @@
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { Registry, Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client';
-import { Logger } from 'pino';
 import { container } from 'tsyringe';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import type { Logger } from 'pino';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -96,10 +98,11 @@ export const metrics = {
 };
 
 const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const logger = container.resolve<Logger>(DI_TOKENS.Logger).child({ context: 'monitoring' });
 
   // Add hook to track request start time
-  fastify.addHook('onRequest', async (request: FastifyRequest) => {
+  fastify.addHook('onRequest', (request: FastifyRequest) => {
     request.startTime = process.hrtime.bigint();
   });
 
@@ -194,7 +197,7 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
 
   // Metrics endpoint
   fastify.get('/metrics', async (_request, reply) => {
-    reply.type('text/plain');
+    void reply.type('text/plain');
     return register.metrics();
   });
 
@@ -231,25 +234,25 @@ const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
       (check) => check.status === 'healthy',
     );
 
-    reply.status(isHealthy ? 200 : 503).send(healthCheck);
+    void reply.status(isHealthy ? 200 : 503).send(healthCheck);
   });
 
   logger.info('Monitoring plugin loaded');
 };
 
-async function checkDatabase(): Promise<{ status: string; latency?: number; error?: string }> {
+function checkDatabase(): Promise<{ status: string; latency?: number; error?: string }> {
   try {
     const start = Date.now();
     // For now, we'll assume the database is healthy if we can resolve the Supabase client
     container.resolve(DI_TOKENS.SupabaseClient);
     const latency = Date.now() - start;
 
-    return { status: 'healthy', latency };
+    return Promise.resolve({ status: 'healthy', latency });
   } catch (error) {
-    return {
+    return Promise.resolve({
       status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    });
   }
 }
 

@@ -8,13 +8,13 @@ export class FilePath {
   /**
    * パストラバーサル攻撃パターンの検出用正規表現
    */
-  private static readonly DANGEROUS_PATTERNS = /(\.\.[\/\\]|\.\.%2[fF]|\.\.%5[cC])/;
+  private static readonly DANGEROUS_PATTERNS = /(\.\.[\\/]|\.\.%2[fF]|\.\.%5[cC])/;
 
   /**
    * 許可される文字のパターン
    * 英数字、ハイフン、アンダースコア、スラッシュ、ドット
    */
-  private static readonly VALID_PATH_PATTERN = /^[a-zA-Z0-9\-_\/\.]+$/;
+  private static readonly VALID_PATH_PATTERN = /^[a-zA-Z0-9\-_/.]+$/;
 
   /**
    * @param value - ファイルパス

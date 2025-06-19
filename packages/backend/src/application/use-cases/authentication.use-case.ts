@@ -1,21 +1,22 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
+import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
+import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
+import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
+import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
+import { IJWTValidator } from '@/infrastructure/auth/interfaces/jwt-validator.interface';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import { ApplicationError } from '../errors/application-error';
+import { ApplicationResult , Result } from '../errors/result';
 import {
   IAuthenticationUseCase,
   TokenRefreshResult,
   TokenValidationResult,
 } from '../interfaces/authentication-use-case.interface';
-import { Result } from '../errors/result';
-import { ApplicationError } from '../errors/application-error';
-import { ApplicationResult } from '../errors/result';
-import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
-import { IJWTValidator } from '@/infrastructure/auth/interfaces/jwt-validator.interface';
-import { AuthenticationService } from '@/domain/auth/services/authentication.service';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
-import { AuthenticationFailed } from '@/domain/auth/events/authentication-failed.event';
-import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
-import { Logger } from 'pino';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 @injectable()
 export class AuthenticationUseCase implements IAuthenticationUseCase {
@@ -58,7 +59,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           'JWT_VERIFICATION_FAILED',
           token.substring(0, 10) + '...',
         );
-        await this.eventBus.publish(failureEvent);
+        this.eventBus.publish(failureEvent);
 
         return ApplicationResult.fail(
           new ApplicationError(
@@ -85,7 +86,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
           'unknown', // userAgent (TODO: get from request)
           tokenPayload.sub, // attemptedUserId
         );
-        await this.eventBus.publish(failureEvent);
+        this.eventBus.publish(failureEvent);
 
         return ApplicationResult.fail(
           new ApplicationError('TOKEN_VALIDATION_FAILED', error.message, 'UNAUTHORIZED'),
@@ -104,7 +105,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       return ApplicationResult.ok({
         user: authenticatedUser,
-        tokenId: tokenPayload.sub, // Use sub as tokenId since jti is not available
+        tokenId: (tokenPayload as { jti?: string; sub: string }).jti || tokenPayload.sub, // Use jti if available, otherwise sub
       });
     } catch (error) {
       this.logger.error(
@@ -157,7 +158,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       try {
         // Try to decode tokens to get JTI claims
-        const decoded = this.jwtValidator.decodeToken<any>(session.access_token);
+        const decoded = this.jwtValidator.decodeToken<{ jti?: string }>(session.access_token);
         newTokenId = decoded?.jti;
       } catch (e) {
         // If we can't decode, that's ok - token IDs are optional
@@ -173,12 +174,12 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
         1, // First refresh
         refreshToken.substring(0, 10), // Session ID proxy
       );
-      await this.eventBus.publish(refreshEvent);
+      this.eventBus.publish(refreshEvent);
 
       this.logger.info(
         {
           userId: session.user.id,
-          tier: session.user.app_metadata?.tier || 'tier1',
+          tier: (session.user.app_metadata as { tier?: string })?.tier || 'tier1',
         },
         'Token refreshed successfully',
       );
@@ -188,7 +189,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
         refreshToken: session.refresh_token,
         expiresIn: session.expires_in,
         userId: session.user.id,
-        tier: session.user.app_metadata?.tier || 'tier1',
+        tier: (session.user.app_metadata as { tier?: string })?.tier || 'tier1',
       });
     } catch (error) {
       this.logger.error(
@@ -223,7 +224,7 @@ export class AuthenticationUseCase implements IAuthenticationUseCase {
 
       // Publish user logged out event
       const logoutEvent = new UserLoggedOut(userId, 1, userId, 'user_initiated');
-      await this.eventBus.publish(logoutEvent);
+      this.eventBus.publish(logoutEvent);
 
       this.logger.info(
         {

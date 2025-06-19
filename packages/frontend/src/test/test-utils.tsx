@@ -2,7 +2,25 @@ import React from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
-import { AuthProvider } from "../contexts/AuthContext";
+import type { User } from "@supabase/supabase-js";
+
+// Mock AuthProvider for tests
+export const MockAuthProvider = ({ children, user = null, loading = false }: { 
+  children: React.ReactNode;
+  user?: User | null;
+  loading?: boolean;
+}) => {
+  const value = {
+    user,
+    loading,
+    signOut: vi.fn(),
+  };
+  
+  // Create the context
+  const AuthContext = React.createContext(value);
+  
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 // Create a custom render function that includes providers
 export function renderWithRouter(
@@ -10,9 +28,7 @@ export function renderWithRouter(
   options?: Omit<RenderOptions, "wrapper">
 ) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <BrowserRouter>
-      <AuthProvider>{children}</AuthProvider>
-    </BrowserRouter>
+    <BrowserRouter>{children}</BrowserRouter>
   );
 
   return render(ui, { wrapper: Wrapper, ...options });
@@ -21,6 +37,7 @@ export function renderWithRouter(
 // Mock navigation hook
 export const createMockNavigate = () => {
   const navigate = vi.fn();
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   vi.mocked(require("react-router-dom").useNavigate).mockReturnValue(navigate);
   return navigate;
 };

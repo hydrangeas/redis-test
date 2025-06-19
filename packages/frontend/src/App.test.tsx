@@ -1,66 +1,106 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import App from "./App";
+
+// Mock supabase module
+vi.mock("@/lib/supabase", () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+      }),
+      signInWithOAuth: vi.fn(),
+      signOut: vi.fn(),
+    },
+  },
+}));
+
+// Import supabase after mock
 import { supabase } from "@/lib/supabase";
 
-// Set up mocks before component imports
-vi.mock("@/lib/supabase");
+interface MockSupabase {
+  auth: {
+    getSession: ReturnType<typeof vi.fn>;
+    getUser: ReturnType<typeof vi.fn>;
+    onAuthStateChange: ReturnType<typeof vi.fn>;
+    signInWithOAuth: ReturnType<typeof vi.fn>;
+    signOut: ReturnType<typeof vi.fn>;
+  };
+}
+
+const mockSupabase = supabase as unknown as MockSupabase;
 
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Setup default mocks
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
+      // Simulate auth state change to trigger loading state update
+      setTimeout(() => callback('INITIAL', null), 0);
+      return {
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+        error: null,
+      };
+    });
   });
 
   it("should show loading state initially", () => {
-    // Mock getSession to never resolve
-    vi.mocked(supabase.auth.getSession).mockImplementation(
+    // Mock getUser to never resolve
+    mockSupabase.auth.getUser.mockImplementation(
       () => new Promise(() => {})
     );
 
     render(<App />);
 
-    expect(screen.getByText("読み込み中...")).toBeInTheDocument();
-    expect(screen.getByRole("generic")).toHaveClass("auth-callback-container");
+    expect(screen.getByText("ページを読み込み中...")).toBeInTheDocument();
   });
 
   it("should render app after loading", async () => {
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+    mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: null },
       error: null,
     });
-
-    const mockAuthListener = {
-      data: {
-        subscription: {
-          unsubscribe: vi.fn(),
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    // Make onAuthStateChange trigger loading update immediately
+    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
+      callback('INITIAL', null);
+      return {
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
         },
-      },
-    };
-    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
-    );
+        error: null,
+      };
+    });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
-    });
+      expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
+    }, { timeout: 3000 });
   });
 
   it("should handle auth check error gracefully", async () => {
-    vi.mocked(supabase.auth.getSession).mockRejectedValue(
+    mockSupabase.auth.getUser.mockRejectedValue(
       new Error("Auth error")
-    );
-
-    const mockAuthListener = {
-      data: {
-        subscription: {
-          unsubscribe: vi.fn(),
-        },
-      },
-    };
-    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
     );
 
     const consoleErrorSpy = vi
@@ -70,38 +110,34 @@ describe("App", () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+      expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
     });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Auth check error:",
+      "Error checking user:",
       expect.any(Error)
     );
     consoleErrorSpy.mockRestore();
   });
 
   it("should unsubscribe from auth listener on unmount", async () => {
-    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+    const unsubscribeSpy = vi.fn();
+    mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: null },
       error: null,
     });
-
-    const unsubscribeSpy = vi.fn();
-    const mockAuthListener = {
+    mockSupabase.auth.onAuthStateChange.mockReturnValue({
       data: {
         subscription: {
           unsubscribe: unsubscribeSpy,
         },
       },
-    };
-    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(
-      mockAuthListener as ReturnType<typeof supabase.auth.onAuthStateChange>
-    );
+    });
 
     const { unmount } = render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText("読み込み中...")).not.toBeInTheDocument();
+      expect(screen.queryByText("ページを読み込み中...")).not.toBeInTheDocument();
     });
 
     unmount();

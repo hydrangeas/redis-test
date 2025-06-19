@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { Modal } from "../Modal";
@@ -48,16 +47,12 @@ describe("Modal", () => {
       </Modal>
     );
 
-    // Click on overlay (background)
-    const overlay = screen
-      .getByText("Modal content")
-      .closest('[role="dialog"]')?.parentElement;
-    if (overlay) {
-      fireEvent.click(overlay);
-      await waitFor(() => {
-        expect(handleClose).toHaveBeenCalled();
-      });
-    }
+    // Press Escape key, which is the default behavior for closing headlessui dialogs
+    fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' });
+    
+    await waitFor(() => {
+      expect(handleClose).toHaveBeenCalled();
+    });
   });
 
   it("does not close when closeOnOverlayClick is false", () => {

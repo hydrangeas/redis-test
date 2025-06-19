@@ -1,10 +1,14 @@
-import { IUserRepository } from '../user-repository.interface';
-import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors';
-import { User } from '../../entities/user';
-import { UserId } from '../../value-objects/user-id';
-import { Email } from '../../value-objects/email';
 import { vi } from 'vitest';
+
+import { DomainError } from '@/domain/errors';
+import { Result } from '@/domain/errors/result';
+
+
+import type { User } from '../../entities/user';
+import type { Email } from '../../value-objects/email';
+import type { UserId } from '../../value-objects/user-id';
+import type { IUserRepository } from '../user-repository.interface';
+
 
 /**
  * ユーザーリポジトリのモック実装
@@ -20,40 +24,40 @@ export class MockUserRepository implements IUserRepository {
   public findByIdSpy = vi.fn();
   public findByEmailSpy = vi.fn();
 
-  async findById(id: UserId): Promise<Result<User | null>> {
+  findById(id: UserId): Promise<Result<User | null>> {
     this.findByIdSpy(id);
     const user = this.users.get(id.value);
-    return Result.ok(user || null);
+    return Promise.resolve(Result.ok(user || null));
   }
 
-  async findByEmail(email: Email): Promise<Result<User | null>> {
+  findByEmail(email: Email): Promise<Result<User | null>> {
     this.findByEmailSpy(email);
     const user = Array.from(this.users.values()).find((u) => u.email.equals(email));
-    return Result.ok(user || null);
+    return Promise.resolve(Result.ok(user || null));
   }
 
-  async save(user: User): Promise<Result<void>> {
+  save(user: User): Promise<Result<void>> {
     this.saveSpy(user);
     this.users.set(user.id.value, user);
-    return Result.ok(undefined);
+    return Promise.resolve(Result.ok(undefined));
   }
 
-  async update(user: User): Promise<Result<void>> {
+  update(user: User): Promise<Result<void>> {
     this.updateSpy(user);
     if (!this.users.has(user.id.value)) {
-      return Result.fail(DomainError.notFound('USER_NOT_FOUND', 'User not found'));
+      return Promise.resolve(Result.fail(DomainError.notFound('USER_NOT_FOUND', 'User not found')));
     }
     this.users.set(user.id.value, user);
-    return Result.ok(undefined);
+    return Promise.resolve(Result.ok(undefined));
   }
 
-  async delete(id: UserId): Promise<Result<void>> {
+  delete(id: UserId): Promise<Result<void>> {
     this.deleteSpy(id);
     const deleted = this.users.delete(id.value);
     if (!deleted) {
-      return Result.fail(DomainError.notFound('USER_NOT_FOUND', 'User not found'));
+      return Promise.resolve(Result.fail(DomainError.notFound('USER_NOT_FOUND', 'User not found')));
     }
-    return Result.ok(undefined);
+    return Promise.resolve(Result.ok(undefined));
   }
 
   // テストヘルパーメソッド

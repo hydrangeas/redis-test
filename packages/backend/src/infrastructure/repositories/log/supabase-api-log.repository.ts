@@ -1,19 +1,20 @@
-import { injectable, inject } from 'tsyringe';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
-import { APILogEntry } from '@/domain/log/entities/api-log-entry';
-import { LogId } from '@/domain/log/value-objects/log-id';
-import { TimeRange } from '@/domain/log/value-objects/time-range';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
-import { Endpoint } from '@/domain/api/value-objects/endpoint';
+import { injectable, inject } from 'tsyringe';
+
 import { ApiPath } from '@/domain/api/value-objects/api-path';
+import { Endpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { APILogEntry } from '@/domain/log/entities/api-log-entry';
+import { IAPILogRepository } from '@/domain/log/interfaces/api-log-repository.interface';
+import { LogId } from '@/domain/log/value-objects/log-id';
 import { RequestInfo } from '@/domain/log/value-objects/request-info';
 import { ResponseInfo } from '@/domain/log/value-objects/response-info';
+import { TimeRange } from '@/domain/log/value-objects/time-range';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface APILogRecord {
   id: string;
@@ -26,7 +27,7 @@ interface APILogRecord {
   ip_address: string;
   user_agent: string | null;
   error_message: string | null;
-  metadata: any;
+  metadata: Record<string, unknown> | null;
   request_id: string | null;
   created_at: string;
 }
@@ -78,7 +79,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
       }
 
       this.logger.debug({ logId: logEntry.id.value }, 'API log saved successfully');
-      return Result.ok(undefined as any);
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error saving API log');
       return Result.fail(
@@ -100,9 +101,9 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         .from('api_logs')
         .select('*')
         .eq('id', id.value)
-        .single();
+        .single() as { data: APILogRecord | null; error: Error | null };
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && 'code' in error && error.code !== 'PGRST116') {
         // PGRST116 = no rows returned
         this.logger.error({ error, logId: id.value }, 'Failed to find API log by ID');
         return Result.fail(
@@ -114,7 +115,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         return Result.ok(null);
       }
 
-      const logEntry = await this.recordToLogEntry(data);
+      const logEntry = this.recordToLogEntry(data);
       return Result.ok(logEntry);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding API log');
@@ -150,7 +151,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: APILogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error, userId: userId.value }, 'Failed to find API logs by user ID');
@@ -163,7 +164,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding API logs by user');
@@ -191,7 +192,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         .gte('created_at', timeRange.start.toISOString())
         .lte('created_at', timeRange.end.toISOString())
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .limit(limit) as { data: APILogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find API logs by time range');
@@ -204,7 +205,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding API logs by time range');
@@ -239,7 +240,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
           .lte('created_at', timeRange.end.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: APILogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to find API error logs');
@@ -252,7 +253,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding API error logs');
@@ -284,7 +285,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         .from('api_logs')
         .select('*')
         .gte('created_at', timeRange.start.toISOString())
-        .lte('created_at', timeRange.end.toISOString());
+        .lte('created_at', timeRange.end.toISOString()) as { data: APILogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error }, 'Failed to get API statistics');
@@ -411,7 +412,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   /**
    * レコードをドメインオブジェクトに変換
    */
-  private async recordToLogEntry(record: APILogRecord): Promise<APILogEntry | null> {
+  private recordToLogEntry(record: APILogRecord): APILogEntry | null {
     try {
       const logIdResult = LogId.create(record.id);
       if (logIdResult.isFailure) {
@@ -423,7 +424,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
       const requestInfo = new RequestInfo({
         ipAddress: record.ip_address,
         userAgent: record.user_agent || 'Unknown',
-        headers: record.metadata || {},
+        headers: (record.metadata as Record<string, string>) || {},
         body: record.metadata?.requestBody || null,
       });
 
@@ -431,7 +432,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         statusCode: record.status_code,
         responseTime: record.response_time,
         size: record.response_size || 0,
-        headers: record.metadata || {},
+        headers: (record.metadata as Record<string, string>) || {},
       });
 
       const userId = record.user_id ? UserId.create(record.user_id).getValue() : undefined;
@@ -466,11 +467,11 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
   /**
    * 複数のレコードをドメインオブジェクトに変換
    */
-  private async recordsToLogEntries(records: APILogRecord[]): Promise<APILogEntry[]> {
+  private recordsToLogEntries(records: APILogRecord[]): APILogEntry[] {
     const logEntries: APILogEntry[] = [];
 
     for (const record of records) {
-      const logEntry = await this.recordToLogEntry(record);
+      const logEntry = this.recordToLogEntry(record);
       if (logEntry) {
         logEntries.push(logEntry);
       }
@@ -518,7 +519,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
       }
 
       this.logger.debug({ count: records.length }, 'API logs batch saved successfully');
-      return Result.ok(undefined as any);
+      return Result.ok(undefined);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error saving API logs batch');
       return Result.fail(
@@ -544,7 +545,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         .select('*')
         .gte('response_time', thresholdMs)
         .order('response_time', { ascending: false })
-        .limit(limit);
+        .limit(limit) as { data: APILogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error, thresholdMs }, 'Failed to find slow API requests');
@@ -557,7 +558,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding slow API requests');
@@ -616,7 +617,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         query = query.range(options.offset, options.offset + (options.limit || 100) - 1);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query as { data: APILogRecord[] | null; error: Error | null };
 
       if (error) {
         this.logger.error({ error, options }, 'Failed to find API error logs');
@@ -629,7 +630,7 @@ export class SupabaseAPILogRepository implements IAPILogRepository {
         );
       }
 
-      const logEntries = await this.recordsToLogEntries(data || []);
+      const logEntries = this.recordsToLogEntries(data || []);
       return Result.ok(logEntries);
     } catch (error) {
       this.logger.error({ error }, 'Unexpected error finding API error logs');

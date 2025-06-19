@@ -127,12 +127,21 @@ describe('Logging Infrastructure Integration', () => {
       // 少し待機（非同期処理のため）
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      const logCall = (mockLogger.info as any).mock.calls[0];
+      // Find the correct log call
+      const logCall = (mockLogger.info as any).mock.calls.find(
+        (call: any[]) => call[1] === 'Domain event: APIAccessRequested',
+      );
+
+      if (!logCall) {
+        console.log('All logger.info calls:', (mockLogger.info as any).mock.calls);
+        throw new Error('Expected log message not found');
+      }
+
       const loggedData = logCall[0].event.data;
 
       // センシティブデータがサニタイズされていることを確認
       expect(loggedData.headers).toBeUndefined();
-      expect(loggedData.endpoint).toBe('/api/data/test.json');
+      expect(loggedData.path).toBe('/api/data/test.json');
       expect(loggedData.method).toBe('GET');
     });
   });

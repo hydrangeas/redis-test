@@ -7,7 +7,7 @@ export class SecurityAlertRaisedEvent extends DomainEvent {
   constructor(
     public readonly userId: string | undefined,
     public readonly alertType: string,
-    public readonly details: Record<string, any>,
+    public readonly details: Record<string, unknown>,
     public readonly occurredAt: Date,
   ) {
     super();

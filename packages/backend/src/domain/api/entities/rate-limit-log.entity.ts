@@ -1,6 +1,6 @@
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { Entity, UniqueEntityId } from '@/domain/shared/entity';
 import { Result } from '@/domain/shared/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 
 export interface RateLimitLogProps {
   userId: string;

@@ -1,12 +1,14 @@
 import fp from 'fastify-plugin';
 
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 /**
  * シンプルなパス検証プラグイン
  * パストラバーサル攻撃の防止
  */
 export default fp(
-  async function pathValidationPlugin(fastify) {
-    fastify.addHook('preHandler', async (request, reply) => {
+  function pathValidationPlugin(fastify: FastifyInstance) {
+    fastify.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
       // ヘルスチェックとドキュメントエンドポイントは除外
       if (request.url === '/health' || request.url.startsWith('/api-docs')) {
         return;
@@ -27,11 +29,11 @@ export default fp(
 
       // クエリパラメータのXSS対策
       if (request.query && typeof request.query === 'object') {
-        const sanitizedQuery: Record<string, any> = {};
+        const sanitizedQuery: Record<string, unknown> = {};
 
         for (const [key, value] of Object.entries(request.query)) {
           if (typeof value === 'string') {
-            let sanitizedValue = value
+            const sanitizedValue = value
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')
@@ -44,7 +46,8 @@ export default fp(
           }
         }
 
-        (request as any).query = sanitizedQuery;
+        // Type assertion for Fastify query object
+        (request as unknown as { query: Record<string, unknown> }).query = sanitizedQuery;
       }
     });
 

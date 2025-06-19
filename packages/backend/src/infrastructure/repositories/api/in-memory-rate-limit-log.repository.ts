@@ -1,11 +1,12 @@
 import { injectable } from 'tsyringe';
-import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
+
 import { RateLimitLog } from '@/domain/api/entities/rate-limit-log.entity';
-import { UserId } from '@/domain/auth/value-objects/user-id';
+import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
 import { EndpointId } from '@/domain/api/value-objects/endpoint-id';
 import { RateLimitWindow } from '@/domain/api/value-objects/rate-limit-window';
-import { Result } from '@/domain/errors/result';
+import { UserId } from '@/domain/auth/value-objects/user-id';
 import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
 
 /**
  * インメモリレート制限ログリポジトリ実装
@@ -18,15 +19,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
   async save(log: RateLimitLog): Promise<Result<void>> {
     try {
       this.logs.set(log.id.value, log);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'SAVE_FAILED',
           'Failed to save rate limit log',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
@@ -35,15 +36,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
       for (const log of logs) {
         this.logs.set(log.id.value, log);
       }
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'SAVE_MANY_FAILED',
           'Failed to save rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
@@ -65,15 +66,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         );
       });
 
-      return Result.ok(matchingLogs);
+      return Promise.resolve(Result.ok(matchingLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'FIND_FAILED',
           'Failed to find rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
@@ -92,15 +93,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      return Result.ok(matchingLogs);
+      return Promise.resolve(Result.ok(matchingLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'FIND_BY_USER_FAILED',
           'Failed to find user rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
@@ -121,15 +122,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         );
       }
 
-      return Result.ok(matchingLogs);
+      return Promise.resolve(Result.ok(matchingLogs));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'FIND_BY_ENDPOINT_FAILED',
           'Failed to find endpoint rate limit logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
@@ -145,15 +146,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
       }
 
       const deletedCount = initialSize - this.logs.size;
-      return Result.ok(deletedCount);
+      return Promise.resolve(Result.ok(deletedCount));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'DELETE_FAILED',
           'Failed to delete old logs',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
@@ -177,15 +178,15 @@ export class InMemoryRateLimitLogRepository implements IRateLimitLogRepository {
         })
         .length; // Count the number of logs
 
-      return Result.ok(count);
+      return Promise.resolve(Result.ok(count));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'COUNT_FAILED',
           'Failed to count requests',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 

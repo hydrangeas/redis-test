@@ -122,7 +122,7 @@ export const WithRightIcon: Story = {
 };
 
 export const PasswordWithToggle: Story = {
-  render: () => {
+  render: function PasswordWithToggleInput() {
     const [showPassword, setShowPassword] = React.useState(false);
 
     return (

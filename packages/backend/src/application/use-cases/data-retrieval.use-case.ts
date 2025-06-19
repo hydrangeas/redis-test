@@ -1,17 +1,19 @@
-import { injectable, inject } from 'tsyringe';
-import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
-import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { DataPath } from '@/domain/data/value-objects/data-path';
-import { Result } from '@/domain/shared/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DataAccessRequested } from '@/domain/data/events/data-access-requested.event';
-import { DataRetrieved } from '@/domain/data/events/data-retrieved.event';
-import { DataResourceNotFound } from '@/domain/data/events/data-resource-not-found.event';
-import { DataAccessDenied } from '@/domain/data/events/data-access-denied.event';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { IAPIAccessControlUseCase } from '@/application/interfaces/api-access-control-use-case.interface';
+import { IDataRetrievalUseCase } from '@/application/interfaces/data-retrieval-use-case.interface';
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { DataAccessDenied } from '@/domain/data/events/data-access-denied.event';
+import { DataAccessRequested } from '@/domain/data/events/data-access-requested.event';
+import { DataResourceNotFound } from '@/domain/data/events/data-resource-not-found.event';
+import { DataRetrieved } from '@/domain/data/events/data-retrieved.event';
+import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import { DataPath } from '@/domain/data/value-objects/data-path';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { Result } from '@/domain/shared/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
  * データ取得ユースケースの実装
@@ -22,6 +24,8 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   constructor(
     @inject(DI_TOKENS.OpenDataRepository)
     private readonly dataRepository: IOpenDataRepository,
+    @inject(DI_TOKENS.APIAccessControlUseCase)
+    private readonly accessControlUseCase: IAPIAccessControlUseCase,
     @inject(DI_TOKENS.EventBus)
     private readonly eventBus: IEventBus,
     @inject(DI_TOKENS.Logger)
@@ -34,9 +38,10 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
   async retrieveData(
     path: string,
     user: AuthenticatedUser,
+    metadata?: { ipAddress?: string },
   ): Promise<
     Result<{
-      content: any;
+      content: unknown;
       checksum: string;
       lastModified: Date;
     }>
@@ -48,7 +53,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
         this.logger.warn({ path, userId: user.userId.value }, 'Invalid data path');
 
         // データアクセス拒否イベントを発行
-        await this.eventBus.publish(
+        void this.eventBus.publish(
           new DataAccessDenied(
             user.userId.value,  // aggregateId
             user.userId.value,  // userId
@@ -65,9 +70,75 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
 
       const dataPath = dataPathResult.getValue();
 
+      // アクセス制御チェック
+      const accessCheckResult = await this.accessControlUseCase.checkAndRecordAccess(
+        user,
+        path,
+        'GET',
+        metadata,
+      );
+
+      if (accessCheckResult.isFailure) {
+        this.logger.error(
+          { path, userId: user.userId.value, error: accessCheckResult.getError() },
+          'Access control check failed',
+        );
+        return Result.fail(accessCheckResult.getError());
+      }
+
+      const accessDecision = accessCheckResult.getValue();
+      if (!accessDecision.allowed) {
+        this.logger.warn(
+          { 
+            path, 
+            userId: user.userId.value, 
+            reason: accessDecision.reason,
+            rateLimitStatus: accessDecision.rateLimitStatus,
+          },
+          'Access denied',
+        );
+
+        // データアクセス拒否イベントを発行
+        void this.eventBus.publish(
+          new DataAccessDenied(
+            user.userId.value,
+            user.userId.value,
+            path,
+            path,
+            user.tier.level.toString(),
+            accessDecision.reason || 'ACCESS_DENIED',
+            new Date(),
+          ),
+        );
+
+        // レート制限超過の場合は特別なエラーを返す
+        if (accessDecision.reason === 'rate_limit_exceeded') {
+          return Result.fail(
+            new DomainError(
+              'ACCESS_DENIED',
+              'Rate limit exceeded',
+              ErrorType.FORBIDDEN,
+              {
+                reason: accessDecision.reason,
+                rateLimitStatus: accessDecision.rateLimitStatus,
+              },
+            ),
+          );
+        }
+
+        return Result.fail(
+          new DomainError(
+            'ACCESS_DENIED',
+            accessDecision.message || 'Access denied',
+            ErrorType.FORBIDDEN,
+            { reason: accessDecision.reason },
+          ),
+        );
+      }
+
       // データアクセス要求イベントを発行
       // We don't have resource size and mime type yet, using placeholders
-      await this.eventBus.publish(
+      void this.eventBus.publish(
         new DataAccessRequested(
           user.userId.value,  // aggregateId
           user.userId.value,  // userId
@@ -90,7 +161,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
         // リソースが見つからない場合のイベント発行
         const error = resourceResult.getError();
         if (error instanceof DomainError && error.type === ErrorType.NOT_FOUND) {
-          await this.eventBus.publish(
+          void this.eventBus.publish(
             new DataResourceNotFound(
               user.userId.value,  // aggregateId
               user.userId.value,  // userId
@@ -119,7 +190,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      await this.eventBus.publish(
+      void this.eventBus.publish(
         new DataRetrieved(
           resource.id.value,          // aggregateId
           1,                          // eventVersion
@@ -220,7 +291,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     etag: string,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       newEtag?: string;
     }>
@@ -262,7 +333,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      await this.eventBus.publish(
+      void this.eventBus.publish(
         new DataRetrieved(
           resource.id.value,          // aggregateId
           1,                          // eventVersion
@@ -300,7 +371,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
     ifModifiedSince: Date,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       lastModified?: Date;
     }>
@@ -345,7 +416,7 @@ export class DataRetrievalUseCase implements IDataRetrievalUseCase {
       resource.recordAccess();
 
       // データ取得成功イベントを発行
-      await this.eventBus.publish(
+      void this.eventBus.publish(
         new DataRetrieved(
           resource.id.value,          // aggregateId
           1,                          // eventVersion

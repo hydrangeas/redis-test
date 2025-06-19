@@ -1,14 +1,16 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import fp from 'fastify-plugin';
 import { container } from 'tsyringe';
-import { IJWTService } from '@/application/interfaces/jwt.service.interface';
-import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { UserId } from '@/domain/auth/value-objects/user-id';
 import { UserTier } from '@/domain/auth/value-objects/user-tier';
-import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import fp from 'fastify-plugin';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { metrics } from '@/plugins/monitoring';
+
+import type { IJWTService } from '@/application/interfaces/jwt.service.interface';
+import type { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
+import type { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 interface AuthPluginOptions {
   excludePaths?: string[];
@@ -26,12 +28,13 @@ declare module 'fastify' {
 }
 
 const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, options) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const excludePaths = options.excludePaths || [];
 
-  const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
+  const authenticate = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     // デバッグログ
     if (process.env.NODE_ENV === 'test') {
-      console.log('Auth plugin authenticate called for URL:', request.url);
+      // console.log('Auth plugin authenticate called for URL:', request.url);
     }
     request.log.debug(
       { url: request.url, headers: request.headers },
@@ -43,13 +46,13 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       const jwtService = container.resolve<IJWTService>(DI_TOKENS.JwtService);
       const userRepository = container.resolve<IUserRepository>(DI_TOKENS.UserRepository);
       if (process.env.NODE_ENV === 'test') {
-        console.log('Services resolved successfully');
+        // console.log('Services resolved successfully');
       }
 
       // 除外パスのチェック
       if (process.env.NODE_ENV === 'test') {
-        console.log('Checking exclude paths for URL:', request.url);
-        console.log('Exclude paths:', excludePaths);
+        // console.log('Checking exclude paths for URL:', request.url);
+        // console.log('Exclude paths:', excludePaths);
       }
       if (
         excludePaths.some((path) => {
@@ -63,7 +66,7 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       ) {
         request.log.debug({ url: request.url }, 'URL is in exclude paths');
         if (process.env.NODE_ENV === 'test') {
-          console.log('URL is excluded from auth');
+          // console.log('URL is excluded from auth');
         }
         return;
       }
@@ -71,13 +74,13 @@ const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, option
       // Authorizationヘッダーのチェック
       const authHeader = request.headers.authorization;
       if (process.env.NODE_ENV === 'test') {
-        console.log('Auth header value:', authHeader);
-        console.log('All headers:', JSON.stringify(request.headers));
+        // console.log('Auth header value:', authHeader);
+        // console.log('All headers:', JSON.stringify(request.headers));
       }
       if (!authHeader) {
         request.log.debug('No authorization header found');
         if (process.env.NODE_ENV === 'test') {
-          console.log('Auth plugin: No authorization header');
+          // console.log('Auth plugin: No authorization header');
         }
         await reply.code(401).send({
           type: `${process.env.API_URL || 'https://api.example.com'}/errors/unauthorized`,

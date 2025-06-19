@@ -25,6 +25,18 @@ describe('SupabaseUserRepository', () => {
   describe('findById', () => {
     it('既存のユーザーを正常に取得できる', async () => {
       const userId = '123e4567-e89b-12d3-a456-426614174000';
+      
+      // Set up mock user data
+      mockAuthAdapter.setMockUser(userId, {
+        id: userId,
+        email: 'test@example.com',
+        email_confirmed_at: new Date().toISOString(),
+        app_metadata: { tier: 'tier1' },
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
       const userIdResult = UserId.create(userId);
       if (!userIdResult.isSuccess) {
         throw new Error(`Failed to create UserId: ${userIdResult.getError().message}`);
@@ -74,6 +86,19 @@ describe('SupabaseUserRepository', () => {
   describe('findByEmail', () => {
     it('既存のユーザーをメールアドレスで取得できる', async () => {
       const email = 'test@example.com';
+      const userId = '123e4567-e89b-12d3-a456-426614174000';
+      
+      // Set up mock user data
+      mockAuthAdapter.setMockUser(userId, {
+        id: userId,
+        email: email,
+        email_confirmed_at: new Date().toISOString(),
+        app_metadata: { tier: 'tier1' },
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
       const emailVO = Email.create(email).getValue();
 
       const result = await repository.findByEmail(emailVO);
@@ -171,9 +196,22 @@ describe('SupabaseUserRepository', () => {
 
   describe('update', () => {
     it('既存のユーザーを正常に更新できる', async () => {
+      const userId = '123e4567-e89b-12d3-a456-426614174000';
+      
+      // Set up existing user
+      mockAuthAdapter.setMockUser(userId, {
+        id: userId,
+        email: 'test@example.com',
+        email_confirmed_at: new Date().toISOString(),
+        app_metadata: { tier: 'tier1' },
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
       // 既存のユーザーを取得
-      const userId = UserId.create('123e4567-e89b-12d3-a456-426614174000').getValue();
-      const findResult = await repository.findById(userId);
+      const userIdVO = UserId.create(userId).getValue();
+      const findResult = await repository.findById(userIdVO);
       const existingUser = findResult.getValue()!;
 
       // メールアドレスを更新
@@ -190,10 +228,23 @@ describe('SupabaseUserRepository', () => {
     });
 
     it('ユーザー更新に失敗した場合はエラーを返す', async () => {
+      const userId = '123e4567-e89b-12d3-a456-426614174000';
+      
+      // Set up existing user
+      mockAuthAdapter.setMockUser(userId, {
+        id: userId,
+        email: 'test@example.com',
+        email_confirmed_at: new Date().toISOString(),
+        app_metadata: { tier: 'tier1' },
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
       vi.spyOn(mockAuthAdapter, 'updateUser').mockResolvedValue(null);
 
-      const userId = UserId.create('123e4567-e89b-12d3-a456-426614174000').getValue();
-      const findResult = await repository.findById(userId);
+      const userIdVO = UserId.create(userId).getValue();
+      const findResult = await repository.findById(userIdVO);
       const existingUser = findResult.getValue()!;
 
       const result = await repository.update(existingUser);
@@ -205,14 +256,27 @@ describe('SupabaseUserRepository', () => {
 
   describe('delete', () => {
     it('既存のユーザーを正常に削除できる', async () => {
-      const userId = UserId.create('123e4567-e89b-12d3-a456-426614174000').getValue();
+      const userId = '123e4567-e89b-12d3-a456-426614174000';
+      
+      // Set up existing user
+      mockAuthAdapter.setMockUser(userId, {
+        id: userId,
+        email: 'test@example.com',
+        email_confirmed_at: new Date().toISOString(),
+        app_metadata: { tier: 'tier1' },
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
+      const userIdVO = UserId.create(userId).getValue();
 
-      const result = await repository.delete(userId);
+      const result = await repository.delete(userIdVO);
 
       expect(result.isSuccess).toBe(true);
 
       // モックで削除されたことを確認
-      const deletedUser = await mockAuthAdapter.getUserById(userId.value);
+      const deletedUser = await mockAuthAdapter.getUserById(userIdVO.value);
       expect(deletedUser).toBeNull();
     });
 
@@ -241,7 +305,7 @@ describe('SupabaseUserRepository', () => {
         user_metadata: { foo: 'bar' },
       };
 
-      mockAuthAdapter.setMockUser(supabaseUser);
+      mockAuthAdapter.setMockUser(supabaseUser.id, supabaseUser);
 
       const userId = UserId.create(supabaseUser.id).getValue();
       const result = await repository.findById(userId);
@@ -265,7 +329,7 @@ describe('SupabaseUserRepository', () => {
         // app_metadata, user_metadata は未設定
       };
 
-      mockAuthAdapter.setMockUser(supabaseUser);
+      mockAuthAdapter.setMockUser(supabaseUser.id, supabaseUser);
 
       const userId = UserId.create(supabaseUser.id).getValue();
       const result = await repository.findById(userId);

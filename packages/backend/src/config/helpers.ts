@@ -28,8 +28,9 @@ export function getCorsOrigins(): string[] {
   return config.security.cors.origins;
 }
 
-export function getRateLimitConfig(tier: string) {
-  const tierConfig = config.rateLimit.tiers[tier.toLowerCase()];
+export function getRateLimitConfig(tier: string): { max: number; window: number } {
+  const lowerTier = tier.toLowerCase() as 'tier1' | 'tier2' | 'tier3';
+  const tierConfig = config.rateLimit.tiers[lowerTier];
   if (!tierConfig) {
     throw new Error(`Unknown tier: ${tier}`);
   }
@@ -40,7 +41,7 @@ export function getFeatureFlag(feature: keyof typeof config.features): boolean {
   return config.features[feature];
 }
 
-export function getServerConfig() {
+export function getServerConfig(): { port: number; host: string; baseUrl: string } {
   return {
     port: config.server.port,
     host: config.server.host,
@@ -48,7 +49,7 @@ export function getServerConfig() {
   };
 }
 
-export function getSupabaseConfig() {
+export function getSupabaseConfig(): { url: string | undefined; anonKey: string | undefined; serviceRoleKey: string | undefined } {
   return {
     url: config.supabase.url,
     anonKey: config.supabase.anonKey,
@@ -56,7 +57,7 @@ export function getSupabaseConfig() {
   };
 }
 
-export function getSecurityConfig() {
+export function getSecurityConfig(): { jwtSecret: string; encryptionKey: string; cors: { origins: string[]; credentials: boolean } } {
   return {
     jwtSecret: config.security.jwtSecret,
     encryptionKey: config.security.encryptionKey,

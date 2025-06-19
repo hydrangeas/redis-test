@@ -1,4 +1,4 @@
-import { Result } from '@/domain/errors/result';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * File storage interface for data persistence
@@ -10,7 +10,7 @@ export interface IFileStorage {
    * @param path - Relative path to the file
    * @returns Parsed JSON content or error
    */
-  readFile(path: string): Promise<Result<any>>;
+  readFile(path: string): Promise<Result<unknown>>;
 
   /**
    * Get file metadata without reading content

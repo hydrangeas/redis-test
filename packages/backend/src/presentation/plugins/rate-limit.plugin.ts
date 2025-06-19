@@ -1,14 +1,16 @@
 import fp from 'fastify-plugin';
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { container } from 'tsyringe';
-import { IRateLimitService } from '@/domain/api/interfaces/rate-limit-service.interface';
+
+import { ApiPath } from '@/domain/api/value-objects/api-path';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
 import { HttpMethod } from '@/domain/api/value-objects/http-method';
-import { ApiPath } from '@/domain/api/value-objects/api-path';
-import { toProblemDetails } from '@/presentation/errors/error-mapper';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { rateLimitHits, rateLimitExceeded } from '@/monitoring/metrics';
+import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
+import type { IRateLimitService } from '@/domain/api/interfaces/rate-limit-service.interface';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 
 export interface RateLimitPluginOptions {
   // レート制限をスキップするパス
@@ -28,6 +30,7 @@ declare module 'fastify' {
 }
 
 const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fastify, options) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const rateLimitService = container.resolve<IRateLimitService>(DI_TOKENS.RateLimitService);
 
   const defaultExcludePaths = [
@@ -68,7 +71,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
   /**
    * レート制限をチェックする関数をデコレーターとして登録
    */
-  const checkRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
+  const checkRateLimit = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     // 認証されていない場合はスキップ（認証ミドルウェアで処理）
     if (!request.user) {
       return;
@@ -98,7 +101,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
 
       // ヘッダーの設定（成功・失敗に関わらず）
       if (includeHeaders) {
-        reply.headers({
+        void reply.headers({
           'X-RateLimit-Limit': rateLimitResult.limit.toString(),
           'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining).toString(),
           'X-RateLimit-Reset': Math.floor(rateLimitResult.resetAt.getTime() / 1000).toString(),
@@ -109,7 +112,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
           ((rateLimitResult.limit - rateLimitResult.remaining) / rateLimitResult.limit) * 100;
 
         if (usagePercentage >= 80) {
-          reply.header('X-RateLimit-Warning', `${Math.round(usagePercentage)}% of rate limit used`);
+          void reply.header('X-RateLimit-Warning', `${Math.round(usagePercentage)}% of rate limit used`);
         }
       }
 
@@ -137,7 +140,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
 
         // Retry-Afterヘッダーの設定
         if (rateLimitResult.retryAfter) {
-          reply.header('Retry-After', rateLimitResult.retryAfter.toString());
+          void reply.header('Retry-After', rateLimitResult.retryAfter.toString());
         }
 
         request.log.warn(
@@ -187,7 +190,7 @@ const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fasti
       // エラーが発生した場合でも、基本的なヘッダーは設定
       if (includeHeaders && request.user) {
         const tier = request.user.tier;
-        reply.headers({
+        void reply.headers({
           'X-RateLimit-Limit': tier.rateLimit.maxRequests.toString(),
           'X-RateLimit-Remaining': 'unknown',
           'X-RateLimit-Reset': 'unknown',

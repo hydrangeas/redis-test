@@ -6,14 +6,14 @@ export class RequestInfo {
   private readonly _ipAddress: string;
   private readonly _userAgent: string;
   private readonly _headers: Record<string, string>;
-  private readonly _body: any;
+  private readonly _body: unknown;
   private readonly _queryParams?: Record<string, string>;
 
   constructor(params: {
     ipAddress: string;
     userAgent: string;
     headers: Record<string, string>;
-    body: any;
+    body: unknown;
     queryParams?: Record<string, string>;
   }) {
     this._ipAddress = params.ipAddress;
@@ -49,7 +49,7 @@ export class RequestInfo {
   /**
    * リクエストボディ
    */
-  get body(): any {
+  get body(): unknown {
     return this._body;
   }
 
@@ -149,7 +149,7 @@ export class RequestInfo {
   /**
    * センシティブな情報をマスクしたオブジェクトを返す
    */
-  toSafeObject(): Record<string, any> {
+  toSafeObject(): Record<string, unknown> {
     const safeHeaders = { ...this._headers };
 
     // 認証情報をマスク

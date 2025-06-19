@@ -10,6 +10,7 @@ import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { APIEndpointFactory } from '../../factories/api-endpoint.factory';
+import { UniqueEntityId } from '@/domain/shared/entity';
 
 describe('APIAggregate', () => {
   let aggregate: APIAggregate;
@@ -150,20 +151,20 @@ describe('APIAggregate', () => {
       aggregate.addEndpoint(APIEndpointFactory.createAdminEndpoint('/admin/users'));
     });
 
-    it('should process public endpoint access without rate limiting', async () => {
+    it('should process public endpoint access without rate limiting', () => {
       const path = EndpointPath.create('/health').getValue();
 
-      const result = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      const result = aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().isExceeded).toBe(false);
       expect(result.getValue().remainingRequests).toBe(Number.MAX_SAFE_INTEGER);
     });
 
-    it('should process protected endpoint access with rate limiting', async () => {
+    it('should process protected endpoint access with rate limiting', () => {
       const path = EndpointPath.create('/api/data/test.json').getValue();
 
-      const result = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      const result = aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().isExceeded).toBe(false);
@@ -171,51 +172,51 @@ describe('APIAggregate', () => {
       expect(result.getValue().remainingRequests).toBe(59); // 60 - 1
     });
 
-    it('should detect rate limit exceeded', async () => {
+    it('should detect rate limit exceeded', () => {
       const path = EndpointPath.create('/api/data/test.json').getValue();
 
       // Make 60 requests (tier 1 limit)
       for (let i = 0; i < 60; i++) {
-        await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+        aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
       }
 
       // 61st request should exceed
-      const result = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      const result = aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue().isExceeded).toBe(true);
       expect(result.getValue().retryAfterSeconds).toBeDefined();
     });
 
-    it('should reject access to admin endpoints for regular users', async () => {
+    it('should reject access to admin endpoints for regular users', () => {
       const path = EndpointPath.create('/admin/users').getValue();
 
-      const result = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      const result = aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().code).toBe('INSUFFICIENT_TIER');
     });
 
-    it('should reject access to inactive endpoints', async () => {
+    it('should reject access to inactive endpoints', () => {
       const endpoint = APIEndpointFactory.createDataEndpoint('/api/inactive');
       endpoint.deactivate();
       aggregate.addEndpoint(endpoint);
 
       const path = EndpointPath.create('/api/inactive').getValue();
 
-      const result = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      const result = aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       expect(result.isFailure).toBe(true);
       expect(result.getError().code).toBe('ENDPOINT_INACTIVE');
     });
 
-    it('should track domain events', async () => {
+    it('should track domain events', () => {
       const path = EndpointPath.create('/api/data/test.json').getValue();
 
       // Clear existing events
       aggregate['_domainEvents'] = [];
 
-      await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       const events = aggregate.getUncommittedEvents();
       expect(events.length).toBe(2); // APIAccessRequested and APIAccessRecorded
@@ -227,36 +228,41 @@ describe('APIAggregate', () => {
   describe('tier access control', () => {
     beforeEach(() => {
       // Add internal endpoint
-      const pathResult = EndpointPath.create('/internal/api');
       const typeResult = EndpointType.create('internal');
-      const endpoint = APIEndpoint.create({
-        path: pathResult.getValue(),
+      if (!typeResult.isSuccess) {
+        throw new Error(`Failed to create type: ${typeResult.getError().message}`);
+      }
+      const endpointResult = APIEndpoint.create({
+        path: '/internal/api', // Pass string, not EndpointPath object
         method: HttpMethod.GET,
         type: typeResult.getValue(),
         isActive: true,
-      }).getValue();
-      aggregate.addEndpoint(endpoint);
+      });
+      if (!endpointResult.isSuccess) {
+        throw new Error(`Failed to create endpoint: ${endpointResult.getError().message}`);
+      }
+      aggregate.addEndpoint(endpointResult.getValue());
     });
 
-    it('should allow TIER3 to access internal endpoints', async () => {
+    it('should allow TIER3 to access internal endpoints', () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440003').getValue();
       const userTier = UserTier.createDefault(TierLevel.TIER3);
       const path = EndpointPath.create('/internal/api').getValue();
 
-      const result = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
+      const result = aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier);
 
       expect(result.isSuccess).toBe(true);
     });
 
-    it('should deny TIER1 and TIER2 from accessing internal endpoints', async () => {
+    it('should deny TIER1 and TIER2 from accessing internal endpoints', () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440001').getValue();
       const tier1 = UserTier.createDefault(TierLevel.TIER1);
       const tier2 = UserTier.createDefault(TierLevel.TIER2);
       const path = EndpointPath.create('/internal/api').getValue();
 
-      const result1 = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, tier1);
+      const result1 = aggregate.processAPIAccess(userId, path, HttpMethod.GET, tier1);
 
-      const result2 = await aggregate.processAPIAccess(userId, path, HttpMethod.GET, tier2);
+      const result2 = aggregate.processAPIAccess(userId, path, HttpMethod.GET, tier2);
 
       expect(result1.isFailure).toBe(true);
       expect(result1.getError().code).toBe('INSUFFICIENT_TIER');
@@ -266,7 +272,7 @@ describe('APIAggregate', () => {
   });
 
   describe('cleanup operations', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       const endpoint = APIEndpointFactory.createDataEndpoint('/api/data/*');
       aggregate.addEndpoint(endpoint);
 
@@ -281,21 +287,21 @@ describe('APIAggregate', () => {
 
       // Process some requests
       for (let i = 0; i < 3; i++) {
-        await aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier, now);
+        aggregate.processAPIAccess(userId, path, HttpMethod.GET, userTier, now);
       }
     });
 
-    it('should cleanup user logs', async () => {
+    it('should cleanup user logs', () => {
       const userId = UserId.create('550e8400-e29b-41d4-a716-446655440099').getValue();
 
-      const result = await aggregate.cleanupUserLogs(userId, 60);
+      const result = aggregate.cleanupUserLogs(userId, 60);
 
       expect(result.isSuccess).toBe(true);
       // Cleanup count depends on the automatic cleanup in the endpoint
     });
 
-    it('should cleanup all logs', async () => {
-      const result = await aggregate.cleanupAllLogs(60);
+    it('should cleanup all logs', () => {
+      const result = aggregate.cleanupAllLogs(60);
 
       expect(result.isSuccess).toBe(true);
       expect(result.getValue()).toBeGreaterThanOrEqual(0);
@@ -321,7 +327,7 @@ describe('APIAggregate', () => {
         defaultRateLimits: new Map([[TierLevel.TIER1, new RateLimit(100, 60)]]),
       };
 
-      const reconstituted = APIAggregate.reconstitute(props, 'aggregate-id');
+      const reconstituted = APIAggregate.reconstitute(props, new UniqueEntityId('aggregate-id'));
 
       expect(reconstituted.endpoints.size).toBe(1);
       expect(reconstituted.defaultRateLimits.get(TierLevel.TIER1)?.maxRequests).toBe(100);

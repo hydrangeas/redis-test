@@ -1,6 +1,6 @@
-import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
 import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
 
 /**
  * レート制限の設定を表すバリューオブジェクト

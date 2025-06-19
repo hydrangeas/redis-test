@@ -1,5 +1,5 @@
-import { Result } from '@/domain/shared/result';
 import { ValidationError } from '@/domain/errors/validation-error';
+import { Result } from '@/domain/shared/result';
 
 export enum HttpMethodType {
   GET = 'GET',

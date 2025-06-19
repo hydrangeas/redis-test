@@ -28,18 +28,18 @@ describe('TimeRange', () => {
 
       const result1 = TimeRange.create(null as any, date);
       expect(result1.isFailure).toBe(true);
-      expect(result1.error).toBe('開始日時と終了日時は必須です');
+      expect(result1.getError().message).toBe('開始日時と終了日時は必須です');
 
       const result2 = TimeRange.create(date, null as any);
       expect(result2.isFailure).toBe(true);
-      expect(result2.error).toBe('開始日時と終了日時は必須です');
+      expect(result2.getError().message).toBe('開始日時と終了日時は必須です');
     });
 
     it('Date型以外の値の場合はエラーを返す', () => {
       const result = TimeRange.create('2025-01-01' as any, '2025-01-31' as any);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('開始日時と終了日時はDate型である必要があります');
+      expect(result.getError().message).toBe('開始日時と終了日時はDate型である必要があります');
     });
 
     it('無効な日時の場合はエラーを返す', () => {
@@ -49,7 +49,7 @@ describe('TimeRange', () => {
       const result = TimeRange.create(invalidDate, validDate);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('無効な日時が指定されました');
+      expect(result.getError().message).toBe('無効な日時が指定されました');
     });
 
     it('開始日時が終了日時より後の場合はエラーを返す', () => {
@@ -58,7 +58,7 @@ describe('TimeRange', () => {
       const result = TimeRange.create(start, end);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('開始日時は終了日時より前である必要があります');
+      expect(result.getError().message).toBe('開始日時は終了日時より前である必要があります');
     });
 
     it('1年を超える範囲の場合はエラーを返す', () => {
@@ -67,7 +67,7 @@ describe('TimeRange', () => {
       const result = TimeRange.create(start, end);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('時間範囲は最大1年までです');
+      expect(result.getError().message).toBe('時間範囲は最大1年までです');
     });
 
     it('作成された時間範囲は元の日付オブジェクトとは独立している', () => {

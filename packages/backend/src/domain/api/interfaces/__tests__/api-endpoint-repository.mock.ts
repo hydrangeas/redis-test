@@ -1,10 +1,14 @@
-import { IAPIEndpointRepository } from '../api-endpoint-repository.interface';
-import { APIEndpoint } from '../../value-objects/api-endpoint';
-import { EndpointPath } from '../../value-objects/endpoint-path';
-import { HttpMethod } from '../../value-objects/http-method';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
 import { vi } from 'vitest';
+
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+
+import type { APIEndpoint } from '../../value-objects/api-endpoint';
+import type { EndpointPath } from '../../value-objects/endpoint-path';
+import type { HttpMethod } from '../../value-objects/http-method';
+import type { IAPIEndpointRepository } from '../api-endpoint-repository.interface';
+
+
 
 /**
  * APIエンドポイントリポジトリのモック実装
@@ -27,26 +31,26 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
   /**
    * エンドポイントを保存
    */
-  async save(endpoint: APIEndpoint): Promise<Result<void>> {
+  save(endpoint: APIEndpoint): Promise<Result<void>> {
     this.saveSpy(endpoint);
 
     try {
       const key = this.createKey(endpoint.path, endpoint.method);
       this.endpoints.set(key, endpoint);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('SAVE_FAILED', 'Failed to save endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * パスとメソッドでエンドポイントを検索
    */
-  async findByPathAndMethod(
+  findByPathAndMethod(
     path: EndpointPath,
     method: HttpMethod,
   ): Promise<Result<APIEndpoint | null>> {
@@ -55,58 +59,58 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
     try {
       const key = this.createKey(path, method);
       const endpoint = this.endpoints.get(key) || null;
-      return Result.ok(endpoint);
+      return Promise.resolve(Result.ok(endpoint));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('FIND_FAILED', 'Failed to find endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * すべてのエンドポイントを取得
    */
-  async listAll(): Promise<Result<APIEndpoint[]>> {
+  listAll(): Promise<Result<APIEndpoint[]>> {
     this.listAllSpy();
 
     try {
       const allEndpoints = Array.from(this.endpoints.values());
-      return Result.ok(allEndpoints);
+      return Promise.resolve(Result.ok(allEndpoints));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('LIST_FAILED', 'Failed to list endpoints', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * アクティブなエンドポイントのみを取得
    */
-  async listActive(): Promise<Result<APIEndpoint[]>> {
+  listActive(): Promise<Result<APIEndpoint[]>> {
     this.listActiveSpy();
 
     try {
       const activeEndpoints = Array.from(this.endpoints.values()).filter(
         (endpoint) => endpoint.isActive,
       );
-      return Result.ok(activeEndpoints);
+      return Promise.resolve(Result.ok(activeEndpoints));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('LIST_FAILED', 'Failed to list active endpoints', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 
   /**
    * エンドポイントを削除
    */
-  async delete(path: EndpointPath, method: HttpMethod): Promise<Result<void>> {
+  delete(path: EndpointPath, method: HttpMethod): Promise<Result<void>> {
     this.deleteSpy(path, method);
 
     try {
@@ -114,22 +118,22 @@ export class MockAPIEndpointRepository implements IAPIEndpointRepository {
       const existed = this.endpoints.has(key);
 
       if (!existed) {
-        return Result.fail(
+        return Promise.resolve(Result.fail(
           new DomainError('NOT_FOUND', 'Endpoint not found', ErrorType.NOT_FOUND, {
             path: path.value,
             method: method,
           }),
-        );
+        ));
       }
 
       this.endpoints.delete(key);
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         new DomainError('DELETE_FAILED', 'Failed to delete endpoint', ErrorType.INTERNAL, {
           error: error instanceof Error ? error.message : 'Unknown error',
         }),
-      );
+      ));
     }
   }
 

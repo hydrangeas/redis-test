@@ -1,22 +1,27 @@
-import { injectable, inject } from 'tsyringe';
-import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
-import { OpenDataResource } from '@/domain/data/entities/open-data-resource.entity';
-import { DataPath } from '@/domain/data/value-objects/data-path';
-import { ResourceId } from '@/domain/data/value-objects/resource-id';
-import { MimeType } from '@/domain/data/value-objects/mime-type';
-import { FileSize } from '@/domain/data/value-objects/file-size';
-import { ResourceMetadata } from '@/domain/data/value-objects/resource-metadata';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import type { Logger } from 'pino';
-import { DI_TOKENS } from '../di/tokens';
+import { createHash } from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createHash } from 'crypto';
+
+import { injectable, inject } from 'tsyringe';
+
+import { OpenDataResource } from '@/domain/data/entities/open-data-resource.entity';
+import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import { DataPath } from '@/domain/data/value-objects/data-path';
+import { FileSize } from '@/domain/data/value-objects/file-size';
+import { MimeType } from '@/domain/data/value-objects/mime-type';
+import { ResourceId } from '@/domain/data/value-objects/resource-id';
+import { ResourceMetadata } from '@/domain/data/value-objects/resource-metadata';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+
+import { DI_TOKENS } from '../di/tokens';
+
+import type { Logger } from 'pino';
+
 
 interface CacheEntry {
   resource: OpenDataResource;
-  content: any;
+  content: unknown;
   cachedAt: Date;
 }
 
@@ -93,8 +98,8 @@ export class OpenDataRepository implements IOpenDataRepository {
         this.logger.info({ path: dataPath.value, id: resourceId.value }, 'Resource found by path');
 
         return Result.ok(resource);
-      } catch (error: any) {
-        if (error.code === 'ENOENT') {
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
           return Result.fail(
             new DomainError(
               'RESOURCE_NOT_FOUND',
@@ -128,23 +133,27 @@ export class OpenDataRepository implements IOpenDataRepository {
       );
 
       if (cachedEntry) {
-        return Result.ok(cachedEntry.resource);
+        return Promise.resolve(Result.ok(cachedEntry.resource));
       }
 
-      return Result.fail(
-        new DomainError(
-          'RESOURCE_NOT_FOUND',
-          `Resource not found with id: ${id.value}`,
-          ErrorType.NOT_FOUND,
+      return Promise.resolve(
+        Result.fail(
+          new DomainError(
+            'RESOURCE_NOT_FOUND',
+            `Resource not found with id: ${id.value}`,
+            ErrorType.NOT_FOUND,
+          ),
         ),
       );
     } catch (error) {
       this.logger.error({ error, id: id.value }, 'Failed to find resource by id');
 
-      return Result.fail(
-        new DomainError('REPOSITORY_ERROR', 'Failed to find resource', ErrorType.INTERNAL, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }),
+      return Promise.resolve(
+        Result.fail(
+          new DomainError('REPOSITORY_ERROR', 'Failed to find resource', ErrorType.INTERNAL, {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+        ),
       );
     }
   }
@@ -152,12 +161,12 @@ export class OpenDataRepository implements IOpenDataRepository {
   /**
    * データリソースのコンテンツを取得
    */
-  async getContent(resource: OpenDataResource): Promise<Result<any>> {
+  async getContent(resource: OpenDataResource): Promise<Result<unknown>> {
     try {
       const filePath = this.getFilePath(resource.path);
 
       // キャッシュチェック
-      const cachedContent = await this.getCachedContent(resource.path);
+      const cachedContent = this.getCachedContent(resource.path);
       if (cachedContent) {
         this.logger.debug({ path: resource.path.value }, 'Returning cached content');
         return Result.ok(cachedContent);
@@ -168,7 +177,7 @@ export class OpenDataRepository implements IOpenDataRepository {
       // JSONファイルの場合はパース
       if (resource.metadata.contentType === 'application/json') {
         try {
-          const jsonContent = JSON.parse(content);
+          const jsonContent = JSON.parse(content) as unknown;
           await this.cache(resource, jsonContent);
           return Result.ok(jsonContent);
         } catch (parseError) {
@@ -231,8 +240,8 @@ export class OpenDataRepository implements IOpenDataRepository {
       );
 
       return Result.ok(resources);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(
           new DomainError(
             'DIRECTORY_NOT_FOUND',
@@ -280,14 +289,16 @@ export class OpenDataRepository implements IOpenDataRepository {
         this.logger.debug({ path: resource.path.value }, 'Updated cached resource metadata');
       }
 
-      return Result.ok(undefined);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
       this.logger.error({ error, path: resource.path.value }, 'Failed to update metadata');
 
-      return Result.fail(
-        new DomainError('METADATA_UPDATE_ERROR', 'Failed to update metadata', ErrorType.INTERNAL, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }),
+      return Promise.resolve(
+        Result.fail(
+          new DomainError('METADATA_UPDATE_ERROR', 'Failed to update metadata', ErrorType.INTERNAL, {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+        ),
       );
     }
   }
@@ -300,7 +311,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     const cached = this.cacheStore.get(cacheKey);
 
     if (!cached) {
-      return null;
+      return Promise.resolve(null);
     }
 
     // キャッシュ有効期限チェック
@@ -309,16 +320,16 @@ export class OpenDataRepository implements IOpenDataRepository {
 
     if (now > expirationTime) {
       this.cacheStore.delete(cacheKey);
-      return null;
+      return Promise.resolve(null);
     }
 
-    return cached.resource;
+    return Promise.resolve(cached.resource);
   }
 
   /**
    * リソースをキャッシュに保存
    */
-  async cache(resource: OpenDataResource, content: any): Promise<void> {
+  async cache(resource: OpenDataResource, content: unknown): Promise<void> {
     const cacheKey = this.getCacheKey(resource.path);
 
     this.cacheStore.set(cacheKey, {
@@ -336,6 +347,8 @@ export class OpenDataRepository implements IOpenDataRepository {
       )[0][0];
       this.cacheStore.delete(oldestKey);
     }
+
+    return Promise.resolve();
   }
 
   /**
@@ -350,6 +363,8 @@ export class OpenDataRepository implements IOpenDataRepository {
       this.cacheStore.clear();
       this.logger.info('Cleared all cache');
     }
+
+    return Promise.resolve();
   }
 
   /**
@@ -363,7 +378,7 @@ export class OpenDataRepository implements IOpenDataRepository {
     return dataPath.value;
   }
 
-  private async getCachedContent(dataPath: DataPath): Promise<any | null> {
+  private getCachedContent(dataPath: DataPath): unknown {
     const cacheKey = this.getCacheKey(dataPath);
     const cached = this.cacheStore.get(cacheKey);
 

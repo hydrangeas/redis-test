@@ -8,7 +8,7 @@
  */
 
 // Example 1: Using URL path versioning
-async function _getDataWithUrlVersion() {
+async function _getDataWithUrlVersion(): Promise<unknown> {
   const response = await fetch('/api/v1/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -23,7 +23,7 @@ async function _getDataWithUrlVersion() {
 }
 
 // Example 2: Using Accept-Version header
-async function _getDataWithHeaderVersion() {
+async function _getDataWithHeaderVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -38,7 +38,7 @@ async function _getDataWithHeaderVersion() {
 }
 
 // Example 3: Using X-API-Version header
-async function _getDataWithXApiVersion() {
+async function _getDataWithXApiVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -50,7 +50,7 @@ async function _getDataWithXApiVersion() {
 }
 
 // Example 4: Using query parameter
-async function _getDataWithQueryVersion() {
+async function _getDataWithQueryVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json?version=1', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -61,7 +61,7 @@ async function _getDataWithQueryVersion() {
 }
 
 // Example 5: Handling version fallback
-async function _getDataWithUnsupportedVersion() {
+async function _getDataWithUnsupportedVersion(): Promise<unknown> {
   const response = await fetch('/api/data/secure/319985/r5.json', {
     headers: {
       Authorization: 'Bearer YOUR_ACCESS_TOKEN',
@@ -89,7 +89,7 @@ class ApiClient {
     this.apiVersion = apiVersion;
   }
 
-  async getData(path: string): Promise<any> {
+  async getData(path: string): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}/api/data/${path}`, {
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -107,49 +107,49 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`API Error: ${(error as any).title} - ${(error as any).detail}`);
+      throw new Error(`API Error: ${(error as { title: string; detail: string }).title} - ${(error as { title: string; detail: string }).detail}`);
     }
 
     return response.json();
   }
 
   // Get available API versions
-  async getVersions(): Promise<any> {
+  async getVersions(): Promise<{ current: string; supported: string[]; deprecated: string[] }> {
     const response = await fetch(`${this.baseUrl}/api/versions`);
-    return response.json();
+    return response.json() as Promise<{ current: string; supported: string[]; deprecated: string[] }>;
   }
 
   // Get features available in current version
-  async getFeatures(): Promise<any> {
+  async getFeatures(): Promise<{ base: string[]; advanced: string[] }> {
     const response = await fetch(`${this.baseUrl}/api/features`, {
       headers: {
         'Accept-Version': this.apiVersion,
       },
     });
-    return response.json();
+    return response.json() as Promise<{ base: string[]; advanced: string[] }>;
   }
 }
 
 // Usage example
-async function _main() {
+async function _main(): Promise<void> {
   const client = new ApiClient('https://api.example.com', 'YOUR_TOKEN', '2');
 
   try {
     // Get version information
-    const versions = await client.getVersions();
-    console.log('Available versions:', versions);
+    await client.getVersions();
+    // Available versions: { current: '2', supported: ['1', '2', '2.1'], deprecated: ['1'] }
     // Output: { current: '2', supported: ['1', '2', '2.1'], deprecated: ['1'] }
 
     // Get features for current version
-    const features = await client.getFeatures();
-    console.log('Features:', features);
+    await client.getFeatures();
+    // Features: { base: ['data_access', 'rate_limiting'], advanced: ['filtering', 'sorting'] }
     // Output: { base: ['data_access', 'rate_limiting'], advanced: ['filtering', 'sorting'] }
 
     // Get data
-    const data = await client.getData('secure/319985/r5.json');
-    console.log('Data:', data);
+    await client.getData('secure/319985/r5.json');
+    // Data: [JSON data from the API]
   } catch (error) {
-    console.error('Error:', error);
+    // Error handling
   }
 }
 

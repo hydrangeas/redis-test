@@ -1,9 +1,12 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Static, Type } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
-import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
+import type { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import type { Static} from '@sinclair/typebox';
+import type { FastifyPluginAsync } from 'fastify';
 
 // レスポンススキーマ
 const LogoutResponse = Type.Object({
@@ -26,7 +29,7 @@ const ErrorResponse = Type.Object({
 
 type LogoutResponseType = Static<typeof LogoutResponse>;
 
-const logoutRoute: FastifyPluginAsync = async (fastify) => {
+const logoutRoute: FastifyPluginAsync = (fastify) => {
   const authUseCase = container.resolve<AuthenticationUseCase>(DI_TOKENS.AuthenticationUseCase);
 
   fastify.post<{
@@ -126,7 +129,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
         };
 
         // クライアントへのヒント：トークンを削除するよう指示
-        reply.header('Clear-Site-Data', '"storage"');
+        void reply.header('Clear-Site-Data', '"storage"');
 
         return reply.send(response);
       } catch (error) {
@@ -155,6 +158,7 @@ const logoutRoute: FastifyPluginAsync = async (fastify) => {
       }
     },
   );
+  return Promise.resolve();
 };
 
 export default logoutRoute;

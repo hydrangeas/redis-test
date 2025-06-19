@@ -1,20 +1,24 @@
 import 'reflect-metadata';
-import fastify, { FastifyServerOptions } from 'fastify';
+
+import Fastify from 'fastify';
 import { container } from 'tsyringe';
+
 import { setupDI, DI_TOKENS } from './infrastructure/di';
 import { createFastifyLoggerConfig, setupRequestLogging } from './infrastructure/logging';
-import type { EnvConfig } from './infrastructure/config';
 
-export default async function buildApp(opts: FastifyServerOptions = {}) {
+import type { EnvConfig } from './infrastructure/config';
+import type { FastifyServerOptions, FastifyInstance } from 'fastify';
+
+export default async function buildApp(opts: FastifyServerOptions = {}): Promise<FastifyInstance> {
   // DIコンテナをセットアップ
-  await setupDI();
+  setupDI();
 
   // DIコンテナから依存性を取得
   const config = container.resolve<EnvConfig>(DI_TOKENS.EnvConfig);
 
   // Fastifyサーバーの作成（ロガー設定を含む）
   const loggerConfig = createFastifyLoggerConfig(config);
-  const server = fastify({ ...loggerConfig, ...opts });
+  const server = Fastify({ ...loggerConfig, ...opts });
 
   // リクエストロギングの設定
   setupRequestLogging(server);
@@ -48,7 +52,7 @@ export default async function buildApp(opts: FastifyServerOptions = {}) {
   // APIルートの登録
   await server.register(import('./presentation/routes'), { prefix: '/api/v1' });
 
-  server.get('/health', async () => {
+  server.get('/health', () => {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),

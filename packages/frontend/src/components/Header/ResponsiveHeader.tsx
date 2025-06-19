@@ -55,12 +55,12 @@ export const ResponsiveHeader: React.FC = () => {
             {user ? (
               <>
                 <Link to="/dashboard">
-                  <Button variant="outline" size="small">
+                  <Button variant="outline" size="sm">
                     ダッシュボード
                   </Button>
                 </Link>
                 <Link to="/profile">
-                  <Button variant="secondary" size="small">
+                  <Button variant="secondary" size="sm">
                     プロフィール
                   </Button>
                 </Link>
@@ -68,12 +68,12 @@ export const ResponsiveHeader: React.FC = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="outline" size="small">
+                  <Button variant="outline" size="sm">
                     ログイン
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button variant="primary" size="small">
+                  <Button variant="primary" size="sm">
                     サインアップ
                   </Button>
                 </Link>

@@ -1,9 +1,10 @@
 import fp from 'fastify-plugin';
-import { FastifyInstance } from 'fastify';
+
+import type { FastifyInstance } from 'fastify';
 
 // startTime is already declared in monitoring.ts as bigint
 
-export default fp(async function vercelAnalytics(fastify: FastifyInstance) {
+export default fp(function vercelAnalytics(fastify: FastifyInstance) {
   // Vercel Analytics用のデータ収集
   fastify.addHook('onRequest', async (request, _reply) => {
     request.startTime = BigInt(Date.now());
@@ -15,7 +16,7 @@ export default fp(async function vercelAnalytics(fastify: FastifyInstance) {
     // Vercel Analyticsに送信
     if (process.env.VERCEL_ANALYTICS_ID) {
       // Web Vitalsの記録
-      reply.header('Server-Timing', `total;dur=${duration}`);
+      void reply.header('Server-Timing', `total;dur=${duration}`);
     }
 
     // カスタムメトリクスの記録

@@ -1,5 +1,6 @@
-import { PathTraversalException } from '../errors/exceptions';
 import path from 'path';
+
+import { PathTraversalException } from '../errors/exceptions';
 
 /**
  * パストラバーサル攻撃を防ぐためのパス検証ユーティリティ
@@ -24,6 +25,7 @@ export class PathValidator {
       /^\/+/, // 絶対パス
       /^~\//, // ホームディレクトリ
       /\0/g, // nullバイト
+      // eslint-disable-next-line no-control-regex
       /[\x00-\x1f]/g, // 制御文字
       /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i, // Windows予約名
     ];
@@ -70,6 +72,7 @@ export class PathValidator {
       .replace(/^\/+/, '') // 先頭のスラッシュ除去
       .replace(/^~\//, '') // ホームディレクトリ参照除去
       .replace(/\0/g, '') // nullバイト除去
+      // eslint-disable-next-line no-control-regex
       .replace(/[\x00-\x1f]/g, '') // 制御文字除去
       .replace(/\/+/g, '/') // 連続スラッシュを単一に
       .trim();

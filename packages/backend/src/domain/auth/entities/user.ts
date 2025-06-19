@@ -1,9 +1,12 @@
-import { Entity, UniqueEntityId } from '@/domain/shared/entity';
-import { UserId } from '../value-objects/user-id';
-import { Email } from '../value-objects/email';
-import { UserTier } from '../value-objects/user-tier';
-import { Result } from '@/domain/shared/result';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+import { Result } from '@/domain/shared/result';
+
+import { UserId } from '../value-objects/user-id';
+
+import type { Email } from '../value-objects/email';
+import type { UserTier } from '../value-objects/user-tier';
+
 
 export interface UserProps {
   email: Email;
@@ -12,7 +15,7 @@ export interface UserProps {
   updatedAt: Date;
   lastAuthenticatedAt?: Date;
   emailVerified: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -53,7 +56,7 @@ export class User extends Entity<UserProps> {
     return this.props.emailVerified;
   }
 
-  get metadata(): Record<string, any> | undefined {
+  get metadata(): Record<string, unknown> | undefined {
     return this.props.metadata;
   }
 
@@ -65,7 +68,7 @@ export class User extends Entity<UserProps> {
     email: Email;
     tier: UserTier;
     emailVerified?: boolean;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }): Result<User> {
     const now = new Date();
 
@@ -162,7 +165,7 @@ export class User extends Entity<UserProps> {
   /**
    * メタデータの更新
    */
-  public updateMetadata(metadata: Record<string, any>): void {
+  public updateMetadata(metadata: Record<string, unknown>): void {
     this.props.metadata = { ...this.props.metadata, ...metadata };
     this.props.updatedAt = new Date();
   }

@@ -1,10 +1,12 @@
+import { SupabaseClient } from '@supabase/supabase-js';
 import { injectable, inject } from 'tsyringe';
+
 import {
   ISecurityAuditService,
   SecurityEvent,
 } from '@/domain/data/interfaces/secure-file-access.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { SupabaseClient } from '@supabase/supabase-js';
+
 import type { Logger } from 'pino';
 
 @injectable()

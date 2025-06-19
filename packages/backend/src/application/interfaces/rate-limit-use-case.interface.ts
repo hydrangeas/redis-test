@@ -1,5 +1,5 @@
-import { Result } from '@/domain/shared/result';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Result } from '@/domain/shared/result';
 
 /**
  * レート制限チェック結果

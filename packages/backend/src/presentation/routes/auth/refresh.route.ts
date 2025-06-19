@@ -1,9 +1,12 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Static, Type } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
-import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { toProblemDetails } from '@/presentation/errors/error-mapper';
+
+import type { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import type { Static} from '@sinclair/typebox';
+import type { FastifyPluginAsync } from 'fastify';
 
 // リクエストボディのスキーマ
 const RefreshTokenRequest = Type.Object({
@@ -39,7 +42,7 @@ const ErrorResponse = Type.Object({
 type RefreshTokenRequestType = Static<typeof RefreshTokenRequest>;
 type RefreshTokenResponseType = Static<typeof RefreshTokenResponse>;
 
-const refreshRoute: FastifyPluginAsync = async (fastify) => {
+const refreshRoute: FastifyPluginAsync = (fastify) => {
   const authUseCase = container.resolve<AuthenticationUseCase>(DI_TOKENS.AuthenticationUseCase);
 
   fastify.post<{
@@ -165,6 +168,7 @@ const refreshRoute: FastifyPluginAsync = async (fastify) => {
       }
     },
   );
+  return Promise.resolve();
 };
 
 export default refreshRoute;

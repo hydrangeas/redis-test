@@ -1,6 +1,7 @@
-import { FastifyPluginAsync } from 'fastify';
 import scalarPlugin from '@scalar/fastify-api-reference';
 import * as yaml from 'yaml';
+
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * APIドキュメントルート
@@ -29,7 +30,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, _reply) => {
-      _reply.type('text/yaml');
+      void _reply.type('text/yaml');
       const spec = fastify.swagger();
       return yaml.stringify(spec);
     },
@@ -63,7 +64,7 @@ const apiDocsRoute: FastifyPluginAsync = async (fastify) => {
         preferredSecurityScheme: 'bearerAuth', // デフォルトの認証スキーム
       },
       defaultOpenAllTags: false, // すべてのタグを展開しない
-      onSpecUpdate: (_spec: any) => {
+      onSpecUpdate: (_spec: unknown) => {
         // 仕様書が更新されたときの処理
         fastify.log.info('OpenAPI specification updated');
       },

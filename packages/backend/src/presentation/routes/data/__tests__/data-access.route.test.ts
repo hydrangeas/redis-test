@@ -9,7 +9,9 @@ import { DataAccessUseCase } from '../../../../application/use-cases/data-access
 import { AuthenticatedUser } from '../../../../domain/auth/value-objects/authenticated-user';
 import { UserId } from '../../../../domain/auth/value-objects/user-id';
 import { UserTier } from '../../../../domain/auth/value-objects/user-tier';
-import { DomainError } from '../../../../domain/errors/domain-error';
+import { TierLevel } from '../../../../domain/auth/value-objects/tier-level';
+import { DomainError, ErrorType } from '../../../../domain/errors/domain-error';
+import { Result } from '../../../../domain/shared/result';
 
 describe('Data Access Route', () => {
   let app: FastifyInstance;
@@ -17,9 +19,13 @@ describe('Data Access Route', () => {
 
   function createMockAuthenticatedUser(
     userId = 'test-user-123',
-    tier = 'tier1',
+    tier = TierLevel.TIER1,
   ): AuthenticatedUser {
-    return new AuthenticatedUser(new UserId(userId), new UserTier(tier as any));
+    const userTierResult = UserTier.create(tier);
+    if (userTierResult.isFailure) {
+      throw new Error('Failed to create UserTier');
+    }
+    return new AuthenticatedUser(new UserId(userId), userTierResult.getValue());
   }
 
   beforeEach(async () => {
@@ -74,16 +80,14 @@ describe('Data Access Route', () => {
         numbers: [1, 2, 3],
       };
 
-      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
-        success: true,
-        data: {
+      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue(
+        Result.ok({
           content: mockData,
           etag: '"abc123"',
           lastModified: new Date('2024-01-01T00:00:00Z'),
           size: 1024,
-        },
-        error: null,
-      });
+        }),
+      );
 
       const response = await app.inject({
         method: 'GET',
@@ -117,16 +121,14 @@ describe('Data Access Route', () => {
     });
 
     it('should return 304 when etag matches', async () => {
-      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
-        success: true,
-        data: {
+      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue(
+        Result.ok({
           content: { key: 'value' },
           etag: '"abc123"',
           lastModified: new Date('2024-01-01T00:00:00Z'),
           size: 1024,
-        },
-        error: null,
-      });
+        }),
+      );
 
       const response = await app.inject({
         method: 'GET',
@@ -152,11 +154,9 @@ describe('Data Access Route', () => {
     });
 
     it('should return 404 when data not found', async () => {
-      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
-        success: false,
-        data: null,
-        error: new DomainError('DATA_NOT_FOUND', 'Data file not found', 'NOT_FOUND'),
-      });
+      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue(
+        Result.fail(new DomainError('DATA_NOT_FOUND', 'Data file not found', ErrorType.NOT_FOUND)),
+      );
 
       const response = await app.inject({
         method: 'GET',
@@ -178,11 +178,9 @@ describe('Data Access Route', () => {
     });
 
     it('should return 400 for invalid path', async () => {
-      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
-        success: false,
-        data: null,
-        error: new DomainError('INVALID_PATH', 'Path traversal detected', 'SECURITY'),
-      });
+      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue(
+        Result.fail(new DomainError('INVALID_PATH', 'Path traversal detected', ErrorType.VALIDATION)),
+      );
 
       const response = await app.inject({
         method: 'GET',
@@ -197,16 +195,14 @@ describe('Data Access Route', () => {
     });
 
     it('should return 429 when rate limit exceeded', async () => {
-      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue({
-        success: false,
-        data: null,
-        error: new DomainError('RATE_LIMIT_EXCEEDED', 'API rate limit exceeded', 'RATE_LIMIT', {
+      vi.mocked(mockDataAccessUseCase.getData).mockResolvedValue(
+        Result.fail(new DomainError('RATE_LIMIT_EXCEEDED', 'API rate limit exceeded', ErrorType.RATE_LIMIT, {
           limit: 60,
           remaining: 0,
           reset: 1704067260,
           retryAfter: 30,
-        }),
-      });
+        })),
+      );
 
       const response = await app.inject({
         method: 'GET',

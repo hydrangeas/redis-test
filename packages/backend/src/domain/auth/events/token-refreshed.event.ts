@@ -18,7 +18,7 @@ export class TokenRefreshed extends DomainEvent {
     return 'TokenRefreshed';
   }
 
-  getData(): Record<string, any> {
+  getData(): Record<string, unknown> {
     return {
       userId: this.userId,
       oldTokenId: this.oldTokenId,

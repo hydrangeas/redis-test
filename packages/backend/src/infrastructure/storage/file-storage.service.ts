@@ -1,19 +1,22 @@
-import { injectable, inject } from 'tsyringe';
-import { IFileStorage, FileMetadata } from '@/domain/data/interfaces/file-storage.interface';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
+import * as crypto from 'crypto';
+import { constants as fsConstants , createReadStream } from 'fs';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import * as crypto from 'crypto';
+
 import { watch, FSWatcher } from 'chokidar';
 import { LRUCache } from 'lru-cache';
-import { constants as fsConstants } from 'fs';
-import { createReadStream } from 'fs';
+import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { IFileStorage, FileMetadata } from '@/domain/data/interfaces/file-storage.interface';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+
 
 interface CacheEntry {
-  content: any;
+  content: unknown;
   metadata: FileMetadata;
   compressed?: Buffer;
 }
@@ -36,7 +39,7 @@ export class FileStorageService implements IFileStorage {
     this.cache = new LRUCache<string, CacheEntry>({
       max: 100, // Maximum 100 files
       maxSize: 100 * 1024 * 1024, // Maximum 100MB
-      sizeCalculation: (entry) => {
+      sizeCalculation: (entry): number => {
         return JSON.stringify(entry.content).length + (entry.compressed?.length || 0);
       },
       ttl: 1000 * 60 * 60, // 1 hour
@@ -47,10 +50,10 @@ export class FileStorageService implements IFileStorage {
     this.initializeWatcher();
   }
 
-  async readFile(filePath: string): Promise<Result<any>> {
+  async readFile(filePath: string): Promise<Result<unknown>> {
     try {
       // Path validation
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -94,7 +97,7 @@ export class FileStorageService implements IFileStorage {
 
   async getFileMetadata(filePath: string): Promise<Result<FileMetadata>> {
     try {
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -119,13 +122,13 @@ export class FileStorageService implements IFileStorage {
         path: filePath,
         size: stats.size,
         mtime: stats.mtime,
-        etag: await this.generateETag(absolutePath, stats),
+        etag: this.generateETag(absolutePath, stats),
         contentType: this.detectContentType(filePath),
       };
 
       return Result.ok(metadata);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(
           new DomainError('FILE_NOT_FOUND', `File not found: ${filePath}`, ErrorType.NOT_FOUND),
         );
@@ -142,7 +145,7 @@ export class FileStorageService implements IFileStorage {
     options?: { start?: number; end?: number },
   ): Promise<Result<NodeJS.ReadableStream>> {
     try {
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -160,8 +163,8 @@ export class FileStorageService implements IFileStorage {
       });
 
       return Result.ok(stream);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', ErrorType.NOT_FOUND));
       }
 
@@ -173,7 +176,7 @@ export class FileStorageService implements IFileStorage {
 
   async listFiles(directory: string): Promise<Result<string[]>> {
     try {
-      const validationResult = await this.validatePath(directory);
+      const validationResult = this.validatePath(directory);
       if (validationResult.isFailure) {
         return Result.fail(validationResult.getError());
       }
@@ -195,8 +198,8 @@ export class FileStorageService implements IFileStorage {
       const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
       return Result.ok(jsonFiles);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(
           new DomainError('DIRECTORY_NOT_FOUND', `Directory not found: ${directory}`, ErrorType.NOT_FOUND),
         );
@@ -210,7 +213,7 @@ export class FileStorageService implements IFileStorage {
 
   async exists(filePath: string): Promise<boolean> {
     try {
-      const validationResult = await this.validatePath(filePath);
+      const validationResult = this.validatePath(filePath);
       if (validationResult.isFailure) {
         return false;
       }
@@ -230,7 +233,7 @@ export class FileStorageService implements IFileStorage {
     this.cache.clear();
   }
 
-  private async validatePath(filePath: string): Promise<Result<void>> {
+  private validatePath(filePath: string): Result<void> {
     // Basic validation
     if (!filePath || filePath.trim().length === 0) {
       return Result.fail(
@@ -257,6 +260,7 @@ export class FileStorageService implements IFileStorage {
     }
 
     // Check for dangerous characters
+    // eslint-disable-next-line no-control-regex
     const dangerousChars = /[<>:"|?*\x00-\x1f\x80-\x9f]/;
     if (dangerousChars.test(filePath)) {
       return Result.fail(
@@ -269,7 +273,7 @@ export class FileStorageService implements IFileStorage {
 
   private async readFileFromDisk(
     absolutePath: string,
-  ): Promise<Result<{ content: any; metadata: FileMetadata }>> {
+  ): Promise<Result<{ content: unknown; metadata: FileMetadata }>> {
     try {
       const [content, stats] = await Promise.all([
         fs.readFile(absolutePath, 'utf-8'),
@@ -277,7 +281,7 @@ export class FileStorageService implements IFileStorage {
       ]);
 
       // Parse JSON
-      let jsonData: any;
+      let jsonData: unknown;
       try {
         jsonData = JSON.parse(content);
       } catch (error) {
@@ -290,13 +294,13 @@ export class FileStorageService implements IFileStorage {
         path: path.relative(this.dataDirectory, absolutePath),
         size: stats.size,
         mtime: stats.mtime,
-        etag: await this.generateETag(absolutePath, stats),
+        etag: this.generateETag(absolutePath, stats),
         contentType: 'application/json',
       };
 
       return Result.ok({ content: jsonData, metadata });
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return Result.fail(new DomainError('FILE_NOT_FOUND', 'File not found', ErrorType.NOT_FOUND));
       }
 
@@ -328,7 +332,7 @@ export class FileStorageService implements IFileStorage {
     return files;
   }
 
-  private async generateETag(filePath: string, stats: Awaited<ReturnType<typeof fs.stat>>): Promise<string> {
+  private generateETag(filePath: string, stats: Awaited<ReturnType<typeof fs.stat>>): string {
     const hash = crypto.createHash('md5');
     hash.update(`${filePath}-${stats.size}-${stats.mtime.getTime()}`);
     return `"${hash.digest('hex')}"`;

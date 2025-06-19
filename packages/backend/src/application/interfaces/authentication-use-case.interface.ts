@@ -1,5 +1,6 @@
-import { Result } from '../errors/result';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Result } from '../errors/result';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+
 
 export interface TokenRefreshResult {
   accessToken: string;

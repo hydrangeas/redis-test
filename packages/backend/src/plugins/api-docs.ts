@@ -1,21 +1,37 @@
-import fp from 'fastify-plugin';
-import { FastifyInstance } from 'fastify';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+import fp from 'fastify-plugin';
 import yaml from 'js-yaml';
+
+import type { FastifyInstance } from 'fastify';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
+interface OpenAPISpec {
+  openapi: string;
+  info?: {
+    title?: string;
+    version?: string;
+    description?: string;
+  };
+  servers?: Array<{
+    url: string;
+    description: string;
+  }>;
+  paths: Record<string, unknown>;
+}
+
+export default fp(function apiDocsPlugin(fastify: FastifyInstance) {
   // OpenAPI仕様書の読み込み
-  let openapiSpec: any;
+  let openapiSpec: OpenAPISpec;
 
   try {
     const openapiPath = join(__dirname, '../openapi/openapi.yaml');
     const openapiContent = readFileSync(openapiPath, 'utf8');
-    openapiSpec = yaml.load(openapiContent) as any;
+    openapiSpec = yaml.load(openapiContent) as OpenAPISpec;
   } catch (error) {
     fastify.log.error('Failed to load OpenAPI specification:', error);
     // フォールバック仕様
@@ -45,7 +61,7 @@ export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>${openapiSpec.info.title} - API Documentation</title>
+  <title>${openapiSpec.info?.title || 'API'} - API Documentation</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
@@ -98,30 +114,30 @@ export default fp(async function apiDocsPlugin(fastify: FastifyInstance) {
 
   // APIドキュメントページ
   fastify.get('/api-docs', async (_request, reply) => {
-    reply.type('text/html');
+    void reply.type('text/html');
     return scalarHtml;
   });
 
   // リダイレクト（ルートからドキュメントへ）
   fastify.get('/docs', async (_request, reply) => {
-    reply.redirect('/api-docs');
+    void reply.redirect('/api-docs');
   });
 
   // OpenAPI JSON エンドポイント
   fastify.get('/api/v1/openapi.json', async (_request, reply) => {
-    reply.type('application/json');
+    void reply.type('application/json');
     return openapiSpec;
   });
 
   // OpenAPI YAML エンドポイント
   fastify.get('/api/v1/openapi.yaml', async (_request, reply) => {
-    reply.type('text/yaml');
+    void reply.type('text/yaml');
     return yaml.dump(openapiSpec);
   });
 
   // OpenAPI仕様を別パスでも提供（互換性のため）
   fastify.get('/openapi.json', async (_request, reply) => {
-    reply.redirect('/api/v1/openapi.json');
+    void reply.redirect('/api/v1/openapi.json');
   });
 
   fastify.log.info('API documentation available at /api-docs');

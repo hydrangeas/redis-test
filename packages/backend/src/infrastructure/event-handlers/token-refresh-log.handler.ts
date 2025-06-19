@@ -1,15 +1,17 @@
 import { injectable, inject } from 'tsyringe';
-import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
+
 import { TokenRefreshed } from '@/domain/auth/events/token-refreshed.event';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
-import { AuthResult } from '@/domain/log/value-objects/auth-result';
-import { AuthEvent } from '@/domain/log/value-objects/auth-event';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Provider } from '@/domain/log/value-objects/provider';
+import { IEventHandler } from '@/domain/interfaces/event-handler.interface';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
+import { AuthEvent } from '@/domain/log/value-objects/auth-event';
+import { AuthResult } from '@/domain/log/value-objects/auth-result';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { Provider } from '@/domain/log/value-objects/provider';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 import type { Logger } from 'pino';
 
 @injectable()

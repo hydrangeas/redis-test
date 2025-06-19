@@ -20,7 +20,7 @@ export interface INotificationService {
   sendSecurityAlert(params: {
     userId: string;
     reason: string;
-    details: Record<string, any>;
+    details: Record<string, unknown>;
   }): Promise<void>;
 
   /**

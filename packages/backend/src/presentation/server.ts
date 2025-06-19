@@ -1,20 +1,27 @@
-import Fastify, { FastifyInstance } from 'fastify';
-import { fastifySwagger } from '@fastify/swagger';
 import { fastifyCors } from '@fastify/cors';
-import fastifyHelmet from '@fastify/helmet';
-import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { v4 as uuidv4 } from 'uuid';
+import { default as fastifyHelmet } from '@fastify/helmet';
+import { fastifySwagger } from '@fastify/swagger';
+import Fastify from 'fastify';
 import { container } from 'tsyringe';
+import { v4 as uuidv4 } from 'uuid';
+
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
 import authPlugin from './plugins/auth.plugin';
 import errorHandlerPlugin from './plugins/error-handler';
 import loggingPlugin from './plugins/logging.plugin';
 import rateLimitPlugin from './plugins/rate-limit.plugin';
 import apiRoutes from './routes/api';
 import apiDocsRoute from './routes/api-docs';
-import { Logger } from 'pino';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
-export async function buildServer(): Promise<FastifyInstance<any, any, any, any, TypeBoxTypeProvider>> {
+
+
+import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import type { FastifyInstance, FastifyServerOptions } from 'fastify';
+import type { Logger } from 'pino';
+import type { Server, IncomingMessage, ServerResponse } from 'http';
+
+export async function buildServer(): Promise<FastifyInstance<Server, IncomingMessage, ServerResponse, Logger, TypeBoxTypeProvider>> {
   const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
   const server = Fastify({
@@ -141,7 +148,7 @@ export async function buildServer(): Promise<FastifyInstance<any, any, any, any,
         },
       },
     },
-    async () => {
+    () => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -170,7 +177,7 @@ export async function buildServer(): Promise<FastifyInstance<any, any, any, any,
         },
       },
     },
-    async () => {
+    () => {
       return {
         name: 'Open Data API',
         version: process.env.API_VERSION || '1.0.0',

@@ -27,4 +27,5 @@ export const toBrand = <T, TBrand>(value: T): Brand<T, TBrand> => {
  * ブランド型から基本型を取得するヘルパー型
  * @template B - ブランド型
  */
-export type UnBrand<B> = B extends Brand<infer T, any> ? T : B;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnBrand<B> = B extends Brand<infer T, unknown> ? T : B;

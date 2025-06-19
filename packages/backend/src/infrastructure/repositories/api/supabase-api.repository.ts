@@ -1,18 +1,19 @@
-import { injectable, inject } from 'tsyringe';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { IAPIRepository } from '@/domain/api/interfaces/api-repository.interface';
-import { APIAggregate } from '@/domain/api/aggregates/api.aggregate';
-import { EndpointId } from '@/domain/api/value-objects/endpoint-id';
-import { HttpMethod } from '@/domain/api/value-objects/http-method';
-import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
-import { Result } from '@/domain/errors/result';
-import { DomainError } from '@/domain/errors/domain-error';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { APIAggregate } from '@/domain/api/aggregates/api.aggregate';
 import { APIEndpoint } from '@/domain/api/entities/api-endpoint.entity';
+import { IAPIRepository } from '@/domain/api/interfaces/api-repository.interface';
+import { EndpointId } from '@/domain/api/value-objects/endpoint-id';
+import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
+import { HttpMethod } from '@/domain/api/value-objects/http-method';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface EndpointRecord {
   id: string;
@@ -176,7 +177,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       // デフォルトレート制限を取得
       const { data: rateLimits, error: rateLimitError } = await this.supabase
         .from('default_rate_limits')
-        .select('*');
+        .select('*') as { data: RateLimitRecord[] | null; error: Error | null };
 
       if (rateLimitError) {
         this.logger.error({ error: rateLimitError }, 'Failed to fetch rate limits');
@@ -187,7 +188,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       for (const record of rateLimits || []) {
         const rateLimitResult = RateLimit.create(record.max_requests, record.window_seconds);
         if (rateLimitResult.isSuccess) {
-          defaultRateLimits.set(record.tier_level, rateLimitResult.getValue()!);
+          defaultRateLimits.set(record.tier_level, rateLimitResult.getValue());
         }
       }
 
@@ -212,7 +213,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       const { data: endpoints, error: endpointError } = await this.supabase
         .from('api_endpoints')
         .select('*')
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }) as { data: EndpointRecord[] | null; error: Error | null };
 
       if (endpointError) {
         this.logger.error({ error: endpointError }, 'Failed to fetch endpoints');
@@ -222,7 +223,7 @@ export class SupabaseAPIRepository implements IAPIRepository {
       // エンドポイントを集約に追加
       for (const record of endpoints || []) {
         const pathResult = EndpointPath.create(record.path);
-        const typeResult = EndpointType.create(record.type);
+        const typeResult = EndpointType.create(record.type as 'public' | 'protected');
 
         if (pathResult.isSuccess && typeResult.isSuccess) {
           // Note: rate_limit_override from database is not currently used
@@ -231,13 +232,13 @@ export class SupabaseAPIRepository implements IAPIRepository {
           const endpointResult = APIEndpoint.create({
             path: record.path, // The create method expects a string
             method: record.method as HttpMethod,
-            type: typeResult.getValue()!,
+            type: typeResult.getValue(),
             description: record.description,
             isActive: true,
           });
 
           if (endpointResult.isSuccess) {
-            aggregate.addEndpoint(endpointResult.getValue()!);
+            aggregate.addEndpoint(endpointResult.getValue());
           }
         }
       }

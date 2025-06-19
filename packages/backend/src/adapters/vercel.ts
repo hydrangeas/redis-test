@@ -1,10 +1,10 @@
-import type { FastifyInstance } from 'fastify';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { FastifyInstance } from 'fastify';
 
 export class VercelAdapter {
   constructor(private app: FastifyInstance) {}
 
-  async handleRequest(req: VercelRequest, res: VercelResponse) {
+  async handleRequest(req: VercelRequest, res: VercelResponse): Promise<void> {
     // Vercelのリクエストオブジェクトを変換
     const url = `https://${req.headers.host}${req.url}`;
     const headers: Record<string, string> = {};
@@ -17,10 +17,10 @@ export class VercelAdapter {
 
     // Fastifyリクエストとして処理
     const response = await this.app.inject({
-      method: req.method as any,
+      method: req.method as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS',
       url,
       headers,
-      payload: req.body,
+      payload: req.body as string | Record<string, unknown> | undefined,
     });
 
     // レスポンスの返却

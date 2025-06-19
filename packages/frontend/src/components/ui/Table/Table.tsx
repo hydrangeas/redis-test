@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/utils/cn";
 
-interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
   striped?: boolean;
   hoverable?: boolean;
   bordered?: boolean;
@@ -10,8 +10,8 @@ interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
 export const Table: React.FC<TableProps> = ({
   children,
   className,
-  striped = false,
-  hoverable = false,
+  striped: _striped = false,
+  hoverable: _hoverable = false,
   bordered = false,
   ...props
 }) => {

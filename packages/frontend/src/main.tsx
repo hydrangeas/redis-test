@@ -8,7 +8,7 @@ import { initializeResourceHints, setupLinkPreloading } from "./utils/preload";
 
 // 開発環境での React DevTools 設定
 if (import.meta.env.DEV) {
-  // @ts-ignore
+  // @ts-expect-error React DevTools global hook
   window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
     supportsFiber: true,
     inject: () => {},

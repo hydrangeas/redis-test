@@ -1,4 +1,4 @@
-import { DomainEvent } from '@/domain/shared/domain-event';
+import type { DomainEvent } from '@/domain/shared/domain-event';
 
 export interface IEventBus {
   /**

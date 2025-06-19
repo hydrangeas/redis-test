@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockedFunction } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 describe("useMediaQuery", () => {
-  let matchMediaMock: vi.MockedFunction<typeof window.matchMedia>;
+  let matchMediaMock: MockedFunction<typeof window.matchMedia>;
   let listeners: { [key: string]: ((event: MediaQueryListEvent) => void)[] } =
     {};
 

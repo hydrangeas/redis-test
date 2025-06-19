@@ -31,7 +31,7 @@ export const ApiDocsPage: React.FC = () => {
           <h3>主なエンドポイント</h3>
           <ul>
             <li>
-              <code>GET /data/secure/{path}</code> - データファイルの取得
+              <code>GET /data/secure/:path</code> - データファイルの取得
             </li>
             <li>
               <code>GET /health</code> - ヘルスチェック

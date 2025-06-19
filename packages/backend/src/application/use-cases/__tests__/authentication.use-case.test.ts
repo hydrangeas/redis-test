@@ -31,10 +31,12 @@ describe('AuthenticationUseCase', () => {
 
     mockJWTValidator = {
       validateToken: vi.fn(),
+      decodeToken: vi.fn().mockReturnValue({ jti: 'token-id-123' }),
     };
 
     mockAuthService = {
       validateToken: vi.fn(),
+      validateAccessToken: vi.fn(),
     } as any;
 
     mockEventBus = {
@@ -81,7 +83,7 @@ describe('AuthenticationUseCase', () => {
         DomainResult.ok({ sub: validUuid }),
       );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
-      vi.mocked(mockAuthService.validateToken).mockReturnValue(DomainResult.ok(authenticatedUser));
+      vi.mocked(mockAuthService.validateAccessToken).mockResolvedValue(DomainResult.ok(authenticatedUser));
 
       const result = await useCase.validateToken(token);
 
@@ -91,7 +93,7 @@ describe('AuthenticationUseCase', () => {
         expect(result.data.tokenId).toBe('token-id-123');
       }
       expect(mockAuthAdapter.verifyToken).toHaveBeenCalledWith(token);
-      expect(mockAuthService.validateToken).toHaveBeenCalledWith(tokenPayload);
+      expect(mockAuthService.validateAccessToken).toHaveBeenCalledWith(tokenPayload);
       expect(mockEventBus.publish).not.toHaveBeenCalled();
     });
 
@@ -145,7 +147,7 @@ describe('AuthenticationUseCase', () => {
         DomainResult.ok({ sub: validUuid }),
       );
       vi.mocked(mockAuthAdapter.verifyToken).mockResolvedValue(tokenPayload);
-      vi.mocked(mockAuthService.validateToken).mockReturnValue(
+      vi.mocked(mockAuthService.validateAccessToken).mockResolvedValue(
         DomainResult.fail(new Error('Token expired')),
       );
 
@@ -159,8 +161,9 @@ describe('AuthenticationUseCase', () => {
       expect(mockEventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           aggregateId: validUuid,
-          provider: validUuid,
+          provider: 'jwt',
           reason: 'Token expired',
+          attemptedUserId: validUuid,
         }),
       );
     });

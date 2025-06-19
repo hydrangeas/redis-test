@@ -65,7 +65,7 @@ describe('Data Routes Security Tests', () => {
     });
 
     // Register routes
-    await fastify.register(require('../index').default, { prefix: '/api/data' });
+    await fastify.register((await import('../index')).default, { prefix: '/api/data' });
   });
 
   describe('Path Traversal Protection', () => {

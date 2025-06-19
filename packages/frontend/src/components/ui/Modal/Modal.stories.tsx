@@ -8,6 +8,7 @@ import Modal, {
 } from "./Modal";
 import { Button } from "../Button";
 import { Input } from "../Input";
+import type { StoryContext } from "@/test/types";
 
 const meta = {
   title: "UI/Modal",
@@ -33,7 +34,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const ModalDemo = (args: any) => {
+const ModalDemo = (args: StoryContext["args"]) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -67,7 +68,7 @@ export const Default: Story = {
 };
 
 export const Small: Story = {
-  render: () => {
+  render: function SmallModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -101,7 +102,7 @@ export const Small: Story = {
 };
 
 export const Large: Story = {
-  render: () => {
+  render: function LargeModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -136,7 +137,7 @@ export const Large: Story = {
 };
 
 export const WithForm: Story = {
-  render: () => {
+  render: function WithFormModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -176,7 +177,7 @@ export const WithForm: Story = {
 };
 
 export const NoOverlayClose: Story = {
-  render: () => {
+  render: function NoOverlayCloseModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -214,7 +215,7 @@ export const NoOverlayClose: Story = {
 };
 
 export const CustomContent: Story = {
-  render: () => {
+  render: function CustomContentModal() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -248,7 +249,7 @@ export const CustomContent: Story = {
           <ModalBody>
             <div className="space-y-4">
               <p className="text-gray-600 dark:text-gray-400">
-                We're excited to have you here. Check out these resources to get
+                We&apos;re excited to have you here. Check out these resources to get
                 started:
               </p>
               <ul className="space-y-2">

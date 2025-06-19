@@ -1,7 +1,9 @@
-import { Brand, toBrand } from '@/domain/shared/types/brand';
-import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
 import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+import { toBrand } from '@/domain/shared/types/brand';
+
+import type { Brand} from '@/domain/shared/types/brand';
 
 /**
  * ブランド型としてのUserId
@@ -86,7 +88,8 @@ export class UserId {
       uuid = crypto.randomUUID();
     } else {
       // Node.js環境
-      const { randomUUID } = require('crypto');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { randomUUID } = require('crypto') as { randomUUID: () => string };
       uuid = randomUUID();
     }
 

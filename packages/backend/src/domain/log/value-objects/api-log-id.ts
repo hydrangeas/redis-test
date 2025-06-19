@@ -1,7 +1,9 @@
-import { ValueObject } from '@/domain/shared/value-object';
+import { v4 as uuidv4 } from 'uuid';
+
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { v4 as uuidv4 } from 'uuid';
+import { ValueObject } from '@/domain/shared/value-object';
+
 
 export interface APILogIdProps {
   value: string;

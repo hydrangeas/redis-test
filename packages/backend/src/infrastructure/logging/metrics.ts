@@ -1,4 +1,4 @@
-import { Logger } from 'pino';
+import type { Logger } from 'pino';
 
 /**
  * パフォーマンスメトリクスのログ記録
@@ -7,7 +7,7 @@ export function logPerformance(
   logger: Logger,
   operation: string,
   duration: number,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 ): void {
   logger.info(
     {
@@ -30,7 +30,7 @@ export async function measurePerformance<T>(
   logger: Logger,
   operation: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 ): Promise<T> {
   const startTime = process.hrtime.bigint();
 
@@ -66,7 +66,7 @@ export function measureSyncPerformance<T>(
   logger: Logger,
   operation: string,
   fn: () => T,
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
 ): T {
   const startTime = process.hrtime.bigint();
 

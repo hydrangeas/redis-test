@@ -13,14 +13,19 @@ export class ApplicationError extends Error {
     public readonly code: string,
     public readonly message: string,
     public readonly type: ApplicationErrorType,
-    public readonly metadata?: Record<string, any>,
+    public readonly metadata?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'ApplicationError';
     Object.setPrototypeOf(this, ApplicationError.prototype);
   }
 
-  toJSON() {
+  toJSON(): {
+    code: string;
+    message: string;
+    type: ApplicationErrorType;
+    metadata?: Record<string, unknown>;
+  } {
     return {
       code: this.code,
       message: this.message,

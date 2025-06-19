@@ -1,8 +1,9 @@
-import { TierLevel, TierLevelOrder } from './tier-level';
-import { RateLimit } from './rate-limit';
-import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
 import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+
+import { RateLimit } from './rate-limit';
+import { TierLevel, TierLevelOrder } from './tier-level';
 
 /**
  * ユーザーティアを表すバリューオブジェクト
@@ -171,7 +172,7 @@ export class UserTier {
       default:
         // 網羅性チェック
         // const _exhaustiveCheck: never = this._level;
-        throw new Error(`Unknown tier level: ${this._level}`);
+        throw new Error(`Unknown tier level: ${this._level as string}`);
     }
   }
 

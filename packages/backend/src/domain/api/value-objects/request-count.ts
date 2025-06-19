@@ -1,6 +1,6 @@
-import { ValidationError } from '@/domain/errors/validation-error';
-import { Result } from '@/domain/errors/result';
 import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { ValidationError } from '@/domain/errors/validation-error';
 
 export class RequestCount {
   private readonly _count: number;
@@ -27,7 +27,7 @@ export class RequestCount {
   }
 
   public exceeds(limit: number): boolean {
-    return this._count >= limit;
+    return this._count > limit;
   }
 
   public add(count: number): RequestCount {

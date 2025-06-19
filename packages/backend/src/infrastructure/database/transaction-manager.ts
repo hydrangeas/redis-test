@@ -1,7 +1,8 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
 import { IEventBus } from '@/domain/interfaces/event-bus.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
 
 /**
  * トランザクション管理クラス

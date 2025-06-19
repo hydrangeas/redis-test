@@ -54,7 +54,10 @@ describe('DatabaseSeeder', () => {
 
   describe('seed', () => {
     it('should execute all seeding steps in order', async () => {
-      const seedSpy = vi.spyOn(seeder as any, 'cleanup');
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      const cleanupSpy = vi.spyOn(seeder as any, 'cleanup');
       const seedUsersSpy = vi.spyOn(seeder as any, 'seedUsers');
       const seedApiKeysSpy = vi.spyOn(seeder as any, 'seedApiKeys');
       const seedRateLimitLogsSpy = vi.spyOn(seeder as any, 'seedRateLimitLogs');
@@ -63,13 +66,15 @@ describe('DatabaseSeeder', () => {
 
       await seeder.seed();
 
-      expect(seedSpy).toHaveBeenCalled();
+      expect(cleanupSpy).toHaveBeenCalled();
       expect(seedUsersSpy).toHaveBeenCalled();
       expect(seedApiKeysSpy).toHaveBeenCalled();
       expect(seedRateLimitLogsSpy).toHaveBeenCalled();
       expect(seedAuthLogsSpy).toHaveBeenCalled();
       expect(seedApiLogsSpy).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith('Database seeding completed successfully');
+
+      process.env.NODE_ENV = originalEnv;
     });
 
     it('should skip cleanup in non-development environment', async () => {

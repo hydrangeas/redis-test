@@ -70,5 +70,85 @@ export class AuthNotificationHandler implements IEventHandler<UserAuthenticated>
 }
 */
 
+interface INotificationService {
+  sendNewDeviceAlert: (params: { userId: string; device: string; location: string; timestamp: Date }) => Promise<void>;
+  sendSecurityAlert: (params: { userId: string; reason: string; details: unknown }) => Promise<void>;
+}
+
+interface ILogger {
+  info: (obj: Record<string, unknown>, msg: string) => void;
+  warn: (obj: Record<string, unknown>, msg: string) => void;
+  error: (obj: Record<string, unknown>, msg: string) => void;
+}
+
+interface IEvent {
+  userId: string;
+  userAgent?: string;
+  occurredAt: Date;
+  getData: () => unknown;
+  getMetadata: () => unknown;
+}
+
 // Temporary export to avoid compilation errors
-export class AuthNotificationHandler {}
+export class AuthNotificationHandler {
+  constructor(
+    private readonly notificationService: INotificationService,
+    private readonly logger: ILogger,
+  ) {}
+
+  handle(event: IEvent): Promise<void> {
+    // Stub implementation for tests
+    try {
+      if (this.isNewDevice(event)) {
+        this.notificationService.sendNewDeviceAlert({
+          userId: event.userId,
+          device: event.userAgent || 'Unknown device',
+          location: 'Unknown location',
+          timestamp: event.occurredAt,
+        }).catch((err) => {
+          this.logger.error({
+            error: err instanceof Error ? err.message : String(err),
+            userId: event.userId,
+          }, 'Failed to send new device alert');
+        });
+        
+        this.logger.info({
+          userId: event.userId,
+          userAgent: event.userAgent,
+        }, 'New device login alert sent');
+      }
+
+      if (this.isSuspiciousLogin(event)) {
+        this.notificationService.sendSecurityAlert({
+          userId: event.userId,
+          reason: 'Suspicious login pattern detected',
+          details: event.getData(),
+        }).catch((err) => {
+          this.logger.warn({
+            error: err instanceof Error ? err.message : String(err),
+            userId: event.userId,
+          }, 'Failed to send suspicious login alert');
+        });
+        
+        this.logger.warn({
+          userId: event.userId,
+          eventData: event.getData(),
+        }, 'Suspicious login alert sent');
+      }
+    } catch (error) {
+      this.logger.error({
+        error: error instanceof Error ? error.message : error,
+        event: event.getMetadata(),
+      }, 'Failed to send authentication notification');
+    }
+    return Promise.resolve();
+  }
+
+  private isNewDevice(_event: IEvent): boolean {
+    return false;
+  }
+
+  private isSuspiciousLogin(_event: IEvent): boolean {
+    return false;
+  }
+}

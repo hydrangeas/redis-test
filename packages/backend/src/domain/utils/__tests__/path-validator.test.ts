@@ -104,11 +104,11 @@ describe('PathValidator', () => {
 
     it('should handle empty or invalid input', () => {
       expect(() => PathValidator.validateAndSanitize('')).toThrow(PathTraversalException);
-      expect(() => PathValidator.validateAndSanitize(null as any)).toThrow(PathTraversalException);
-      expect(() => PathValidator.validateAndSanitize(undefined as any)).toThrow(
+      expect(() => PathValidator.validateAndSanitize(null as unknown as string)).toThrow(PathTraversalException);
+      expect(() => PathValidator.validateAndSanitize(undefined as unknown as string)).toThrow(
         PathTraversalException,
       );
-      expect(() => PathValidator.validateAndSanitize(123 as any)).toThrow(PathTraversalException);
+      expect(() => PathValidator.validateAndSanitize(123 as unknown as string)).toThrow(PathTraversalException);
     });
   });
 

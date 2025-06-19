@@ -1,16 +1,17 @@
-import { injectable, inject } from 'tsyringe';
-import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
-import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
-import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
-import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
 import { Logger } from 'pino';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { injectable, inject } from 'tsyringe';
+
+import { UserLoggedOut } from '@/domain/auth/events/user-logged-out.event';
 import { UserId } from '@/domain/auth/value-objects/user-id';
-import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
+import { IEventHandler } from '@/domain/interfaces/event-bus.interface';
+import { AuthLogEntry } from '@/domain/log/entities/auth-log-entry';
+import { IAuthLogRepository } from '@/domain/log/interfaces/auth-log-repository.interface';
 import { AuthResult } from '@/domain/log/value-objects';
-import { Provider } from '@/domain/log/value-objects/provider';
+import { AuthEvent, EventType } from '@/domain/log/value-objects/auth-event';
 import { IPAddress } from '@/domain/log/value-objects/ip-address';
+import { Provider } from '@/domain/log/value-objects/provider';
 import { UserAgent } from '@/domain/log/value-objects/user-agent';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
  * ユーザーログアウトイベントのハンドラー

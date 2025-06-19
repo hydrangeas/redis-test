@@ -1,21 +1,24 @@
-import { IAuthAdapter, Session } from '../interfaces/auth-adapter.interface';
-import { TokenPayload } from '@/domain/auth/types/token-payload';
+import { injectable } from 'tsyringe';
 
+import type { IAuthAdapter, Session, AuthUser, CreateUserData, UpdateUserData } from '../interfaces/auth-adapter.interface';
+import type { TokenPayload } from '@/domain/auth/types/token-payload';
+
+@injectable()
 export class MockSupabaseAuthAdapter implements IAuthAdapter {
   private mockTokens = new Map<string, TokenPayload>();
   private mockSessions = new Map<string, Session>();
   private signedOutUsers = new Set<string>();
-  private mockUsers = new Map<string, any>();
+  private mockUsers = new Map<string, AuthUser>();
 
-  async verifyToken(token: string): Promise<TokenPayload | null> {
-    return this.mockTokens.get(token) || null;
+  verifyToken(token: string): Promise<TokenPayload | null> {
+    return Promise.resolve(this.mockTokens.get(token) || null);
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<Session | null> {
-    return this.mockSessions.get(refreshToken) || null;
+  refreshAccessToken(refreshToken: string): Promise<Session | null> {
+    return Promise.resolve(this.mockSessions.get(refreshToken) || null);
   }
 
-  async signOut(userId: string): Promise<void> {
+  signOut(userId: string): Promise<void> {
     this.signedOutUsers.add(userId);
     // Remove all sessions for this user
     for (const [token, session] of this.mockSessions.entries()) {
@@ -23,38 +26,38 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
         this.mockSessions.delete(token);
       }
     }
+    return Promise.resolve();
   }
 
-  async getUserById(id: string): Promise<any | null> {
-    return this.mockUsers.get(id) || null;
+  getUserById(id: string): Promise<AuthUser | null> {
+    return Promise.resolve(this.mockUsers.get(id) || null);
   }
 
-  async getUserByEmail(email: string): Promise<any | null> {
+  getUserByEmail(email: string): Promise<AuthUser | null> {
     for (const user of this.mockUsers.values()) {
       if (user.email === email) {
-        return user;
+        return Promise.resolve(user);
       }
     }
-    return null;
+    return Promise.resolve(null);
   }
 
-  async createUser(userData: any): Promise<any | null> {
-    const user = {
-      id: userData.id,
+  createUser(userData: CreateUserData): Promise<AuthUser | null> {
+    const user: AuthUser = {
+      id: `user-${Date.now()}`,
       email: userData.email,
-      email_confirmed_at: userData.email_confirmed ? new Date().toISOString() : null,
       app_metadata: userData.app_metadata || {},
       user_metadata: userData.user_metadata || {},
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
     this.mockUsers.set(user.id, user);
-    return user;
+    return Promise.resolve(user);
   }
 
-  async updateUser(id: string, updates: any): Promise<any | null> {
+  updateUser(id: string, updates: UpdateUserData): Promise<AuthUser | null> {
     const user = this.mockUsers.get(id);
-    if (!user) return null;
+    if (!user) return Promise.resolve(null);
 
     const updatedUser = {
       ...user,
@@ -62,11 +65,11 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
       updated_at: new Date().toISOString(),
     };
     this.mockUsers.set(id, updatedUser);
-    return updatedUser;
+    return Promise.resolve(updatedUser);
   }
 
-  async deleteUser(id: string): Promise<boolean> {
-    return this.mockUsers.delete(id);
+  deleteUser(id: string): Promise<boolean> {
+    return Promise.resolve(this.mockUsers.delete(id));
   }
 
   // テスト用ヘルパーメソッド
@@ -82,7 +85,7 @@ export class MockSupabaseAuthAdapter implements IAuthAdapter {
     return this.signedOutUsers.has(userId);
   }
 
-  setMockUser(id: string, user: any): void {
+  setMockUser(id: string, user: AuthUser): void {
     this.mockUsers.set(id, user);
   }
 

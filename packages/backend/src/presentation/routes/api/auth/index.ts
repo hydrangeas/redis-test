@@ -1,10 +1,13 @@
-import { FastifyPluginAsync } from 'fastify';
-import { Type, Static } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import { container } from 'tsyringe';
-import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
+
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { toProblemDetails } from '@/presentation/errors/error-mapper';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+
+import type { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Static } from '@sinclair/typebox';
+import type { FastifyPluginAsync } from 'fastify';
 
 // レスポンススキーマ
 const UserInfoResponse = Type.Object({
@@ -34,6 +37,7 @@ const ErrorResponse = Type.Object({
 });
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   // User repository is not needed in these routes
   const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
 

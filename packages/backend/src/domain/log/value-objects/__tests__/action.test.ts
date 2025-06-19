@@ -23,7 +23,7 @@ describe('Action', () => {
       const result = Action.create('INVALID_TYPE' as ActionType);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error).toBe('無効なアクションタイプです');
+      expect(result.getError().message).toBe('無効なアクションタイプです');
     });
 
     describe('メタデータ検証', () => {
@@ -31,7 +31,7 @@ describe('Action', () => {
         const result = Action.create(ActionType.LOGIN, { provider: 'google' });
 
         expect(result.isFailure).toBe(true);
-        expect(result.error).toBe('ログイン成功時はuserIdが必要です');
+        expect(result.getError().message).toBe('ログイン成功時はuserIdが必要です');
       });
 
       it('ログイン失敗時はuserIdが不要', () => {
@@ -46,11 +46,11 @@ describe('Action', () => {
       it('APIアクセス時にendpointとmethodが必要', () => {
         const result1 = Action.create(ActionType.API_ACCESS, { endpoint: '/api/data' });
         expect(result1.isFailure).toBe(true);
-        expect(result1.error).toBe('APIアクセスにはendpointとmethodが必要です');
+        expect(result1.getError().message).toBe('APIアクセスにはendpointとmethodが必要です');
 
         const result2 = Action.create(ActionType.API_ACCESS, { method: 'GET' });
         expect(result2.isFailure).toBe(true);
-        expect(result2.error).toBe('APIアクセスにはendpointとmethodが必要です');
+        expect(result2.getError().message).toBe('APIアクセスにはendpointとmethodが忁要です');
       });
 
       it('レート制限超過時にuserId、limit、windowが必要', () => {
@@ -59,7 +59,7 @@ describe('Action', () => {
           limit: 60,
         });
         expect(result1.isFailure).toBe(true);
-        expect(result1.error).toBe('レート制限超過にはuserId、limit、windowが必要です');
+        expect(result1.getError().message).toBe('レート制限超過にはuserId、limit、windowが必要です');
 
         const result2 = Action.create(ActionType.RATE_LIMIT_EXCEEDED, {
           userId: 'user-123',

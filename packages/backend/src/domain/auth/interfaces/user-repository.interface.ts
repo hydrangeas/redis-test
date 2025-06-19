@@ -1,7 +1,8 @@
-import { Result } from '@/domain/errors/result';
-import { User } from '../entities/user';
-import { UserId } from '../value-objects/user-id';
-import { Email } from '../value-objects/email';
+
+import type { User } from '../entities/user';
+import type { Email } from '../value-objects/email';
+import type { UserId } from '../value-objects/user-id';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * ユーザーリポジトリインターフェース

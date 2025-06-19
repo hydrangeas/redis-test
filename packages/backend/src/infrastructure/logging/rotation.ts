@@ -1,9 +1,10 @@
-import pino from 'pino';
-// @ts-ignore - pino-multi-stream doesn't have type declarations
-import pinoMultiStream from 'pino-multi-stream';
-import { createStream } from 'rotating-file-stream';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+import { pino, stdTimeFunctions, stdSerializers, type LoggerOptions } from 'pino';
+// @ts-expect-error - pino-multi-stream doesn't have type declarations
+import pinoMultiStream from 'pino-multi-stream';
+import { createStream } from 'rotating-file-stream';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +20,7 @@ interface RotatingLoggerOptions {
 /**
  * Creates a logger with rotating file streams
  */
-export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
+export function createRotatingLogger(options: RotatingLoggerOptions = {}): pino.Logger {
   const {
     level = 'info',
     logDir = path.join(__dirname, '../../../../logs'),
@@ -29,13 +30,13 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
   } = options;
 
   // Ensure log directory exists
-  import('fs').then((fs) => {
+  void import('fs').then((fs) => {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
   });
 
-  const streams: pinoMultiStream.Streams = [
+  const streams: Array<{ stream: NodeJS.WritableStream; level?: string }> = [
     // Console output (development)
     {
       level: level as pino.Level,
@@ -54,7 +55,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         maxFiles,
         size: maxSize,
         compress: compress ? 'gzip' : false,
-      }) as any,
+      }) as unknown as NodeJS.WritableStream,
     });
 
     // Error log with longer retention
@@ -66,7 +67,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         maxFiles: 90, // Keep error logs for 90 days
         size: maxSize,
         compress: compress ? 'gzip' : false,
-      }) as any,
+      }) as unknown as NodeJS.WritableStream,
     });
 
     // Audit log for security events
@@ -78,7 +79,7 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
         maxFiles: 365, // Keep audit logs for 1 year
         size: maxSize,
         compress: compress ? 'gzip' : false,
-      }) as any,
+      }) as unknown as NodeJS.WritableStream,
     });
   }
 
@@ -88,13 +89,13 @@ export function createRotatingLogger(options: RotatingLoggerOptions = {}) {
       formatters: {
         level: (label) => ({ level: label }),
       },
-      timestamp: pino.stdTimeFunctions.isoTime,
+      timestamp: stdTimeFunctions.isoTime,
       base: {
         pid: process.pid,
         hostname: process.env.HOSTNAME || 'unknown',
       },
     },
-    pinoMultiStream.multistream(streams),
+    (pinoMultiStream as { multistream: (streams: Array<{ stream: NodeJS.WritableStream; level?: string }>) => NodeJS.WritableStream }).multistream(streams),
   );
 }
 
@@ -133,39 +134,39 @@ export function getLogRotationConfig(): RotatingLoggerOptions {
 /**
  * Custom serializers for sensitive data
  */
-export const logSerializers = {
-  req: (req: any) => ({
+export const logSerializers: NonNullable<LoggerOptions['serializers']> = {
+  req: (req: Record<string, unknown>) => ({
     id: req.id,
     method: req.method,
     url: req.url,
     query: req.query,
     params: req.params,
     headers: {
-      'user-agent': req.headers['user-agent'],
-      'x-forwarded-for': req.headers['x-forwarded-for'],
-      'x-real-ip': req.headers['x-real-ip'],
+      'user-agent': (req.headers as Record<string, string>)['user-agent'],
+      'x-forwarded-for': (req.headers as Record<string, string>)['x-forwarded-for'],
+      'x-real-ip': (req.headers as Record<string, string>)['x-real-ip'],
     },
     remoteAddress: req.ip,
-    userId: req.user?.userId?.value,
+    userId: (req.user as { userId?: { value?: string } } | undefined)?.userId?.value,
   }),
 
-  res: (res: any) => ({
+  res: (res: Record<string, unknown>) => ({
     statusCode: res.statusCode,
     headers: {
-      'content-type': res.getHeader('content-type'),
-      'content-length': res.getHeader('content-length'),
+      'content-type': (res.getHeader as (name: string) => string | undefined)('content-type'),
+      'content-length': (res.getHeader as (name: string) => string | undefined)('content-length'),
     },
   }),
 
-  err: pino.stdSerializers.err,
+  err: stdSerializers.err,
 
-  user: (user: any) => ({
-    id: user.userId?.value,
-    tier: user.tier?.level,
+  user: (user: Record<string, unknown>) => ({
+    id: (user.userId as { value?: string } | undefined)?.value,
+    tier: (user.tier as { level?: string } | undefined)?.level,
   }),
 
   // Sanitize sensitive data
-  auth: (auth: any) => ({
+  auth: (auth: Record<string, unknown>) => ({
     provider: auth.provider,
     status: auth.status,
     // Don't log tokens or secrets
@@ -178,7 +179,7 @@ export const logSerializers = {
 export function createContextLogger(
   logger: pino.Logger,
   context: string,
-  additionalContext?: Record<string, any>,
+  additionalContext?: Record<string, unknown>,
 ): pino.Logger {
   return logger.child({
     context,

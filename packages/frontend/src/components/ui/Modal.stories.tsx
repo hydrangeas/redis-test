@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
 import { useState } from "react";
+import type { StoryContext } from "@/test/types";
 
 const meta = {
   title: "UI/Modal",
@@ -28,7 +29,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Wrapper component to handle modal state
-const ModalDemo = (args: any) => {
+const ModalDemo = (args: StoryContext["args"]) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -100,7 +101,7 @@ export const NoCloseButton: Story = {
     title: "Modal without Close Button",
     children: (
       <div>
-        <p>This modal doesn't have a close button in the header.</p>
+        <p>This modal doesn&apos;t have a close button in the header.</p>
         <p>Users must click outside or use other means to close it.</p>
       </div>
     ),

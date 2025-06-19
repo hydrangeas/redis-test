@@ -4,7 +4,7 @@ export interface GuardResult {
 }
 
 export interface GuardArgument {
-  argument: any;
+  argument: unknown;
   argumentName: string;
 }
 
@@ -17,7 +17,7 @@ export class Guard {
     return { succeeded: true, message: '' };
   }
 
-  public static againstNullOrUndefined(argument: any, argumentName: string): GuardResult {
+  public static againstNullOrUndefined(argument: unknown, argumentName: string): GuardResult {
     if (argument === null || argument === undefined) {
       return {
         succeeded: false,

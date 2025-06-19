@@ -1,9 +1,10 @@
-import { injectable, inject } from 'tsyringe';
-import { IEventBus, IEventHandler } from '@/domain/interfaces/event-bus.interface';
-import { DomainEvent } from '@/domain/shared/domain-event';
-import { IEventStore } from '@/domain/interfaces/event-store.interface';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { IEventBus, IEventHandler } from '@/domain/interfaces/event-bus.interface';
+import { IEventStore } from '@/domain/interfaces/event-store.interface';
+import { DomainEvent } from '@/domain/shared/domain-event';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 interface EventHandlerEntry<T extends DomainEvent> {
   eventName: string;
@@ -13,7 +14,7 @@ interface EventHandlerEntry<T extends DomainEvent> {
 
 @injectable()
 export class EventBus implements IEventBus {
-  private handlers = new Map<string, EventHandlerEntry<any>[]>();
+  private handlers = new Map<string, EventHandlerEntry<DomainEvent>[]>();
   private pendingEvents: DomainEvent[] = [];
   private isDispatching = false;
   private processedEventIds = new Set<string>();

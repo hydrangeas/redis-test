@@ -1,22 +1,24 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
 import {
   IAPIAccessControlUseCase,
   APIAccessDecision,
   APIAccessMetadata,
 } from '@/application/interfaces/api-access-control-use-case.interface';
 import { IRateLimitUseCase } from '@/application/interfaces/rate-limit-use-case.interface';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { Result } from '@/domain/shared/result';
-import { DomainError } from '@/domain/errors/domain-error';
 import { APIAccessRequested } from '@/domain/api/events/api-access-requested.event';
 import { InvalidAPIAccess } from '@/domain/api/events/invalid-api-access.event';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
-import { UserId } from '@/domain/auth/value-objects/user-id';
+import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
+import { IAPIAccessControlService } from '@/domain/api/services/api-access-control.service';
 import { EndpointPath } from '@/domain/api/value-objects/endpoint-path';
 import { EndpointType } from '@/domain/api/value-objects/endpoint-type';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError } from '@/domain/errors/domain-error';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { Result } from '@/domain/shared/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
  * APIアクセス制御ユースケース
@@ -50,7 +52,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       // エンドポイントパスの作成
       const endpointPathResult = EndpointPath.create(endpoint);
       if (endpointPathResult.isFailure) {
-        await this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
+        this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
         return Result.ok({
           allowed: false,
           reason: 'endpoint_not_found',
@@ -69,7 +71,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       );
 
       if (accessCheckResult.isFailure || !accessCheckResult.getValue()) {
-        await this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
+        this.recordUnauthorizedAccess(user.userId, endpoint, method, startTime, metadata);
         return Result.ok({
           allowed: false,
           reason: 'unauthorized',
@@ -91,7 +93,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       const rateLimitStatus = rateLimitResult.getValue();
 
       // 3. アクセスログの記録
-      await this.recordAPIAccess(
+      this.recordAPIAccess(
         user.userId,
         endpoint,
         method,
@@ -101,7 +103,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
       );
 
       // 4. ドメインイベントの発行
-      await this.eventBus.publish(
+      this.eventBus.publish(
         new APIAccessRequested(
           user.userId.toString(), // aggregateId
           user.userId.toString(), // userId
@@ -115,12 +117,14 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
 
       // レート制限に引っかかった場合
       if (!rateLimitStatus.allowed) {
-        await this.eventBus.publish(
-          new InvalidAPIAccess(
+        this.eventBus.publish(
+          new RateLimitExceeded(
+            user.userId.toString(),
+            1,
             user.userId.toString(),
             endpoint,
-            method,
-            'rate_limit_exceeded',
+            rateLimitStatus.limit - rateLimitStatus.remaining,
+            rateLimitStatus.limit,
             new Date(),
           ),
         );
@@ -163,7 +167,7 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   /**
    * 公開エンドポイントへのアクセスを記録
    */
-  async recordPublicAccess(
+  recordPublicAccess(
     endpoint: string,
     method: string,
     metadata?: APIAccessMetadata,
@@ -172,9 +176,9 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
 
     try {
       // 公開エンドポイントへのアクセスログを記録
-      await this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
+      this.recordAPIAccess(undefined, endpoint, method, 200, startTime, metadata);
 
-      return Result.ok(undefined as any);
+      return Promise.resolve(Result.ok(undefined));
     } catch (error) {
       this.logger.error(
         {
@@ -185,27 +189,27 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
         'Error recording public access',
       );
 
-      return Result.fail(
+      return Promise.resolve(Result.fail(
         DomainError.internal(
           'PUBLIC_ACCESS_RECORD_ERROR',
           'Failed to record public access',
           error instanceof Error ? error : undefined,
         ),
-      );
+      ));
     }
   }
 
   /**
    * APIアクセスログを記録
    */
-  private async recordAPIAccess(
+  private recordAPIAccess(
     userId: UserId | undefined,
     endpoint: string,
     method: string,
     statusCode: number,
     startTime: number,
     metadata?: APIAccessMetadata,
-  ): Promise<void> {
+  ): void {
     const responseTime = Date.now() - startTime;
 
     // 簡略化: 現時点ではログ記録の詳細実装を省略
@@ -226,16 +230,16 @@ export class APIAccessControlUseCase implements IAPIAccessControlUseCase {
   /**
    * 認可されていないアクセスを記録
    */
-  private async recordUnauthorizedAccess(
+  private recordUnauthorizedAccess(
     userId: UserId,
     endpoint: string,
     method: string,
     startTime: number,
     metadata?: APIAccessMetadata,
-  ): Promise<void> {
-    await this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
+  ): void {
+    this.recordAPIAccess(userId, endpoint, method, 403, startTime, metadata);
 
-    await this.eventBus.publish(
+    this.eventBus.publish(
       new InvalidAPIAccess(userId.toString(), endpoint, method, 'unauthorized', new Date()),
     );
   }

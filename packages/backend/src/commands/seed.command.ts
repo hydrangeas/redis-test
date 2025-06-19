@@ -1,18 +1,21 @@
 import 'reflect-metadata';
+
 import * as dotenv from 'dotenv';
 import { container } from 'tsyringe';
+
 import { setupDI } from '@/infrastructure/di/container';
-import { DatabaseSeeder } from '@/infrastructure/seeders/database-seeder';
-import { Logger } from 'pino';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { DatabaseSeeder } from '@/infrastructure/seeders/database-seeder';
+
+import type { Logger } from 'pino';
 
 // Load environment variables
 dotenv.config();
 
-async function runSeeder() {
+async function runSeeder(): Promise<void> {
   try {
     // DI設定
-    await setupDI();
+    setupDI();
 
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
     const seeder = container.resolve(DatabaseSeeder);
@@ -36,10 +39,10 @@ async function runSeeder() {
   }
 }
 
-async function resetDatabase() {
+function resetDatabase(): void {
   try {
     // DI設定
-    await setupDI();
+    setupDI();
 
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
     logger.info('Starting database reset process...');
@@ -70,14 +73,17 @@ const command = args[0];
 
 switch (command) {
   case 'seed':
-    runSeeder();
+    void runSeeder();
     break;
   case 'reset':
-    resetDatabase();
+    void resetDatabase();
     break;
   default:
+    // eslint-disable-next-line no-console
     console.log('Usage: npm run db:seed [seed|reset]');
+    // eslint-disable-next-line no-console
     console.log('  seed  - Populate database with test data');
+    // eslint-disable-next-line no-console
     console.log('  reset - Reset database (requires manual schema reset)');
     process.exit(1);
 }

@@ -1,13 +1,15 @@
-import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
-import { HttpMethod } from '@/domain/log/value-objects/http-method';
-import { StatusCode } from '@/domain/api/value-objects/status-code';
-import { RequestDuration } from '@/domain/api/value-objects/request-duration';
-import { RequestId } from '@/domain/api/value-objects/request-id';
 import { APILogId } from '@/domain/log/value-objects/api-log-id';
+import { Entity, UniqueEntityId } from '@/domain/shared/entity';
+
+import type { APIEndpoint } from '@/domain/api/value-objects/api-endpoint';
+import type { RequestDuration } from '@/domain/api/value-objects/request-duration';
+import type { RequestId } from '@/domain/api/value-objects/request-id';
+import type { StatusCode } from '@/domain/api/value-objects/status-code';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { HttpMethod } from '@/domain/log/value-objects/http-method';
 
 export interface APILogProps {
   userId: UserId | null; // null for anonymous requests

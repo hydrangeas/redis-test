@@ -1,6 +1,8 @@
-import { FastifyPluginAsync } from 'fastify';
-import refreshRoute from './refresh.route';
+
 import logoutRoute from './logout.route';
+import refreshRoute from './refresh.route';
+
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * 認証関連のルートを登録するプラグイン

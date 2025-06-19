@@ -4,14 +4,21 @@
  */
 
 import 'reflect-metadata';
-import { container, DependencyContainer } from 'tsyringe';
-import { DI_TOKENS } from './tokens';
-import { Logger } from 'pino';
-import { createLogger } from '../logging';
-import { EnvConfig } from '../config/env.config';
 import path from 'path';
-import { Result } from '@/domain/shared/result';
+
+import { container } from 'tsyringe';
 import { vi } from 'vitest';
+
+import { Result } from '@/domain/shared/result';
+
+import { DI_TOKENS } from './tokens';
+import { createLogger } from '../logging';
+
+import type { EnvConfig } from '../config/env.config';
+import type { IEventHandler } from '@/domain/interfaces/event-handler.interface';
+import type { DomainEvent } from '@/domain/shared/domain-event';
+import type { Logger } from 'pino';
+import type { DependencyContainer } from 'tsyringe';
 
 /**
  * Default test environment configuration
@@ -222,7 +229,7 @@ export class TestContainerFactory {
  * Helper function to create a test container with custom mocks
  */
 export function createTestContainer(
-  customMocks?: Record<string | symbol, any>,
+  customMocks?: Record<string | symbol, unknown>,
   envOverrides?: Partial<EnvConfig>,
 ): DependencyContainer {
   const testContainer = TestContainerFactory.create(envOverrides);
@@ -262,30 +269,40 @@ export class MockFactory {
       trace: vi.fn(),
       fatal: vi.fn(),
       child: vi.fn().mockReturnThis(),
-    } as any;
+    } as unknown as Logger;
   }
 
   /**
    * Create a mock event bus
    */
-  static createMockEventBus() {
+  static createMockEventBus(): {
+    publish: ReturnType<typeof vi.fn<[DomainEvent], Promise<void>>>;
+    subscribe: ReturnType<typeof vi.fn<[string, IEventHandler<DomainEvent>], void>>;
+    unsubscribe: ReturnType<typeof vi.fn<[string, IEventHandler<DomainEvent>], void>>;
+  } {
     return {
-      publish: vi.fn().mockResolvedValue(undefined),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
+      publish: vi.fn<[DomainEvent], Promise<void>>().mockResolvedValue(undefined),
+      subscribe: vi.fn<[string, IEventHandler<DomainEvent>], void>(),
+      unsubscribe: vi.fn<[string, IEventHandler<DomainEvent>], void>(),
     };
   }
 
   /**
    * Create a mock repository with common methods
    */
-  static createMockRepository() {
+  static createMockRepository(): {
+    save: ReturnType<typeof vi.fn<[unknown], Promise<Result<void>>>>;
+    findById: ReturnType<typeof vi.fn<[unknown], Promise<Result<unknown>>>>;
+    findAll: ReturnType<typeof vi.fn<[], Promise<Result<unknown[]>>>>;
+    update: ReturnType<typeof vi.fn<[unknown], Promise<Result<void>>>>;
+    delete: ReturnType<typeof vi.fn<[unknown], Promise<Result<void>>>>;
+  } {
     return {
-      save: vi.fn().mockResolvedValue(Result.ok(undefined)),
-      findById: vi.fn().mockResolvedValue(Result.ok(null)),
-      findAll: vi.fn().mockResolvedValue(Result.ok([])),
-      update: vi.fn().mockResolvedValue(Result.ok(undefined)),
-      delete: vi.fn().mockResolvedValue(Result.ok(undefined)),
+      save: vi.fn<[unknown], Promise<Result<void>>>().mockResolvedValue(Result.ok(undefined)),
+      findById: vi.fn<[unknown], Promise<Result<unknown>>>().mockResolvedValue(Result.ok(null)),
+      findAll: vi.fn<[], Promise<Result<unknown[]>>>().mockResolvedValue(Result.ok([])),
+      update: vi.fn<[unknown], Promise<Result<void>>>().mockResolvedValue(Result.ok(undefined)),
+      delete: vi.fn<[unknown], Promise<Result<void>>>().mockResolvedValue(Result.ok(undefined)),
     };
   }
 }
@@ -297,9 +314,10 @@ export class DITestUtils {
   /**
    * Spy on a service method
    */
-  static spyOn<T>(container: DependencyContainer, token: symbol, method: keyof T): any {
+  static spyOn<T extends Record<string, unknown>>(container: DependencyContainer, token: symbol, method: keyof T): ReturnType<typeof vi.spyOn> {
     const service = container.resolve<T>(token);
-    return vi.spyOn(service as any, method as string);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return vi.spyOn(service as any, method as any);
   }
 
   /**

@@ -1,8 +1,9 @@
-import pino from 'pino';
-import { createStream } from 'rotating-file-stream';
+import { existsSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, mkdirSync } from 'fs';
+
+import { pino, stdTimeFunctions, multistream } from 'pino';
+import { createStream } from 'rotating-file-stream';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,7 +14,7 @@ if (!existsSync(logsDir)) {
   mkdirSync(logsDir, { recursive: true });
 }
 
-export function createRotatingLogger() {
+export function createRotatingLogger(): pino.Logger {
   // アプリケーションログのローテーション設定
   const appLogStream = createStream('app.log', {
     interval: '1d', // 日次ローテーション
@@ -56,14 +57,14 @@ export function createRotatingLogger() {
       formatters: {
         level: (label) => ({ level: label }),
       },
-      timestamp: pino.stdTimeFunctions.isoTime,
+      timestamp: stdTimeFunctions.isoTime,
     },
-    pino.multistream(streams),
+    multistream(streams),
   );
 }
 
 // ログファイルのクリーンアップ関数
-export async function cleanupOldLogs(daysToKeep: number = 30) {
+export async function cleanupOldLogs(daysToKeep: number = 30): Promise<void> {
   const { readdir, stat, unlink } = await import('fs').then((m) => m.promises);
   const files = await readdir(logsDir);
   const now = Date.now();
@@ -75,7 +76,7 @@ export async function cleanupOldLogs(daysToKeep: number = 30) {
 
     if (now - stats.mtime.getTime() > maxAge) {
       await unlink(filePath);
-      console.log(`Deleted old log file: ${file}`);
+      // Log deletion tracked internally
     }
   }
 }

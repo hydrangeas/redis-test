@@ -1,8 +1,11 @@
-import { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
+
 import { apiLoggingMiddleware } from '../middleware/api-logging.middleware';
 
+import type { FastifyPluginAsync } from 'fastify';
+
 const apiLoggingPlugin: FastifyPluginAsync = async (fastify) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   // API logging middleware
   fastify.addHook('onRequest', apiLoggingMiddleware.onRequest);
   fastify.addHook('onSend', apiLoggingMiddleware.onSend);
@@ -12,5 +15,5 @@ const apiLoggingPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(apiLoggingPlugin, {
   name: 'api-logging',
-  dependencies: ['di-container'], // Ensure DI is set up first
+  // Remove the dependency as DI is setup before plugin registration
 });

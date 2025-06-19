@@ -60,7 +60,6 @@ export const DashboardPage: React.FC = () => {
       setUserInfo(mockUserInfo);
       setUsageStats(mockUsageStats);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
@@ -78,7 +77,6 @@ export const DashboardPage: React.FC = () => {
         }
         await fetchUserData(user);
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error("Error fetching user:", error);
         navigate("/login");
       }
@@ -92,7 +90,6 @@ export const DashboardPage: React.FC = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        // eslint-disable-next-line no-console
         console.error("Error signing out:", error);
         alert("ログアウトに失敗しました。もう一度お試しください。");
         setLoggingOut(false);
@@ -101,7 +98,6 @@ export const DashboardPage: React.FC = () => {
       // ログアウト成功後、トップページにリダイレクト
       navigate("/");
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error signing out:", error);
       alert("予期せぬエラーが発生しました。");
       setLoggingOut(false);
@@ -116,7 +112,6 @@ export const DashboardPage: React.FC = () => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Failed to copy API key:", error);
     }
   };
@@ -161,12 +156,20 @@ export const DashboardPage: React.FC = () => {
     {
       key: "count" as keyof UsageStats,
       header: "使用回数",
-      render: (value: any, item: UsageStats) => `${item.count} / ${item.limit}`,
+      render: (_: UsageStats["count"], item: UsageStats) => `${item.count} / ${item.limit}`,
+    },
+    {
+      key: "count" as keyof UsageStats,
+      header: "使用率",
+      render: (_: UsageStats["count"], item: UsageStats) => {
+        const percentage = Math.round((item.count / item.limit) * 100);
+        return `${percentage}%`;
+      },
     },
     {
       key: "resetAt" as keyof UsageStats,
       header: "リセット時刻",
-      render: (value: any) => new Date(value).toLocaleTimeString("ja-JP"),
+      render: (value: UsageStats["resetAt"]) => new Date(value).toLocaleTimeString("ja-JP"),
       hideOnMobile: true,
     },
   ];

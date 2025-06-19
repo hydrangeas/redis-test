@@ -1,8 +1,10 @@
-import { APIAggregate } from '../aggregates/api.aggregate';
-import { EndpointId } from '../value-objects/endpoint-id';
-import { HttpMethod } from '../value-objects/http-method';
-import { EndpointPath } from '../value-objects/endpoint-path';
-import { Result } from '@/domain/errors/result';
+
+
+import type { APIAggregate } from '../aggregates/api.aggregate';
+import type { EndpointId } from '../value-objects/endpoint-id';
+import type { EndpointPath } from '../value-objects/endpoint-path';
+import type { HttpMethod } from '../value-objects/http-method';
+import type { Result } from '@/domain/errors/result';
 
 /**
  * APIリポジトリインターフェース

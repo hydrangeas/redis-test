@@ -18,7 +18,7 @@ export class APIAccessRecorded extends DomainEvent {
     return 'APIAccessRecorded';
   }
 
-  getEventData(): Record<string, any> {
+  getEventData(): Record<string, unknown> {
     return {
       endpoint: this.endpoint,
       method: this.method,

@@ -20,7 +20,29 @@ const vercelEnvSchema = z.object({
   RATE_LIMIT_REDIS_URL: z.string().optional(),
 });
 
-export function loadVercelEnv() {
+export function loadVercelEnv(): {
+  supabase: {
+    url: string;
+    serviceRoleKey: string;
+    anonKey: string;
+  };
+  vercel: {
+    region?: string;
+    url?: string;
+    env?: 'production' | 'preview' | 'development';
+  };
+  features: {
+    enableRateLimit: boolean;
+  };
+  redis?: {
+    url: string;
+  };
+  environment: {
+    isProduction: boolean;
+    isPreview: boolean;
+    isDevelopment: boolean;
+  };
+} {
   const env = vercelEnvSchema.parse(process.env);
 
   // Vercel環境に応じた設定
@@ -28,10 +50,24 @@ export function loadVercelEnv() {
   const isPreview = env.VERCEL_ENV === 'preview';
 
   return {
-    ...env,
-    isProduction,
-    isPreview,
-    isDevelopment: !env.VERCEL_ENV || env.VERCEL_ENV === 'development',
-    baseUrl: env.VERCEL_URL ? `https://${env.VERCEL_URL}` : 'http://localhost:3000',
+    supabase: {
+      url: env.SUPABASE_URL,
+      serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+      anonKey: env.SUPABASE_ANON_KEY,
+    },
+    vercel: {
+      region: env.VERCEL_REGION,
+      url: env.VERCEL_URL,
+      env: env.VERCEL_ENV,
+    },
+    features: {
+      enableRateLimit: env.ENABLE_RATE_LIMIT,
+    },
+    redis: env.RATE_LIMIT_REDIS_URL ? { url: env.RATE_LIMIT_REDIS_URL } : undefined,
+    environment: {
+      isProduction,
+      isPreview,
+      isDevelopment: !env.VERCEL_ENV || env.VERCEL_ENV === 'development',
+    },
   };
 }

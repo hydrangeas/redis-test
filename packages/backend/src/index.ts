@@ -1,20 +1,22 @@
 import 'reflect-metadata';
-import { setupDI } from '@/infrastructure/di/container';
-import { buildServer } from '@/presentation/server';
-import { Logger } from 'pino';
 import { container } from 'tsyringe';
+
+import { setupDI } from '@/infrastructure/di/container';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+import { buildServer } from '@/presentation/server';
+
+import type { Logger } from 'pino';
 
 /**
  * アプリケーションのエントリーポイント
  */
-async function start() {
+async function start(): Promise<void> {
   try {
     // 環境変数の検証
     validateEnvironment();
 
     // DI設定
-    await setupDI();
+    setupDI();
 
     const logger = container.resolve<Logger>(DI_TOKENS.Logger);
 
@@ -46,7 +48,7 @@ async function start() {
     );
 
     // Graceful shutdown
-    const gracefulShutdown = async (signal: string) => {
+    const gracefulShutdown = async (signal: string): Promise<void> => {
       logger.info({ signal }, 'Shutdown signal received');
 
       try {
@@ -68,8 +70,8 @@ async function start() {
     };
 
     // シグナルハンドラーの登録
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
 
     // 未処理のエラーハンドリング
     process.on('unhandledRejection', (reason, promise) => {
@@ -100,7 +102,7 @@ async function start() {
 /**
  * 必要な環境変数の検証
  */
-function validateEnvironment() {
+function validateEnvironment(): void {
   const required = ['NODE_ENV', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'JWT_SECRET'];
 
   const missing = required.filter((key) => !process.env[key]);
@@ -123,4 +125,4 @@ function validateEnvironment() {
 }
 
 // アプリケーション起動
-start();
+void start();

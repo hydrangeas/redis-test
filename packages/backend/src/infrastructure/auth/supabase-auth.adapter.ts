@@ -1,17 +1,20 @@
-import { injectable } from 'tsyringe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { jwtDecode } from 'jwt-decode';
-import { IAuthAdapter, Session } from './interfaces/auth-adapter.interface';
+import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
 import { TokenPayload } from '@/domain/auth/types/token-payload';
 import { getEnvConfig } from '@/infrastructure/config/env.config';
-import { Logger } from 'pino';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+import { IAuthAdapter, Session, AuthUser, CreateUserData, UpdateUserData } from './interfaces/auth-adapter.interface';
 
 @injectable()
 export class SupabaseAuthAdapter implements IAuthAdapter {
   private readonly supabaseClient: SupabaseClient;
   private readonly adminClient: SupabaseClient;
 
-  constructor(private readonly logger: Logger) {
+  constructor(@inject(DI_TOKENS.Logger) private readonly logger: Logger) {
     const env = getEnvConfig();
 
     // 通常のクライアント（anonキー使用）
@@ -66,8 +69,8 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
         sub: user.user.id,
         email: user.user.email,
         app_metadata: {
-          tier: user.user.app_metadata?.tier || 'tier1',
-          ...user.user.app_metadata,
+          tier: (user.user.app_metadata?.tier as string | undefined) || 'tier1',
+          ...(user.user.app_metadata as Record<string, unknown> | undefined),
         },
         user_metadata: user.user.user_metadata || {},
       };
@@ -166,7 +169,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * IDでユーザーを取得
    */
-  async getUserById(id: string): Promise<any | null> {
+  async getUserById(id: string): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.getUserById(id);
 
@@ -191,7 +194,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * メールアドレスでユーザーを取得
    */
-  async getUserByEmail(email: string): Promise<any | null> {
+  async getUserByEmail(email: string): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.listUsers();
 
@@ -217,7 +220,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * ユーザーを作成
    */
-  async createUser(userData: any): Promise<any | null> {
+  async createUser(userData: CreateUserData): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.createUser({
         email: userData.email,
@@ -246,7 +249,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
   /**
    * ユーザー情報を更新
    */
-  async updateUser(id: string, updates: any): Promise<any | null> {
+  async updateUser(id: string, updates: UpdateUserData): Promise<AuthUser | null> {
     try {
       const { data, error } = await this.adminClient.auth.admin.updateUserById(id, {
         email: updates.email,
@@ -310,7 +313,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
       });
 
       if (data?.session) {
-        const decoded = jwtDecode<any>(data.session.access_token);
+        const decoded = jwtDecode<TokenPayload>(data.session.access_token);
         const hasTierClaim = decoded.app_metadata?.tier !== undefined;
 
         // クリーンアップ

@@ -7,10 +7,10 @@ export interface TokenPayload {
   email?: string; // ユーザーのメールアドレス
   app_metadata: {
     tier: string; // ユーザーティア (tier1, tier2, tier3)
-    [key: string]: any; // その他のメタデータ
+    [key: string]: unknown; // その他のメタデータ
   };
   user_metadata?: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
   aud: string; // Audience
   exp: number; // 有効期限（Unix timestamp）

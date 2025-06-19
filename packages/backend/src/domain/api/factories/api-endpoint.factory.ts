@@ -1,7 +1,7 @@
 import { APIEndpoint } from '../entities/api-endpoint.entity';
 import { EndpointPath } from '../value-objects/endpoint-path';
-import { HttpMethod } from '../value-objects/http-method';
 import { EndpointType } from '../value-objects/endpoint-type';
+import { HttpMethod } from '../value-objects/http-method';
 
 /**
  * APIエンドポイントのファクトリクラス

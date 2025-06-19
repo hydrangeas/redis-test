@@ -1,6 +1,7 @@
+import { randomUUID } from 'crypto';
+
 import { Result } from '@/domain/errors';
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { randomUUID } from 'crypto';
 
 /**
  * リクエストIDを表すバリューオブジェクト

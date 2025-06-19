@@ -1,15 +1,30 @@
-import { injectable, inject } from 'tsyringe';
-import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
-import { User, UserProps } from '@/domain/auth/entities/user';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { Email } from '@/domain/auth/value-objects/email';
-import { UserTier } from '@/domain/auth/value-objects/user-tier';
-import { TierLevel } from '@/domain/auth/value-objects/tier-level';
-import { Result } from '@/domain/errors/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { Logger } from 'pino';
+import { injectable, inject } from 'tsyringe';
+
+import { User, UserProps } from '@/domain/auth/entities/user';
+import { IUserRepository } from '@/domain/auth/interfaces/user-repository.interface';
+import { Email } from '@/domain/auth/value-objects/email';
+import { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { UserTier } from '@/domain/auth/value-objects/user-tier';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/errors/result';
+import { IAuthAdapter } from '@/infrastructure/auth/interfaces/auth-adapter.interface';
 import { DI_TOKENS } from '@/infrastructure/di/tokens';
+
+interface SupabaseUserData {
+  id: string;
+  email?: string | null;
+  app_metadata?: {
+    tier?: string;
+    [key: string]: unknown;
+  };
+  created_at?: string;
+  updated_at?: string;
+  last_sign_in_at?: string | null;
+  email_confirmed_at?: string | null;
+  user_metadata?: Record<string, unknown>;
+}
 
 /**
  * Supabaseユーザーリポジトリ実装
@@ -41,7 +56,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       // Supabaseユーザーからドメインモデルへ変換
-      const user = await this.mapToDomainUser(supabaseUser);
+      const user = this.mapToDomainUser(supabaseUser as SupabaseUserData);
 
       if (!user) {
         return Result.fail(
@@ -86,7 +101,7 @@ export class SupabaseUserRepository implements IUserRepository {
       }
 
       // Supabaseユーザーからドメインモデルへ変換
-      const user = await this.mapToDomainUser(supabaseUser);
+      const user = this.mapToDomainUser(supabaseUser as SupabaseUserData);
 
       if (!user) {
         return Result.fail(
@@ -128,7 +143,6 @@ export class SupabaseUserRepository implements IUserRepository {
 
       // Supabase Authでユーザーを作成
       const result = await this.authAdapter.createUser({
-        id: user.id.value,
         email: user.email.value,
         email_confirmed: user.emailVerified,
         app_metadata: {
@@ -248,11 +262,11 @@ export class SupabaseUserRepository implements IUserRepository {
   /**
    * SupabaseユーザーからドメインUserへのマッピング
    */
-  private async mapToDomainUser(supabaseUser: any): Promise<User | null> {
+  private mapToDomainUser(supabaseUser: SupabaseUserData): User | null {
     try {
       this.logger.debug(
         {
-          supabaseUser,
+          supabaseUser: supabaseUser as unknown,
         },
         'Mapping Supabase user to domain model',
       );
@@ -308,8 +322,8 @@ export class SupabaseUserRepository implements IUserRepository {
         id: userId,
         email: email,
         tier: tier,
-        createdAt: new Date(supabaseUser.created_at),
-        updatedAt: new Date(supabaseUser.updated_at || supabaseUser.created_at),
+        createdAt: new Date(supabaseUser.created_at || Date.now()),
+        updatedAt: new Date(supabaseUser.updated_at || supabaseUser.created_at || Date.now()),
         lastAuthenticatedAt: supabaseUser.last_sign_in_at
           ? new Date(supabaseUser.last_sign_in_at)
           : undefined,

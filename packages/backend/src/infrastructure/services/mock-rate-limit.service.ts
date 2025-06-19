@@ -1,10 +1,11 @@
 import { injectable } from 'tsyringe';
+
 import {
   IRateLimitService,
   RateLimitCheckResult,
 } from '@/domain/api/interfaces/rate-limit-service.interface';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 import { Endpoint as APIEndpoint } from '@/domain/api/value-objects/endpoint';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
 
 /**
  * レート制限サービスのモック実装
@@ -15,8 +16,8 @@ export class MockRateLimitService implements IRateLimitService {
   private usageMap = new Map<string, number>();
   private windowStart = new Date();
 
-  async checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
-    const key = `${user.userId.value}:${endpoint.path}`;
+  checkLimit(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<RateLimitCheckResult> {
+    const key = `${user.userId.value}:${endpoint.path.value}`;
     const currentCount = this.usageMap.get(key) || 0;
     const limit = user.tier.rateLimit.maxRequests;
 
@@ -32,22 +33,23 @@ export class MockRateLimitService implements IRateLimitService {
     const resetAt = new Date(this.windowStart.getTime() + user.tier.rateLimit.windowSeconds * 1000);
     const retryAfter = allowed ? undefined : Math.ceil((resetAt.getTime() - now.getTime()) / 1000);
 
-    return {
+    return Promise.resolve({
       allowed,
       limit,
       remaining,
       resetAt,
       retryAfter,
-    };
+    });
   }
 
-  async recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
-    const key = `${user.userId.value}:${endpoint.path}`;
+  recordUsage(user: AuthenticatedUser, endpoint: APIEndpoint): Promise<void> {
+    const key = `${user.userId.value}:${endpoint.path.value}`;
     const currentCount = this.usageMap.get(key) || 0;
     this.usageMap.set(key, currentCount + 1);
+    return Promise.resolve();
   }
 
-  async getUsageStatus(user: AuthenticatedUser): Promise<{
+  getUsageStatus(user: AuthenticatedUser): Promise<{
     currentCount: number;
     limit: number;
     windowStart: Date;
@@ -62,20 +64,21 @@ export class MockRateLimitService implements IRateLimitService {
       }
     }
 
-    return {
+    return Promise.resolve({
       currentCount: totalCount,
       limit: user.tier.rateLimit.maxRequests,
       windowStart: this.windowStart,
       windowEnd: new Date(this.windowStart.getTime() + user.tier.rateLimit.windowSeconds * 1000),
-    };
+    });
   }
 
-  async resetLimit(userId: string): Promise<void> {
+  resetLimit(userId: string): Promise<void> {
     // Remove all entries for this user
     for (const key of this.usageMap.keys()) {
       if (key.startsWith(userId)) {
         this.usageMap.delete(key);
       }
     }
+    return Promise.resolve();
   }
 }

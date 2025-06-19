@@ -1,8 +1,9 @@
-import { ValueObject } from '@/domain/shared/value-object';
-import { DataPath } from './data-path';
-import { ResourceMetadata } from './resource-metadata';
-import { Result } from '@/domain/shared/result';
 import { DomainError } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/shared/result';
+import { ValueObject } from '@/domain/shared/value-object';
+
+import type { DataPath } from './data-path';
+import type { ResourceMetadata } from './resource-metadata';
 
 export interface OpenDataResourceProps {
   path: DataPath;

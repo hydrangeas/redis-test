@@ -1,6 +1,8 @@
+import { TierLevel } from './tier-level';
 import { UserId } from './user-id';
 import { UserTier } from './user-tier';
-import { TierLevel } from './tier-level';
+
+import type { RateLimit } from './rate-limit';
 
 /**
  * 認証済みユーザーを表現するバリューオブジェクト
@@ -33,7 +35,7 @@ export class AuthenticatedUser {
    * レート制限情報を取得
    * @returns ユーザーティアに応じたレート制限
    */
-  getRateLimit() {
+  getRateLimit(): RateLimit {
     return this.tier.rateLimit;
   }
 

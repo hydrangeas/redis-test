@@ -1,33 +1,56 @@
 import 'reflect-metadata';
-import { container, DependencyContainer } from 'tsyringe';
-import { Logger } from 'pino';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { DI_TOKENS } from './tokens';
-import { getEnvConfig, type EnvConfig } from '../config/env.config';
-import { createLogger } from '../logging';
 import path from 'path';
-import { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
-import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
-import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
-import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+
+import { createClient } from '@supabase/supabase-js';
+import { container } from 'tsyringe';
+
+import { APIAccessControlUseCase } from '@/application/use-cases/api-access-control.use-case';
 import { AuthenticationUseCase } from '@/application/use-cases/authentication.use-case';
+import { DataAccessUseCase } from '@/application/use-cases/data-access.use-case';
 import { DataRetrievalUseCase } from '@/application/use-cases/data-retrieval.use-case';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { EventBus } from '../events/event-bus';
-import { IEventStore } from '@/domain/interfaces/event-store.interface';
-import { InMemoryEventStore } from '../events/in-memory-event-store';
-import { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
-import { OpenDataRepository } from '../repositories/open-data.repository';
-import { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
-import { JWTValidatorService } from '../auth/services/jwt-validator.service';
-import { Result } from '@/domain/errors/result';
+import { RateLimitUseCase } from '@/application/use-cases/rate-limit.use-case';
+import { APIAccessControlService } from '@/domain/api/services/api-access-control.service';
+import { AuthenticationService } from '@/domain/auth/services/authentication.service';
+import { DataAccessService } from '@/domain/data/services/data-access.service';
 import { DomainError } from '@/domain/errors';
+import { Result } from '@/domain/errors/result';
+
+import { DI_TOKENS } from './tokens';
+import { OpenDataResourceFactory } from '../../domain/data/factories/open-data-resource.factory';
+import { MockSupabaseAuthAdapter } from '../auth/__mocks__/supabase-auth.adapter';
+import { JWTValidatorService } from '../auth/services/jwt-validator.service';
+import { JWTService } from '../auth/services/jwt.service';
+import { SupabaseAuthAdapter } from '../auth/supabase-auth.adapter';
+import { getEnvConfig, type EnvConfig } from '../config/env.config';
+import { EventBus } from '../events/event-bus';
+import { InMemoryEventStore } from '../events/in-memory-event-store';
+import { createLogger } from '../logging';
+import { SupabaseUserRepository } from '../repositories/auth/supabase-user.repository';
+import { SupabaseAPILogRepository } from '../repositories/log/supabase-api-log.repository';
+import { SupabaseAuthLogRepository } from '../repositories/log/supabase-auth-log.repository';
+import { OpenDataRepository } from '../repositories/open-data.repository';
+import { DatabaseSeeder } from '../seeders/database-seeder';
+import { ApiLogService } from '../services/api-log.service';
+import { InMemoryRateLimitService } from '../services/in-memory-rate-limit.service';
+import { SecureFileAccessService } from '../services/secure-file-access.service';
+import { SecurityAuditService } from '../services/security-audit.service';
+import { SupabaseService } from '../services/supabase.service';
+import { FileStorageService } from '../storage/file-storage.service';
+
+import type { IAuthAdapter } from '../auth/interfaces/auth-adapter.interface';
+import type { IJWTValidator } from '../auth/interfaces/jwt-validator.interface';
+import type { IOpenDataRepository } from '@/domain/data/interfaces/open-data-repository.interface';
+import type { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import type { IEventStore } from '@/domain/interfaces/event-store.interface';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Logger } from 'pino';
+import type { DependencyContainer } from 'tsyringe';
 
 /**
  * DIコンテナのセットアップ
  * アプリケーション起動時に一度だけ実行される
  */
-export async function setupDI(): Promise<DependencyContainer> {
+export function setupDI(): DependencyContainer {
   // 環境変数設定の登録
   const envConfig = getEnvConfig();
   container.register<EnvConfig>(DI_TOKENS.EnvConfig, {
@@ -69,7 +92,7 @@ export async function setupDI(): Promise<DependencyContainer> {
   registerInfrastructureServices(container);
 
   // イベントハンドラーの登録
-  import('@/application/event-handlers').then((module) => {
+  void import('@/application/event-handlers').then((module) => {
     module.registerEventHandlers(container);
     logger.info('Event handlers registered');
   });
@@ -121,13 +144,13 @@ export function setupTestDI(): DependencyContainer {
         getUserById: () => Promise.resolve({ data: { user: null }, error: null }),
       },
     },
-    from: () => ({
-      select: () => ({ data: [], error: null }),
-      insert: () => ({ data: null, error: null }),
-      update: () => ({ data: null, error: null }),
-      delete: () => ({ data: null, error: null }),
+    from: (): { select: () => { data: unknown[]; error: null }; insert: () => { data: null; error: null }; update: () => { data: null; error: null }; delete: () => { data: null; error: null } } => ({
+      select: (): { data: unknown[]; error: null } => ({ data: [], error: null }),
+      insert: (): { data: null; error: null } => ({ data: null, error: null }),
+      update: (): { data: null; error: null } => ({ data: null, error: null }),
+      delete: (): { data: null; error: null } => ({ data: null, error: null }),
     }),
-  } as any;
+  } as unknown as SupabaseClient;
   container.register<SupabaseClient>(DI_TOKENS.SupabaseClient, {
     useValue: mockSupabaseClient,
   });
@@ -147,6 +170,7 @@ export function setupTestDI(): DependencyContainer {
   registerTestRepositories(container);
   registerDomainServices(container);
   registerApplicationServices(container);
+  registerTestInfrastructureServices(container);
 
   // テスト用にJwtServiceのモックを登録（auth.plugin.tsで必要）
   // 実際のモックはテストで上書き可能
@@ -163,10 +187,15 @@ export function setupTestDI(): DependencyContainer {
     },
   });
 
-  // テスト用にSupabaseUserRepositoryを登録
-  const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
+  // テスト用にUserRepositoryのモックを登録
   container.register(DI_TOKENS.UserRepository, {
-    useClass: SupabaseUserRepository,
+    useValue: {
+      save: () => Promise.resolve(Result.ok(undefined)),
+      update: () => Promise.resolve(Result.ok(undefined)),
+      findByUserId: () => Promise.resolve(Result.ok(null)),
+      updateLastActivity: () => Promise.resolve(Result.ok(undefined)),
+      delete: () => Promise.resolve(Result.ok(undefined)),
+    },
   });
 
   // テスト用にRateLimitLogRepositoryのモックを登録（必要な場合）
@@ -252,6 +281,26 @@ export function setupTestDI(): DependencyContainer {
     },
   });
 
+  // テスト用にSecureFileAccessServiceのモックを登録
+  container.register(DI_TOKENS.SecureFileAccessService, {
+    useValue: {
+      validatePath: () => Result.ok({ safe: true, normalized: '/test/path' }),
+      checkAccess: () => Promise.resolve(Result.ok(true)),
+      readFile: () => Promise.resolve(Result.ok({ content: Buffer.from('test'), metadata: { size: 4, mimeType: 'text/plain' } })),
+      listDirectory: () => Promise.resolve(Result.ok([])),
+    },
+  });
+
+  // テスト用にSecurityAuditServiceのモックを登録
+  container.register(DI_TOKENS.SecurityAuditService, {
+    useValue: {
+      logSecurityEvent: () => Promise.resolve(),
+      logAuthEvent: () => Promise.resolve(),
+      logAccessEvent: () => Promise.resolve(),
+      getAuditLogs: () => Promise.resolve([]),
+    },
+  });
+
   return container;
 }
 
@@ -298,21 +347,15 @@ function registerDomainServices(container: DependencyContainer): void {
     useClass: AuthenticationService,
   });
 
-  // Import domain services synchronously for tests
-  const {
-    APIAccessControlService,
-  } = require('../../domain/api/services/api-access-control.service');
   container.register(DI_TOKENS.APIAccessControlService, {
     useClass: APIAccessControlService,
   });
 
-  const { DataAccessService } = require('../../domain/data/services/data-access.service');
   container.register(DI_TOKENS.DataAccessService, {
     useClass: DataAccessService,
   });
 
   // RateLimitServiceの実装を登録
-  const { InMemoryRateLimitService } = require('../services/in-memory-rate-limit.service');
   container.register(DI_TOKENS.RateLimitService, {
     useClass: InMemoryRateLimitService,
   });
@@ -331,22 +374,14 @@ function registerApplicationServices(container: DependencyContainer): void {
     useClass: DataRetrievalUseCase,
   });
 
-  // DataAccessUseCaseの同期インポート
-  const { DataAccessUseCase } = require('../../application/use-cases/data-access.use-case');
   container.register(DI_TOKENS.DataAccessUseCase, {
     useClass: DataAccessUseCase,
   });
 
-  // RateLimitUseCaseの同期インポート
-  const { RateLimitUseCase } = require('../../application/use-cases/rate-limit.use-case');
   container.register(DI_TOKENS.RateLimitUseCase, {
     useClass: RateLimitUseCase,
   });
 
-  // APIAccessControlUseCaseの同期インポート
-  const {
-    APIAccessControlUseCase,
-  } = require('../../application/use-cases/api-access-control.use-case');
   container.register(DI_TOKENS.APIAccessControlUseCase, {
     useClass: APIAccessControlUseCase,
   });
@@ -389,39 +424,31 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
 
   // UserRepositoryの登録
-  const { SupabaseUserRepository } = require('../repositories/auth/supabase-user.repository');
   container.register(DI_TOKENS.UserRepository, {
     useClass: SupabaseUserRepository,
   });
 
   // AuthLogRepositoryの登録
-  const { SupabaseAuthLogRepository } = require('../repositories/log/supabase-auth-log.repository');
   container.register(DI_TOKENS.AuthLogRepository, {
     useClass: SupabaseAuthLogRepository,
   });
 
   // APILogRepositoryの登録
-  const { SupabaseAPILogRepository } = require('../repositories/log/supabase-api-log.repository');
   container.register(DI_TOKENS.APILogRepository, {
     useClass: SupabaseAPILogRepository,
   });
 
   // Factoriesの登録
-  const {
-    OpenDataResourceFactory,
-  } = require('../../domain/data/factories/open-data-resource.factory');
   container.register(DI_TOKENS.OpenDataResourceFactory, {
     useClass: OpenDataResourceFactory,
   });
 
   // JWTServiceの登録
-  const { JWTService } = require('../auth/services/jwt.service');
   container.register(DI_TOKENS.JwtService, {
     useClass: JWTService,
   });
 
   // FileStorageServiceの登録
-  const { FileStorageService } = require('../storage/file-storage.service');
   container.register(DI_TOKENS.FileStorage, {
     useClass: FileStorageService,
   });
@@ -430,35 +457,63 @@ function registerInfrastructureServices(container: DependencyContainer): void {
   });
 
   // SupabaseServiceの登録
-  const { SupabaseService } = require('../services/supabase.service');
   container.register(DI_TOKENS.SupabaseService, {
     useClass: SupabaseService,
   });
 
   // SecurityAuditServiceの登録
-  const { SecurityAuditService } = require('../services/security-audit.service');
   container.register(DI_TOKENS.SecurityAuditService, {
     useClass: SecurityAuditService,
   });
 
   // SecureFileAccessServiceの登録
-  const { SecureFileAccessService } = require('../services/secure-file-access.service');
   container.register(DI_TOKENS.SecureFileAccessService, {
     useClass: SecureFileAccessService,
   });
 
   // DatabaseSeederの登録
-  const { DatabaseSeeder } = require('../seeders/database-seeder');
   container.register('DatabaseSeeder', {
     useClass: DatabaseSeeder,
   });
 
   // ApiLogServiceの登録
-  const { ApiLogService } = require('../services/api-log.service');
   container.register(DI_TOKENS.ApiLogService, {
     useClass: ApiLogService,
   });
 
   // 他のインフラストラクチャサービスは後続タスクで実装
   // ... 他のインフラストラクチャサービス
+}
+
+/**
+ * テスト用インフラストラクチャサービスの登録
+ */
+function registerTestInfrastructureServices(container: DependencyContainer): void {
+  // TransactionManagerのモック登録（必要に応じて後で追加）
+  // container.register(DI_TOKENS.TransactionManager, {
+  //   useValue: {
+  //     transaction: async (fn: () => Promise<unknown>) => {
+  //       // テスト環境ではトランザクションなしで直接実行
+  //       return fn();
+  //     },
+  //   },
+  // });
+
+  // RateLimitLogRepositoryの登録（InMemoryRateLimitServiceが依存）
+  // Use mock for tests to avoid module resolution issues with require
+  container.register(DI_TOKENS.RateLimitLogRepository, {
+    useValue: {
+      save: () => Promise.resolve(Result.ok(undefined)),
+      findByUserId: () => Promise.resolve(Result.ok([])),
+      countInWindow: () => Promise.resolve(Result.ok(0)),
+      deleteOlderThan: () => Promise.resolve(Result.ok(undefined)),
+      deleteByUserId: () => Promise.resolve(Result.ok(undefined)),
+      saveMany: () => Promise.resolve(Result.ok(undefined)),
+      findByUserAndEndpoint: () => Promise.resolve(Result.ok([])),
+      findByUser: () => Promise.resolve(Result.ok([])),
+      findByEndpoint: () => Promise.resolve(Result.ok([])),
+      deleteOldLogs: () => Promise.resolve(Result.ok(0)),
+      countRequests: () => Promise.resolve(Result.ok(0)),
+    },
+  });
 }

@@ -1,4 +1,5 @@
 import { injectable } from 'tsyringe';
+
 import { IEventStore, DeadLetterEvent } from '@/domain/interfaces/event-store.interface';
 import { DomainEvent } from '@/domain/shared/domain-event';
 
@@ -11,26 +12,28 @@ export class InMemoryEventStore implements IEventStore {
   private events: DomainEvent[] = [];
   private deadLetters: DeadLetterEvent[] = [];
 
-  async save(event: DomainEvent): Promise<void> {
+  save(event: DomainEvent): Promise<void> {
     this.events.push(event);
+    return Promise.resolve();
   }
 
-  async getByAggregateId(aggregateId: string): Promise<DomainEvent[]> {
-    return this.events.filter((event) => event.getAggregateId() === aggregateId);
+  getByAggregateId(aggregateId: string): Promise<DomainEvent[]> {
+    return Promise.resolve(this.events.filter((event) => event.getAggregateId() === aggregateId));
   }
 
-  async getByEventName(eventName: string, limit?: number): Promise<DomainEvent[]> {
+  getByEventName(eventName: string, limit?: number): Promise<DomainEvent[]> {
     const filtered = this.events.filter((event) => event.getEventName() === eventName);
 
     if (limit && limit > 0) {
-      return filtered.slice(0, limit);
+      return Promise.resolve(filtered.slice(0, limit));
     }
 
-    return filtered;
+    return Promise.resolve(filtered);
   }
 
-  async saveDeadLetter(deadLetter: DeadLetterEvent): Promise<void> {
+  saveDeadLetter(deadLetter: DeadLetterEvent): Promise<void> {
     this.deadLetters.push(deadLetter);
+    return Promise.resolve();
   }
 
   /**

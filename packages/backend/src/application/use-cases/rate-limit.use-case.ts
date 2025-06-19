@@ -1,22 +1,23 @@
+import { Logger } from 'pino';
 import { injectable, inject } from 'tsyringe';
+
 import {
   IRateLimitUseCase,
   RateLimitCheckResult,
 } from '@/application/interfaces/rate-limit-use-case.interface';
-import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
-import { IEventBus } from '@/domain/interfaces/event-bus.interface';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
-import { Result } from '@/domain/shared/result';
-import { DomainError, ErrorType } from '@/domain/errors/domain-error';
-import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
-import { APIAccessRecorded } from '@/domain/api/events/api-access-recorded.event';
-import { DI_TOKENS } from '@/infrastructure/di/tokens';
-import { Logger } from 'pino';
-import { UserId } from '@/domain/auth/value-objects/user-id';
 import { RateLimitLog } from '@/domain/api/entities/rate-limit-log.entity';
+import { APIAccessRecorded } from '@/domain/api/events/api-access-recorded.event';
+import { RateLimitExceeded } from '@/domain/api/events/rate-limit-exceeded.event';
+import { IRateLimitLogRepository } from '@/domain/api/interfaces/rate-limit-log-repository.interface';
 import { EndpointId } from '@/domain/api/value-objects/endpoint-id';
 import { RateLimitWindow } from '@/domain/api/value-objects/rate-limit-window';
 import { RequestId } from '@/domain/api/value-objects/request-id';
+import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import { UserId } from '@/domain/auth/value-objects/user-id';
+import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { IEventBus } from '@/domain/interfaces/event-bus.interface';
+import { Result } from '@/domain/shared/result';
+import { DI_TOKENS } from '@/infrastructure/di/tokens';
 
 /**
  * レート制限ユースケースの実装
@@ -59,21 +60,20 @@ export class RateLimitUseCase implements IRateLimitUseCase {
 
       // スライディングウィンドウ内のアクセス数をカウント
       const window = new RateLimitWindow(windowSizeSeconds, now);
-      const countResult = await this.rateLimitRepository.countRequests(
-        user.userId,
-        endpointId,
-        window,
-      );
-
-      if (countResult.isFailure) {
+      
+      // すべてのエンドポイントへのアクセスをカウント（ユーザーベースのレート制限）
+      const logsResult = await this.rateLimitRepository.findByUser(user.userId, window);
+      
+      if (logsResult.isFailure) {
         this.logger.error(
-          { userId: user.userId.value, error: countResult.getError() },
-          'Failed to count rate limit logs',
+          { userId: user.userId.value, error: logsResult.getError() },
+          'Failed to get rate limit logs',
         );
-        return Result.fail(countResult.getError());
+        return Result.fail(logsResult.getError());
       }
-
-      const currentCount = countResult.getValue();
+      
+      const logs = logsResult.getValue();
+      const currentCount = logs.length; // Each log represents one request
 
       // レート制限チェック
       if (currentCount >= limit) {
@@ -93,7 +93,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
         );
 
         // レート制限超過イベントを発行
-        await this.eventBus.publish(
+        void this.eventBus.publish(
           new RateLimitExceeded(
             user.userId.value,
             1,
@@ -139,7 +139,7 @@ export class RateLimitUseCase implements IRateLimitUseCase {
       }
 
       // APIアクセス記録イベントを発行
-      await this.eventBus.publish(
+      void this.eventBus.publish(
         new APIAccessRecorded(user.userId.value, 1, endpoint, method),
       );
 

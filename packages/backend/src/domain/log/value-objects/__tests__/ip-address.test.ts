@@ -45,14 +45,14 @@ describe('IPAddress', () => {
     it('should fail for empty or invalid addresses', () => {
       const result1 = IPAddress.create('');
       expect(result1.isFailure).toBe(true);
-      expect(result1.getError()).toBe('IPアドレスは空にできません');
+      expect(result1.getError().message).toBe('IPアドレスは空にできません');
 
       const result2 = IPAddress.create('   ');
       expect(result2.isFailure).toBe(true);
 
       const result3 = IPAddress.create('999.999.999.999');
       expect(result3.isFailure).toBe(true);
-      expect(result3.getError()).toBe('無効なIPアドレス形式です');
+      expect(result3.getError().message).toBe('無効なIPアドレス形式です');
 
       const result4 = IPAddress.create('not.an.ip.address');
       expect(result4.isFailure).toBe(true);

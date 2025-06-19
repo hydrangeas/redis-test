@@ -15,7 +15,7 @@ export const routes = {
 
 export const isAuthRoute = (path: string): boolean => {
   const authRoutes = [routes.login, routes.signup, routes.authCallback];
-  return authRoutes.includes(path as any);
+  return authRoutes.includes(path as typeof authRoutes[number]);
 };
 
 export const isProtectedRoute = (path: string): boolean => {

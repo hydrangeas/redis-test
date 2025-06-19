@@ -1,12 +1,14 @@
 import { injectable } from 'tsyringe';
-import { OpenDataResource } from '../entities/open-data-resource.entity';
-import { ResourceId } from '../value-objects/resource-id';
-import { DataPath } from '../value-objects/data-path';
-import { ResourceMetadata } from '../value-objects/resource-metadata';
-import { MimeType } from '../value-objects/mime-type';
-import { FileSize } from '../value-objects/file-size';
-import { Result } from '@/domain/shared/result';
+
 import { DomainError, ErrorType } from '@/domain/errors/domain-error';
+import { Result } from '@/domain/shared/result';
+
+import { OpenDataResource } from '../entities/open-data-resource.entity';
+import { DataPath } from '../value-objects/data-path';
+import { FileSize } from '../value-objects/file-size';
+import { MimeType } from '../value-objects/mime-type';
+import { ResourceId } from '../value-objects/resource-id';
+import { ResourceMetadata } from '../value-objects/resource-metadata';
 
 export interface FileSystemMetadata {
   size: number;

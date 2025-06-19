@@ -1,8 +1,12 @@
-import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
+
+
 import versioningPlugin from '@/presentation/plugins/versioning.plugin';
+
 import authRoutes from './auth';
 import dataRoutes from './data';
+
+import type { FastifyPluginAsync } from 'fastify';
 // import dataRoutesV1 from './v1/data.routes';
 // import dataRoutesV2 from './v2/data.routes';
 
@@ -30,7 +34,7 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request, _reply) => {
+    (request, _reply) => {
       return {
         status: 'ok',
         version: request.apiVersion!,
@@ -54,7 +58,7 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async () => {
+    () => {
       return {
         version: process.env.API_VERSION || '1.0.0',
         build: process.env.BUILD_NUMBER || process.env.COMMIT_HASH || 'unknown',
@@ -83,7 +87,7 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request) => {
+    (request) => {
       const baseUrl = `${request.protocol}://${request.hostname}`;
 
       return {
@@ -113,7 +117,7 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request, _reply) => {
+    (request, _reply) => {
       const features: { base: string[]; advanced?: string[] } = {
         base: ['data_access', 'rate_limiting', 'authentication'],
       };

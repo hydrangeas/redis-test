@@ -1,20 +1,22 @@
-import { AggregateRoot } from '@/domain/shared/aggregate-root';
-import { APIEndpoint } from '../entities/api-endpoint.entity';
-import { EndpointPath } from '../value-objects/endpoint-path';
-import { HttpMethod } from '../value-objects/http-method';
-import { EndpointId } from '../value-objects/endpoint-id';
-import { UserId } from '@/domain/auth/value-objects/user-id';
-import { UserTier } from '@/domain/auth/value-objects/user-tier';
 import { RateLimit } from '@/domain/auth/value-objects/rate-limit';
-import { Result } from '@/domain/shared/result';
-import { Guard } from '@/domain/shared/guard';
-import { UniqueEntityId } from '@/domain/shared/entity';
-import { DomainError } from '@/domain/errors/domain-error';
-import { APIAccessRequested } from '../events/api-access-requested.event';
-import { RateLimitExceeded } from '../events/rate-limit-exceeded.event';
-import { InvalidAPIAccess } from '../events/invalid-api-access.event';
-import { APIAccessRecorded } from '../events/api-access-recorded.event';
 import { TierLevel } from '@/domain/auth/value-objects/tier-level';
+import { DomainError } from '@/domain/errors/domain-error';
+import { AggregateRoot } from '@/domain/shared/aggregate-root';
+import { UniqueEntityId } from '@/domain/shared/entity';
+import { Guard } from '@/domain/shared/guard';
+import { Result } from '@/domain/shared/result';
+
+import { APIAccessRecorded } from '../events/api-access-recorded.event';
+import { APIAccessRequested } from '../events/api-access-requested.event';
+import { InvalidAPIAccess } from '../events/invalid-api-access.event';
+import { RateLimitExceeded } from '../events/rate-limit-exceeded.event';
+
+import type { APIEndpoint } from '../entities/api-endpoint.entity';
+import type { EndpointId } from '../value-objects/endpoint-id';
+import type { EndpointPath } from '../value-objects/endpoint-path';
+import type { HttpMethod } from '../value-objects/http-method';
+import type { UserId } from '@/domain/auth/value-objects/user-id';
+import type { UserTier } from '@/domain/auth/value-objects/user-tier';
 
 export interface APIAggregateProps {
   endpoints: Map<string, APIEndpoint>; // endpointId -> APIEndpoint
@@ -140,13 +142,13 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * APIアクセスを処理
    */
-  async processAPIAccess(
+  processAPIAccess(
     userId: UserId,
     path: EndpointPath,
     method: HttpMethod,
     userTier: UserTier,
     requestTime: Date = new Date(),
-  ): Promise<Result<RateLimitCheckResult>> {
+  ): Result<RateLimitCheckResult> {
     // エンドポイントを検索
     const endpointResult = this.findEndpointByPathAndMethod(path, method);
     if (endpointResult.isFailure) {
@@ -273,7 +275,11 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     }
 
     // レート制限を超えていない場合のみアクセスを記録
-    // Record request at aggregate level - endpoints don't track requests
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const recordResult = endpoint.recordAccess(userId, requestId, requestTime);
+    if (recordResult.isFailure) {
+      return Result.fail(recordResult.getError());
+    }
 
     // APIアクセス記録イベントを発行
     this.addDomainEvent(
@@ -286,10 +292,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
     );
 
     // 記録後の最新状態を返す
-    // Note: checkRateLimitのタイムスタンプを1ms後にすることで、
-    // 記録したリクエストが確実にウィンドウ内に含まれるようにする
-    const checkTime = new Date(requestTime.getTime() + 1);
-    const finalCheck = endpoint.checkRateLimit(userId, rateLimit, checkTime);
+    const finalCheck = endpoint.checkRateLimit(userId, rateLimit, requestTime);
 
     return Result.ok({
       isExceeded: finalCheck.isExceeded,
@@ -341,10 +344,10 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * ユーザーのレート制限ログをクリーンアップ
    */
-  async cleanupUserLogs(
+  cleanupUserLogs(
     _userId: UserId,
     _retentionPeriodMinutes: number = 60,
-  ): Promise<Result<number>> {
+  ): Result<number> {
     // Endpoints don't track per-user logs in the current implementation
     // This would require a separate log storage mechanism
     const totalCleaned = 0;
@@ -355,7 +358,7 @@ export class APIAggregate extends AggregateRoot<APIAggregateProps> {
   /**
    * すべてのエンドポイントのレート制限ログをクリーンアップ
    */
-  async cleanupAllLogs(retentionPeriodMinutes: number = 60): Promise<Result<number>> {
+  cleanupAllLogs(retentionPeriodMinutes: number = 60): Result<number> {
     let totalCleaned = 0;
 
     for (const endpoint of this.props.endpoints.values()) {

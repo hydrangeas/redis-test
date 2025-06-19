@@ -121,10 +121,19 @@ describe('Auth Routes', () => {
       DATA_DIRECTORY: './test-data',
     };
 
+    // Create mock RateLimitService
+    const mockRateLimitService = {
+      checkRateLimit: vi.fn().mockResolvedValue(Result.ok(true)),
+      recordUsage: vi.fn().mockResolvedValue(Result.ok(undefined)),
+      getRemainingRequests: vi.fn().mockResolvedValue(Result.ok(60)),
+      resetUsage: vi.fn().mockResolvedValue(Result.ok(undefined)),
+    };
+
     // Register all dependencies
     container.registerInstance(DI_TOKENS.Logger, logger);
     container.registerInstance(DI_TOKENS.UserRepository, mockUserRepository);
     container.registerInstance(DI_TOKENS.RateLimitUseCase, mockRateLimitUseCase);
+    container.registerInstance(DI_TOKENS.RateLimitService, mockRateLimitService);
     container.registerInstance(DI_TOKENS.JwtService, mockJWTService);
     container.registerInstance(DI_TOKENS.ApiLogRepository, mockUsageLogRepository);
     container.registerInstance(DI_TOKENS.RateLimitRepository, mockRateLimitRepository);

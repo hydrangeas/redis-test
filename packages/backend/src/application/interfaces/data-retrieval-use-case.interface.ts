@@ -1,5 +1,5 @@
-import { Result } from '@/domain/shared/result';
-import { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { AuthenticatedUser } from '@/domain/auth/value-objects/authenticated-user';
+import type { Result } from '@/domain/shared/result';
 
 /**
  * データ取得ユースケースのインターフェース
@@ -10,14 +10,16 @@ export interface IDataRetrievalUseCase {
    * 指定されたパスのデータを取得
    * @param path データパス（例: "secure/319985/r5.json"）
    * @param user 認証済みユーザー
+   * @param metadata APIアクセスのメタデータ（オプション）
    * @returns データ内容とメタデータ
    */
   retrieveData(
     path: string,
     user: AuthenticatedUser,
+    metadata?: { ipAddress?: string },
   ): Promise<
     Result<{
-      content: any;
+      content: unknown;
       checksum: string;
       lastModified: Date;
     }>
@@ -48,7 +50,7 @@ export interface IDataRetrievalUseCase {
     etag: string,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       newEtag?: string;
     }>
@@ -65,7 +67,7 @@ export interface IDataRetrievalUseCase {
     ifModifiedSince: Date,
   ): Promise<
     Result<{
-      data?: any;
+      data?: unknown;
       notModified: boolean;
       lastModified?: Date;
     }>
