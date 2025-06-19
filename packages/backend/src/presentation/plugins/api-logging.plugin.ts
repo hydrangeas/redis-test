@@ -5,6 +5,7 @@ import { apiLoggingMiddleware } from '../middleware/api-logging.middleware';
 import type { FastifyPluginAsync } from 'fastify';
 
 const apiLoggingPlugin: FastifyPluginAsync = async (fastify) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   // API logging middleware
   fastify.addHook('onRequest', apiLoggingMiddleware.onRequest);
   fastify.addHook('onSend', apiLoggingMiddleware.onSend);

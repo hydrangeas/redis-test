@@ -89,6 +89,7 @@ export function setupDependencies(): MockDependencies {
   const mockEventBus = new EventEmitter();
   // EventEmitter uses emit, not publish
   const eventBusWithPublish = mockEventBus as EventEmitter & { publish: ReturnType<typeof vi.fn> };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   eventBusWithPublish.publish = vi.fn(() => Promise.resolve()) as any;
 
   const mockRepositories = {

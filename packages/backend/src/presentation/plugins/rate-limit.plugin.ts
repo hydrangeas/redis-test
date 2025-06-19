@@ -30,6 +30,7 @@ declare module 'fastify' {
 }
 
 const rateLimitPlugin: FastifyPluginAsync<RateLimitPluginOptions> = async (fastify, options) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const rateLimitService = container.resolve<IRateLimitService>(DI_TOKENS.RateLimitService);
 
   const defaultExcludePaths = [

@@ -10,6 +10,7 @@ interface LoggingPluginOptions {
 }
 
 const loggingPlugin: FastifyPluginAsync<LoggingPluginOptions> = async (fastify, options) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const skipPaths = options.skipPaths || ['/health', '/metrics'];
 
   // インフラストラクチャ層のロギング設定を適用

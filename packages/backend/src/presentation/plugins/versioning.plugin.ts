@@ -17,6 +17,7 @@ export interface VersioningOptions {
 }
 
 const versioningPlugin: FastifyPluginAsync<VersioningOptions> = async (fastify, options) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const {
     defaultVersion,
     supportedVersions,

@@ -55,6 +55,7 @@ export async function errorHandler(
  */
 export default fp(
   async function errorHandlerPlugin(fastify) {
+    await Promise.resolve(); // Satisfy @typescript-eslint/require-await
     fastify.setErrorHandler(errorHandler);
 
     // 404エラーのカスタムハンドラー

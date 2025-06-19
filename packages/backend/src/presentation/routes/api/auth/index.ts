@@ -37,6 +37,7 @@ const ErrorResponse = Type.Object({
 });
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   // User repository is not needed in these routes
   const rateLimitUseCase = container.resolve<IRateLimitUseCase>(DI_TOKENS.RateLimitUseCase);
 

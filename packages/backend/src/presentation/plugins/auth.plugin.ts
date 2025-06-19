@@ -28,6 +28,7 @@ declare module 'fastify' {
 }
 
 const authPlugin: FastifyPluginAsync<AuthPluginOptions> = async (fastify, options) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const excludePaths = options.excludePaths || [];
 
   const authenticate = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {

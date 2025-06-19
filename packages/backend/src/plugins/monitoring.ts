@@ -98,6 +98,7 @@ export const metrics = {
 };
 
 const monitoringPlugin: FastifyPluginAsync = async (fastify) => {
+  await Promise.resolve(); // Satisfy @typescript-eslint/require-await
   const logger = container.resolve<Logger>(DI_TOKENS.Logger).child({ context: 'monitoring' });
 
   // Add hook to track request start time

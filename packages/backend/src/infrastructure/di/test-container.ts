@@ -316,6 +316,7 @@ export class DITestUtils {
    */
   static spyOn<T extends Record<string, unknown>>(container: DependencyContainer, token: symbol, method: keyof T): ReturnType<typeof vi.spyOn> {
     const service = container.resolve<T>(token);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return vi.spyOn(service as any, method as any);
   }
 
