@@ -46,12 +46,12 @@ export function createSupabaseMock(): { mockClient: { from: ReturnType<typeof vi
   });
 
   // Create the main mock client
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
   const mockClient = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
     from: vi.fn((_tableName: string) => {
       // Return the chainable object when from is called
       return chainableObject;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as any,
   };
 
