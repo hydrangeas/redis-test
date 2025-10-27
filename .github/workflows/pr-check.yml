@@ -72,7 +72,7 @@ jobs:
           CORS_ORIGIN: http://localhost:3000
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-${{ matrix.package }}
           path: packages/${{ matrix.package }}/coverage
@@ -167,7 +167,7 @@ jobs:
   #         JWT_SECRET: test-jwt-secret-key-for-testing-only-must-be-at-least-32-chars
 
   #     - name: Upload Playwright report
-  #       uses: actions/upload-artifact@v4
+  #       uses: actions/upload-artifact@v5
   #       if: always()
   #       with:
   #         name: playwright-report
@@ -200,7 +200,7 @@ jobs:
         run: pnpm run size
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-artifacts
           path: |
